@@ -1,0 +1,183 @@
+/***************************************************************************/
+/* Tooltip Component */
+
+/*
+    How to use it:
+    <Tooltip content="This is a tooltip">
+        <button>Hover me</button>
+    </Tooltip>
+*/
+
+.tooltip {
+    /* Use top-layer for better z-index management */
+    position: fixed;
+
+    background-color: color-mix(in srgb, var(--3dverse-color-bg-underground) 80%, transparent);
+    backdrop-filter: blur(16px);
+    color: var(--3dverse-color-content-primary);
+    border-radius: var(--3dverse-border-radius-md);
+    box-shadow: var(--3dverse-shadow-lg);
+    border: 1px solid var(--3dverse-color-border-secondary-alpha);
+
+    font-size: var(--3dverse-font-size-xs);
+
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 200ms cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    user-select: none;
+    pointer-events: none;
+
+    visibility: hidden;
+    z-index: 1000;
+
+    /* For following cursor */
+    --follow-cursor-mouse-x: 0px;
+    translate: var(--follow-cursor-mouse-x) 0;
+
+    &[data-position="top"] {
+        transform-origin: bottom center;
+    }
+    &[data-position="bottom"] {
+        transform-origin: top center;
+    }
+    &[data-position="left"] {
+        transform-origin: right center;
+    }
+    &[data-position="right"] {
+        transform-origin: left center;
+    }
+}
+
+/* When using Popover API (top-layer), don't set z-index */
+.tooltip.tooltip-top-layer {
+    z-index: unset;
+}
+
+/* Support Popover API's :popover-open pseudo-class */
+.tooltip:popover-open {
+    opacity: 1;
+    transform: scale(1);
+    visibility: visible;
+}
+
+.tooltip.tooltip-visible {
+    opacity: 1;
+    transform: scale(1);
+    visibility: visible;
+}
+
+.tooltip.tooltip-hoverable {
+    pointer-events: auto;
+}
+
+.tooltip.tooltip-hoverable.tooltip-visible,
+.tooltip.tooltip-hoverable:popover-open {
+    pointer-events: auto;
+}
+
+.tooltip-content {
+    position: relative;
+    padding: 0.25rem 0.5rem;
+    overflow: hidden;
+    border-radius: inherit;
+    z-index: 1;
+
+    &:has(video) {
+        padding: 0;
+        display: flex;
+    }
+
+    & img {
+        display: block;
+    }
+}
+
+/* Arrow styling */
+.tooltip-arrow {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background-color: inherit;
+    backdrop-filter: inherit;
+    border: 1px solid var(--3dverse-color-border-secondary-alpha);
+    transform: rotate(45deg);
+    z-index: -1;
+}
+
+.tooltip[data-position="top"] .tooltip-arrow {
+    bottom: calc(-1 * var(--tooltip-offset, 8px) / 2);
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    border-left: none;
+    border-top: none;
+}
+
+.tooltip[data-position="bottom"] .tooltip-arrow {
+    top: calc(-1 * var(--tooltip-offset, 8px) / 2);
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    border-right: none;
+    border-bottom: none;
+}
+
+.tooltip[data-position="left"] .tooltip-arrow {
+    right: calc(-1 * var(--tooltip-offset, 8px) / 2);
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    border-bottom: none;
+    border-left: none;
+}
+
+.tooltip[data-position="right"] .tooltip-arrow {
+    left: calc(-1 * var(--tooltip-offset, 8px) / 2);
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    border-top: none;
+    border-right: none;
+}
+
+.tooltip[data-position="top-start"] .tooltip-arrow {
+    bottom: calc(-1 * var(--tooltip-offset, 8px) / 2);
+    left: calc(var(--tooltip-offset, 8px) * 2);
+    transform: rotate(45deg);
+    border-right: none;
+    border-bottom: none;
+}
+
+.tooltip[data-position="top-end"] .tooltip-arrow {
+    bottom: calc(-1 * var(--tooltip-offset, 8px) / 2);
+    right: calc(var(--tooltip-offset, 8px) * 2);
+    transform: rotate(45deg);
+    border-right: none;
+    border-bottom: none;
+}
+
+.tooltip[data-position="bottom-start"] .tooltip-arrow {
+    top: calc(-1 * var(--tooltip-offset, 8px) / 2);
+    left: calc(var(--tooltip-offset, 8px) * 2);
+    transform: rotate(45deg);
+    border-left: none;
+    border-top: none;
+}
+
+.tooltip[data-position="bottom-end"] .tooltip-arrow {
+    top: calc(-1 * var(--tooltip-offset, 8px) / 2);
+    right: calc(var(--tooltip-offset, 8px) * 2);
+    transform: rotate(45deg);
+    border-left: none;
+    border-top: none;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .tooltip {
+        transition: opacity 100ms ease;
+        transform: none;
+    }
+
+    .tooltip.tooltip-visible,
+    .tooltip:popover-open {
+        transform: none;
+    }
+}

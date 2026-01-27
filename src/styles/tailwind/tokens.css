@@ -1,0 +1,49 @@
+/* Semantic color tokens - always reference the same neutral colors */
+/* The color schemes themselves are inverted in color-scheme-dark.css */
+:root {
+    --token-text-default: var(--color-neutral-900);
+    --token-text-subtle: var(--color-neutral-700);
+    --token-text-muted: var(--color-neutral-500);
+    --token-border-default: var(--color-neutral-400);
+    --token-border-subtle: var(--color-neutral-300);
+    --token-border-muted: var(--color-neutral-200);
+    --token-bg-ground: var(--color-neutral-50);
+    --token-bg-underground: var(--color-neutral-100);
+    --token-bg-foreground: var(--color-neutral-200);
+}
+
+@theme {
+    /* Font sizes - Text utilities */
+    --text-2xs: 0.625rem; /* 10px */
+
+    /* Typography - Headings (for CSS use, not Tailwind utilities) */
+    --font-size-h1: 3rem; /* 48px */
+    --font-size-h2: 2.25rem; /* 36px */
+    --font-size-h3: 1.875rem; /* 30px */
+    --font-size-h4: 1.5rem; /* 24px */
+    --font-size-h5: 1.25rem; /* 20px */
+
+    /* Typography - Display Headings (for CSS use, not Tailwind utilities) */
+    --font-size-h1-display: 4rem; /* 64px */
+    --font-size-h2-display: 3.5rem; /* 56px */
+    --font-size-h3-display: 3rem; /* 48px */
+    --font-size-h4-display: 2.5rem; /* 40px */
+    --font-size-h5-display: 2rem; /* 32px */
+
+    /* Semantic colors - avoiding duplicate prefixes */
+    /* Text colors: text-default, text-subtle, text-muted */
+    --color-default: var(--token-text-default);
+    --color-subtle: var(--token-text-subtle);
+    --color-muted: var(--token-text-muted);
+
+    /* Border colors: Use border-{name} classes */
+    /* These create border-border-* utilities, use with border-border-default syntax */
+    --border-color-default: var(--token-border-default);
+    --border-color-subtle: var(--token-border-subtle);
+    --border-color-muted: var(--token-border-muted);
+
+    /* Background colors: bg-ground, bg-underground, bg-foreground */
+    --color-ground: var(--token-bg-ground);
+    --color-underground: var(--token-bg-underground);
+    --color-foreground: var(--token-bg-foreground);
+}

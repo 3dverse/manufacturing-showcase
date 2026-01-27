@@ -1,0 +1,99 @@
+@theme {
+    /* Color schemes - Brand (referencing CSS variables from colors.css) */
+    --color-brand-50: var(--color-brand-50);
+    --color-brand-100: var(--color-brand-100);
+    --color-brand-200: var(--color-brand-200);
+    --color-brand-300: var(--color-brand-300);
+    --color-brand-400: var(--color-brand-400);
+    --color-brand-500: var(--color-brand-500);
+    --color-brand-600: var(--color-brand-600);
+    --color-brand-700: var(--color-brand-700);
+    --color-brand-800: var(--color-brand-800);
+    --color-brand-900: var(--color-brand-900);
+
+    /* Color schemes - Accent */
+    --color-accent-50: var(--color-accent-50);
+    --color-accent-100: var(--color-accent-100);
+    --color-accent-200: var(--color-accent-200);
+    --color-accent-300: var(--color-accent-300);
+    --color-accent-400: var(--color-accent-400);
+    --color-accent-500: var(--color-accent-500);
+    --color-accent-600: var(--color-accent-600);
+    --color-accent-700: var(--color-accent-700);
+    --color-accent-800: var(--color-accent-800);
+    --color-accent-900: var(--color-accent-900);
+
+    /* Color schemes - Neutral */
+    --color-neutral-0: var(--color-neutral-0);
+    --color-neutral-50: var(--color-neutral-50);
+    --color-neutral-100: var(--color-neutral-100);
+    --color-neutral-200: var(--color-neutral-200);
+    --color-neutral-300: var(--color-neutral-300);
+    --color-neutral-400: var(--color-neutral-400);
+    --color-neutral-500: var(--color-neutral-500);
+    --color-neutral-600: var(--color-neutral-600);
+    --color-neutral-700: var(--color-neutral-700);
+    --color-neutral-800: var(--color-neutral-800);
+    --color-neutral-900: var(--color-neutral-900);
+    --color-neutral-1000: var(--color-neutral-1000);
+
+    /* Color schemes - Informative */
+    --color-informative-50: var(--color-informative-50);
+    --color-informative-100: var(--color-informative-100);
+    --color-informative-200: var(--color-informative-200);
+    --color-informative-300: var(--color-informative-300);
+    --color-informative-400: var(--color-informative-400);
+    --color-informative-500: var(--color-informative-500);
+    --color-informative-600: var(--color-informative-600);
+    --color-informative-700: var(--color-informative-700);
+    --color-informative-800: var(--color-informative-800);
+    --color-informative-900: var(--color-informative-900);
+
+    /* Color schemes - Negative */
+    --color-negative-50: var(--color-negative-50);
+    --color-negative-100: var(--color-negative-100);
+    --color-negative-200: var(--color-negative-200);
+    --color-negative-300: var(--color-negative-300);
+    --color-negative-400: var(--color-negative-400);
+    --color-negative-500: var(--color-negative-500);
+    --color-negative-600: var(--color-negative-600);
+    --color-negative-700: var(--color-negative-700);
+    --color-negative-800: var(--color-negative-800);
+    --color-negative-900: var(--color-negative-900);
+
+    /* Color schemes - Warning */
+    --color-warning-50: var(--color-warning-50);
+    --color-warning-100: var(--color-warning-100);
+    --color-warning-200: var(--color-warning-200);
+    --color-warning-300: var(--color-warning-300);
+    --color-warning-400: var(--color-warning-400);
+    --color-warning-500: var(--color-warning-500);
+    --color-warning-600: var(--color-warning-600);
+    --color-warning-700: var(--color-warning-700);
+    --color-warning-800: var(--color-warning-800);
+    --color-warning-900: var(--color-warning-900);
+
+    /* Color schemes - Positive */
+    --color-positive-50: var(--color-positive-50);
+    --color-positive-100: var(--color-positive-100);
+    --color-positive-200: var(--color-positive-200);
+    --color-positive-300: var(--color-positive-300);
+    --color-positive-400: var(--color-positive-400);
+    --color-positive-500: var(--color-positive-500);
+    --color-positive-600: var(--color-positive-600);
+    --color-positive-700: var(--color-positive-700);
+    --color-positive-800: var(--color-positive-800);
+    --color-positive-900: var(--color-positive-900);
+
+    /* Color schemes - Guidance */
+    --color-guidance-50: var(--color-guidance-50);
+    --color-guidance-100: var(--color-guidance-100);
+    --color-guidance-200: var(--color-guidance-200);
+    --color-guidance-300: var(--color-guidance-300);
+    --color-guidance-400: var(--color-guidance-400);
+    --color-guidance-500: var(--color-guidance-500);
+    --color-guidance-600: var(--color-guidance-600);
+    --color-guidance-700: var(--color-guidance-700);
+    --color-guidance-800: var(--color-guidance-800);
+    --color-guidance-900: var(--color-guidance-900);
+}
