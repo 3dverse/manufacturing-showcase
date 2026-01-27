@@ -1,0 +1,1 @@
+export const CONTACT_URL = "https://www.3dverse.com/get-in-touch";

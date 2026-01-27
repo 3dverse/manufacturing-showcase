@@ -1,12 +1,10 @@
 @import "tailwindcss";
+@import "./tailwind/tokens.css";
+@import "./tailwind/theme-scheme.css";
 
 /* Themes */
 @import "./themes/theme-light.css";
 @import "./themes/theme-dark.css";
-
-/* Tailwind */
-@import "./tailwind/tokens.css";
-@import "./tailwind/theme-scheme.css";
 
 /* components */
 @import "./components/typography.css";
@@ -22,6 +20,8 @@ body {
     place-items: center;
     width: 100dvw;
     height: 100dvh;
+
+    cursor: default;
 }
 
 @keyframes fade-out {

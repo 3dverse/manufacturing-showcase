@@ -5,7 +5,7 @@ import MainMenu from "@/components/layout/MainMenu";
 import MainPanel from "@/components/layout/MainPanel";
 
 //------------------------------------------------------------------------------
-const ViewerLayout = () => {
+const ViewerLayout = ({ currentRoute, setCurrentRoute }: { currentRoute: string; setCurrentRoute: (route: string) => void }) => {
     const { cameraEntity } = useCameraEntity();
     const { isConnecting } = useContext(LivelinkContext);
 
@@ -23,7 +23,7 @@ const ViewerLayout = () => {
                 </Viewport>
             </Canvas>
             <div className="absolute bottom-0 left-0 w-full h-full flex pointer-events-none">
-                <MainMenu />
+                <MainMenu currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />
                 <MainPanel />
             </div>
         </div>

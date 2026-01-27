@@ -1,18 +1,94 @@
 /* Semantic color tokens - always reference the same neutral colors */
 /* The color schemes themselves are inverted in color-scheme-dark.css */
+
+/* Default/fallback definitions in :root (light theme is default) */
 :root {
     --token-text-default: var(--color-neutral-900);
-    --token-text-subtle: var(--color-neutral-700);
-    --token-text-muted: var(--color-neutral-500);
+    --token-text-subtle: var(--color-neutral-800);
+    --token-text-muted: var(--color-neutral-700);
+
     --token-border-default: var(--color-neutral-400);
     --token-border-subtle: var(--color-neutral-300);
     --token-border-muted: var(--color-neutral-200);
+
     --token-bg-ground: var(--color-neutral-50);
     --token-bg-underground: var(--color-neutral-100);
     --token-bg-foreground: var(--color-neutral-200);
+
+    /* Tailwind semantic color variables - default/light theme */
+    --color-default: var(--token-text-default);
+    --color-subtle: var(--token-text-subtle);
+    --color-muted: var(--token-text-muted);
+
+    --border-color-default: var(--token-border-default);
+    --border-color-subtle: var(--token-border-subtle);
+    --border-color-muted: var(--token-border-muted);
+
+    --color-ground: var(--token-bg-ground);
+    --color-underground: var(--token-bg-underground);
+    --color-foreground: var(--token-bg-foreground);
+}
+
+/* Explicit light theme (same as root, but explicit for clarity) */
+[data-theme="light"] {
+    --token-text-default: var(--color-neutral-900);
+    --token-text-subtle: var(--color-neutral-800);
+    --token-text-muted: var(--color-neutral-700);
+
+    --token-border-default: var(--color-neutral-400);
+    --token-border-subtle: var(--color-neutral-300);
+    --token-border-muted: var(--color-neutral-200);
+
+    --token-bg-ground: var(--color-neutral-50);
+    --token-bg-underground: var(--color-neutral-100);
+    --token-bg-foreground: var(--color-neutral-200);
+
+    /* Tailwind semantic color variables - light theme */
+    --color-default: var(--token-text-default);
+    --color-subtle: var(--token-text-subtle);
+    --color-muted: var(--token-text-muted);
+
+    --border-color-default: var(--token-border-default);
+    --border-color-subtle: var(--token-border-subtle);
+    --border-color-muted: var(--token-border-muted);
+
+    --color-ground: var(--token-bg-ground);
+    --color-underground: var(--token-bg-underground);
+    --color-foreground: var(--token-bg-foreground);
+}
+
+[data-theme="dark"] {
+    --token-text-default: var(--color-neutral-900);
+    --token-text-subtle: var(--color-neutral-800);
+    --token-text-muted: var(--color-neutral-700);
+
+    --token-border-default: var(--color-neutral-400);
+    --token-border-subtle: var(--color-neutral-300);
+    --token-border-muted: var(--color-neutral-200);
+
+    --token-bg-ground: var(--color-neutral-50);
+    --token-bg-underground: var(--color-neutral-100);
+    --token-bg-foreground: var(--color-neutral-200);
+
+    /* Tailwind semantic color variables - dark theme */
+    --color-default: var(--token-text-default);
+    --color-subtle: var(--token-text-subtle);
+    --color-muted: var(--token-text-muted);
+
+    --border-color-default: var(--token-border-default);
+    --border-color-subtle: var(--token-border-subtle);
+    --border-color-muted: var(--token-border-muted);
+
+    --color-ground: var(--token-bg-ground);
+    --color-underground: var(--token-bg-underground);
+    --color-foreground: var(--token-bg-foreground);
 }
 
 @theme {
+    /* Font families */
+    --font-family-sans: "Inter", system-ui, -apple-system, sans-serif;
+    --font-family-heading: "Manrope", system-ui, -apple-system, sans-serif;
+
     /* Font sizes - Text utilities */
     --text-2xs: 0.625rem; /* 10px */
 
@@ -30,7 +106,8 @@
     --font-size-h4-display: 2.5rem; /* 40px */
     --font-size-h5-display: 2rem; /* 32px */
 
-    /* Semantic colors - avoiding duplicate prefixes */
+    /* Semantic colors - Tailwind utilities that reference scoped token variables */
+    /* These variables resolve at computed-value time based on the current theme context */
     /* Text colors: text-default, text-subtle, text-muted */
     --color-default: var(--token-text-default);
     --color-subtle: var(--token-text-subtle);
