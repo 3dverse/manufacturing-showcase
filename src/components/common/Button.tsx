@@ -3,8 +3,8 @@ import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
-    size?: "xs" | "sm" | "md" | "lg";
+    variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "guidance";
+    size?: "2xs" | "xs" | "sm" | "md" | "lg";
     isLoading?: boolean;
     children: React.ReactNode;
 }
@@ -23,11 +23,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             outline: "border-2 border-default bg-transparent hover:bg-ground text-default focus:ring-brand-500",
             ghost: "bg-transparent hover:bg-ground text-subtle hover:text-default focus:ring-brand-500",
             danger: "bg-negative-600 hover:bg-negative-700 text-white focus:ring-negative-500",
+            guidance: "bg-guidance-600 hover:bg-guidance-700 text-white focus:ring-guidance-500",
         };
 
         //--------------------------------------------------------------------------
         const sizeClasses = {
-            xs: "px-2 py-1 text-xs font-normal",
+            "2xs": "px-1 py-[2px] text-2xs font-normal rounded-sm",
+            xs: "px-2 py-1 text-xs font-normal rounded-sm",
             sm: "px-3 py-1.5 text-sm",
             md: "px-4 py-2 text-base",
             lg: "px-6 py-3 text-lg",

@@ -30,6 +30,7 @@ export const Icon = ({
     fixedWidth,
     flip,
     rotation,
+    className,
 }: {
     variant?: "default" | "light" | "elevation";
     icon: IconDefinition;
@@ -37,6 +38,7 @@ export const Icon = ({
     fixedWidth?: boolean;
     flip?: FlipProp;
     rotation?: RotateProp;
+    className?: string;
 }) => {
     //--------------------------------------------------------------------------
     const getVariantStyle = () => {
@@ -57,6 +59,7 @@ export const Icon = ({
             flip={flip}
             rotation={rotation}
             {...getVariantStyle()}
+            className={className}
         />
     );
 };

@@ -4,23 +4,27 @@ import Button from "@/components/common/Button";
 //------------------------------------------------------------------------------
 type ColorScheme = "brand" | "accent" | "neutral" | "informative" | "negative" | "warning" | "positive" | "guidance";
 
-const colorSchemes: ColorScheme[] = ["brand", "accent", "neutral", "informative", "negative", "warning", "positive", "guidance"];
+const colorSchemes: ColorScheme[] = [
+    "brand",
+    "accent",
+    "neutral",
+    "informative",
+    "negative",
+    "warning",
+    "positive",
+    "guidance",
+];
 
 //------------------------------------------------------------------------------
-const ColorSwatch = ({ colorName, theme }: { colorName: string; theme: "light" | "dark" }) => {
+const ColorSwatch = ({ scheme, shade, theme }: { scheme: ColorScheme; shade: string; theme: "light" | "dark" }) => {
+    const colorName = `${scheme}-${shade}`;
     const colorVar = `--color-${colorName}`;
     return (
-        <div
-            className={cn("flex flex-col gap-1 p-2 rounded border border-border-subtle", "bg-foreground")}
-            data-theme={theme}
-        >
-            <div
-                className="w-full h-16 rounded border border-border-muted"
-                style={{ backgroundColor: `var(${colorVar})` }}
-            />
-            <div className="text-xs">
-                <div className="font-medium text-default">{colorName}</div>
-                <div className="text-muted text-2xs font-mono">{`var(${colorVar})`}</div>
+        <div className={cn("flex flex-col gap-1 rounded border border-muted overflow-hidden", "")} data-theme={theme}>
+            <div className="w-full h-16" style={{ backgroundColor: `var(${colorVar})` }} />
+            <div className="px-2 py-1 text-xs">
+                <p className="font-medium text-subtle">{shade}</p>
+                {/* <div className="text-muted text-2xs font-mono">{`var(${colorVar})`}</div> */}
             </div>
         </div>
     );
@@ -28,14 +32,17 @@ const ColorSwatch = ({ colorName, theme }: { colorName: string; theme: "light" |
 
 //------------------------------------------------------------------------------
 const ColorSchemeSection = ({ scheme, theme }: { scheme: ColorScheme; theme: "light" | "dark" }) => {
-    const shades = scheme === "neutral" ? ["0", "50", "100", "200", "300", "400", "500", "600", "700", "800", "900", "1000"] : ["50", "100", "200", "300", "400", "500", "600", "700", "800", "900"];
+    const shades =
+        scheme === "neutral"
+            ? ["0", "50", "100", "200", "300", "400", "500", "600", "700", "800", "900", "1000"]
+            : ["50", "100", "200", "300", "400", "500", "600", "700", "800", "900"];
 
     return (
         <div className="space-y-2">
             <h3 className="text-sm font-semibold text-default capitalize">{scheme}</h3>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-12">
                 {shades.map((shade) => (
-                    <ColorSwatch key={shade} colorName={`${scheme}-${shade}`} theme={theme} />
+                    <ColorSwatch key={shade} scheme={scheme} shade={shade} theme={theme} />
                 ))}
             </div>
         </div>
@@ -63,7 +70,7 @@ const SemanticTokensSection = ({ theme }: { theme: "light" | "dark" }) => {
     ];
 
     return (
-        <div className="space-y-4">
+        <div className="px-8 space-y-4">
             <h2 className="text-base font-semibold text-default">Semantic Tokens</h2>
 
             <div className="space-y-3">
@@ -73,16 +80,11 @@ const SemanticTokensSection = ({ theme }: { theme: "light" | "dark" }) => {
                         {textTokens.map((token) => (
                             <div
                                 key={token.name}
-                                className={cn("flex flex-col gap-1 p-2 rounded border border-border-subtle", "bg-foreground")}
+                                className={cn("flex flex-col gap-1 p-2 rounded border border-subtle", "bg-foreground")}
                                 data-theme={theme}
                             >
-                                <div
-                                    className="w-full h-12 rounded border border-border-muted flex items-center justify-center bg-ground"
-                                >
-                                    <span
-                                        className="text-xs font-medium"
-                                        style={{ color: `var(${token.var})` }}
-                                    >
+                                <div className="w-full h-12 rounded border border-muted flex items-center justify-center bg-ground">
+                                    <span className="text-xs font-medium" style={{ color: `var(${token.var})` }}>
                                         Sample Text
                                     </span>
                                 </div>
@@ -101,7 +103,7 @@ const SemanticTokensSection = ({ theme }: { theme: "light" | "dark" }) => {
                         {borderTokens.map((token) => (
                             <div
                                 key={token.name}
-                                className={cn("flex flex-col gap-1 p-2 rounded border border-border-subtle", "bg-foreground")}
+                                className={cn("flex flex-col gap-1 p-2 rounded border border-subtle", "bg-foreground")}
                                 data-theme={theme}
                             >
                                 <div
@@ -123,11 +125,11 @@ const SemanticTokensSection = ({ theme }: { theme: "light" | "dark" }) => {
                         {bgTokens.map((token) => (
                             <div
                                 key={token.name}
-                                className={cn("flex flex-col gap-1 p-2 rounded border border-border-subtle", "bg-foreground")}
+                                className={cn("flex flex-col gap-1 p-2 rounded border border-subtle", "bg-foreground")}
                                 data-theme={theme}
                             >
                                 <div
-                                    className="w-full h-12 rounded border border-border-muted"
+                                    className="w-full h-12 rounded border border-muted"
                                     style={{ backgroundColor: `var(${token.var})` }}
                                 />
                                 <div className="text-xs">
@@ -146,14 +148,14 @@ const SemanticTokensSection = ({ theme }: { theme: "light" | "dark" }) => {
 //------------------------------------------------------------------------------
 const ThemeColumn = ({ theme }: { theme: "light" | "dark" }) => {
     return (
-        <div className="flex-1 space-y-6 bg-ground" data-theme={theme}>
-            <div className="sticky top-0 z-10 bg-foreground border-b border-border-default pb-2">
+        <div className="flex-1 space-y-6 bg-ground rounded-sm" data-theme={theme}>
+            <div className="sticky top-0 px-8 pt-4 z-10 bg-foreground border-b border-default pb-2">
                 <h2 className="text-lg font-semibold text-default capitalize">{theme} Theme</h2>
             </div>
 
             <SemanticTokensSection theme={theme} />
 
-            <div className="space-y-6">
+            <div className="px-8 pb-12 space-y-6">
                 <h2 className="text-base font-semibold text-default">Color Schemes</h2>
                 {colorSchemes.map((scheme) => (
                     <ColorSchemeSection key={scheme} scheme={scheme} theme={theme} />
@@ -167,20 +169,21 @@ const ThemeColumn = ({ theme }: { theme: "light" | "dark" }) => {
 const Theme = ({ onBack }: { onBack: () => void }) => {
     return (
         <div className="absolute inset-0 overflow-auto bg-ground">
-            <div className="mx-auto p-6">
-                <div className="mb-6 flex items-start justify-between">
+            <div className="mx-auto">
+                <div className="mb-6 p-8 flex items-start justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-default">Theme Showcase</h1>
-                        <p className="text-sm text-subtle mt-1">Compare light and dark themes with all color schemes and semantic tokens</p>
+                        <p className="text-sm text-subtle mt-1">
+                            Compare light and dark themes with all color schemes and semantic tokens
+                        </p>
                     </div>
                     <Button onClick={onBack} variant="ghost" size="sm">
                         Back
                     </Button>
                 </div>
 
-                <div className="flex gap-6">
+                <div className="flex">
                     <ThemeColumn theme="light" />
-                    <div className="w-px bg-border-default" />
                     <ThemeColumn theme="dark" />
                 </div>
             </div>

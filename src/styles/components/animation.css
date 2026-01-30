@@ -1,0 +1,89 @@
+@keyframes fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes appear-in-from-bottom {
+    from {
+        opacity: 0;
+        translate: 0 var(--translate, 1rem);
+    }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+@keyframes appear-in-from-left {
+    from {
+        opacity: 0;
+        translate: var(--translate, -1rem) 0;
+    }
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+.appear-in-from-bottom {
+    animation: appear-in-from-bottom;
+}
+
+.appear-in-from-left {
+    animation: appear-in-from-left;
+}
+
+.appear-in-from-bottom,
+.appear-in-from-left {
+    animation-duration: 0.18s;
+    animation-timing-function: ease-in-out;
+    animation-delay: var(--animation-delay, 0);
+    animation-fill-mode: forwards;
+}
+
+:root {
+    --default-transition-duration: 100ms;
+}
+
+@keyframes refresh-notifier {
+    0% {
+        scale: 1 0.1;
+    }
+    10% {
+        scale: 1 1;
+    }
+    20% {
+        scale: 1 0.1;
+    }
+    100% {
+        scale: 1 0.1;
+    }
+}
+
+/* ChatGPT-style thinking dots */
+@keyframes thinking-dot {
+    0%,
+    60%,
+    100% {
+        opacity: 0.35;
+        transform: scale(0.8);
+    }
+    30% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-thinking-dot {
+    animation: thinking-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes bg-swoosh {
+    0% {
+        background-position: -50% 0;
+    }
+    100% {
+        background-position: -250% 0;
+    }
+}

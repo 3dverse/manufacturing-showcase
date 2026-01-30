@@ -1,5 +1,6 @@
+/* Color schemes */
 @theme {
-    /* Color schemes - Brand (referencing CSS variables from colors.css) */
+    /* Brand */
     --color-brand-50: var(--color-brand-50);
     --color-brand-100: var(--color-brand-100);
     --color-brand-200: var(--color-brand-200);
@@ -11,7 +12,7 @@
     --color-brand-800: var(--color-brand-800);
     --color-brand-900: var(--color-brand-900);
 
-    /* Color schemes - Accent */
+    /* Accent */
     --color-accent-50: var(--color-accent-50);
     --color-accent-100: var(--color-accent-100);
     --color-accent-200: var(--color-accent-200);
@@ -23,7 +24,7 @@
     --color-accent-800: var(--color-accent-800);
     --color-accent-900: var(--color-accent-900);
 
-    /* Color schemes - Neutral */
+    /* Neutral */
     --color-neutral-0: var(--color-neutral-0);
     --color-neutral-50: var(--color-neutral-50);
     --color-neutral-100: var(--color-neutral-100);
@@ -37,7 +38,7 @@
     --color-neutral-900: var(--color-neutral-900);
     --color-neutral-1000: var(--color-neutral-1000);
 
-    /* Color schemes - Informative */
+    /* Informative */
     --color-informative-50: var(--color-informative-50);
     --color-informative-100: var(--color-informative-100);
     --color-informative-200: var(--color-informative-200);
@@ -49,7 +50,7 @@
     --color-informative-800: var(--color-informative-800);
     --color-informative-900: var(--color-informative-900);
 
-    /* Color schemes - Negative */
+    /* Negative */
     --color-negative-50: var(--color-negative-50);
     --color-negative-100: var(--color-negative-100);
     --color-negative-200: var(--color-negative-200);
@@ -61,7 +62,7 @@
     --color-negative-800: var(--color-negative-800);
     --color-negative-900: var(--color-negative-900);
 
-    /* Color schemes - Warning */
+    /* Warning */
     --color-warning-50: var(--color-warning-50);
     --color-warning-100: var(--color-warning-100);
     --color-warning-200: var(--color-warning-200);
@@ -73,7 +74,7 @@
     --color-warning-800: var(--color-warning-800);
     --color-warning-900: var(--color-warning-900);
 
-    /* Color schemes - Positive */
+    /* Positive */
     --color-positive-50: var(--color-positive-50);
     --color-positive-100: var(--color-positive-100);
     --color-positive-200: var(--color-positive-200);
@@ -85,7 +86,7 @@
     --color-positive-800: var(--color-positive-800);
     --color-positive-900: var(--color-positive-900);
 
-    /* Color schemes - Guidance */
+    /* Guidance */
     --color-guidance-50: var(--color-guidance-50);
     --color-guidance-100: var(--color-guidance-100);
     --color-guidance-200: var(--color-guidance-200);

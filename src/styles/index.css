@@ -8,6 +8,7 @@
 
 /* components */
 @import "./components/typography.css";
+@import "./components/animation.css";
 
 #root {
     width: 100%;
@@ -21,11 +22,25 @@ body {
     width: 100dvw;
     height: 100dvh;
 
+    color: var(--token-text-default);
+    background-color: var(--token-bg-ground);
+
     cursor: default;
 }
 
-@keyframes fade-out {
-    to {
-        opacity: 0;
-    }
+.livelink-react-ui-component {
+    --3dverse-color-bg-foreground: oklch(100% 0.00011 271.152 / 0.2);
+    --3dverse-color-bg-overground: oklch(0.86 0.04 269.79);
+}
+
+
+.bg-stripes {
+    background-image: repeating-linear-gradient(
+        -45deg,
+        #e1e1e1 0,
+        #e1e1e1 1px,
+        transparent 0,
+        transparent 50%
+    );
+    background-size: 10px 10px;
 }

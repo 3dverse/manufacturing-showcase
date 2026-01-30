@@ -1,6 +1,6 @@
 /* Modal backdrop - using native CSS ::backdrop */
 .modal::backdrop {
-    background: var(--color-bg-underground);
+    background: color-mix(in srgb, var(--color-underground) 90%, transparent);
     backdrop-filter: blur(4px);
     transition:
         opacity 0.3s ease,
@@ -41,8 +41,8 @@
     width: 100%;
     max-width: 42rem;
     max-height: 90vh;
-    background: var(--color-bg-foreground);
-    border-radius: 1rem;
+    background: var(--color-ground);
+    border-radius: 8px;
     box-shadow:
         0 20px 25px -5px rgba(0, 0, 0, 0.1),
         0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -175,7 +175,7 @@
 
 .modal__body::-webkit-scrollbar-thumb {
     background: var(--color-border-subtle);
-    border-radius: 0.25rem;
+    border-radius: 4px;
 }
 
 .modal__body::-webkit-scrollbar-thumb:hover {
