@@ -2,9 +2,6 @@ import React, { useState, useRef, useEffect, type ReactNode } from "react";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import "./Tooltip.css";
-
-//------------------------------------------------------------------------------
 export interface TooltipProps {
     /** Whether tooltip is open */
     open?: boolean;
