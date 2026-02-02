@@ -15,7 +15,6 @@ interface DailyProductionData {
     date: Date;
     qualityProducts: number;
     nonQualityProducts: number;
-    notProduced: number;
     capacity: number;
     warningIncidents: number;
     errorIncidents: number;
@@ -48,7 +47,7 @@ export const DailyProductionChart: React.FC<DailyProductionChartProps> = ({ data
         const values: number[] = [];
         chartData.forEach((day) => {
             values.push(day.capacity);
-            values.push(day.qualityProducts + day.nonQualityProducts + day.notProduced);
+            values.push(day.qualityProducts + day.nonQualityProducts);
         });
         return Math.max(...values, 1);
     }, [chartData]);
@@ -129,7 +128,6 @@ export const DailyProductionChart: React.FC<DailyProductionChartProps> = ({ data
                                 <div className="text-orange-400">
                                     Non-Quality: {dayData.nonQualityProducts.toLocaleString()}
                                 </div>
-                                <div className="text-red-400">Not Produced: {dayData.notProduced.toLocaleString()}</div>
                                 <div className="mt-1 pt-1 border-t border-neutral-600">
                                     <div className="text-yellow-400">Warnings: {dayData.warningIncidents}</div>
                                     <div className="text-red-400">Errors: {dayData.errorIncidents}</div>
@@ -148,15 +146,11 @@ export const DailyProductionChart: React.FC<DailyProductionChartProps> = ({ data
 
                         // Calculate y positions for each segment (stacked from bottom to top)
                         // yScale returns the top y position for a given value
-                        const redTop = yScale(dayData.notProduced); // Top of red bar
-                        const orangeTop = yScale(dayData.notProduced + dayData.nonQualityProducts); // Top of orange bar
-                        const greenTop = yScale(
-                            dayData.qualityProducts + dayData.nonQualityProducts + dayData.notProduced,
-                        ); // Top of green bar
+                        const orangeTop = yScale(dayData.nonQualityProducts); // Top of orange bar
+                        const greenTop = yScale(dayData.qualityProducts + dayData.nonQualityProducts); // Top of green bar
 
                         // Heights (from top y position to bottom)
-                        const redHeight = innerHeight - redTop;
-                        const orangeHeight = redTop - orangeTop;
+                        const orangeHeight = innerHeight - orangeTop;
                         const greenHeight = orangeTop - greenTop;
 
                         const handleMouseEnter = () => {
@@ -171,17 +165,6 @@ export const DailyProductionChart: React.FC<DailyProductionChartProps> = ({ data
 
                         return (
                             <Group key={index} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-                                {/* Red bar: Not produced (bottom) */}
-                                {dayData.notProduced > 0 && (
-                                    <Bar
-                                        x={xCenter - barWidth / 2}
-                                        y={redTop}
-                                        width={barWidth}
-                                        height={redHeight}
-                                        fill="var(--color-negative-500, #ef4444)"
-                                        opacity={0.8}
-                                    />
-                                )}
                                 {/* Orange bar: Non-quality products (middle) */}
                                 {dayData.nonQualityProducts > 0 && (
                                     <Bar
