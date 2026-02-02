@@ -1,4 +1,7 @@
 import React, { useState, useRef, useEffect, type ReactNode } from "react";
+import { cn } from "@/utils/cn";
+
+//------------------------------------------------------------------------------
 import "./Tooltip.css";
 
 //------------------------------------------------------------------------------
@@ -31,6 +34,8 @@ export interface TooltipProps {
     followCursor?: boolean;
     /** Custom className for the tooltip */
     className?: string;
+    /** Custom className for the container */
+    containerClassName?: string;
     /** The trigger element */
     children: ReactNode;
 }
@@ -51,6 +56,7 @@ function Tooltip({
     showArrow = true,
     followCursor = false,
     className = "",
+    containerClassName = "",
     children,
 }: TooltipProps) {
     //--------------------------------------------------------------------------
@@ -238,7 +244,7 @@ function Tooltip({
                 onMouseMove={followCursor ? handleTooltipMouseMove : undefined}
                 onFocus={showTooltip}
                 onBlur={hideTooltip}
-                style={{ display: "inline-block" }}
+                className={cn("inline-block", containerClassName)}
             >
                 {children}
             </div>

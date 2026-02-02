@@ -48,8 +48,8 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
         }>
     >([]);
     const [monthlyProductionCompare, setMonthlyProductionCompare] = useState(false);
-    const [productionIntervalMs, setProductionIntervalMs] = useState(() => 
-        dashboardApi.getProductionConfig().productionIntervalMs
+    const [productionIntervalMs, setProductionIntervalMs] = useState(
+        () => dashboardApi.getProductionConfig().productionIntervalMs,
     );
 
     // Factory tick: one product every 10s when running and 8am–8pm; dashboard refreshes every 2s
@@ -94,10 +94,9 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
             <Header factory={factory} keyStatus={data.keyStatus} />
 
             <WrapperPanel className="p-0 flex flex-col overflow-y-auto overflow-x-hidden">
-                
                 <OEEPanel oeeValue={data.oee} oeeHistory={oeeHistory} incidents={dailyIncidents} className="pl-15" />
 
-                <div className="flex flex-col gap-5 mt-5 pl-15 pr-4">
+                <div className="flex flex-col gap-5 mt-5 pl-15 pr-4 pb-8">
                     <PlanningPanel dailyProductionData={dailyProductionData as unknown as DailyProduction[]} />
 
                     <ProductionPanel
@@ -131,7 +130,7 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
 
                     {handleAddProduct && (
                         <Button variant="primary" size="sm" onClick={handleAddProduct}>
-                            New product created
+                            Create new unit
                         </Button>
                     )}
                 </div>

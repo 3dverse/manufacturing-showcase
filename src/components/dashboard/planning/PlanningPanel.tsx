@@ -3,6 +3,7 @@ import React, { useState } from "react";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
+import Tooltip from "@/components/common/Tooltip/Tooltip";
 import { PanelHeader } from "@/components/common/panel/PanelHeader";
 import { orders, orderStatus } from "./content";
 
@@ -70,54 +71,65 @@ export const PlanningPanel: React.FC<PlanningPanelProps> = ({ dailyProductionDat
                 </div>
                 <ul className="bg-ground rounded divide-y divide-muted border border-muted">
                     {editedOrders.map((order) => (
-                        <li
-                            key={order.ref}
-                            className={cn(
-                                "group relative grid grid-cols-3 @sm:grid-cols-5 text-xs px-2 py-1 hover:bg-underground transition-all duration-200 cursor-pointer",
-                                order.status.name === orderStatus.planned.name ? "opacity-60 hover:opacity-100" : "",
-                                order.status.name === orderStatus.inProgress.name
-                                    ? "bg-accent-50/50 hover:bg-accent-50"
-                                    : "",
-                            )}
-                        >
-                            {order.status.name === orderStatus.inProgress.name && showPing && <Swoosh />}
-                            <p
-                                className={cn(
-                                    "tabular-nums",
-                                    order.status.name === orderStatus.inProgress.name
-                                        ? "text-accent-500 font-medium"
-                                        : "",
-                                )}
+                        <li key={order.ref}>
+                            <Tooltip
+                                content={<p className="text-2xs">Open SAP to view order {order.ref}</p>}
+                                hoverable
+                                showArrow={false}
+                                offset={0}
+                                containerClassName="block w-full"
                             >
-                                {order.ref}
-                            </p>
-                            <p className="hidden @sm:block text-2xs pt-px text-subtle">{order.startDate}</p>
-                            <p className="hidden @sm:block text-2xs pt-px text-subtle">{order.endDate}</p>
-                            <p className="tabular-nums tracking-tight text-right">
-                                <span
+                                <div
                                     className={cn(
-                                        "",
-                                        order.unitsCompleted === 0 ? "text-muted/80" : "",
-                                        order.unitsCompleted !== 0 &&
-                                            (order.unitsPlanned > order.unitsCompleted
-                                                ? "text-accent-700 font-medium"
-                                                : "text-positive-800 font-medium"),
+                                        "group relative grid grid-cols-3 @sm:grid-cols-5 text-xs px-2 py-1 hover:bg-underground transition-all duration-200 cursor-pointer",
+                                        order.status.name === orderStatus.planned.name
+                                            ? "opacity-60 hover:opacity-100"
+                                            : "",
+                                        order.status.name === orderStatus.inProgress.name
+                                            ? "bg-accent-50/50 hover:bg-accent-50"
+                                            : "",
                                     )}
                                 >
-                                    {order.unitsCompleted}
-                                </span>
-                                <span className="pl-[2px] pr-px text-muted/80">/</span>
-                                {order.unitsPlanned}
-                            </p>
-                            <p className={cn("flex justify-end items-center gap-1", order.status.color)}>
-                                {order.status.name}
-                                <Icon
-                                    icon={order.status.icon}
-                                    size="xs"
-                                    fixedWidth
-                                    className={cn(order.status.color)}
-                                />
-                            </p>
+                                    {order.status.name === orderStatus.inProgress.name && showPing && <Swoosh />}
+                                    <p
+                                        className={cn(
+                                            "tabular-nums",
+                                            order.status.name === orderStatus.inProgress.name
+                                                ? "text-accent-500 font-medium"
+                                                : "",
+                                        )}
+                                    >
+                                        {order.ref}
+                                    </p>
+                                    <p className="hidden @sm:block text-2xs pt-px text-subtle">{order.startDate}</p>
+                                    <p className="hidden @sm:block text-2xs pt-px text-subtle">{order.endDate}</p>
+                                    <p className="tabular-nums tracking-tight text-right">
+                                        <span
+                                            className={cn(
+                                                "",
+                                                order.unitsCompleted === 0 ? "text-muted/80" : "",
+                                                order.unitsCompleted !== 0 &&
+                                                    (order.unitsPlanned > order.unitsCompleted
+                                                        ? "text-accent-700 font-medium"
+                                                        : "text-positive-800 font-medium"),
+                                            )}
+                                        >
+                                            {order.unitsCompleted}
+                                        </span>
+                                        <span className="pl-[2px] pr-px text-muted/80">/</span>
+                                        {order.unitsPlanned}
+                                    </p>
+                                    <p className={cn("flex justify-end items-center gap-1", order.status.color)}>
+                                        {order.status.name}
+                                        <Icon
+                                            icon={order.status.icon}
+                                            size="xs"
+                                            fixedWidth
+                                            className={cn(order.status.color)}
+                                        />
+                                    </p>
+                                </div>
+                            </Tooltip>
                         </li>
                     ))}
                 </ul>
