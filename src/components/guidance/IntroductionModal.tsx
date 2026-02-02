@@ -1,4 +1,4 @@
-import Modal from "@/components/common/Modal";
+import Modal from "@/components/common/modal/Modal";
 import Button from "../common/Button";
 
 //------------------------------------------------------------------------------
@@ -9,12 +9,16 @@ interface IntroductionModalProps {
 
 //------------------------------------------------------------------------------
 const IntroductionModal = ({ isOpen, onClose }: IntroductionModalProps) => {
+    //--------------------------------------------------------------------------
     const handleContinue = () => {
         onClose();
     };
 
-    if (!isOpen) return null;
-
+    //--------------------------------------------------------------------------
+    if (!isOpen) {
+        return null;
+    }
+    //--------------------------------------------------------------------------
     return (
         <Modal
             isOpen={isOpen}
@@ -27,20 +31,15 @@ const IntroductionModal = ({ isOpen, onClose }: IntroductionModalProps) => {
                 {/* Video */}
                 <div className="hidden lg:flex lg:w-96 bg-stripes border-r border-muted/50 p-6 lg:p-8 items-center justify-center">
                     <div className="w-full flex items-center justify-center overflow-hidden">
-                        {/* Video placeholder - replace with actual video element */}
                         <div className="text-center p-4">
-                            <p className="text-sm text-muted">
-                                Video
-                            </p>
+                            <p className="text-sm text-muted">Video</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col justify-center p-8 lg:p-12 overflow-y-auto">
-                    <h1 className="text-2xl font-bold text-default mb-2">
-                        Welcome to Manufacturing 5.0
-                    </h1>
+                    <h1 className="text-2xl font-bold text-default mb-2">Welcome to Manufacturing 5.0</h1>
                     <p className="text-sm text-subtle mb-8 max-w-md">
                         Explore our cutting-edge manufacturing solutions with immersive 3D visualization. Discover how
                         we revolutionize industrial processes through innovative technology and design.
@@ -73,12 +72,7 @@ const IntroductionModal = ({ isOpen, onClose }: IntroductionModalProps) => {
                         </div>
                     </div>
 
-                    <Button
-                    
-                    variant="guidance"
-                    className="w-fit min-w-56"
-                        onClick={handleContinue}
-                    >
+                    <Button variant="guidance" className="w-fit min-w-56" onClick={handleContinue}>
                         Continue
                     </Button>
                 </div>
