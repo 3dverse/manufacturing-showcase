@@ -19,7 +19,7 @@ interface OEEPanelProps {
 //------------------------------------------------------------------------------
 const OEEPanel: React.FC<OEEPanelProps> = ({ oeeValue, oeeHistory, incidents = [], className }) => {
     return (
-        <div className={cn("border-b border-muted bg-linear-0 from-neutral-0 to-transparent", className)}>
+        <div className={cn("bg-linear-0 from-neutral-0 to-transparent", className)}>
             <div className="flex items-start justify-between pr-6 pt-3">
                 <div>
                     <h3 className="text-2xl font-bold text-default">OEE</h3>

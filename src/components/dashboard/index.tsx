@@ -92,13 +92,17 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
     return (
         <div className="flex flex-col h-full grow overflow-y-hidden">
             <Header factory={factory} keyStatus={data.keyStatus} />
-
             <WrapperPanel className="p-0 flex flex-col overflow-y-auto overflow-x-hidden">
-                <OEEPanel oeeValue={data.oee} oeeHistory={oeeHistory} incidents={dailyIncidents} className="pl-15" />
-
-                <div className="flex flex-col gap-5 mt-5 pl-15 pr-4 pb-8">
+                <OEEPanel
+                    oeeValue={data.oee}
+                    oeeHistory={oeeHistory}
+                    incidents={dailyIncidents}
+                    className="pl-15 border-b border-muted"
+                />
+                <div className="flex flex-col gap-5 py-4 pl-15 pr-4 border-b border-muted">
                     <PlanningPanel dailyProductionData={dailyProductionData as unknown as DailyProduction[]} />
-
+                </div>
+                <div className="flex flex-col gap-5 py-4 pl-15 pr-4 border-b border-muted">
                     <ProductionPanel
                         data={data}
                         dailyProductionData={dailyProductionData as unknown as DailyProduction[]}
@@ -106,7 +110,8 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
                         monthlyProductionCompare={monthlyProductionCompare}
                         setMonthlyProductionCompare={setMonthlyProductionCompare}
                     />
-
+                </div>
+                <div className="flex flex-col gap-5 py-4 pl-15 pr-4">
                     <div className="flex flex-col gap-2 mb-1">
                         <div className="flex items-center justify-end gap-2">
                             <label htmlFor="production-interval" className="text-2xs text-muted/80">
@@ -127,7 +132,6 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
                             <RefreshNotifier refreshRate={productionIntervalMs} />
                         </div>
                     </div>
-
                     {handleAddProduct && (
                         <Button variant="primary" size="sm" onClick={handleAddProduct}>
                             Create new unit

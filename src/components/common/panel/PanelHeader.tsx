@@ -11,5 +11,5 @@ export const PanelHeader = ({
     children: React.ReactNode;
 }) => {
     const Element = as;
-    return <Element className={cn("text-2xs text-subtle uppercase tracking-wider", className)}>{children}</Element>;
+    return <Element className={cn("text-xs uppercase tracking-wider", className)}>{children}</Element>;
 };

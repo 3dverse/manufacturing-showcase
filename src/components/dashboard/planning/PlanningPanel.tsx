@@ -64,8 +64,8 @@ export const PlanningPanel: React.FC<PlanningPanelProps> = ({ dailyProductionDat
             <div>
                 <div className="grid grid-cols-3 @sm:grid-cols-5 text-2xs text-muted pr-2 pl-1 pb-1">
                     <p>Ref</p>
-                    <p className="hidden @sm:block">Start</p>
-                    <p className="hidden @sm:block">End</p>
+                    <p className="hidden @sm:block">Planned Start</p>
+                    <p className="hidden @sm:block">Planned End</p>
                     <p className="text-right">Units</p>
                     <p className="text-right">Status</p>
                 </div>
@@ -73,15 +73,19 @@ export const PlanningPanel: React.FC<PlanningPanelProps> = ({ dailyProductionDat
                     {editedOrders.map((order) => (
                         <li key={order.ref}>
                             <Tooltip
-                                content={<p className="text-2xs">Open SAP to view order {order.ref}</p>}
-                                hoverable
+                                content={
+                                    <p className="flex items-center text-2xs">
+                                        Open order <span className="tabular-nums ml-1">{order.ref}</span>
+                                        <img src="/logo/sap.svg" alt="SAP" className="h-3 ml-2" />
+                                    </p>
+                                }
                                 showArrow={false}
                                 offset={0}
                                 containerClassName="block w-full"
                             >
                                 <div
                                     className={cn(
-                                        "group relative grid grid-cols-3 @sm:grid-cols-5 text-xs px-2 py-1 hover:bg-underground transition-all duration-200 cursor-pointer",
+                                        "group relative grid grid-cols-3 @sm:grid-cols-5 text-xs pl-2 py-1 hover:bg-underground transition-all duration-200 cursor-pointer",
                                         order.status.name === orderStatus.planned.name
                                             ? "opacity-60 hover:opacity-100"
                                             : "",
@@ -110,7 +114,7 @@ export const PlanningPanel: React.FC<PlanningPanelProps> = ({ dailyProductionDat
                                                 order.unitsCompleted === 0 ? "text-muted/80" : "",
                                                 order.unitsCompleted !== 0 &&
                                                     (order.unitsPlanned > order.unitsCompleted
-                                                        ? "text-accent-700 font-medium"
+                                                        ? "text-accent-700 font-semibold"
                                                         : "text-positive-800 font-medium"),
                                             )}
                                         >
@@ -119,17 +123,32 @@ export const PlanningPanel: React.FC<PlanningPanelProps> = ({ dailyProductionDat
                                         <span className="pl-[2px] pr-px text-muted/80">/</span>
                                         {order.unitsPlanned}
                                     </p>
-                                    <p className={cn("flex justify-end items-center gap-1", order.status.color)}>
+                                    <p
+                                        className={cn(
+                                            "flex justify-self-end items-center gap-1 w-fit mr-1",
+                                            order.status.color,
+                                        )}
+                                    >
                                         {order.status.name}
-                                        <Icon
-                                            icon={order.status.icon}
-                                            size="xs"
-                                            fixedWidth
-                                            className={cn(order.status.color)}
-                                        />
+                                        <Icon icon={order.status.icon} size="xs" fixedWidth />
                                     </p>
                                 </div>
                             </Tooltip>
+                            {order.status.name === orderStatus.inProgress.name && (
+                                <div className="px-2 pt-1 pb-2 grid grid-cols-5 bg-accent-500 text-accent-50">
+                                    <span />
+                                    <p className="text-2xs">
+                                        {/* <Icon
+                                                icon={faClipboardClock}
+                                                size="sm"
+                                                fixedWidth
+                                                className=" inline mr-1"
+                                            /> */}
+                                        No delay
+                                    </p>
+                                    <p className="text-2xs">Estimated completion: {order.endDate}</p>
+                                </div>
+                            )}
                         </li>
                     ))}
                 </ul>

@@ -30,7 +30,6 @@ export const ProductionPanel: React.FC<ProductionPanelProps> = ({
     return (
         <div className="flex flex-col gap-2">
             <PanelHeader>Production</PanelHeader>
-
             <MetricCard
                 title="Daily Production"
                 value={

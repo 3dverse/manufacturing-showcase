@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck } from "@fortawesome/sharp-solid-svg-icons";
+import { faSlidersSimple } from "@fortawesome/sharp-light-svg-icons";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
+import { Icon } from "@/components/common/Icon";
 import Button from "@/components/common/Button";
 
 //------------------------------------------------------------------------------
-import { cn } from "@/utils/cn";
 import { dashboardApi } from "@/services/dashboardApi";
+import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 const SYSTEMS = ["SAP", "MES", "WMS", "Process"] as const;
@@ -20,18 +22,21 @@ const DEFAULT_CONNECTIONS: ConnectionState = {
     SAP: true,
     MES: true,
     WMS: true,
-    Process: false, // disconnected by default (e.g. simulate maintenance)
+    Process: false,
 };
 
 //------------------------------------------------------------------------------
 export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ className }) => {
+    //--------------------------------------------------------------------------
     const [connections, setConnections] = useState<ConnectionState>(() => ({ ...DEFAULT_CONNECTIONS }));
 
+    //--------------------------------------------------------------------------
     // Sync API with Process state (Process disconnected by default)
     useEffect(() => {
         dashboardApi.setProductionRunning(connections.Process);
     }, [connections.Process]);
 
+    //--------------------------------------------------------------------------
     const toggle = (id: SystemId) => {
         setConnections((prev) => {
             const next = { ...prev, [id]: !prev[id] };
@@ -40,16 +45,18 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
         });
     };
 
+    //--------------------------------------------------------------------------
     const isConnected = (id: SystemId): boolean => connections[id];
 
+    //--------------------------------------------------------------------------
     return (
         <ViewerPanel
             className={cn(
-                "appear-in-from-left opacity-0 [--animation-delay:1200ms] px-2 py-1.5 w-fit min-w-[120px] rounded-md pointer-events-auto",
+                "appear-in-from-left opacity-0 [--animation-delay:1200ms] pl-2 pr-1 py-1.5 w-fit min-w-[120px] rounded-md pointer-events-auto",
                 className,
             )}
         >
-            <p className="px-px pb-1 text-2xs text-muted mb-px">Connected systems</p>
+            <p className="px-px pb-px text-2xs text-muted mb-px">Connected systems</p>
             <ul className="flex flex-col">
                 {SYSTEMS.map((id) => {
                     const connected = isConnected(id);
@@ -58,10 +65,10 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
                             <Button
                                 variant="ghost"
                                 size="2xs"
-                                className="group pl-[3px] relative w-full justify-start not-disabled:hover:bg-(--color)/10 rounded-full"
+                                className="group pl-[3px] pr-2 relative w-full justify-start not-disabled:hover:bg-(--color)/10 rounded-full"
                                 style={
                                     {
-                                        "--color": connected ? "var(--color-positive-600)" : "var(--color-neutral-400)",
+                                        "--color": connected ? "var(--color-positive-700)" : "var(--color-neutral-400)",
                                     } as React.CSSProperties
                                 }
                                 onClick={() => toggle(id)}
@@ -75,7 +82,7 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
                                 <span
                                     className={cn(
                                         "flex items-center justify-center border border-(--color) w-4 h-4 mr-2 rounded-full shrink-0 transition-colors",
-                                        connected ? "bg-positive-600 text-neutral-0" : "group-hover:bg-neutral-0",
+                                        connected ? "bg-positive-700 text-neutral-0" : "group-hover:bg-neutral-0",
                                     )}
                                 >
                                     <FontAwesomeIcon
@@ -88,12 +95,18 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
                                 </span>
                                 <span
                                     className={cn(
-                                        "text-xs text-default transition-opacity",
+                                        "grow text-left text-xs text-default transition-opacity",
                                         connected ? "opacity-100" : "opacity-60 group-hover:opacity-100",
                                     )}
                                 >
                                     {id}
                                 </span>
+                                <Icon
+                                    icon={faSlidersSimple}
+                                    size="sm"
+                                    fixedWidth
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                />
                             </Button>
                         </li>
                     );
