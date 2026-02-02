@@ -1,0 +1,17 @@
+---
+labels:
+  - pairs:
+      app.kubernetes.io/component: web-app
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/part-of: labs
+    includeSelectors: false
+  - pairs:
+      app.kubernetes.io/name: manufacturing-showcase
+    includeSelectors: true
+
+namespace: demo
+
+resources:
+  - deployment.yaml
+  - http-route.yaml
+  - service.yaml

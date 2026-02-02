@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: manufacturing-showcase
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: manufacturing-showcase
+          image: registry.gitlab.com/3dverse/showcase/microverses/manufacturing-showcase:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+            - name: ops
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: ops
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: ops
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+      imagePullSecrets:
+        - name: gitlab-regcreds
+      restartPolicy: Always

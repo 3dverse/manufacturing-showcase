@@ -1,0 +1,4 @@
+# Keep only encrypted secrets
+**/secrets/**
+!**/secrets/**/
+!**/secrets/**/*.enc.*

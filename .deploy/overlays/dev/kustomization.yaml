@@ -1,0 +1,17 @@
+---
+labels:
+  - pairs:
+      app.kubernetes.io/platform: gcp
+    includeSelectors: false
+
+patches:
+  - target:
+      kind: HTTPRoute
+      name: manufacturing-showcase
+    patch: |-
+      - op: replace
+        path: /spec/hostnames/0
+        value: manufacturing.3dverse.dev
+
+resources:
+  - ../../base/
