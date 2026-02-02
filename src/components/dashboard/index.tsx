@@ -12,7 +12,7 @@ import { PlanningPanel } from "./planning/PlanningPanel";
 import { ProductionPanel } from "./production/ProductionPanel";
 
 //------------------------------------------------------------------------------
-import { dashboardApi, type DashboardData, type DailyProduction } from "@/services/dashboardApi";
+import { dashboardApi, type DashboardData } from "@/services/dashboardApi";
 import type { Factory } from "@/content/factory";
 
 //------------------------------------------------------------------------------
@@ -30,7 +30,6 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
             date: Date;
             qualityProducts: number;
             nonQualityProducts: number;
-            notProduced: number;
             capacity: number;
             warningIncidents: number;
             errorIncidents: number;
@@ -41,7 +40,6 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
             monthIndex: number;
             qualityProducts: number;
             nonQualityProducts: number;
-            notProduced: number;
             capacity: number;
             warningIncidents: number;
             errorIncidents: number;
@@ -100,13 +98,18 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
                     className="pl-15 border-b border-muted"
                 />
                 <div className="flex flex-col gap-5 py-4 pl-15 pr-4 border-b border-muted">
-                    <PlanningPanel dailyProductionData={dailyProductionData as unknown as DailyProduction[]} />
+                    <PlanningPanel dailyProductionData={dailyProductionData.map(d => ({
+                        date: d.date.toISOString().split('T')[0],
+                        products: d.qualityProducts + d.nonQualityProducts,
+                        nonQualityProducts: d.nonQualityProducts,
+                        qualityProducts: d.qualityProducts,
+                    }))} />
                 </div>
                 <div className="flex flex-col gap-5 py-4 pl-15 pr-4 border-b border-muted">
                     <ProductionPanel
                         data={data}
-                        dailyProductionData={dailyProductionData as unknown as DailyProduction[]}
-                        monthlyProductionData={data.monthlyProductionSeries}
+                        dailyProductionData={dailyProductionData}
+                        monthlyProductionDetailedData={monthlyProductionData}
                         monthlyProductionCompare={monthlyProductionCompare}
                         setMonthlyProductionCompare={setMonthlyProductionCompare}
                     />

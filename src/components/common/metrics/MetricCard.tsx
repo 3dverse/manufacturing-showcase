@@ -47,7 +47,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             <div className="flex justify-between px-2 py-1">
                 <div>
                     <div className="flex items-baseline gap-2">
-                        {/* <p className="text-xs">{title}</p> */}
+                        {title && <p className="text-xs">{title}</p>}
                         {timeFrame && <Badge className="-translate-x-1 mb-1">{timeFrame}</Badge>}
                     </div>
                     <p className="font-family-heading text-xl leading-none tabular-nums font-semibold tracking-tight mb-px">

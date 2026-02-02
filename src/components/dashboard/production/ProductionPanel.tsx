@@ -7,13 +7,31 @@ import { MonthlyProductionChart } from "@/components/dashboard/production/Monthl
 import { DailyProductionChart } from "@/components/dashboard/production/DailyProductionChart";
 
 //------------------------------------------------------------------------------
-import { type DashboardData, type DailyProduction, type MonthlyProductionSeries } from "@/services/dashboardApi";
+import { type DashboardData } from "@/services/dashboardApi";
 
 //------------------------------------------------------------------------------
+interface DailyProductionDetailedData {
+    date: Date;
+    qualityProducts: number;
+    nonQualityProducts: number;
+    capacity: number;
+    warningIncidents: number;
+    errorIncidents: number;
+}
+
+interface MonthlyProductionDetailedData {
+    monthIndex: number;
+    qualityProducts: number;
+    nonQualityProducts: number;
+    capacity: number;
+    warningIncidents: number;
+    errorIncidents: number;
+}
+
 interface ProductionPanelProps {
     data: DashboardData;
-    dailyProductionData: DailyProduction[];
-    monthlyProductionData: MonthlyProductionSeries;
+    dailyProductionData: DailyProductionDetailedData[];
+    monthlyProductionDetailedData?: MonthlyProductionDetailedData[];
     monthlyProductionCompare: boolean;
     setMonthlyProductionCompare: (compare: boolean) => void;
     className?: string;
@@ -23,7 +41,7 @@ interface ProductionPanelProps {
 export const ProductionPanel: React.FC<ProductionPanelProps> = ({
     data,
     dailyProductionData,
-    monthlyProductionData,
+    monthlyProductionDetailedData,
     monthlyProductionCompare,
     setMonthlyProductionCompare,
 }) => {
@@ -79,7 +97,7 @@ export const ProductionPanel: React.FC<ProductionPanelProps> = ({
                     previousYear={data.monthlyProductionSeries.previousYear}
                     showCompare={monthlyProductionCompare}
                     currentMonthIndex={data.currentMonthIndex}
-                    monthlyData={monthlyProductionData}
+                    monthlyData={monthlyProductionDetailedData}
                     height={48}
                 />
             </MetricCard>

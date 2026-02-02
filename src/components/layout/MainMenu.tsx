@@ -20,7 +20,7 @@ const MenuItem = ({
     label: string;
     icon: IconDefinition;
     isActive: boolean;
-    isDisabled: boolean;
+    isDisabled?: boolean;
     onClick: () => void;
 }) => {
     return (
@@ -59,7 +59,7 @@ const MainMenu = ({
                             key={item.label}
                             {...item}
                             isActive={currentRoute === item.href}
-                            isDisabled={item.isDisabled}
+                            isDisabled={!!item.isDisabled}
                             onClick={() => setCurrentRoute(item.href)}
                         />
                     ))}

@@ -36,7 +36,6 @@ interface MonthlyProductionData {
     monthIndex: number;
     qualityProducts: number;
     nonQualityProducts: number;
-    notProduced: number;
     capacity: number;
     warningIncidents: number;
     errorIncidents: number;
@@ -217,9 +216,6 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
                                                 <div className="text-orange-400">
                                                     Non-Quality: {monthData.nonQualityProducts.toLocaleString()}
                                                 </div>
-                                                <div className="text-red-400">
-                                                    Not Produced: {monthData.notProduced.toLocaleString()}
-                                                </div>
                                             </div>
                                         </>
                                     )}
@@ -243,9 +239,6 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
                                             </div>
                                             <div className="text-orange-400">
                                                 Non-Quality: {monthData.nonQualityProducts.toLocaleString()}
-                                            </div>
-                                            <div className="text-red-400">
-                                                Not Produced: {monthData.notProduced.toLocaleString()}
                                             </div>
                                             <div className="mt-1 pt-1 border-t border-neutral-600">
                                                 <div className="text-yellow-400">
@@ -323,15 +316,13 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
                                 const xCenter = x0 + barWidth / 2;
 
                                 // Calculate y positions for each segment (stacked from bottom to top)
-                                const redTop = yScale(monthData.notProduced);
-                                const orangeTop = yScale(monthData.notProduced + monthData.nonQualityProducts);
+                                const orangeTop = yScale(monthData.nonQualityProducts); // Top of orange bar (non-quality at bottom)
                                 const greenTop = yScale(
-                                    monthData.qualityProducts + monthData.nonQualityProducts + monthData.notProduced,
-                                );
+                                    monthData.qualityProducts + monthData.nonQualityProducts,
+                                ); // Top of green bar (quality at top)
 
                                 // Heights
-                                const redHeight = innerHeight - redTop;
-                                const orangeHeight = redTop - orangeTop;
+                                const orangeHeight = innerHeight - orangeTop;
                                 const greenHeight = orangeTop - greenTop;
 
                                 return (
@@ -340,18 +331,7 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
                                         onMouseEnter={handleMouseEnter}
                                         onMouseLeave={handleMouseLeave}
                                     >
-                                        {/* Red bar: Not produced (bottom) */}
-                                        {monthData.notProduced > 0 && (
-                                            <Bar
-                                                x={xCenter - barWidth / 2}
-                                                y={redTop}
-                                                width={barWidth}
-                                                height={redHeight}
-                                                fill="var(--color-negative-500, #ef4444)"
-                                                opacity={0.8}
-                                            />
-                                        )}
-                                        {/* Orange bar: Non-quality products (middle) */}
+                                        {/* Orange bar: Non-quality products (bottom) */}
                                         {monthData.nonQualityProducts > 0 && (
                                             <Bar
                                                 x={xCenter - barWidth / 2}

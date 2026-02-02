@@ -135,6 +135,7 @@ class DashboardApiService {
                 date: key,
                 products: 0,
                 nonQualityProducts: 0,
+                qualityProducts: 0,
             });
         }
         return this.dailyProduction.get(key)!;
@@ -146,11 +147,6 @@ class DashboardApiService {
         const productsPerDayLastYear = 80;
         const productsPerDayThisYear = 100;
         const nonQualityRate = 0.04; // 4% non-quality
-
-        // Calculate daily capacity (24 hours * products per hour)
-        const secondsPerProduct = this.productionConfig.productionIntervalMs / 1000;
-        const productsPerHour = 3600 / secondsPerProduct;
-        const dailyCapacity = Math.round(24 * productsPerHour);
 
         // Initialize last 2 years (~730 days) with realistic production data
         for (let i = 730; i >= 0; i--) {
@@ -529,8 +525,7 @@ class DashboardApiService {
         date: Date;
         qualityProducts: number;
         nonQualityProducts: number;
-        notProduced: number; // Capacity - actual production
-        capacity: number; // Total production capacity for the day
+        capacity: number; // Total production capacity for the day (for indicator only)
         warningIncidents: number;
         errorIncidents: number;
     }> {
@@ -539,7 +534,6 @@ class DashboardApiService {
             date: Date;
             qualityProducts: number;
             nonQualityProducts: number;
-            notProduced: number;
             capacity: number;
             warningIncidents: number;
             errorIncidents: number;
@@ -566,8 +560,6 @@ class DashboardApiService {
 
             const qualityProducts = dailyRecord.products - dailyRecord.nonQualityProducts;
             const nonQualityProducts = dailyRecord.nonQualityProducts;
-            const actualProduction = dailyRecord.products;
-            const notProduced = Math.max(0, dailyCapacity - actualProduction);
 
             const incidentData = this.dailyIncidentsByType.find(
                 (inc) => inc.date.getTime() === normalizedDate.getTime(),
@@ -577,7 +569,6 @@ class DashboardApiService {
                 date: normalizedDate,
                 qualityProducts,
                 nonQualityProducts,
-                notProduced,
                 capacity: dailyCapacity,
                 warningIncidents: incidentData.warning,
                 errorIncidents: incidentData.error,
@@ -592,8 +583,7 @@ class DashboardApiService {
         monthIndex: number; // 0-11
         qualityProducts: number;
         nonQualityProducts: number;
-        notProduced: number; // Capacity - actual production
-        capacity: number; // Total production capacity for the month
+        capacity: number; // Total production capacity for the month (for indicator only)
         warningIncidents: number;
         errorIncidents: number;
     }> {
@@ -603,7 +593,6 @@ class DashboardApiService {
             monthIndex: number;
             qualityProducts: number;
             nonQualityProducts: number;
-            notProduced: number;
             capacity: number;
             warningIncidents: number;
             errorIncidents: number;
@@ -613,7 +602,6 @@ class DashboardApiService {
                 monthIndex,
                 qualityProducts: 0,
                 nonQualityProducts: 0,
-                notProduced: 0,
                 capacity: 0,
                 warningIncidents: 0,
                 errorIncidents: 0,
@@ -639,12 +627,6 @@ class DashboardApiService {
                 result[month].capacity += dailyCapacity;
             }
         }
-
-        // Calculate not produced for each month
-        result.forEach((monthData) => {
-            const actualProduction = monthData.qualityProducts + monthData.nonQualityProducts;
-            monthData.notProduced = Math.max(0, monthData.capacity - actualProduction);
-        });
 
         // Aggregate incidents by month
         this.dailyIncidentsByType.forEach((incident) => {
