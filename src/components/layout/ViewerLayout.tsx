@@ -42,15 +42,12 @@ const ViewerLayout = ({
                             </div>
                         )}
                         <CameraController ref={cameraControllerRef} />
-                        {cameraControllerRef.current && (
-                            <StationLabels cameraController={cameraControllerRef.current} />
-                        )}
-                        {cameraControllerRef.current && (
-                            <StationButtonsList cameraController={cameraControllerRef.current} />
-                        )}
+                        <StationLabels cameraController={cameraControllerRef.current} />
+                        <StationButtonsList cameraController={cameraControllerRef.current} />
                     </Viewport>
                 </Canvas>
             )}
+            {/* eslint-disable-next-line no-constant-binary-expression */}
             {false && (
                 <div
                     className="absolute inset-0 bg-cover bg-center w-full h-full opacity-100 backdrop-blur-xl pointer-events-none"

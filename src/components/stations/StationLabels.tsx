@@ -5,10 +5,14 @@ import { DefaultCameraController, DOM3DOverlay, DOMEntity, useEntities } from "@
 import { moveCamera } from "@/utils/camera";
 
 //------------------------------------------------------------------------------
-const StationLabels = ({ cameraController }: { cameraController: DefaultCameraController }) => {
+const StationLabels = ({ cameraController }: { cameraController: DefaultCameraController | null }) => {
     //--------------------------------------------------------------------------
     const { entities } = useEntities({ mandatory_components: ["label"] }, ["label"]);
 
+    //--------------------------------------------------------------------------
+    if (!cameraController) {
+        return null;
+    }
     //--------------------------------------------------------------------------
     return (
         <DOM3DOverlay>

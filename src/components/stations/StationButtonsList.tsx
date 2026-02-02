@@ -6,10 +6,14 @@ import Button from "@/components/common/Button";
 import { moveCamera } from "@/utils/camera";
 
 //------------------------------------------------------------------------------
-const StationButtonsList = ({ cameraController }: { cameraController: DefaultCameraController }) => {
+const StationButtonsList = ({ cameraController }: { cameraController: DefaultCameraController | null }) => {
     //--------------------------------------------------------------------------
     const { entities } = useEntities({ mandatory_components: ["label"] }, ["label"]);
 
+    //--------------------------------------------------------------------------
+    if (!cameraController) {
+        return null;
+    }
     //--------------------------------------------------------------------------
     return (
         <div className="flex gap-1 pointer-events-auto">
