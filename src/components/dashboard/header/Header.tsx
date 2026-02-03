@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({ factory, keyStatus }) => {
             </div>
 
             <div className="grow flex flex-col items-stretch @lg:flex-row @lg:justify-between @lg:items-start gap-2">
-                <div className="grow @lg:self-center flex flex-col items-baseline justify-between">
+                <div className="grow shrink-0 @lg:self-center flex flex-col items-baseline justify-between">
                     <p className="font-family-heading text-lg font-bold text-default">{factory.name}</p>
                     <div className="flex gap-2 text-2xs text-muted">
                         <p className="">{factory.location}</p>
@@ -59,13 +59,12 @@ export const Header: React.FC<HeaderProps> = ({ factory, keyStatus }) => {
                     </div>
                 </div>
 
-                <div className="flex-1 flex items-center gap-2">
+                <div className="shrink flex items-center gap-2">
                     <KeyStatusIndicators
                         efficiency={keyStatus.efficiency}
                         quality={keyStatus.quality}
                         tracking={keyStatus.tracking}
                         maintenance={keyStatus.maintenance}
-                        className="grow"
                     />
                 </div>
             </div>

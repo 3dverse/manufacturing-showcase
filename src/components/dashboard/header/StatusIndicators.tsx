@@ -40,7 +40,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ index, label, 
     return (
         <div
             className={cn(
-                "flex flex-col items-center justify-center py-1 px-8 opacity-0 appear-in-from-bottom duration-200",
+                "flex flex-col items-center justify-center py-1 px-3 opacity-0 appear-in-from-bottom duration-200",
             )}
             style={
                 {
@@ -87,7 +87,7 @@ export const KeyStatusIndicators: React.FC<KeyStatusIndicatorsProps> = ({
     return (
         <div
             className={cn(
-                "grid grid-cols-4 @lg:w-fit @lg:basis-1/2 py-px px-2 border border-muted rounded overflow-hidden",
+                "flex w-full justify-around @lg:w-fit py-px px-2 border border-muted rounded overflow-hidden",
                 className,
             )}
         >
