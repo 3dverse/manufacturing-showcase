@@ -9,7 +9,7 @@ spec:
   parentRefs:
     - name: gateway-public
       namespace: istio-ingress
-      sectionName: https-demo
+      sectionName: https
   rules:
     - matches:
         - path:
