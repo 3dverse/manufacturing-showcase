@@ -1,8 +1,4 @@
 //------------------------------------------------------------------------------
 export const ViewerController = () => {
-    return (
-        <>
-            <ViewerController />
-        </>
-    );
+    return <></>;
 };

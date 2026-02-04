@@ -7,7 +7,7 @@ import { useState } from "react";
 import ViewerLayout from "@/components/layout/ViewerLayout";
 import MainGuidance from "@/components/guidance/MainGuidance";
 import Theme from "@/components/pages/Theme";
-import IntroductionModal from "./components/guidance/IntroductionModal";
+import IntroductionModal from "@/components/guidance/IntroductionModal";
 
 //------------------------------------------------------------------------------
 const scene_id = "d490dde6-5590-426f-a0ff-7a422b3e2ba7";
