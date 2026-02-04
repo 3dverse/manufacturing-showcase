@@ -199,7 +199,7 @@ export const DailyProductionChart: React.FC<DailyProductionChartProps> = ({ data
                             y={(d) => incidentYScale(d.warningIncidents)}
                             curve={curveLinear}
                             stroke="var(--color-warning-400, #fb923c)"
-                            strokeWidth={2}
+                            strokeWidth={1}
                             strokeOpacity={0.9}
                         />
                     )}
@@ -212,7 +212,7 @@ export const DailyProductionChart: React.FC<DailyProductionChartProps> = ({ data
                             y={(d) => incidentYScale(d.errorIncidents)}
                             curve={curveLinear}
                             stroke="var(--color-negative-500, #ef4444)"
-                            strokeWidth={2}
+                            strokeWidth={1}
                             strokeOpacity={0.9}
                         />
                     )}

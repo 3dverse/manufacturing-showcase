@@ -3,21 +3,23 @@ import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
+import type { StationId } from "@/content/stations/enum";
+import { StationContent } from "./StationContent";
 
 //------------------------------------------------------------------------------
 export const PropertyPanel = ({
+    station_id,
     hoveredEntity,
     pickedEntity,
 }: {
+    station_id: StationId;
     hoveredEntity: { entity: Entity } | null;
     pickedEntity: { entity: Entity } | null;
 }) => {
     //--------------------------------------------------------------------------
     return (
-        <ViewerPanel className="w-72 px-3 py-2">
-            <header className="flex flex-col gap-2">
-                <h2 className="text-sm font-semibold">Property Panel</h2>
-            </header>
+        <ViewerPanel className="w-72 rounded-e-none translate-x-4 pointer-events-auto">
+            <StationContent station_id={station_id} />
             <div>
                 {hoveredEntity?.entity && (
                     <div>

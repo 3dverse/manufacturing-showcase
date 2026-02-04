@@ -56,7 +56,7 @@ export const NonQualityChart: React.FC<NonQualityChartProps> = ({ data, width = 
                         y={(d) => yScale(d.y)}
                         curve={curveLinear}
                         stroke="#10b981"
-                        strokeWidth={2}
+                        strokeWidth={1}
                     />
                 </Group>
             </svg>

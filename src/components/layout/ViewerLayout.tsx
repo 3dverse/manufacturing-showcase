@@ -69,7 +69,11 @@ const ViewerLayout = ({
                         {cameraControllerRef.current && (
                             <StationButtonsList cameraController={cameraControllerRef.current} />
                         )}
-                        <PropertyPanel hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} />
+                        <PropertyPanel
+                            hoveredEntity={hoveredEntity}
+                            pickedEntity={pickedEntity}
+                            station_id="picking_station"
+                        />
                     </div>
                 </div>
             </div>

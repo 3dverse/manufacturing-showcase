@@ -146,18 +146,19 @@ export const OEEChart: React.FC<OEEChartProps> = ({ data, incidents = [], height
                             y={(d) => yScale(d.value)}
                             curve={curveLinear}
                             stroke="var(--color-positive-500)"
-                            strokeWidth={2}
+                            strokeWidth={1}
                         />
                         {/* Add dots for each day */}
-                        {data.map((d, i) => (
-                            <circle
-                                key={i}
-                                cx={xScale(d.date.getTime())}
-                                cy={yScale(d.value)}
-                                r={3}
-                                fill="var(--color-positive-500)"
-                            />
-                        ))}
+                        {false &&
+                            data.map((d, i) => (
+                                <circle
+                                    key={i}
+                                    cx={xScale(d.date.getTime())}
+                                    cy={yScale(d.value)}
+                                    r={1}
+                                    fill="var(--color-positive-500)"
+                                />
+                            ))}
                         {/* Incidents line (orange) */}
                         {incidents.length > 0 && (
                             <LinePath
@@ -166,7 +167,7 @@ export const OEEChart: React.FC<OEEChartProps> = ({ data, incidents = [], height
                                 y={(d) => incidentYScale(d.count)}
                                 curve={curveLinear}
                                 stroke="orange"
-                                strokeWidth={2}
+                                strokeWidth={1}
                                 strokeOpacity={0.7}
                             />
                         )}

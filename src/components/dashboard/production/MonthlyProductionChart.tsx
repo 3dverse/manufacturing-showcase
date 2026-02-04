@@ -317,9 +317,7 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
 
                                 // Calculate y positions for each segment (stacked from bottom to top)
                                 const orangeTop = yScale(monthData.nonQualityProducts); // Top of orange bar (non-quality at bottom)
-                                const greenTop = yScale(
-                                    monthData.qualityProducts + monthData.nonQualityProducts,
-                                ); // Top of green bar (quality at top)
+                                const greenTop = yScale(monthData.qualityProducts + monthData.nonQualityProducts); // Top of green bar (quality at top)
 
                                 // Heights
                                 const orangeHeight = innerHeight - orangeTop;
@@ -392,7 +390,7 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
                             }}
                             curve={curveLinear}
                             stroke="var(--color-warning-400, #fb923c)"
-                            strokeWidth={2}
+                            strokeWidth={1}
                             strokeOpacity={0.9}
                         />
                     )}
@@ -412,7 +410,7 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
                             }}
                             curve={curveLinear}
                             stroke="var(--color-negative-500, #ef4444)"
-                            strokeWidth={2}
+                            strokeWidth={1}
                             strokeOpacity={0.9}
                         />
                     )}
