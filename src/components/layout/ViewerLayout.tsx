@@ -15,6 +15,7 @@ import { ConnectedSystemsPanel } from "@/components/connectedSystems/ConnectedSy
 import StationLabels from "@/components/stations/StationLabels";
 import StationButtonsList from "@/components/stations/StationButtonsList";
 import ClientAvatarList from "@/components/clients/AvatarList";
+import { ViewerController } from "@/components/viewer/ViewerController";
 
 //------------------------------------------------------------------------------
 const ViewerLayout = ({
@@ -26,27 +27,26 @@ const ViewerLayout = ({
 }) => {
     //--------------------------------------------------------------------------
     const cameraControllerRef = useRef<DefaultCameraController | null>(null);
-    const { cameraEntity } = useCameraEntity({ position: [50, 100, -50] });
+    const { cameraEntity } = useCameraEntity({ position: [10, 10, -10] });
     const { isConnecting } = useContext(LivelinkContext);
 
     //--------------------------------------------------------------------------
     return (
         <div className="relative flex-1">
-            {/* eslint-disable-next-line no-constant-binary-expression */}
-            {true && (
-                <Canvas className="w-full h-full" style={{ filter: "brightness(3) contrast(1.8) hue-rotate(335deg)" }}>
-                    <Viewport cameraEntity={cameraEntity} className="w-full h-full">
-                        {!isConnecting && (
-                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-green-800 text-sm text-white rounded-full py-1 px-3 pointer-events-none animate-[fade-out_.5s_2s_forwards]">
-                                Connected.
-                            </div>
-                        )}
-                        <CameraController ref={cameraControllerRef} />
-                        <StationLabels cameraController={cameraControllerRef.current} />
-                        <StationButtonsList cameraController={cameraControllerRef.current} />
-                    </Viewport>
-                </Canvas>
-            )}
+            <Canvas className="w-full h-full">
+                <Viewport cameraEntity={cameraEntity} className="w-full h-full">
+                    {!isConnecting && (
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-green-800 text-sm text-white rounded-full py-1 px-3 pointer-events-none animate-[fade-out_.5s_2s_forwards]">
+                            Connected.
+                        </div>
+                    )}
+                    <ViewerController />
+                    <CameraController ref={cameraControllerRef} />
+                    <StationLabels cameraController={cameraControllerRef.current} />
+                    <StationButtonsList cameraController={cameraControllerRef.current} />
+                </Viewport>
+            </Canvas>
+
             {/* eslint-disable-next-line no-constant-binary-expression */}
             {false && (
                 <div

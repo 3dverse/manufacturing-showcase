@@ -10,7 +10,7 @@ import Theme from "@/components/pages/Theme";
 import IntroductionModal from "./components/guidance/IntroductionModal";
 
 //------------------------------------------------------------------------------
-const scene_id = "85854d95-3263-46eb-b83f-736380f59417";
+const scene_id = "d490dde6-5590-426f-a0ff-7a422b3e2ba7";
 const token = "public_OJTstp3bLFmUw0OS";
 
 //------------------------------------------------------------------------------
