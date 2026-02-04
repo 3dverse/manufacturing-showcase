@@ -11,7 +11,7 @@ const StationButtonsList = ({ cameraController }: { cameraController: DefaultCam
     const { entities } = useEntities({ mandatory_components: ["label"] }, ["label"]);
 
     //--------------------------------------------------------------------------
-    if (!cameraController) {
+    if (!cameraController || !entities.length) {
         return null;
     }
     //--------------------------------------------------------------------------

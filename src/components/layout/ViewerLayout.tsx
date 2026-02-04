@@ -1,4 +1,5 @@
-import { useContext, useRef } from "react";
+import { useContext, useRef, useState } from "react";
+import type { Entity } from "@3dverse/livelink";
 import {
     Canvas,
     Viewport,
@@ -16,6 +17,7 @@ import StationLabels from "@/components/stations/StationLabels";
 import StationButtonsList from "@/components/stations/StationButtonsList";
 import ClientAvatarList from "@/components/clients/AvatarList";
 import { ViewerController } from "@/components/viewer/ViewerController";
+import { PropertyPanel } from "@/components/propertyPanel/PropertyPanel";
 
 //------------------------------------------------------------------------------
 const ViewerLayout = ({
@@ -31,31 +33,30 @@ const ViewerLayout = ({
     const { isConnecting } = useContext(LivelinkContext);
 
     //--------------------------------------------------------------------------
+    const [pickedEntity, setPickedEntity] = useState<{ entity: Entity } | null>(null);
+    const [hoveredEntity, setHoveredEntity] = useState<{ entity: Entity } | null>(null);
+
+    //--------------------------------------------------------------------------
     return (
         <div className="relative flex-1">
             <Canvas className="w-full h-full">
-                <Viewport cameraEntity={cameraEntity} className="w-full h-full">
+                <Viewport
+                    cameraEntity={cameraEntity}
+                    className="w-full h-full"
+                    setHoveredEntity={setHoveredEntity}
+                    setPickedEntity={setPickedEntity}
+                >
                     {!isConnecting && (
                         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-green-800 text-sm text-white rounded-full py-1 px-3 pointer-events-none animate-[fade-out_.5s_2s_forwards]">
                             Connected.
                         </div>
                     )}
-                    <ViewerController />
+                    <ViewerController hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} />
                     <CameraController ref={cameraControllerRef} />
                     <StationLabels cameraController={cameraControllerRef.current} />
-                    <StationButtonsList cameraController={cameraControllerRef.current} />
                 </Viewport>
             </Canvas>
 
-            {/* eslint-disable-next-line no-constant-binary-expression */}
-            {false && (
-                <div
-                    className="absolute inset-0 bg-cover bg-center w-full h-full opacity-100 backdrop-blur-xl pointer-events-none"
-                    style={{
-                        backgroundImage: "url(/bg.webp)",
-                    }}
-                />
-            )}
             <div className="absolute bottom-0 left-0 w-full h-full flex pointer-events-none">
                 <MainMenu currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />
                 <MainPanel />
@@ -64,10 +65,11 @@ const ViewerLayout = ({
                         <ConnectedSystemsPanel />
                         <ClientAvatarList />
                     </div>
-                    <div className="flex justify-center pb-4">
+                    <div className="flex justify-end">
                         {cameraControllerRef.current && (
                             <StationButtonsList cameraController={cameraControllerRef.current} />
                         )}
+                        <PropertyPanel hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} />
                     </div>
                 </div>
             </div>
