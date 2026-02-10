@@ -77,8 +77,8 @@ const CanvasWrapper = () => {
             <Viewport
                 cameraEntity={cameraEntity}
                 className="w-full h-full"
-                // setHoveredEntity={setHoveredEntity}
-                // setPickedEntity={setPickedEntity}
+                setHoveredEntity={setHoveredEntity}
+                setPickedEntity={setPickedEntity}
             >
                 <ViewerController hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} />
                 <CameraController ref={cameraControllerRef} />
