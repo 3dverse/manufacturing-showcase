@@ -22,7 +22,7 @@ export const PropertyPanel = ({
     return (
         <ViewerPanel className="w-80 rounded-e-none translate-x-4 pointer-events-auto wrap-anywhere">
             <StationContent station_id={station_id} />
-            <div className="bg-ground">
+            <div hidden className="bg-ground">
                 {hoveredEntity?.entity && (
                     <div>
                         <h3 className="text-sm font-semibold">Hovered Entity</h3>

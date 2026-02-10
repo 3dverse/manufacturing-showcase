@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type HTMLElementType } from "react";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -8,7 +8,7 @@ export const ViewerPanel = ({
     children,
     ...props
 }: {
-    as?: "div" | "aside";
+    as?: HTMLElementType;
     className?: string;
     children: React.ReactNode;
     [key: string]: unknown;

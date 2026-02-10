@@ -174,12 +174,12 @@
 }
 
 .modal__body::-webkit-scrollbar-thumb {
-    background: var(--color-border-subtle);
+    background: var(--color-accent);
     border-radius: 4px;
 }
 
 .modal__body::-webkit-scrollbar-thumb:hover {
-    background: var(--color-border-default);
+    background: var(--color-accent-600);
 }
 
 /* Animations */

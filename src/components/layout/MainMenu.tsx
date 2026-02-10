@@ -52,7 +52,10 @@ const MainMenu = ({
     return (
         <div className="absolute top-0 left-1 w-10 h-full flex flex-col justify-between items-center z-10">
             <span />
-            <ViewerPanel className="w-10 h-fit rounded-lg pointer-events-auto">
+            <ViewerPanel
+                as="nav"
+                className="w-10 h-fit rounded-lg shadow-[0_7px_30px_-5px_color-mix(in_srgb,var(--color-accent)_50%,transparent)] pointer-events-auto"
+            >
                 <div className="flex flex-col gap-px p-[2px]">
                     {mainMenuItems.map((item) => (
                         <MenuItem

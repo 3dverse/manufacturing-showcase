@@ -25,6 +25,10 @@ export const pickingStation: Station = {
                         z: 0,
                     },
                     course: 100, // mm
+                    units_picked: 100,
+                    picked_rate: 90,
+                    incidents: 10,
+                    quality_of_grip: 90,
                 },
             ],
             pieces: [

@@ -4,7 +4,8 @@ import { faCircleStar, faChartArea, faScrewdriverWrench, faShieldHalved } from "
 //------------------------------------------------------------------------------
 import Button from "@/components/common/Button";
 import { Icon } from "@/components/common/Icon";
-import { TechnicalDocumentation } from "./TechnicalDocumentation";
+import { TechnicalDocumentation } from "./sections/TechnicalDocumentation";
+import { Production } from "./sections/Production";
 
 //------------------------------------------------------------------------------
 import { stations } from "@/content/stations";
@@ -43,7 +44,7 @@ export const StationContent = ({ station_id }: { station_id: StationId }) => {
 
     //--------------------------------------------------------------------------
     return (
-        <article>
+        <section>
             <Wrapper as="header" className="py-2">
                 <h3 className="text-sm font-semibold">{station.name}</h3>
                 <p className="text-sm text-muted">{station.description}</p>
@@ -65,6 +66,7 @@ export const StationContent = ({ station_id }: { station_id: StationId }) => {
                 <div className="divide-y divide-neutral-0">
                     <Wrapper className="py-1">
                         <Heading>Production</Heading>
+                        <Production units_picked={station.modules[0]?.states[0]?.units_picked} />
                     </Wrapper>
                     <Wrapper className="py-1">
                         <Heading>Maintenance</Heading>
@@ -78,7 +80,7 @@ export const StationContent = ({ station_id }: { station_id: StationId }) => {
                     </Wrapper>
                 </div>
             </div>
-        </article>
+        </section>
     );
 };
 
