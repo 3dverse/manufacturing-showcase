@@ -56,7 +56,7 @@ export const PlanningPanel: React.FC<PlanningPanelProps> = ({ dailyProductionDat
         <div className="@container flex flex-col gap-2">
             <header className="flex items-baseline gap-2 pr-2">
                 <PanelHeader>Planning</PanelHeader>
-                <a href="#" className="text-2xs text-accent-500">
+                <a href="#" className="text-2xs text-accent">
                     All orders
                 </a>
             </header>
@@ -99,7 +99,7 @@ export const PlanningPanel: React.FC<PlanningPanelProps> = ({ dailyProductionDat
                                         className={cn(
                                             "tabular-nums",
                                             order.status.name === orderStatus.inProgress.name
-                                                ? "text-accent-500 font-medium"
+                                                ? "text-accent font-medium"
                                                 : "",
                                         )}
                                     >
@@ -135,7 +135,7 @@ export const PlanningPanel: React.FC<PlanningPanelProps> = ({ dailyProductionDat
                                 </div>
                             </Tooltip>
                             {order.status.name === orderStatus.inProgress.name && (
-                                <div className="px-2 pt-1 pb-2 grid grid-cols-5 bg-accent-500 text-accent-50">
+                                <div className="px-2 pt-1 pb-2 grid grid-cols-5 bg-accent text-accent-50">
                                     <span />
                                     <p className="text-2xs">
                                         {/* <Icon
@@ -162,7 +162,7 @@ const Swoosh = () => {
     return (
         <span
             className="absolute inset-0 opacity-30 pointer-events-none
-            bg-[linear-gradient(90deg,transparent_25%,var(--color-accent-500)_50%,transparent_75%)]
+            bg-[linear-gradient(90deg,transparent_25%,var(--color-accent)_50%,transparent_75%)]
             bg-size-[200%_100%]
             animate-[bg-swoosh_.6s_ease-in-out_forwards]"
         />

@@ -71,7 +71,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                 {metric && (
                     <div className="flex items-start gap-2 mr-1 mt-2">
                         <div className="text-right">
-                            <p className="text-2xs text-accent-500">{metric.title}</p>
+                            <p className="text-2xs text-accent">{metric.title}</p>
                             <p className="font-family-heading text-xl leading-none tabular-nums font-semibold tracking-tight">
                                 {metric.value}
                             </p>

@@ -48,7 +48,7 @@ const IntroductionModal = ({ isOpen, onClose }: IntroductionModalProps) => {
                     {/* 3 Small Items */}
                     <div className="hidden grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                         <div className="bg-ground rounded-lg p-4 border border-subtle">
-                            <div className="w-10 h-10 bg-brand-500 rounded-lg mb-3 flex items-center justify-center">
+                            <div className="w-10 h-10 bg-brand rounded-lg mb-3 flex items-center justify-center">
                                 <span className="text-2xl">🎯</span>
                             </div>
                             <h3 className="text-lg font-semibold text-default mb-2">Precision</h3>
@@ -56,7 +56,7 @@ const IntroductionModal = ({ isOpen, onClose }: IntroductionModalProps) => {
                         </div>
 
                         <div className="bg-ground rounded-lg p-4 border border-subtle">
-                            <div className="w-10 h-10 bg-accent-500 rounded-lg mb-3 flex items-center justify-center">
+                            <div className="w-10 h-10 bg-accent rounded-lg mb-3 flex items-center justify-center">
                                 <span className="text-2xl">⚡</span>
                             </div>
                             <h3 className="text-lg font-semibold text-default mb-2">Efficiency</h3>
@@ -64,7 +64,7 @@ const IntroductionModal = ({ isOpen, onClose }: IntroductionModalProps) => {
                         </div>
 
                         <div className="bg-ground rounded-lg p-4 border border-subtle">
-                            <div className="w-10 h-10 bg-positive-500 rounded-lg mb-3 flex items-center justify-center">
+                            <div className="w-10 h-10 bg-positive rounded-lg mb-3 flex items-center justify-center">
                                 <span className="text-2xl">🌱</span>
                             </div>
                             <h3 className="text-lg font-semibold text-default mb-2">Sustainability</h3>

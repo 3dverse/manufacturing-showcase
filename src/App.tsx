@@ -25,7 +25,7 @@ export function App() {
 //------------------------------------------------------------------------------
 function AppLayout() {
     const [currentRoute, setCurrentRoute] = useState("/");
-    const [isIntroductionModalOpen, setIsIntroductionModalOpen] = useState(true);
+    const [isIntroductionModalOpen, setIsIntroductionModalOpen] = useState<boolean>(false);
 
     return (
         <div className="flex flex-col h-dvh">

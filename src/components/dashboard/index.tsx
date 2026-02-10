@@ -127,7 +127,7 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
                                 step="100"
                                 value={productionIntervalMs}
                                 onChange={(e) => handleProductionIntervalChange(Number(e.target.value))}
-                                className="w-24 px-2 py-1 text-2xs border border-muted/50 rounded bg-neutral-0 text-default focus:outline-none focus:ring-2 focus:ring-accent-500/50"
+                                className="w-24 px-2 py-1 text-2xs border border-muted/50 rounded bg-neutral-0 text-default focus:outline-none focus:ring-2 focus:ring-accent/50"
                             />
                         </div>
                         <div className="flex justify-end gap-2">

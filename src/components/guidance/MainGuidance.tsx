@@ -17,9 +17,9 @@ const MainGuidance = () => {
             <div className="flex items-center justify-between h-full px-10">
                 <a href={LANDING_3DVERSE_URL} target="_blank" rel="noopener noreferrer" className="flex flex-col">
                     <p className="text-lg font-family-heading font-semibold">
-                        <span className="text-guidance-500">3d</span>verse
+                        <span className="text-guidance">3d</span>verse
                     </p>
-                    <p className="text-xs text-guidance-500 hidden sm:inline">Immersive 3D Experiences</p>
+                    <p className="text-xs text-guidance hidden sm:inline">Immersive 3D Experiences</p>
                 </a>
 
                 <div className="flex-1 flex justify-center">

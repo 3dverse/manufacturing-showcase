@@ -18,12 +18,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
         //--------------------------------------------------------------------------
         const variantClasses = {
-            primary: "bg-brand-600 hover:bg-brand-700 text-white focus:ring-brand-500",
-            secondary: "bg-neutral-600 hover:bg-neutral-700 text-white focus:ring-neutral-500",
-            outline: "border-2 border-default bg-transparent hover:bg-ground text-default focus:ring-brand-500",
-            ghost: "bg-transparent hover:bg-ground text-subtle hover:text-default focus:ring-brand-500",
-            danger: "bg-negative-600 hover:bg-negative-700 text-white focus:ring-negative-500",
-            guidance: "bg-guidance-600 hover:bg-guidance-700 text-white focus:ring-guidance-500",
+            primary: "bg-brand-600 hover:bg-brand-700 text-white focus:ring-brand",
+            secondary: "bg-neutral-600 hover:bg-neutral-700 text-white focus:ring-neutral",
+            outline: "border-2 border-default bg-transparent hover:bg-ground text-default focus:ring-brand",
+            ghost: "bg-transparent hover:bg-ground text-subtle hover:text-default focus:ring-brand",
+            danger: "bg-negative-600 hover:bg-negative-700 text-white focus:ring-negative",
+            guidance: "bg-guidance-600 hover:bg-guidance-700 text-white focus:ring-guidance",
         };
 
         //--------------------------------------------------------------------------

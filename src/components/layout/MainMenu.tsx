@@ -29,8 +29,8 @@ const MenuItem = ({
                 onClick={onClick}
                 className={cn(
                     "flex flex-col items-center justify-center gap-1 p-1 aspect-square rounded-md transition-colors duration-200 cursor-pointer",
-                    "hover:bg-accent-500/5 hover:text-accent-500",
-                    isActive ? "bg-accent-500! text-accent-100!" : "text-muted",
+                    "hover:bg-accent/5 hover:text-accent",
+                    isActive ? "bg-accent! text-accent-100!" : "text-muted",
                     isDisabled ? "opacity-50 cursor-not-allowed" : "",
                 )}
             >
@@ -66,7 +66,7 @@ const MainMenu = ({
                 </div>
             </ViewerPanel>
             <div className="pb-3">
-                <div className="w-7 aspect-square rounded-full bg-accent-500 text-accent-100 text-2xs font-medium flex items-center justify-center">
+                <div className="w-7 aspect-square rounded-full bg-accent text-accent-100 text-2xs font-medium flex items-center justify-center">
                     BM
                 </div>
             </div>

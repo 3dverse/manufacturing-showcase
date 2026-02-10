@@ -172,7 +172,7 @@ export const DailyProductionChart: React.FC<DailyProductionChartProps> = ({ data
                                         y={orangeTop}
                                         width={barWidth}
                                         height={orangeHeight}
-                                        fill="var(--color-warning-500, #f97316)"
+                                        fill="var(--color-warning, #f97316)"
                                         opacity={0.8}
                                     />
                                 )}
@@ -183,7 +183,7 @@ export const DailyProductionChart: React.FC<DailyProductionChartProps> = ({ data
                                         y={greenTop}
                                         width={barWidth}
                                         height={greenHeight}
-                                        fill="var(--color-positive-500, #22c55e)"
+                                        fill="var(--color-positive, #22c55e)"
                                         opacity={0.8}
                                     />
                                 )}
@@ -211,7 +211,7 @@ export const DailyProductionChart: React.FC<DailyProductionChartProps> = ({ data
                             x={(_, i) => (xScale(i) ?? 0) + bandWidth / 2}
                             y={(d) => incidentYScale(d.errorIncidents)}
                             curve={curveLinear}
-                            stroke="var(--color-negative-500, #ef4444)"
+                            stroke="var(--color-negative, #ef4444)"
                             strokeWidth={1}
                             strokeOpacity={0.9}
                         />
@@ -236,7 +236,7 @@ export const DailyProductionChart: React.FC<DailyProductionChartProps> = ({ data
                                             cx={xCenter}
                                             cy={incidentYScale(dayData.errorIncidents)}
                                             r={3}
-                                            fill="var(--color-negative-500, #ef4444)"
+                                            fill="var(--color-negative, #ef4444)"
                                         />
                                     )}
                                 </React.Fragment>

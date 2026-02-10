@@ -25,7 +25,7 @@ export const OEEGauge: React.FC<OEEGaugeProps> = ({ value }) => {
             }}
             pointer={{
                 type: "arrow",
-                color: "var(--color-neutral-500)",
+                color: "var(--color-neutral)",
                 width: 10,
                 maxFps: 30,
                 baseColor: "#ffffff",

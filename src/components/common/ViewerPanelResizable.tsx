@@ -89,7 +89,7 @@ export const ViewerPanelResizable = ({
                 className={cn(
                     "absolute top-0 bottom-0 w-1 cursor-col-resize z-10 transition-colors",
                     isResizableFromRight ? "right-0" : "left-0",
-                    "hover:bg-accent-500/20 active:bg-accent-500/20",
+                    "hover:bg-accent/20 active:bg-accent/20",
                 )}
                 onMouseDown={handleMouseDown}
             >
@@ -97,7 +97,7 @@ export const ViewerPanelResizable = ({
                     className={cn(
                         "absolute top-1/2 -translate-y-1/2 w-1 h-12 rounded-full",
                         isResizableFromRight ? "left-0" : "right-0",
-                        "bg-neutral-500/50 hover:bg-accent-500/80",
+                        "bg-neutral/50 hover:bg-accent/80",
                     )}
                 />
             </div>
