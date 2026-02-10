@@ -98,12 +98,14 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
                     className="pl-15 border-b border-muted"
                 />
                 <div className="flex flex-col gap-5 py-4 pl-15 pr-4 border-b border-muted">
-                    <PlanningPanel dailyProductionData={dailyProductionData.map(d => ({
-                        date: d.date.toISOString().split('T')[0],
-                        products: d.qualityProducts + d.nonQualityProducts,
-                        nonQualityProducts: d.nonQualityProducts,
-                        qualityProducts: d.qualityProducts,
-                    }))} />
+                    <PlanningPanel
+                        dailyProductionData={dailyProductionData.map((d) => ({
+                            date: d.date.toISOString().split("T")[0],
+                            products: d.qualityProducts + d.nonQualityProducts,
+                            nonQualityProducts: d.nonQualityProducts,
+                            qualityProducts: d.qualityProducts,
+                        }))}
+                    />
                 </div>
                 <div className="flex flex-col gap-5 py-4 pl-15 pr-4 border-b border-muted">
                     <ProductionPanel

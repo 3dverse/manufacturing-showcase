@@ -3,8 +3,10 @@ import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
+import { StationContent } from "./station/StationContent";
+
+//------------------------------------------------------------------------------
 import type { StationId } from "@/content/stations/enum";
-import { StationContent } from "./StationContent";
 
 //------------------------------------------------------------------------------
 export const PropertyPanel = ({
@@ -18,9 +20,9 @@ export const PropertyPanel = ({
 }) => {
     //--------------------------------------------------------------------------
     return (
-        <ViewerPanel className="w-72 rounded-e-none translate-x-4 pointer-events-auto">
+        <ViewerPanel className="w-80 rounded-e-none translate-x-4 pointer-events-auto wrap-anywhere">
             <StationContent station_id={station_id} />
-            <div>
+            <div className="bg-ground">
                 {hoveredEntity?.entity && (
                     <div>
                         <h3 className="text-sm font-semibold">Hovered Entity</h3>
