@@ -78,7 +78,7 @@ export const ViewerPanelResizable = ({
         <Element
             ref={panelRef as React.RefObject<HTMLDivElement>}
             className={cn(
-                "bg-ground/92 shadow-[0_-4px_48px_-1px_rgba(0,0,0,0.1)] backdrop-blur-xl relative",
+                "bg-underground/92 shadow-[0_-4px_48px_-1px_rgba(0,0,0,0.1)] backdrop-blur-xl relative",
                 className,
             )}
             style={{ width: `${width}px`, ...(props.style as React.CSSProperties) }}

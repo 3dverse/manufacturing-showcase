@@ -95,7 +95,6 @@ export const ProductionPanel: React.FC<ProductionPanelProps> = ({
                 <MonthlyProductionChart
                     thisYear={data.monthlyProductionSeries.thisYear}
                     previousYear={data.monthlyProductionSeries.previousYear}
-                    showCompare={monthlyProductionCompare}
                     currentMonthIndex={data.currentMonthIndex}
                     monthlyData={monthlyProductionDetailedData}
                     height={48}

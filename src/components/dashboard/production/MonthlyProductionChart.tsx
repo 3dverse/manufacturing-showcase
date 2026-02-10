@@ -28,8 +28,6 @@ const MONTH_NAMES = [
 ];
 /** Minimum width per bar (including padding) to ensure readability. */
 const MIN_BAR_WIDTH = 8;
-/** Minimum width per bar when comparing (two bars per month). */
-const MIN_BAR_WIDTH_COMPARE = 12;
 
 //------------------------------------------------------------------------------
 interface MonthlyProductionData {
@@ -44,10 +42,8 @@ interface MonthlyProductionData {
 interface MonthlyProductionChartProps {
     /** 12 values (Jan–Dec) for current year. */
     thisYear: number[];
-    /** 12 values (Jan–Dec) for previous year. When showCompare is true, both series are drawn. */
+    /** 12 values (Jan–Dec) for previous year. */
     previousYear?: number[];
-    /** When true, show both this year and previous year for comparison. */
-    showCompare?: boolean;
     /** Current month index (0–11, where 0 = January). If not provided, uses current date. */
     currentMonthIndex?: number;
     /** Optional detailed monthly production data with quality breakdown and incidents. */
@@ -60,7 +56,6 @@ interface MonthlyProductionChartProps {
 export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
     thisYear,
     previousYear = [],
-    showCompare = false,
     currentMonthIndex: propCurrentMonthIndex,
     monthlyData,
     height = 100,
@@ -79,11 +74,11 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
 
     // Calculate how many months fit based on available width
     const visibleMonths = useMemo(() => {
-        const minWidthPerMonth = showCompare ? MIN_BAR_WIDTH_COMPARE : MIN_BAR_WIDTH;
+        const minWidthPerMonth = MIN_BAR_WIDTH;
         const maxMonths = Math.floor(innerWidth / minWidthPerMonth);
         // Show at least 3 months, at most 12
         return Math.max(3, Math.min(12, maxMonths));
-    }, [innerWidth, showCompare]);
+    }, [innerWidth]);
 
     // Build month indices: show previous months (including from previous year if needed), then current month at the end
     // Don't show future months
@@ -127,16 +122,13 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
             } else {
                 values.push(data[monthIndex] ?? 0);
             }
-            if (showCompare && previousYear.length === 12 && !isPreviousYear) {
-                values.push(previousYear[monthIndex] ?? 0);
-            }
         });
         // Always include current month's value to ensure scale accommodates growth
         if (data.length > currentMonthIndex) {
             values.push(data[currentMonthIndex] ?? 0);
         }
         return Math.max(...values, 1);
-    }, [monthIndices, data, previousYear, showCompare, currentMonthIndex]);
+    }, [monthIndices, data, previousYear, currentMonthIndex]);
 
     const yScale = useMemo(
         () =>
@@ -148,7 +140,7 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
     );
 
     const bandWidth = xScale.bandwidth();
-    const barWidth = showCompare ? bandWidth / 2 - 2 : bandWidth;
+    const barWidth = bandWidth;
 
     // Calculate max incidents for incident line scale (if monthlyData is provided)
     const maxIncidents = useMemo(() => {
@@ -197,32 +189,6 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
                         const valuePrev = previousYear[monthInfo.monthIndex] ?? 0;
                         const monthData = monthlyData?.[monthInfo.monthIndex];
 
-                        if (showCompare && previousYear.length === 12 && !monthInfo.isPreviousYear) {
-                            return (
-                                <>
-                                    <div>{monthName}</div>
-                                    <div className="font-semibold tabular-nums">
-                                        {currentYear}: {valueThis.toLocaleString()} products
-                                    </div>
-                                    <div className="tabular-nums text-neutral-300">
-                                        {previousYearNumber}: {valuePrev.toLocaleString()} products
-                                    </div>
-                                    {monthData && (
-                                        <>
-                                            <div className="mt-1 pt-1 border-t border-neutral-600">
-                                                <div className="text-green-400">
-                                                    Quality: {monthData.qualityProducts.toLocaleString()}
-                                                </div>
-                                                <div className="text-orange-400">
-                                                    Non-Quality: {monthData.nonQualityProducts.toLocaleString()}
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                </>
-                            );
-                        }
-
                         return (
                             <>
                                 <div>
@@ -265,11 +231,8 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
                                 : (previousYear[monthInfo.monthIndex] ?? 0);
 
                         const handleMouseEnter = () => {
-                            // Position tooltip at center of month group (or single bar), above it
-                            const monthCenterX =
-                                (x0 ?? 0) +
-                                (showCompare && !monthInfo.isPreviousYear ? barWidth + 1 : barWidth / 2) +
-                                margin.left;
+                            // Position tooltip at center of bar, above it
+                            const monthCenterX = (x0 ?? 0) + barWidth / 2 + margin.left;
                             const barTopY = margin.top;
                             setHoveredMonth({
                                 index: displayIndex,
@@ -280,37 +243,8 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
 
                         const handleMouseLeave = () => setHoveredMonth(null);
 
-                        if (showCompare && previousYear.length === 12 && !monthInfo.isPreviousYear) {
-                            const barHThis = innerHeight - yScale(valThis);
-                            const barHPrev = innerHeight - yScale(valPrev);
-                            return (
-                                <React.Fragment key={displayIndex}>
-                                    <Bar
-                                        x={x0}
-                                        y={innerHeight - barHThis}
-                                        width={barWidth}
-                                        height={barHThis}
-                                        fill="var(--color-neutral-800)"
-                                        opacity={0.9}
-                                        onMouseEnter={handleMouseEnter}
-                                        onMouseLeave={handleMouseLeave}
-                                    />
-                                    <Bar
-                                        x={x0 + barWidth + 2}
-                                        y={innerHeight - barHPrev}
-                                        width={barWidth}
-                                        height={barHPrev}
-                                        fill="var(--color-chart-muted, #94a3b8)"
-                                        opacity={0.7}
-                                        onMouseEnter={handleMouseEnter}
-                                        onMouseLeave={handleMouseLeave}
-                                    />
-                                </React.Fragment>
-                            );
-                        }
-
-                        // If monthlyData is provided and not in compare mode, show stacked bars
-                        if (monthlyData && !showCompare && !monthInfo.isPreviousYear) {
+                        // If monthlyData is provided, show stacked bars
+                        if (monthlyData && !monthInfo.isPreviousYear) {
                             const monthData = monthlyData[monthInfo.monthIndex];
                             if (monthData) {
                                 const xCenter = x0 + barWidth / 2;
@@ -375,8 +309,8 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
                         );
                     })}
 
-                    {/* Warning incidents line (if monthlyData is provided and not in compare mode) */}
-                    {monthlyData && !showCompare && maxIncidents > 0 && (
+                    {/* Warning incidents line (if monthlyData is provided) */}
+                    {monthlyData && maxIncidents > 0 && (
                         <LinePath
                             data={monthIndices.filter(({ isPreviousYear }) => !isPreviousYear)}
                             x={(_, i) => {
@@ -395,8 +329,8 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
                         />
                     )}
 
-                    {/* Error incidents line (if monthlyData is provided and not in compare mode) */}
-                    {monthlyData && !showCompare && maxIncidents > 0 && (
+                    {/* Error incidents line (if monthlyData is provided) */}
+                    {monthlyData && maxIncidents > 0 && (
                         <LinePath
                             data={monthIndices.filter(({ isPreviousYear }) => !isPreviousYear)}
                             x={(_, i) => {
@@ -417,7 +351,6 @@ export const MonthlyProductionChart: React.FC<MonthlyProductionChartProps> = ({
 
                     {/* Dots for incident lines */}
                     {monthlyData &&
-                        !showCompare &&
                         maxIncidents > 0 &&
                         monthIndices
                             .filter(({ isPreviousYear }) => !isPreviousYear)

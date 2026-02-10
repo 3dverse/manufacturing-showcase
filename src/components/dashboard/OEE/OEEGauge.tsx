@@ -14,7 +14,7 @@ export const OEEGauge: React.FC<OEEGaugeProps> = ({ value }) => {
             value={value}
             type="semicircle"
             arc={{
-                width: 0.12,
+                width: 0.03,
                 subArcs: [
                     { limit: 30, color: "var(--color-negative-600)", showTick: false },
                     { limit: 60, color: "var(--color-warning-600)", showTick: false },
@@ -35,13 +35,13 @@ export const OEEGauge: React.FC<OEEGaugeProps> = ({ value }) => {
             }}
             labels={{
                 valueLabel: {
-                    formatTextValue: (e) => "".concat(e, "%"),
+                    formatTextValue: (e) => "".concat(e.toFixed(1), "%"),
                     matchColorWithArc: true,
                     style: {
                         translate: "4px 6px",
-                        fontSize: "58px",
-                        fontWeight: "bold",
-                        letterSpacing: "-0.05em",
+                        fontSize: "60px",
+                        fontWeight: "medium",
+                        letterSpacing: "-0.08em",
                         fontVariantNumeric: "tabular-nums",
                         textShadow: "none",
                     },

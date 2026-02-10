@@ -25,8 +25,8 @@ const OEEPanel: React.FC<OEEPanelProps> = ({ oeeValue, oeeHistory, incidents = [
                     <h3 className="text-2xl font-bold text-default">OEE</h3>
                     <Badge className="-translate-x-1">Last 30 days</Badge>
                 </div>
-                <div className="max-w-24 h-16 flex items-center gap-6">
-                    <OEEGauge value={Number(oeeValue.toFixed(1))} />
+                <div className="max-w-32 h-16 flex items-center gap-6">
+                    <OEEGauge value={oeeValue} />
                 </div>
             </div>
             <OEEChart data={oeeHistory} incidents={incidents} height={120} />
