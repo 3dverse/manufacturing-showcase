@@ -118,18 +118,22 @@ export const OEEChart: React.FC<OEEChartProps> = ({ data, incidents = [], height
             {hasData && (
                 <svg width={width} height={height}>
                     <Group left={margin.left} top={margin.top}>
-                        <GridRows
-                            scale={yScale}
-                            width={innerWidth}
-                            stroke="var(--color-neutral-200)"
-                            strokeDasharray="2,2"
-                        />
-                        <GridColumns
-                            scale={xScale}
-                            height={innerHeight}
-                            stroke="var(--color-neutral-200)"
-                            strokeDasharray="2,2"
-                        />
+                        {false && (
+                            <>
+                                <GridRows
+                                    scale={yScale}
+                                    width={innerWidth}
+                                    stroke="var(--color-neutral-200)"
+                                    strokeDasharray="2,2"
+                                />
+                                <GridColumns
+                                    scale={xScale}
+                                    height={innerHeight}
+                                    stroke="var(--color-neutral-200)"
+                                    strokeDasharray="2,2"
+                                />
+                            </>
+                        )}
 
                         <AreaClosed
                             data={data}
@@ -138,7 +142,7 @@ export const OEEChart: React.FC<OEEChartProps> = ({ data, incidents = [], height
                             yScale={yScale}
                             curve={curveLinear}
                             fill="var(--color-positive)"
-                            fillOpacity={0.2}
+                            fillOpacity={0.1}
                         />
                         <LinePath
                             data={data}
@@ -161,15 +165,26 @@ export const OEEChart: React.FC<OEEChartProps> = ({ data, incidents = [], height
                             ))}
                         {/* Incidents line (orange) */}
                         {incidents.length > 0 && (
-                            <LinePath
-                                data={incidents}
-                                x={(d) => xScale(d.date.getTime())}
-                                y={(d) => incidentYScale(d.count)}
-                                curve={curveLinear}
-                                stroke="orange"
-                                strokeWidth={1}
-                                strokeOpacity={0.7}
-                            />
+                            <>
+                                <AreaClosed
+                                    data={incidents}
+                                    x={(d) => xScale(d.date.getTime())}
+                                    y={(d) => incidentYScale(d.count)}
+                                    yScale={incidentYScale}
+                                    curve={curveLinear}
+                                    fill="var(--color-warning)"
+                                    fillOpacity={0.1}
+                                />
+                                <LinePath
+                                    data={incidents}
+                                    x={(d) => xScale(d.date.getTime())}
+                                    y={(d) => incidentYScale(d.count)}
+                                    curve={curveLinear}
+                                    stroke="orange"
+                                    strokeWidth={1}
+                                    // strokeOpacity={0.7}
+                                />
+                            </>
                         )}
 
                         <AxisTop
@@ -186,7 +201,7 @@ export const OEEChart: React.FC<OEEChartProps> = ({ data, incidents = [], height
                                 textAnchor: "middle",
                                 dy: 3,
                             })}
-                            numTicks={7}
+                            numTicks={6}
                         />
                         <AxisLeft
                             scale={yScale}
@@ -200,7 +215,7 @@ export const OEEChart: React.FC<OEEChartProps> = ({ data, incidents = [], height
                                 textAnchor: "start",
                                 dx: 12,
                             })}
-                            numTicks={5}
+                            numTicks={3}
                         />
                     </Group>
                     <rect

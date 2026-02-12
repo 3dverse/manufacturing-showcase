@@ -1,5 +1,6 @@
+//------------------------------------------------------------------------------
+import Button from "@/components/common/Button";
 import Modal from "@/components/common/modal/Modal";
-import Button from "../common/Button";
 
 //------------------------------------------------------------------------------
 interface IntroductionModalProps {

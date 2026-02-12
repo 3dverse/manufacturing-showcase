@@ -2,12 +2,22 @@ import { cn } from "@/utils/cn";
 import Button from "@/components/common/Button";
 
 //------------------------------------------------------------------------------
-type ColorScheme = "brand" | "accent" | "neutral" | "informative" | "negative" | "warning" | "positive" | "guidance";
+type ColorScheme =
+    | "brand"
+    | "accent"
+    | "neutral"
+    | "slate"
+    | "informative"
+    | "negative"
+    | "warning"
+    | "positive"
+    | "guidance";
 
 const colorSchemes: ColorScheme[] = [
     "brand",
     "accent",
     "neutral",
+    "slate",
     "informative",
     "negative",
     "warning",

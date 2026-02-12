@@ -52,7 +52,7 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
     return (
         <ViewerPanel
             className={cn(
-                "appear-in-from-left opacity-0 [--animation-delay:1200ms] pl-2 pr-1 py-1.5 w-fit min-w-[120px] rounded-md pointer-events-auto",
+                "appear-in-from-left opacity-0 [--animation-delay:1200ms] px-2 py-1.5 w-fit min-w-[120px] border-none rounded-lg pointer-events-auto",
                 className,
             )}
         >

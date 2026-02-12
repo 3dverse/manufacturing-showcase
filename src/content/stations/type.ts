@@ -1,3 +1,4 @@
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { StationId } from "./enum";
 
 //------------------------------------------------------------------------------
@@ -15,6 +16,7 @@ export type Module = {
     id: string;
     name: string;
     description?: string;
+    image?: string;
     technical_documentations?: string[];
     technical_plans?: string[];
     states?: ModuleState[];
@@ -60,4 +62,22 @@ export type StateValue = {
     unit?: string;
     warning_threshold?: number;
     critical_threshold?: number;
+};
+
+//------------------------------------------------------------------------------
+export type OrderStatus = {
+    name: string;
+    color: string;
+    icon: IconProp;
+};
+
+//------------------------------------------------------------------------------
+export type Order = {
+    ref: string;
+    description?: string;
+    status: OrderStatus;
+    startDate: string;
+    endDate: string;
+    unitsPlanned: number;
+    unitsCompleted: number;
 };

@@ -10,10 +10,13 @@ export const pickingStation: Station = {
     technical_plans: [".pdf"],
     modules: [
         {
-            id: "Kawasaki-HK-1250",
-            name: "Module Kawasaki HK-1250",
+            id: "Fanuc-MA-10iB",
+            name: "Fanuc M-950iA/500",
             description: "...",
-            technical_documentations: ["https://openjicareport.jica.go.jp/pdf/11847464_03.pdf"],
+            image: "./assets/module/fanuc.webp",
+            technical_documentations: [
+                "https://d16ohktstcjvly.cloudfront.net/asset/513891251684/document_akc6cfjjbp6h38pb9824982v3p",
+            ],
             technical_plans: ["https://openjicareport.jica.go.jp/pdf/11847464_03.pdf"],
             states: [
                 {

@@ -8,20 +8,22 @@ import RefreshNotifier from "@/components/common/RefreshNotifier";
 //------------------------------------------------------------------------------
 import { Header } from "./header/Header";
 import OEEPanel from "./OEE/OEEPanel";
+import { OrderPanel } from "./order/OrderPanel";
 import { PlanningPanel } from "./planning/PlanningPanel";
 import { ProductionPanel } from "./production/ProductionPanel";
 
 //------------------------------------------------------------------------------
 import { dashboardApi, type DashboardData } from "@/services/dashboardApi";
-import type { Factory } from "@/content/factory";
+import { orders } from "@/content/orders";
+import { cn } from "@/utils/cn";
+import { useFactoryStore } from "@/store/useFactoryStore";
 
 //------------------------------------------------------------------------------
-interface LiveDashboardProps {
-    factory: Factory;
-}
+export const LiveDashboard: React.FC = () => {
+    //--------------------------------------------------------------------------
+    const { currentFactory: factory } = useFactoryStore();
 
-//------------------------------------------------------------------------------
-export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
+    //--------------------------------------------------------------------------
     const [data, setData] = useState<DashboardData | null>(null);
     const [oeeHistory, setOeeHistory] = useState<Array<{ date: Date; value: number }>>([]);
     const [dailyIncidents, setDailyIncidents] = useState<Array<{ date: Date; count: number }>>([]);
@@ -50,6 +52,7 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
         () => dashboardApi.getProductionConfig().productionIntervalMs,
     );
 
+    //--------------------------------------------------------------------------
     // Factory tick: one product every 10s when running and 8am–8pm; dashboard refreshes every 2s
     const updateData = () => {
         dashboardApi.tick(); // adds 1 product every 10s when in shift, 1 OEE sample
@@ -67,18 +70,23 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
         dashboardApi.setProductionConfig({ productionIntervalMs: newValue });
     };
 
-    useEffect(() => {
-        updateData();
-        const interval = setInterval(updateData, productionIntervalMs);
-        return () => clearInterval(interval);
-    }, [productionIntervalMs]);
-
     // Handler for manually adding a product
     const handleAddProduct = () => {
         dashboardApi.addProduct();
         updateData(); // Immediately refresh the dashboard
     };
 
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        updateData();
+        const interval = setInterval(updateData, productionIntervalMs);
+        return () => clearInterval(interval);
+    }, [productionIntervalMs]);
+
+    //--------------------------------------------------------------------------
+    const paddingLeftClassName = "pl-15";
+
+    //--------------------------------------------------------------------------
     if (!data) {
         return (
             <div className="p-4">
@@ -86,18 +94,22 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
             </div>
         );
     }
-
+    //--------------------------------------------------------------------------
     return (
         <div className="flex flex-col h-full grow overflow-y-hidden">
             <Header factory={factory} keyStatus={data.keyStatus} />
-            <WrapperPanel className="p-0 flex flex-col overflow-y-auto overflow-x-hidden">
+            <WrapperPanel className="p-0 flex flex-col overflow-y-auto overflow-x-hidden divide-y divide-slate-0">
                 <OEEPanel
                     oeeValue={data.oee}
                     oeeHistory={oeeHistory}
                     incidents={dailyIncidents}
-                    className="pl-15 border-b border-muted"
+                    className="border-b border-slate-0"
+                    paddingLeftClassName={paddingLeftClassName}
                 />
-                <div className="flex flex-col gap-5 py-4 pl-15 pr-4 border-b border-muted">
+                <article className={cn("py-4 pr-4", paddingLeftClassName)}>
+                    <OrderPanel order={orders[0]} />
+                </article>
+                <article className={cn("py-4 pr-4", paddingLeftClassName)}>
                     <PlanningPanel
                         dailyProductionData={dailyProductionData.map((d) => ({
                             date: d.date.toISOString().split("T")[0],
@@ -106,8 +118,8 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
                             qualityProducts: d.qualityProducts,
                         }))}
                     />
-                </div>
-                <div className="flex flex-col gap-5 py-4 pl-15 pr-4 border-b border-muted">
+                </article>
+                <article className="flex flex-col gap-5 py-4 pl-15 pr-4">
                     <ProductionPanel
                         data={data}
                         dailyProductionData={dailyProductionData}
@@ -115,7 +127,7 @@ export const LiveDashboard: React.FC<LiveDashboardProps> = ({ factory }) => {
                         monthlyProductionCompare={monthlyProductionCompare}
                         setMonthlyProductionCompare={setMonthlyProductionCompare}
                     />
-                </div>
+                </article>
                 <div className="flex flex-col gap-5 py-4 pl-15 pr-4">
                     <div className="flex flex-col gap-2 mb-1">
                         <div className="flex items-center justify-end gap-2">

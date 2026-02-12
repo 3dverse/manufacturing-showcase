@@ -5,9 +5,9 @@ import React, { useState } from "react";
 import { Icon } from "@/components/common/Icon";
 import Tooltip from "@/components/common/Tooltip/Tooltip";
 import { PanelHeader } from "@/components/common/panel/PanelHeader";
-import { orders, orderStatus } from "./content";
 
 //------------------------------------------------------------------------------
+import { orders, orderStatus } from "@/content/orders";
 import type { DailyProduction } from "@/services/dashboardApi";
 import { cn } from "@/utils/cn";
 

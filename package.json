@@ -44,7 +44,8 @@
     "react-dom": "^19.1.0",
     "react-gauge-component": "^2.0.23",
     "react-icons": "^5.5.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.0.1",

@@ -20,7 +20,7 @@ export const PropertyPanel = ({
 }) => {
     //--------------------------------------------------------------------------
     return (
-        <ViewerPanel className="w-80 rounded-e-none translate-x-4 pointer-events-auto wrap-anywhere">
+        <ViewerPanel className="w-[25vw] translate-x-4 bg-slate-100/80 rounded-s-lg rounded-e-none pointer-events-auto wrap-anywhere">
             <StationContent station_id={station_id} />
             <div hidden className="bg-ground">
                 {hoveredEntity?.entity && (

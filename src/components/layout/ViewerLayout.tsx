@@ -20,12 +20,17 @@ import { ViewerController } from "@/components/viewer/ViewerController";
 import { PropertyPanel } from "@/components/propertyPanel/PropertyPanel";
 
 //------------------------------------------------------------------------------
+import type { Factory } from "@/content/factory";
+
+//------------------------------------------------------------------------------
 const ViewerLayout = ({
     currentRoute,
     setCurrentRoute,
+    factory,
 }: {
     currentRoute: string;
     setCurrentRoute: (route: string) => void;
+    factory: Factory;
 }) => {
     //--------------------------------------------------------------------------
     const cameraControllerRef = useRef<DefaultCameraController | null>(null);
@@ -39,7 +44,7 @@ const ViewerLayout = ({
     //--------------------------------------------------------------------------
     return (
         <div className="relative flex-1">
-            <Canvas className="w-full h-full">
+            <Canvas className="w-full h-full filter-[ brightness(1.2)]">
                 <Viewport
                     cameraEntity={cameraEntity}
                     className="w-full h-full"
@@ -55,6 +60,8 @@ const ViewerLayout = ({
                     <CameraController ref={cameraControllerRef} />
                     <StationLabels cameraController={cameraControllerRef.current} />
                 </Viewport>
+                {/* Light overlay */}
+                {/* <span className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-slate-100 to-transparent mix-blend-multiply pointer-events-none opacity-80" /> */}
             </Canvas>
 
             <div className="absolute bottom-0 left-0 w-full h-full flex pointer-events-none">

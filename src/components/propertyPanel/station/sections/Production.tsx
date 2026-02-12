@@ -5,7 +5,7 @@ import { faCartShopping } from "@fortawesome/pro-solid-svg-icons";
 import { Icon } from "@/components/common/Icon";
 
 //------------------------------------------------------------------------------
-export const Production = ({ units_picked }: { units_picked: number }) => {
+export const Production = ({ module }: { module: ModuleType }) => {
     //--------------------------------------------------------------------------
     return (
         <ul className="py-1">
@@ -15,7 +15,7 @@ export const Production = ({ units_picked }: { units_picked: number }) => {
                     size="xs"
                     className="group-hover:text-accent text-muted transition-colors duration-200 mt-1"
                 />
-                Units picked: {units_picked}
+                Units picked: {module.states?.[0]?.units_picked}
             </li>
         </ul>
     );

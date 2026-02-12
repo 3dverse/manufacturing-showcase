@@ -1,4 +1,5 @@
 import { faCalendarDays, faCheckCircle, faClockRotateLeft, faXmarkCircle } from "@fortawesome/pro-solid-svg-icons";
+import type { Order } from "./stations/type";
 
 //------------------------------------------------------------------------------
 export const orderStatus = {
@@ -13,7 +14,7 @@ export const orderStatus = {
 };
 
 //------------------------------------------------------------------------------
-export const orders = [
+export const orders: Order[] = [
     {
         ref: "123456",
         startDate: "Yes. 8:30",
