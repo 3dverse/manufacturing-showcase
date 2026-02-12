@@ -13,7 +13,7 @@ import { Module } from "./module/Module";
 //------------------------------------------------------------------------------
 import { stations } from "@/content/stations";
 import type { StationId } from "@/content/stations/enum";
-import type { Module as ModuleType } from "@/content/stations/type";
+import type { Module as ModuleType } from "@/content/type";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -58,6 +58,7 @@ export const StationContent = ({ station_id }: { station_id: StationId }) => {
                 {station.modules && <Module module={station.modules[0]} />}
             </Wrapper>
 
+            {/* eslint-disable-next-line no-constant-binary-expression */}
             {false && (
                 <>
                     {activeTab === "global" ? (
@@ -78,7 +79,7 @@ export const StationContent = ({ station_id }: { station_id: StationId }) => {
                             <div className="divide-y divide-neutral-0">
                                 <Wrapper className="py-1">
                                     <Heading>Production</Heading>
-                                    <Production module={station.modules?.[0]} />
+                                    {station.modules![0] && <Production module={station.modules![0]} />}
                                 </Wrapper>
                                 <Wrapper className="py-1">
                                     <Heading>Maintenance</Heading>
@@ -93,7 +94,13 @@ export const StationContent = ({ station_id }: { station_id: StationId }) => {
                             </div>
                         </div>
                     ) : (
-                        <Module module={station.modules?.find((module) => module.id === activeTab)} />
+                        <>
+                            {station.modules?.find((module) => module.id === activeTab) && (
+                                <Module
+                                    module={station.modules?.find((module) => module.id === activeTab) as ModuleType}
+                                />
+                            )}
+                        </>
                     )}
                     <Navigation
                         modules={station.modules}

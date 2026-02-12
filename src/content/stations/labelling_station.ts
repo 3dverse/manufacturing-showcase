@@ -1,5 +1,5 @@
 import { StationId } from "./enum";
-import type { Station } from "./type";
+import type { Station } from "@/content/type";
 
 //------------------------------------------------------------------------------
 export const labellingStation: Station = {

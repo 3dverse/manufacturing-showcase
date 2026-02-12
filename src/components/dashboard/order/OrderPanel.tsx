@@ -8,7 +8,7 @@ import { PanelHeader } from "@/components/common/panel/PanelHeader";
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
 import { Card } from "@/components/common/Card";
-import type { Order } from "@/content/stations/type";
+import type { Order } from "@/content/type";
 
 //------------------------------------------------------------------------------
 interface OrderPanelProps {

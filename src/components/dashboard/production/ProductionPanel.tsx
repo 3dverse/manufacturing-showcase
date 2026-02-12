@@ -32,8 +32,6 @@ interface ProductionPanelProps {
     data: DashboardData;
     dailyProductionData: DailyProductionDetailedData[];
     monthlyProductionDetailedData?: MonthlyProductionDetailedData[];
-    monthlyProductionCompare: boolean;
-    setMonthlyProductionCompare: (compare: boolean) => void;
     className?: string;
 }
 
@@ -42,8 +40,6 @@ export const ProductionPanel: React.FC<ProductionPanelProps> = ({
     data,
     dailyProductionData,
     monthlyProductionDetailedData,
-    monthlyProductionCompare,
-    setMonthlyProductionCompare,
 }) => {
     return (
         <div className="flex flex-col gap-2">
@@ -90,7 +86,6 @@ export const ProductionPanel: React.FC<ProductionPanelProps> = ({
                             : undefined,
                     positive: data.productMonth >= data.productPreviousMonth,
                 }}
-                onMetricSubtitleHover={setMonthlyProductionCompare}
             >
                 <MonthlyProductionChart
                     thisYear={data.monthlyProductionSeries.thisYear}

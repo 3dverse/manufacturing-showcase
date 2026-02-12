@@ -2,7 +2,7 @@ import Button from "@/components/common/Button";
 
 //------------------------------------------------------------------------------
 import { CONTACT_URL, LANDING_3DVERSE_URL } from "@/content/routes";
-import { useCases } from "@/content/usecases";
+import { useCases } from "@/content/useCases";
 
 //------------------------------------------------------------------------------
 const MainGuidance = () => {

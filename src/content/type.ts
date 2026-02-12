@@ -1,5 +1,5 @@
-import type { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { StationId } from "./enum";
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import type { StationId } from "./stations/enum";
 
 //------------------------------------------------------------------------------
 export type Station = {
@@ -68,7 +68,7 @@ export type StateValue = {
 export type OrderStatus = {
     name: string;
     color: string;
-    icon: IconProp;
+    icon: IconDefinition;
 };
 
 //------------------------------------------------------------------------------
@@ -80,4 +80,46 @@ export type Order = {
     endDate: string;
     unitsPlanned: number;
     unitsCompleted: number;
+};
+
+//------------------------------------------------------------------------------
+export type UseCase = {
+    id: string;
+    name: string;
+    description: string;
+    steps: UseCaseStep[];
+};
+
+//------------------------------------------------------------------------------
+export type UseCaseStep = {
+    id: string;
+    name: string;
+    description: string;
+    delayBefore: number; // ms
+    incidents: UseCaseIncident[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any;
+};
+
+//------------------------------------------------------------------------------
+export type UseCaseIncident = {
+    type: "warning" | "error";
+    description: string;
+    machines: Machine[];
+    possibleCauses: string[];
+    consequences: string[];
+    actions: Action[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any;
+};
+
+//------------------------------------------------------------------------------
+export type Machine = {
+    station: StationId;
+    machines: string[];
+};
+
+//------------------------------------------------------------------------------
+export type Action = {
+    id: string;
 };

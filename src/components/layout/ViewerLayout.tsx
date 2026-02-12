@@ -20,17 +20,12 @@ import { ViewerController } from "@/components/viewer/ViewerController";
 import { PropertyPanel } from "@/components/propertyPanel/PropertyPanel";
 
 //------------------------------------------------------------------------------
-import type { Factory } from "@/content/factory";
-
-//------------------------------------------------------------------------------
 const ViewerLayout = ({
     currentRoute,
     setCurrentRoute,
-    factory,
 }: {
     currentRoute: string;
     setCurrentRoute: (route: string) => void;
-    factory: Factory;
 }) => {
     //--------------------------------------------------------------------------
     const cameraControllerRef = useRef<DefaultCameraController | null>(null);

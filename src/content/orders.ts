@@ -1,5 +1,5 @@
 import { faCalendarDays, faCheckCircle, faClockRotateLeft, faXmarkCircle } from "@fortawesome/pro-solid-svg-icons";
-import type { Order } from "./stations/type";
+import type { Order } from "@/content/type";
 
 //------------------------------------------------------------------------------
 export const orderStatus = {

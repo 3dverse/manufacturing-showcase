@@ -3,9 +3,10 @@ import { faCartShopping } from "@fortawesome/pro-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
+import type { Module } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export const Production = ({ module }: { module: ModuleType }) => {
+export const Production = ({ module }: { module: Module }) => {
     //--------------------------------------------------------------------------
     return (
         <ul className="py-1">

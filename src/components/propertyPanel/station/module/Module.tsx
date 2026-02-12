@@ -1,10 +1,14 @@
 //------------------------------------------------------------------------------
-import type { Module as ModuleType } from "@/content/stations/type";
+import type { Module as ModuleType } from "@/content/type";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 export const Module = ({ module }: { module: ModuleType }) => {
     const { image, states } = module;
+
+    //--------------------------------------------------------------------------
+    const currentState = states?.[0];
+
     //--------------------------------------------------------------------------
     return (
         <div className="flex gap-2 mb-1 mt-4">
@@ -15,11 +19,13 @@ export const Module = ({ module }: { module: ModuleType }) => {
             )}
             <Box className="grow">
                 <p className="text-sm">{module?.name}</p>
-                {states[0].picked_rate && <p className="text-sm">Picked rate: {states[0].picked_rate}%</p>}
-                {states[0].incidents && <p className="text-sm">Incidents: {states[0].incidents}</p>}
-                {states[0].quality_of_grip && <p className="text-sm">Quality of grip: {states[0].quality_of_grip}%</p>}
-                {states[0].course && <p className="text-sm">Course: {states[0].course} mm</p>}
-                {states[0].units_picked && <p className="text-sm">Units picked: {states[0].units_picked}</p>}
+                {currentState?.picked_rate && <p className="text-sm">Picked rate: {currentState.picked_rate}%</p>}
+                {currentState?.incidents && <p className="text-sm">Incidents: {currentState.incidents}</p>}
+                {currentState?.quality_of_grip && (
+                    <p className="text-sm">Quality of grip: {currentState.quality_of_grip}%</p>
+                )}
+                {currentState?.course && <p className="text-sm">Course: {currentState.course} mm</p>}
+                {currentState?.units_picked && <p className="text-sm">Units picked: {currentState.units_picked}</p>}
             </Box>
         </div>
     );

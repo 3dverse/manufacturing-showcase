@@ -16,13 +16,9 @@ import { ProductionPanel } from "./production/ProductionPanel";
 import { dashboardApi, type DashboardData } from "@/services/dashboardApi";
 import { orders } from "@/content/orders";
 import { cn } from "@/utils/cn";
-import { useFactoryStore } from "@/store/useFactoryStore";
 
 //------------------------------------------------------------------------------
 export const LiveDashboard: React.FC = () => {
-    //--------------------------------------------------------------------------
-    const { currentFactory: factory } = useFactoryStore();
-
     //--------------------------------------------------------------------------
     const [data, setData] = useState<DashboardData | null>(null);
     const [oeeHistory, setOeeHistory] = useState<Array<{ date: Date; value: number }>>([]);
@@ -47,7 +43,6 @@ export const LiveDashboard: React.FC = () => {
             errorIncidents: number;
         }>
     >([]);
-    const [monthlyProductionCompare, setMonthlyProductionCompare] = useState(false);
     const [productionIntervalMs, setProductionIntervalMs] = useState(
         () => dashboardApi.getProductionConfig().productionIntervalMs,
     );
@@ -97,7 +92,7 @@ export const LiveDashboard: React.FC = () => {
     //--------------------------------------------------------------------------
     return (
         <div className="flex flex-col h-full grow overflow-y-hidden">
-            <Header factory={factory} keyStatus={data.keyStatus} />
+            <Header keyStatus={data.keyStatus} />
             <WrapperPanel className="p-0 flex flex-col overflow-y-auto overflow-x-hidden divide-y divide-slate-0">
                 <OEEPanel
                     oeeValue={data.oee}
@@ -124,8 +119,6 @@ export const LiveDashboard: React.FC = () => {
                         data={data}
                         dailyProductionData={dailyProductionData}
                         monthlyProductionDetailedData={monthlyProductionData}
-                        monthlyProductionCompare={monthlyProductionCompare}
-                        setMonthlyProductionCompare={setMonthlyProductionCompare}
                     />
                 </article>
                 <div className="flex flex-col gap-5 py-4 pl-15 pr-4">

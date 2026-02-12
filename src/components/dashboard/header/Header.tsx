@@ -9,16 +9,18 @@ import { KeyStatusIndicators } from "./StatusIndicators";
 
 //------------------------------------------------------------------------------
 import { type KeyStatus } from "@/services/dashboardApi";
-import type { Factory } from "@/content/factory";
+import { useFactoryStore } from "@/store/useFactoryStore";
 
 //------------------------------------------------------------------------------
 interface HeaderProps {
-    factory: Factory;
     keyStatus: KeyStatus;
 }
 
 //------------------------------------------------------------------------------
-export const Header: React.FC<HeaderProps> = ({ factory, keyStatus }) => {
+export const Header: React.FC<HeaderProps> = ({ keyStatus }) => {
+    //--------------------------------------------------------------------------
+    const { currentFactory: factory } = useFactoryStore();
+
     //--------------------------------------------------------------------------
     const [now, setNow] = useState<Date>(() => new Date());
 
@@ -30,6 +32,10 @@ export const Header: React.FC<HeaderProps> = ({ factory, keyStatus }) => {
         return () => clearInterval(interval);
     }, []);
 
+    //--------------------------------------------------------------------------
+    if (!factory) {
+        return null;
+    }
     //--------------------------------------------------------------------------
     return (
         <WrapperPanel

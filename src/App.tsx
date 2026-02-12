@@ -79,7 +79,7 @@ function AppLayout() {
             }
             return (
                 <Livelink sceneId={factory.scene_id} token={token} LoadingPanel={LoadingOverlay}>
-                    <ViewerLayout currentRoute={currentRoute} setCurrentRoute={navigate} factory={factory} />
+                    <ViewerLayout currentRoute={currentRoute} setCurrentRoute={navigate} />
                     <MainGuidance />
                 </Livelink>
             );
