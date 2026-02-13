@@ -40,7 +40,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ index, label, 
     return (
         <div
             className={cn(
-                "flex flex-col items-center justify-center py-1 px-3 opacity-0 appear-in-from-bottom duration-200",
+                "flex flex-col items-center justify-center py-1 @md:px-3 opacity-0 appear-in-from-bottom duration-200",
             )}
             style={
                 {

@@ -69,7 +69,7 @@ export const PlanningPanel: React.FC<PlanningPanelProps> = ({ dailyProductionDat
                     <p className="text-right">Units</p>
                     <p className="text-right">Status</p>
                 </div>
-                <ul className="bg-ground rounded divide-y divide-muted border border-muted">
+                <ul className="bg-neutral-0/50 rounded divide-y divide-muted border border-muted">
                     {editedOrders.map((order) => (
                         <li key={order.ref}>
                             <Tooltip

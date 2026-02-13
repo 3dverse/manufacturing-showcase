@@ -7,7 +7,7 @@ const MainPanel = () => {
     return (
         <ViewerPanelResizable
             resizableFrom="right"
-            defaultWidth={600}
+            defaultWidth={400}
             minWidth={400}
             maxWidth={800}
             className="h-full bg-slate-100/80 pointer-events-auto"

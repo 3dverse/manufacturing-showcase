@@ -70,14 +70,13 @@ export const Header: React.FC<HeaderProps> = ({ keyStatus }) => {
                     </div>
                 </div>
 
-                <div className="shrink flex items-center gap-2">
-                    <KeyStatusIndicators
-                        efficiency={keyStatus.efficiency}
-                        quality={keyStatus.quality}
-                        tracking={keyStatus.tracking}
-                        maintenance={keyStatus.maintenance}
-                    />
-                </div>
+                <KeyStatusIndicators
+                    efficiency={keyStatus.efficiency}
+                    quality={keyStatus.quality}
+                    tracking={keyStatus.tracking}
+                    maintenance={keyStatus.maintenance}
+                    className="shrink"
+                />
             </div>
         </WrapperPanel>
     );
