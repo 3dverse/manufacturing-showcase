@@ -1,24 +1,24 @@
 import {
     faBoltLightning,
     faCog,
+    faDashboard,
     faGraduationCap,
-    faHome,
     faPalette,
     faScrewdriverWrench,
     faShieldHalved,
 } from "@fortawesome/sharp-light-svg-icons";
 import {
-    faHome as faHomeSolid,
     faScrewdriverWrench as faScrewdriverWrenchSolid,
     faShieldHalved as faShieldHalvedSolid,
     faBoltLightning as faBoltLightningSolid,
     faGraduationCap as faGraduationCapSolid,
     faPalette as faPaletteSolid,
     faCog as faCogSolid,
+    faDashboard as faDashboardSolid,
 } from "@fortawesome/pro-solid-svg-icons";
 
 //------------------------------------------------------------------------------
-export const dashboardIcon = { light: faHome, solid: faHomeSolid };
+export const dashboardIcon = { light: faDashboard, solid: faDashboardSolid };
 export const maintenanceIcon = { light: faScrewdriverWrench, solid: faScrewdriverWrenchSolid };
 export const securityIcon = { light: faShieldHalved, solid: faShieldHalvedSolid };
 export const energyIcon = { light: faBoltLightning, solid: faBoltLightningSolid };

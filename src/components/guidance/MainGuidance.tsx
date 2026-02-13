@@ -6,14 +6,16 @@ import { useCases } from "@/content/useCases";
 
 //------------------------------------------------------------------------------
 const MainGuidance = () => {
+    //--------------------------------------------------------------------------
     const handleContact = () => {
         window.open(CONTACT_URL, "_blank", "noopener,noreferrer");
     };
 
+    //--------------------------------------------------------------------------
     return (
         <aside
             data-theme="dark"
-            className="relative w-full h-24 bg-neutral-100 text-default shadow-[0_-4px_32px_-1px_rgba(0,0,0,0.1)] overflow-hidden z-100"
+            className="relative w-full h-24 bg-slate-100 text-default shadow-[0_-4px_32px_-1px_rgba(0,0,0,0.1)] overflow-hidden z-100"
         >
             <div className="flex items-center justify-between h-full px-10">
                 <a href={LANDING_3DVERSE_URL} target="_blank" rel="noopener noreferrer" className="flex flex-col">
@@ -29,7 +31,7 @@ const MainGuidance = () => {
                         {useCases.map((useCase, index) => (
                             <li
                                 key={index}
-                                className="text-xs bg-neutral-200/0 border border-neutral-300 rounded-full px-4 py-2"
+                                className="text-xs bg-slate-200/0 border border-slate-300 rounded-full px-4 py-2"
                             >
                                 {useCase.name}
                             </li>

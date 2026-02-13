@@ -39,18 +39,18 @@
     --color-neutral-1000: oklch(1 0 0);
 
     /* Slate */
-    --color-slate-0: oklch(1 0 289.79);
-    --color-slate-50: oklch(0.98 0.005 289.79);
-    --color-slate-100: oklch(0.94 0.01 289.79);
-    --color-slate-200: oklch(0.88 0.012 289.79);
-    --color-slate-300: oklch(0.78 0.014 289.79);
-    --color-slate-400: oklch(0.65 0.016 289.79);
-    --color-slate-500: oklch(0.52 0.018 289.79);
-    --color-slate-600: oklch(0.42 0.016 289.79);
-    --color-slate-700: oklch(0.34 0.014 289.79);
-    --color-slate-800: oklch(0.26 0.012 289.79);
-    --color-slate-900: oklch(0.18 0.01 289.79);
-    --color-slate-1000: oklch(0.1 0.008 289.79);
+    --color-slate-0: oklch(0.1 0.008 289.79);
+    --color-slate-50: oklch(0.18 0.01 289.79);
+    --color-slate-100: oklch(0.26 0.012 289.79);
+    --color-slate-200: oklch(0.34 0.014 289.79);
+    --color-slate-300: oklch(0.42 0.016 289.79);
+    --color-slate-400: oklch(0.52 0.018 289.79);
+    --color-slate-500: oklch(0.65 0.016 289.79);
+    --color-slate-600: oklch(0.78 0.014 289.79);
+    --color-slate-700: oklch(0.88 0.012 289.79);
+    --color-slate-800: oklch(0.94 0.01 289.79);
+    --color-slate-900: oklch(0.98 0.005 289.79);
+    --color-slate-1000: oklch(1 0 289.79);
 
     /* Informative */
     --color-informative-50: oklch(0.3 0.12 220);

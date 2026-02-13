@@ -5,7 +5,7 @@ export const mainMenuItems = [
     {
         label: "Home",
         icon: mainMenuIcons.dashboard.light,
-        href: "/",
+        href: "",
     },
     {
         label: "Maintenance",

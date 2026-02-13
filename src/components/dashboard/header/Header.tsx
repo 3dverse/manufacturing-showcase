@@ -10,6 +10,7 @@ import { KeyStatusIndicators } from "./StatusIndicators";
 //------------------------------------------------------------------------------
 import { type KeyStatus } from "@/services/dashboardApi";
 import { useFactoryStore } from "@/store/useFactoryStore";
+import { useNavigationStore } from "@/store/useNavigationStore";
 
 //------------------------------------------------------------------------------
 interface HeaderProps {
@@ -20,6 +21,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ keyStatus }) => {
     //--------------------------------------------------------------------------
     const { currentFactory: factory } = useFactoryStore();
+    const { navigate } = useNavigationStore();
 
     //--------------------------------------------------------------------------
     const [now, setNow] = useState<Date>(() => new Date());
@@ -43,7 +45,10 @@ export const Header: React.FC<HeaderProps> = ({ keyStatus }) => {
             className="@container relative flex gap-2 pl-15 py-3 bg-neutral-0/70 border-b border-muted/90 shadow-lg/3"
         >
             <div className="absolute top-4 @lg:top-7 left-4 flex items-center gap-2">
-                <button className="px-1 py-px aspect-square rounded-sm text-accent bg-accent-50 hover:bg-accent-100 transition-colors duration-200 cursor-pointer">
+                <button
+                    className="px-1 py-px aspect-square rounded-sm text-accent bg-accent-50 hover:bg-accent-100 transition-colors duration-200 cursor-pointer"
+                    onClick={() => navigate("/")}
+                >
                     <Icon icon={faGrid} />
                 </button>
             </div>

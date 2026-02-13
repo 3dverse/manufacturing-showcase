@@ -1,5 +1,6 @@
 import { cn } from "@/utils/cn";
 import type { IconDefinition } from "@fortawesome/fontawesome-common-types";
+import { useFactoryStore } from "@/store/useFactoryStore";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
@@ -49,6 +50,14 @@ const MainMenu = ({
     currentRoute: string;
     setCurrentRoute: (route: string) => void;
 }) => {
+    //--------------------------------------------------------------------------
+    const { currentFactory } = useFactoryStore();
+
+    const handleClick = (href: string) => {
+        setCurrentRoute(`/factory/${currentFactory?.id}${href}`);
+    };
+
+    //--------------------------------------------------------------------------
     return (
         <div className="absolute top-0 left-1 w-10 h-full flex flex-col justify-between items-center z-10">
             <span />
@@ -63,7 +72,7 @@ const MainMenu = ({
                             {...item}
                             isActive={currentRoute === item.href}
                             isDisabled={!!item.isDisabled}
-                            onClick={() => setCurrentRoute(item.href)}
+                            onClick={() => handleClick(item.href)}
                         />
                     ))}
                 </div>

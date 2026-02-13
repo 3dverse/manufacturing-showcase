@@ -15,6 +15,7 @@ import {
 //------------------------------------------------------------------------------
 import { ViewerPanelResizable } from "@/components/common/ViewerPanelResizable";
 import { ViewerController } from "@/components/viewer/ViewerController";
+import { factories } from "@/content/factory";
 
 //------------------------------------------------------------------------------
 const meta = {
@@ -48,7 +49,7 @@ export const _ViewerPanelResizable = () => {
 };
 
 //------------------------------------------------------------------------------
-const scene_id = "d490dde6-5590-426f-a0ff-7a422b3e2ba7";
+const scene_id = factories[0].scene_id;
 const token = "public_OJTstp3bLFmUw0OS";
 
 //------------------------------------------------------------------------------

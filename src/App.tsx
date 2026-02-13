@@ -12,11 +12,12 @@ import MainGuidance from "@/components/guidance/MainGuidance";
 import IntroductionModal from "@/components/guidance/IntroductionModal";
 
 //------------------------------------------------------------------------------
-import { factories } from "./content/factory";
+import { factories } from "@/content/factory";
 import { useFactoryStore } from "@/store/useFactoryStore";
+import { useNavigationStore } from "@/store/useNavigationStore";
 
 //------------------------------------------------------------------------------
-const token = "public_OJTstp3bLFmUw0OS";
+const TOKEN_3DVERSE = "public_OJTstp3bLFmUw0OS";
 
 //------------------------------------------------------------------------------
 export function App() {
@@ -29,6 +30,7 @@ function AppLayout() {
     const [currentRoute, setCurrentRoute] = useState(() => window.location.pathname);
     const [isIntroductionModalOpen, setIsIntroductionModalOpen] = useState<boolean>(false);
     const { setCurrentFactory, clearCurrentFactory } = useFactoryStore();
+    const setNavigate = useNavigationStore((state) => state.setNavigate);
 
     //--------------------------------------------------------------------------
     // Navigation function that updates both state and URL
@@ -36,6 +38,12 @@ function AppLayout() {
         setCurrentRoute(route);
         window.history.pushState(null, "", route);
     };
+
+    //--------------------------------------------------------------------------
+    // Register navigation function globally on mount
+    useEffect(() => {
+        setNavigate(navigate);
+    }, [setNavigate]);
 
     //--------------------------------------------------------------------------
     // Handle browser back/forward buttons
@@ -52,7 +60,7 @@ function AppLayout() {
     // Update factory store when route changes
     useEffect(() => {
         if (currentRoute.startsWith("/factory/")) {
-            const factoryId = currentRoute.replace("/factory/", "");
+            const factoryId = currentRoute.split("/")[2];
             const factory = factories.find((f) => f.id === factoryId);
             if (factory) {
                 setCurrentFactory(factory);
@@ -67,24 +75,24 @@ function AppLayout() {
     //--------------------------------------------------------------------------
     const renderContent = () => {
         if (currentRoute === "/") {
-            return <HomePage onNavigate={navigate} />;
+            return <HomePage />;
         } else if (currentRoute === "/theme") {
             return <Theme onBack={() => navigate("/")} />;
         } else if (currentRoute.startsWith("/factory/")) {
-            const factoryId = currentRoute.replace("/factory/", "");
+            const factoryId = currentRoute.split("/")[2];
             const factory = factories.find((f) => f.id === factoryId);
 
             if (!factory) {
-                return <HomePage onNavigate={navigate} />;
+                return <HomePage />;
             }
             return (
-                <Livelink sceneId={factory.scene_id} token={token} LoadingPanel={LoadingOverlay}>
+                <Livelink sceneId={factory.scene_id} token={TOKEN_3DVERSE} LoadingPanel={LoadingOverlay}>
                     <ViewerLayout currentRoute={currentRoute} setCurrentRoute={navigate} />
                     <MainGuidance />
                 </Livelink>
             );
         }
-        return <HomePage onNavigate={navigate} />;
+        return <HomePage />;
     };
 
     //--------------------------------------------------------------------------
