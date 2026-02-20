@@ -10,23 +10,14 @@ import {
 } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
-import MainMenu from "@/components/layout/MainMenu";
-import MainPanel from "@/components/layout/MainPanel";
-import { ConnectedSystemsPanel } from "@/components/connectedSystems/ConnectedSystemsPanel";
 import StationLabels from "@/components/stations/StationLabels";
-import StationButtonsList from "@/components/stations/StationButtonsList";
-import ClientAvatarList from "@/components/clients/AvatarList";
 import { ViewerController } from "@/components/viewer/ViewerController";
-import { PropertyPanel } from "@/components/propertyPanel/PropertyPanel";
 
 //------------------------------------------------------------------------------
-const ViewerLayout = ({
-    currentRoute,
-    setCurrentRoute,
-}: {
-    currentRoute: string;
-    setCurrentRoute: (route: string) => void;
-}) => {
+const ViewerLayout = ({ currentRoute }: { currentRoute: string }) => {
+    //--------------------------------------------------------------------------
+    console.log("currentRoute", currentRoute);
+
     //--------------------------------------------------------------------------
     const cameraControllerRef = useRef<DefaultCameraController | null>(null);
     const { cameraEntity } = useCameraEntity({ position: [10, 10, -10] });
@@ -59,26 +50,7 @@ const ViewerLayout = ({
                 {/* <span className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-slate-100 to-transparent mix-blend-multiply pointer-events-none opacity-80" /> */}
             </Canvas>
 
-            <div className="absolute bottom-0 left-0 w-full h-full flex pointer-events-none">
-                <MainMenu currentRoute={currentRoute} setCurrentRoute={setCurrentRoute} />
-                <MainPanel />
-                <div className="grow flex flex-col justify-between p-4">
-                    <div className="flex justify-between">
-                        <ConnectedSystemsPanel />
-                        <ClientAvatarList />
-                    </div>
-                    <div className="flex justify-end">
-                        {cameraControllerRef.current && (
-                            <StationButtonsList cameraController={cameraControllerRef.current} />
-                        )}
-                        <PropertyPanel
-                            hoveredEntity={hoveredEntity}
-                            pickedEntity={pickedEntity}
-                            station_id="picking_station"
-                        />
-                    </div>
-                </div>
-            </div>
+            <div className="absolute bottom-0 left-0 w-full h-full flex pointer-events-none">{/* Content */}</div>
         </div>
     );
 };

@@ -87,8 +87,9 @@ function AppLayout() {
             }
             return (
                 <Livelink sceneId={factory.scene_id} token={TOKEN_3DVERSE} LoadingPanel={LoadingOverlay}>
-                    <ViewerLayout currentRoute={currentRoute} setCurrentRoute={navigate} />
-                    <MainGuidance />
+                    <ViewerLayout currentRoute={currentRoute} />
+                    {/* eslint-disable-next-line no-constant-binary-expression */}
+                    {false && <MainGuidance />}
                 </Livelink>
             );
         }

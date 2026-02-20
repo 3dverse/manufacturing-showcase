@@ -1,11 +1,9 @@
 //------------------------------------------------------------------------------
-import MainGuidance from "@/components/guidance/MainGuidance";
-import Button from "@/components/common/Button";
+import { Triangle } from "@/components/common/icons/Triangle";
 
 //------------------------------------------------------------------------------
 import { factories } from "@/content/factory";
 import { useNavigate } from "@/hooks/useNavigate";
-import { Triangle } from "@/components/common/icons/triangle";
 
 //------------------------------------------------------------------------------
 export default function HomePage() {
@@ -16,18 +14,21 @@ export default function HomePage() {
     return (
         <>
             <div className="h-full bg-linear-to-br from-slate-50 to-slate-100">
-                <div className="container mx-auto px-4 py-16">
-                    <header className="max-w-6xl mx-auto mb-16">
-                        <h1 className="text-4xl font-bold mb-3">[Client Name]</h1>
-                        <p className="text-subtle/80">[Client Description]</p>
-                    </header>
+                <div className="container h-full mx-auto px-4 py-16">
+                    {/* eslint-disable-next-line no-constant-binary-expression */}
+                    {false && (
+                        <header className="max-w-6xl mx-auto mb-16">
+                            <h1 className="text-4xl font-bold mb-3">[Client Name]</h1>
+                            <p className="text-subtle/80">[Client Description]</p>
+                        </header>
+                    )}
 
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl h-full mx-auto">
                         {factories.map((factoryItem) => (
                             <li key={factoryItem.id}>
                                 <button
                                     onClick={() => navigate(`/factory/${factoryItem.id}`)}
-                                    className="relative w-full text-left bg-slate-50 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group"
+                                    className="relative w-full h-full text-left bg-slate-50 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group"
                                 >
                                     <div className="flex">
                                         <div className="grow pl-7 pr-5 pt-5 pb-4">
@@ -75,7 +76,7 @@ export default function HomePage() {
                                     </div>
 
                                     {/* Livelink preview */}
-                                    <div className="w-full h-80 p-4 bg-stripes rounded-lg border-t border-slate-100" />
+                                    <div className="w-full h-full p-4 bg-stripes rounded-lg border-t border-slate-100" />
 
                                     {/* Bottom accent line */}
                                     <div className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-blue-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left z-10" />
@@ -83,15 +84,8 @@ export default function HomePage() {
                             </li>
                         ))}
                     </ul>
-
-                    <footer className="text-center mt-12">
-                        <Button variant="ghost" size="sm" onClick={() => navigate("/theme")}>
-                            Theme Settings
-                        </Button>
-                    </footer>
                 </div>
             </div>
-            <MainGuidance />
         </>
     );
 }

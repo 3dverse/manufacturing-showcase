@@ -13,7 +13,7 @@ export const pickingStation: Station = {
             id: "Fanuc-MA-10iB",
             name: "Fanuc M-950iA/500",
             description: "...",
-            image: "./assets/module/fanuc.webp",
+            image: "./assets/machine/Fanuc_M-950iA-500.webp",
             technical_documentations: [
                 "https://d16ohktstcjvly.cloudfront.net/asset/513891251684/document_akc6cfjjbp6h38pb9824982v3p",
             ],
