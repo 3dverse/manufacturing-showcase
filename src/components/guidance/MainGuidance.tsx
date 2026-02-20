@@ -15,7 +15,7 @@ const MainGuidance = () => {
     return (
         <aside
             data-theme="dark"
-            className="relative w-full h-24 bg-slate-100 text-default shadow-[0_-4px_32px_-1px_rgba(0,0,0,0.1)] overflow-hidden z-100"
+            className="relative w-full h-24 bg-slate-1000 text-default shadow-[0_-4px_32px_-1px_color-mix(in_oklch,var(--color-accent-200)_20%,transparent)] overflow-hidden z-100"
         >
             <div className="flex items-center justify-between h-full px-10">
                 <a href={LANDING_3DVERSE_URL} target="_blank" rel="noopener noreferrer" className="flex flex-col">
