@@ -7,7 +7,7 @@ import { LoadingOverlay } from "@3dverse/livelink-react-ui";
 import Theme from "@/pages/Theme";
 import HomePage from "@/pages/HomePage";
 //------------------------------------------------------------------------------
-import ViewerLayout from "@/components/layout/ViewerLayout";
+import FactoryLayout from "@/components/layout/FactoryLayout";
 import MainGuidance from "@/components/guidance/MainGuidance";
 import IntroductionModal from "@/components/guidance/IntroductionModal";
 
@@ -85,7 +85,7 @@ function AppLayout() {
             }
             return (
                 <Livelink sceneId={factory.scene_id} token={TOKEN_3DVERSE} LoadingPanel={LoadingOverlay}>
-                    <ViewerLayout currentRoute={currentRoute} />
+                    <FactoryLayout currentRoute={currentRoute} />
                     {/* eslint-disable-next-line no-constant-binary-expression */}
                     {false && <MainGuidance />}
                 </Livelink>

@@ -1,12 +1,23 @@
 //------------------------------------------------------------------------------
+import { useState } from "react";
+import { faGrid } from "@fortawesome/pro-solid-svg-icons";
+
+//------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
-import { cn } from "@/utils/cn";
+import { Icon } from "@/components/common/Icon";
 
 //------------------------------------------------------------------------------
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { useNavigate } from "@/hooks/useNavigate";
-import { Icon } from "../common/Icon";
-import { faGrid } from "@fortawesome/pro-solid-svg-icons";
+import { cn } from "@/utils/cn";
+
+//--------------------------------------------------------------------------
+const areas = [
+    { id: 1, name: "Supply Area", lines: ["Line 1", "Line 2", "Line 3"] },
+    { id: 2, name: "Production Area", lines: ["Line 1", "Line 2", "Line 3"] },
+    { id: 3, name: "Quality control Area", lines: ["Control 1"] },
+    { id: 4, name: "Storage Area", lines: ["Rack 1", "Rack 2"] },
+];
 
 //------------------------------------------------------------------------------
 const MainNav = () => {
@@ -14,11 +25,21 @@ const MainNav = () => {
     const navigate = useNavigate();
 
     //--------------------------------------------------------------------------
-    const areas = [
-        { name: "Area 1", lines: ["Line 1", "Line 2", "Line 3"], isActive: true },
-        { name: "Area 2", lines: ["Line 1", "Line 2", "Line 3"] },
-        { name: "Area 3", lines: ["Line 1", "Line 2", "Line 3"] },
-    ];
+    const [activeAreaId, setActiveAreaId] = useState<number>(2);
+    const [activeLine, setActiveLine] = useState<string>("Line 1");
+
+    //--------------------------------------------------------------------------
+    const handleAreaClick = (areaId: number) => {
+        setActiveAreaId(areaId);
+        setActiveLine("Line 1");
+    };
+
+    //--------------------------------------------------------------------------
+    const handleLineClick = (areaId: number, line: string) => {
+        console.log("handleLineClick", areaId, line);
+        setActiveLine(line);
+        setActiveAreaId(areaId);
+    };
 
     //--------------------------------------------------------------------------
     return (
@@ -46,23 +67,24 @@ const MainNav = () => {
                                 key={area.name}
                                 className={cn(
                                     "flex flex-col gap-1 p-1 bg-muted/5 border border-muted/50 rounded-xl cursor-pointer",
-                                    area.isActive ? "text-accent-100 bg-accent-500 border-accent-500" : "",
+                                    area.id === activeAreaId ? "text-accent-100 bg-accent-500 border-accent-500" : "",
                                 )}
                                 style={
                                     {
                                         cornerShape: "squircle",
                                     } as React.CSSProperties
                                 }
+                                onClick={() => handleAreaClick(area.id)}
                             >
                                 <p className="px-1 text-[70%] uppercase">{area.name}</p>
                                 <ul className="flex gap-1">
-                                    {area.lines.map((line, index) => (
+                                    {area.lines.map((line) => (
                                         <li key={line}>
                                             <button
                                                 className={cn(
                                                     "text-xs bg-[white]/60 hover:bg-[white] rounded-md px-3 py-1 cursor-pointer transition-colors duration-200",
-                                                    area.isActive ? "bg-[white]/10 hover:bg-[white]/15" : "",
-                                                    area.isActive && index === 0
+                                                    area.id === activeAreaId ? "bg-[white]/10 hover:bg-[white]/15" : "",
+                                                    area.id === activeAreaId && line === activeLine
                                                         ? "text-accent bg-white hover:bg-[white]"
                                                         : "",
                                                 )}
@@ -71,6 +93,7 @@ const MainNav = () => {
                                                         cornerShape: "squircle",
                                                     } as React.CSSProperties
                                                 }
+                                                onClick={() => handleLineClick(area.id, line)}
                                             >
                                                 {line}
                                             </button>
