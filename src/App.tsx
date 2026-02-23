@@ -13,11 +13,9 @@ import IntroductionModal from "@/components/guidance/IntroductionModal";
 
 //------------------------------------------------------------------------------
 import { factories } from "@/content/factory";
+import { TOKEN_3DVERSE } from "@/content/3dverse";
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { useNavigationStore } from "@/store/useNavigationStore";
-
-//------------------------------------------------------------------------------
-const TOKEN_3DVERSE = "public_OJTstp3bLFmUw0OS";
 
 //------------------------------------------------------------------------------
 export function App() {
