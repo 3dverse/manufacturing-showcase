@@ -38,7 +38,7 @@ const Viewer = () => {
                         Connected.
                     </div>
                 )}
-                <ViewerController hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} />
+                {/* <ViewerController hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} /> */}
                 <CameraController ref={cameraControllerRef} />
                 <StationLabels cameraController={cameraControllerRef.current} />
             </Viewport>

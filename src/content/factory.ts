@@ -6,13 +6,13 @@ export const factories: Factory[] = [
         name: "X Factory",
         description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
         location: "Paris, France",
-        scene_id: "a4213021-3fee-4348-9c6d-8ebf8cd84842",
+        scene_id: "3e23233c-0c97-43d7-ab5e-9eb8caa2f42b",
     },
     {
         id: "y-factory",
         name: "Y Factory",
         description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
         location: "Tokyo, Japan",
-        scene_id: "a4213021-3fee-4348-9c6d-8ebf8cd84842",
+        scene_id: "3e23233c-0c97-43d7-ab5e-9eb8caa2f42b",
     },
 ];
