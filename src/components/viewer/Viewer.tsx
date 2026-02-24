@@ -21,6 +21,12 @@ const Viewer = () => {
     const { isConnecting } = useContext(LivelinkContext);
 
     //--------------------------------------------------------------------------
+    // const handleSelectEntity = (entity: Entity) => {
+    // Get AABB of entity
+    // cameraControllerRef.current?.fitToBox(cameraEntity);
+    // };
+
+    //--------------------------------------------------------------------------
     const [hoveredEntity, setHoveredEntity] = useState<{ entity: Entity } | null>(null);
     const [pickedEntity, setPickedEntity] = useState<{ entity: Entity } | null>(null);
 
@@ -34,11 +40,11 @@ const Viewer = () => {
                 setPickedEntity={setPickedEntity}
             >
                 {!isConnecting && (
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-green-800 text-sm text-white rounded-full py-1 px-3 pointer-events-none animate-[fade-out_.5s_2s_forwards]">
-                        Connected.
+                    <div className="absolute top-3 right-3 bg-green-500 text-xs text-white rounded-full py-1 px-3 pointer-events-none animate-[fade-out_.5s_2s_forwards]">
+                        Connected
                     </div>
                 )}
-                {/* <ViewerController hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} /> */}
+                <ViewerController hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} />
                 <CameraController ref={cameraControllerRef} />
                 <StationLabels cameraController={cameraControllerRef.current} />
             </Viewport>
