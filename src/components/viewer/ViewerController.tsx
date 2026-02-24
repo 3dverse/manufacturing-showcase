@@ -21,7 +21,7 @@ export const ViewerController = ({
     //--------------------------------------------------------------------------
     // Hover feedback
     useEffect(() => {
-        document.body.style.cursor = hoveredEntity ? "pointer" : "default";
+        console.log("hoveredEntity", hoveredEntity);
     }, [hoveredEntity]);
 
     //--------------------------------------------------------------------------

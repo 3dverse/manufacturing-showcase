@@ -3,11 +3,19 @@ import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 import type { Element, AreaCategory } from "@/contexts/SelectedContext";
+import type { Factory } from "@/content/factory";
 
 //------------------------------------------------------------------------------
-export function fetchElementsFromEntities({ entities }: { entities: Entity[] }) {
+export function fetchElementsFromEntities({
+    entities,
+    currentFactory,
+}: {
+    entities: Entity[];
+    currentFactory: Factory | null;
+}) {
+    //--------------------------------------------------------------------------
     const factories: Element[] = [];
-    const areas: Element[] = [];
+    let areas: Element[] = [];
     const lines: Element[] = [];
     const cells: Element[] = [];
     const machines: Element[] = [];
@@ -41,5 +49,20 @@ export function fetchElementsFromEntities({ entities }: { entities: Entity[] }) 
         }
     }
 
+    // Sort areas by currentFactory.area_categories_sort order
+    areas = sortAreas(areas, currentFactory);
+
+    // Return
     return { factories, areas, lines, cells, machines };
 }
+
+//------------------------------------------------------------------------------
+const sortAreas = (areas: Element[], currentFactory: Factory | null) => {
+    const order = currentFactory?.area_categories_sort;
+    if (!order?.length) return areas;
+    const indexOf = (category: string) => {
+        const i = order.findIndex((s) => s.toLowerCase() === category.toLowerCase());
+        return i === -1 ? order.length : i;
+    };
+    return [...areas].sort((a, b) => indexOf(a.category!) - indexOf(b.category!));
+};

@@ -4,11 +4,14 @@ import type { Entity } from "@3dverse/livelink";
 import { useEntities } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
+import { useFactoryStore } from "@/store/useFactoryStore";
+
+//------------------------------------------------------------------------------
 import { fetchElementsFromEntities } from "@/utils/entities";
 
 //------------------------------------------------------------------------------
 export type ElementType = "factory" | "area" | "line" | "cell" | "machine";
-export type AreaCategory = "Production" | "Storage" | "Control";
+export type AreaCategory = "Reception" | "Production" | "Storage" | "Control";
 
 //------------------------------------------------------------------------------
 export type Element = { type: ElementType; id: string; count: string; entity: Entity; category?: AreaCategory };
@@ -34,11 +37,16 @@ const SelectedContext = createContext<SelectedContextState | null>(null);
 
 //------------------------------------------------------------------------------
 export function SelectedContextProvider({ children }: { children: ReactNode }) {
+    //--------------------------------------------------------------------------
+    const { currentFactory } = useFactoryStore();
+
+    //--------------------------------------------------------------------------
     const { entities } = useEntities({ mandatory_components: ["scene_ref"] });
+
     const [selectedElement, setSelectedElement] = useState<Element | null>(null);
 
     //--------------------------------------------------------------------------
-    const elements = useMemo(() => fetchElementsFromEntities({ entities }), [entities]);
+    const elements = useMemo(() => fetchElementsFromEntities({ entities, currentFactory }), [entities, currentFactory]);
 
     //--------------------------------------------------------------------------
     const setSelectedElementById = useCallback(

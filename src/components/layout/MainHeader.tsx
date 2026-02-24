@@ -32,7 +32,7 @@ const MainHeader = ({ className }: { className?: string }) => {
                     <Icon icon={faGrid} size="lg" />
                 </button>
             </div>
-            <div className="flex flex-col divide-y divide-muted/50">
+            <div className="flex flex-col justify-center divide-y divide-muted/50">
                 <div className="flex items-baseline gap-2 px-3 py-2">
                     <p className="text-base font-medium">{currentFactory?.name}</p>
                     <p className="text-xs text-muted">{currentFactory?.location}</p>
