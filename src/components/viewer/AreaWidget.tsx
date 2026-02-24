@@ -1,13 +1,12 @@
 //------------------------------------------------------------------------------
-import type { Entity } from "@3dverse/livelink";
+import type { Element } from "@/contexts/SelectedContext";
 
 //------------------------------------------------------------------------------
 import { QuadLayout } from "@/utils/QuadLayout";
 import { cn } from "@/utils/cn";
-import type { Element } from "@/contexts/SelectedContext";
 
 //------------------------------------------------------------------------------
-export function ProductionAreaWidget({
+export function AreaWidget({
     area,
     isSelected = false,
     onClick,
@@ -24,10 +23,8 @@ export function ProductionAreaWidget({
                 center={
                     <div
                         className={cn(
-                            "w-full h-full cursor-pointer rounded-xl transition-colors duration-200",
-                            isSelected
-                                ? "outline-[100px] outline-accent-500/20"
-                                : "bg-accent-500/10 hover:bg-accent-500/20",
+                            "w-full h-full cursor-pointer rounded-xl outline-accent-500/20 transition-colors duration-200",
+                            isSelected ? "outline-100 " : "bg-accent-500/10 hover:bg-accent-500/20",
                         )}
                         onClick={onClick}
                     />
@@ -35,12 +32,10 @@ export function ProductionAreaWidget({
                 right={
                     <div
                         className="w-full h-full p-4 text-accent align-left uppercase"
-                        style={
-                            {
-                                textOrientation: "mixed",
-                                writingMode: "sideways-lr",
-                            } as React.CSSProperties
-                        }
+                        style={{
+                            textOrientation: "mixed",
+                            writingMode: "sideways-lr",
+                        }}
                     >
                         {area.category} AREA
                     </div>

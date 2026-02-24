@@ -1,16 +1,20 @@
+//------------------------------------------------------------------------------
+import { AreaWidget } from "@/components/viewer/AreaWidget";
+
+//------------------------------------------------------------------------------
 import { useSelectedContext } from "@/contexts/SelectedContext";
-import { ProductionAreaWidget } from "@/components/viewer/ProductionAreaWidget";
 
 //------------------------------------------------------------------------------
 const FactoryBuilder = () => {
+    //--------------------------------------------------------------------------
     const { elements, selectedElement, setSelectedElementById } = useSelectedContext();
-
     const { areas } = elements;
 
+    //--------------------------------------------------------------------------
     return (
         <>
             {areas.map((area) => (
-                <ProductionAreaWidget
+                <AreaWidget
                     key={area.id}
                     area={area}
                     isSelected={selectedElement?.id === area.id}
