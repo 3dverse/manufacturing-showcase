@@ -8,8 +8,8 @@ import type { FactoryGraphNode } from "@/content/type";
 //------------------------------------------------------------------------------
 type SelectionContextType = {
     selectedNode?: FactoryGraphNode;
-    setSelectedNode: (node: FactoryGraphNode | null) => void;
-    setSelectedNodeByEntity: (entity: Entity | null) => void;
+    setSelectedNode: (node: FactoryGraphNode | undefined) => void;
+    setSelectedNodeByEntity: (entity: Entity | undefined) => void;
 };
 
 //------------------------------------------------------------------------------

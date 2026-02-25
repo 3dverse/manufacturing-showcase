@@ -36,7 +36,7 @@ export const ViewerController = ({
         if (isArea(pickedEntity?.entity)) {
             setSelectedNodeByEntity(pickedEntity.entity);
         } else {
-            setSelectedNodeByEntity(null);
+            setSelectedNodeByEntity(undefined);
         }
     }, [instance?.scene, pickedEntity, setSelectedNodeByEntity]);
 
