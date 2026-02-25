@@ -1,17 +1,16 @@
 //------------------------------------------------------------------------------
-import type { Element } from "@/contexts/SelectedContext";
-
-//------------------------------------------------------------------------------
+import type { AreaNode } from "@/content/type";
 import { QuadLayout } from "@/utils/QuadLayout";
 import { cn } from "@/utils/cn";
 
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export function AreaWidget({
     area,
     isSelected = false,
     onClick,
 }: {
-    area: Element;
+    area: AreaNode;
     isSelected?: boolean;
     onClick?: () => void;
 }) {
@@ -37,7 +36,7 @@ export function AreaWidget({
                             writingMode: "sideways-lr",
                         }}
                     >
-                        {area.category} AREA
+                        {area.name} AREA
                     </div>
                 }
             />

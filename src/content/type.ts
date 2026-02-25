@@ -1,6 +1,7 @@
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type { StationId } from "./stations/enum";
 import type { Entity } from "@3dverse/livelink";
+import type { NodeTypes } from "./enums";
 
 //------------------------------------------------------------------------------
 export type Station = {
@@ -126,14 +127,14 @@ export type Action = {
 };
 
 //------------------------------------------------------------------------------
-export type FactoryGraph = {
-    factories: FactoryNode[];
-};
-export type FactoryGraphNode = {
+type _FactoryGraphNode = {
     entity: Entity;
+    euid: string;
     name: string;
 };
-export type FactoryNode = FactoryGraphNode & { areas: AreaNode[] };
-export type AreaNode = FactoryGraphNode & { cells: CellNode[] };
-export type CellNode = FactoryGraphNode & { machines: MachineNode[] };
-export type MachineNode = FactoryGraphNode;
+export type FactoryNode = _FactoryGraphNode & { type: NodeTypes.factory; areas: AreaNode[] };
+export type AreaNode = _FactoryGraphNode & { type: NodeTypes.area; parent: FactoryNode; cells: CellNode[] };
+export type CellNode = _FactoryGraphNode & { type: NodeTypes.cell; parent: AreaNode; machines: MachineNode[] };
+export type MachineNode = _FactoryGraphNode & { type: NodeTypes.machine; parent: CellNode };
+
+export type FactoryGraphNode = FactoryNode | AreaNode | CellNode | MachineNode;

@@ -295,17 +295,14 @@ export const moveCamera = (
     cameraController: DefaultCameraController,
     viewport: Viewport,
     cameraEntity: Entity,
+    orientation: Quat = [-0.16043, 0.37687, 0.06645, 0.91072] as Quat,
 ) => {
-    const qFancy = [-0.16043, 0.37687, 0.06645, 0.91072] as Quat;
-    //const qLookDown: Quat = quatFromAxisAngle([1, 0, 0], -Math.PI / 2);
-    //const qPitchDown45 = quatFromAxisAngle([1, 0, 0], -Math.PI / 4);
-
     const aspect = viewport.width / viewport.height;
     const viewpoint = AABBViewpoint({
         aabb: entity.global_aabb,
         aabbOffset: [0, -1, 0],
-        orientation: qFancy,
         cameraFov: cameraEntity.perspective_lens?.fovy || 90,
+        orientation,
         aspect,
     });
     const tpos = viewpoint.position || [0, 0, 0];

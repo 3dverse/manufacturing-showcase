@@ -2,9 +2,9 @@
 import { useContext, useEffect } from "react";
 import { LivelinkContext } from "@3dverse/livelink-react";
 import type { Entity } from "@3dverse/livelink";
+import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-import { useSelectedContext } from "@/contexts/SelectedContext";
 
 //------------------------------------------------------------------------------
 export const ViewerController = ({
@@ -16,7 +16,7 @@ export const ViewerController = ({
 }) => {
     //--------------------------------------------------------------------------
     const { instance } = useContext(LivelinkContext);
-    const { setSelectedElementById } = useSelectedContext();
+    const { setSelectedNodeByEntity } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
     // Hover feedback
@@ -34,11 +34,11 @@ export const ViewerController = ({
         });
 
         if (isArea(pickedEntity?.entity)) {
-            setSelectedElementById(pickedEntity.entity.parent!.name);
+            setSelectedNodeByEntity(pickedEntity.entity);
         } else {
-            setSelectedElementById(null);
+            setSelectedNodeByEntity(null);
         }
-    }, [instance?.scene, pickedEntity, setSelectedElementById]);
+    }, [instance?.scene, pickedEntity, setSelectedNodeByEntity]);
 
     //--------------------------------------------------------------------------
     return null;

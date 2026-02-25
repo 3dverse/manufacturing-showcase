@@ -1,53 +1,32 @@
 //------------------------------------------------------------------------------
 import React, { useContext } from "react";
-import { useCallback, useMemo, useState, type MouseEvent } from "react";
-
-//------------------------------------------------------------------------------
-import type { Entity } from "@3dverse/livelink";
+import { useCallback, useMemo, type MouseEvent } from "react";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
 
 //------------------------------------------------------------------------------
-import { cn } from "@/utils/cn";
 import { FactoryContext } from "@/contexts/FactoryContext";
-import { moveCamera } from "@/utils/camera-v2";
-import type { AreaNode, CellNode } from "@/content/type";
-import { CameraContext } from "@/contexts/CameraContext";
+import { SelectionContext } from "@/contexts/SelectionContext";
+
+//------------------------------------------------------------------------------
+import { cn } from "@/utils/cn";
+
+//------------------------------------------------------------------------------
+import type { AreaNode, CellNode, FactoryGraphNode } from "@/content/type";
+import { NodeTypes } from "@/content/enums";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 const MainNav = () => {
     //--------------------------------------------------------------------------
     // Context
-    const factoryGraph = useContext(FactoryContext);
-    const { cameraControllerRef, viewportRef, cameraEntity } = useContext(CameraContext);
-
-    //--------------------------------------------------------------------------
-    // State
-    const [activeAreaEUID, setActiveAreaId] = useState<string>();
-    const [activeCellEUID, setActiveCellId] = useState<string>();
-
-    //--------------------------------------------------------------------------
-    // Memos
-    const factory = useMemo(
-        () => (factoryGraph.factories.length > 0 ? factoryGraph.factories[0] : undefined),
-        [factoryGraph],
-    );
+    const { nodeGraph } = useContext(FactoryContext);
+    const { setSelectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
     // Handlers
-    const handleItemClicked = useCallback(
-        (area: Entity, cell?: Entity) => {
-            setActiveAreaId(area.euid.value);
-            setActiveCellId(cell?.euid.value);
-            console.log("?", cameraControllerRef.current, viewportRef.current, cameraEntity);
-            if (cameraControllerRef.current && viewportRef.current && cameraEntity) {
-                moveCamera(cell || area, cameraControllerRef.current, viewportRef.current, cameraEntity);
-            }
-        },
-        [cameraControllerRef, viewportRef, cameraEntity],
-    );
+    const itemClickedHandler = useCallback((node: FactoryGraphNode) => setSelectedNode(node), [setSelectedNode]);
 
     //--------------------------------------------------------------------------
     // Render
@@ -59,14 +38,8 @@ const MainNav = () => {
             <div className="flex flex-col divide-y divide-muted/50">
                 <div className="p-1">
                     <ul className="flex items-start gap-1">
-                        {factory?.areas.map((area) => (
-                            <AreaNode
-                                key={area.entity.euid.value}
-                                area={area}
-                                activeAreaEUID={activeAreaEUID}
-                                activeCellEUID={activeCellEUID}
-                                onClick={handleItemClicked}
-                            />
+                        {nodeGraph?.areas.map((area) => (
+                            <AreaNode key={area.entity.euid.value} area={area} onClick={itemClickedHandler} />
                         ))}
                     </ul>
                 </div>
@@ -77,25 +50,26 @@ const MainNav = () => {
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const AreaNode = ({
-    area,
-    activeAreaEUID,
-    activeCellEUID,
-    onClick,
-}: {
-    area: AreaNode;
-    activeAreaEUID?: string;
-    activeCellEUID?: string;
-    onClick?: (area: Entity, cell?: Entity) => void;
-}) => {
+const AreaNode = ({ area, onClick }: { area: AreaNode; onClick?: (node: FactoryGraphNode) => void }) => {
+    //--------------------------------------------------------------------------
+    // Contexts
+    const { selectedNode } = useContext(SelectionContext);
+
+    //--------------------------------------------------------------------------
+    // Memos
+    const isActive = useMemo(
+        () => area === selectedNode || (selectedNode?.type === NodeTypes.cell && area === selectedNode?.parent),
+        [area, selectedNode],
+    );
+
     //--------------------------------------------------------------------------
     // Handlers
     const clickHandler = useCallback(
         (e: MouseEvent) => {
             e.stopPropagation();
-            onClick?.(area.entity);
+            onClick?.(area);
         },
-        [onClick, area.entity],
+        [onClick, area],
     );
 
     //--------------------------------------------------------------------------
@@ -104,7 +78,7 @@ const AreaNode = ({
         <li
             className={cn(
                 "flex flex-col gap-1 p-1 bg-muted/5 border border-muted/50 rounded-xl cursor-pointer",
-                area.entity.euid.value === activeAreaEUID ? "text-accent-100 bg-accent-500 border-accent-500" : "",
+                isActive ? "text-accent-100 bg-accent-500 border-accent-500" : "",
             )}
             style={
                 {
@@ -116,14 +90,7 @@ const AreaNode = ({
             <p className="px-1 text-[70%] uppercase">{area.name} area</p>
             <ul className="flex gap-1">
                 {area.cells.map((cell) => (
-                    <CellNode
-                        key={cell.entity.euid.value}
-                        area={area}
-                        cell={cell}
-                        activeAreaEUID={activeAreaEUID}
-                        activeCellEUID={activeCellEUID}
-                        onClick={onClick}
-                    />
+                    <CellNode key={cell.entity.euid.value} area={area} cell={cell} onClick={onClick} />
                 ))}
             </ul>
         </li>
@@ -135,24 +102,37 @@ const AreaNode = ({
 const CellNode = ({
     area,
     cell,
-    activeAreaEUID,
-    activeCellEUID,
     onClick,
 }: {
     area: AreaNode;
     cell: CellNode;
-    activeAreaEUID?: string;
-    activeCellEUID?: string;
-    onClick?: (area: Entity, cell?: Entity) => void;
+    onClick?: (node: FactoryGraphNode) => void;
 }) => {
+    //--------------------------------------------------------------------------
+    // Contexts
+    const { selectedNode } = useContext(SelectionContext);
+
+    //--------------------------------------------------------------------------
+    // Memos
+    const isActive = useMemo(() => selectedNode === cell, [selectedNode, cell]);
+
+    //--------------------------------------------------------------------------
+    const areaIsActive = useMemo(
+        () =>
+            selectedNode === area ||
+            (selectedNode?.type === NodeTypes.cell && selectedNode.parent === area) ||
+            isActive,
+        [selectedNode, area, isActive],
+    );
+
     //--------------------------------------------------------------------------
     // Handlers
     const clickHandler = useCallback(
         (e: MouseEvent) => {
             e.stopPropagation();
-            onClick?.(area.entity, cell.entity);
+            onClick?.(cell);
         },
-        [onClick, area.entity, cell.entity],
+        [onClick, cell],
     );
 
     //--------------------------------------------------------------------------
@@ -162,10 +142,8 @@ const CellNode = ({
             <button
                 className={cn(
                     "text-xs bg-[white]/60 hover:bg-[white] rounded-md px-3 py-1 cursor-pointer transition-colors duration-200",
-                    area.entity.euid.value === activeAreaEUID ? "bg-[white]/10 hover:bg-[white]/15" : "",
-                    area.entity.euid.value === activeAreaEUID && cell.entity.euid.value === activeCellEUID
-                        ? "text-accent bg-white hover:bg-[white]"
-                        : "",
+                    areaIsActive ? "bg-[white]/10 hover:bg-[white]/15" : "",
+                    isActive ? "text-accent bg-white hover:bg-[white]" : "",
                 )}
                 style={
                     {

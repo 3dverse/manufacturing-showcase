@@ -61,15 +61,15 @@ export function renderPlane(
         { position: add(position, scale(worldForward, +r)), label: "F" },
     ];
 
-    distXneg && items.push({ position: add(position, scale(worldX, distXneg)), label: "-X" });
-    distXpos && items.push({ position: add(position, scale(worldX, distXpos)), label: "+X" });
-    distYneg && items.push({ position: add(position, scale(worldY, distYneg)), label: "-Y" });
-    distYpos && items.push({ position: add(position, scale(worldY, distYpos)), label: "+Y" });
+    if (distXneg) items.push({ position: add(position, scale(worldX, distXneg)), label: "-X" });
+    if (distXpos) items.push({ position: add(position, scale(worldX, distXpos)), label: "+X" });
+    if (distYneg) items.push({ position: add(position, scale(worldY, distYneg)), label: "-Y" });
+    if (distYpos) items.push({ position: add(position, scale(worldY, distYpos)), label: "+Y" });
 
-    distXnegproj && items.push({ position: add(position, scale(worldX, distXnegproj)), label: "-X`" });
-    distXposproj && items.push({ position: add(position, scale(worldX, distXposproj)), label: "+X`" });
-    distYnegproj && items.push({ position: add(position, scale(worldY, distYnegproj)), label: "-Y`" });
-    distYposproj && items.push({ position: add(position, scale(worldY, distYposproj)), label: "+Y`" });
+    if (distXnegproj) items.push({ position: add(position, scale(worldX, distXnegproj)), label: "-X`" });
+    if (distXposproj) items.push({ position: add(position, scale(worldX, distXposproj)), label: "+X`" });
+    if (distYnegproj) items.push({ position: add(position, scale(worldY, distYnegproj)), label: "-Y`" });
+    if (distYposproj) items.push({ position: add(position, scale(worldY, distYposproj)), label: "+Y`" });
 
     return items;
 }
