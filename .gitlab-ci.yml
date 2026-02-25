@@ -2,6 +2,3 @@ include:
   - project: 3dverse/platform/ci-utils/gitlab-templates
     file:
       - /ci/js/web-app-static.yaml
-
-variables:
-  NPM_INSTALL_ARGS: --legacy-peer-deps
