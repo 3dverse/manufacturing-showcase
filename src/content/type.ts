@@ -1,5 +1,6 @@
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type { StationId } from "./stations/enum";
+import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 export type Station = {
@@ -123,3 +124,16 @@ export type Machine = {
 export type Action = {
     id: string;
 };
+
+//------------------------------------------------------------------------------
+export type FactoryGraph = {
+    factories: FactoryNode[];
+};
+export type FactoryGraphNode = {
+    entity: Entity;
+    name: string;
+};
+export type FactoryNode = FactoryGraphNode & { areas: AreaNode[] };
+export type AreaNode = FactoryGraphNode & { cells: CellNode[] };
+export type CellNode = FactoryGraphNode & { machines: MachineNode[] };
+export type MachineNode = FactoryGraphNode;

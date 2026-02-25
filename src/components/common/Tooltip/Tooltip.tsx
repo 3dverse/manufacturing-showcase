@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, type ReactNode } from "react";
+import React, { useState, useRef, useEffect, type ReactNode, useCallback } from "react";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ function Tooltip({
     };
 
     //--------------------------------------------------------------------------
-    const updatePosition = () => {
+    const updatePosition = useCallback(() => {
         if (!triggerRef.current || !tooltipRef.current) return;
 
         const triggerRect = triggerRef.current.getBoundingClientRect();
@@ -191,7 +191,7 @@ function Tooltip({
         }
 
         setTooltipPosition({ x, y });
-    };
+    }, [offset, position]);
 
     //--------------------------------------------------------------------------
     useEffect(() => {
@@ -209,7 +209,7 @@ function Tooltip({
                 window.removeEventListener("scroll", handleScroll, true);
             };
         }
-    }, [isVisible, position]);
+    }, [isVisible, position, updatePosition]);
 
     useEffect(() => {
         return () => {

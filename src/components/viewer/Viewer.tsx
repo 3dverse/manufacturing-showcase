@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import type { Entity } from "@3dverse/livelink";
 import {
     Canvas,
@@ -6,7 +6,6 @@ import {
     CameraController,
     useCameraEntity,
     LivelinkContext,
-    DefaultCameraController,
     DOM3DOverlay,
 } from "@3dverse/livelink-react";
 
@@ -17,16 +16,19 @@ import FactoryBuilder from "@/components/viewer/FactoryBuilder";
 
 //------------------------------------------------------------------------------
 import { useSelectedContext } from "@/contexts/SelectedContext";
+import { DebugOverlay } from "./overlays/DebugOverlay";
+import { CameraContext } from "@/contexts/CameraContext";
 
 //------------------------------------------------------------------------------
 const Viewer = () => {
     //--------------------------------------------------------------------------
-    const cameraControllerRef = useRef<DefaultCameraController | null>(null);
     const { cameraEntity } = useCameraEntity({
         position: [10, 10, -10],
     });
+    //--------------------------------------------------------------------------
     const { isConnecting } = useContext(LivelinkContext);
     const { selectedElement } = useSelectedContext();
+    const { viewportRef, setCameraEntity, cameraControllerRef } = useContext(CameraContext);
 
     //--------------------------------------------------------------------------
     const [hoveredEntity, setHoveredEntity] = useState<{ entity: Entity } | null>(null);
@@ -38,12 +40,18 @@ const Viewer = () => {
             cameraControllerRef.current.setPosition(...selectedElement.entity.global_aabb.max, true);
             // cameraControllerRef.current?.fitToBox(selectedElement.entity.global_aabb, true);
         }
-    }, [selectedElement]);
+    }, [selectedElement, cameraControllerRef]);
+
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        setCameraEntity(cameraEntity);
+    }, [setCameraEntity, cameraEntity]);
 
     //--------------------------------------------------------------------------
     return (
         <Canvas className="w-full h-full filter-[ brightness(1.2)]">
             <Viewport
+                ref={viewportRef}
                 cameraEntity={cameraEntity}
                 className="w-full h-full"
                 setHoveredEntity={setHoveredEntity}
@@ -61,6 +69,7 @@ const Viewer = () => {
                 <DOM3DOverlay>
                     <FactoryBuilder />
                 </DOM3DOverlay>
+                {false && <DebugOverlay />}
             </Viewport>
             {/* Light overlay */}
             {/* <span className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-accent to-transparent mix-blend-multiply pointer-events-none opacity-80" /> */}

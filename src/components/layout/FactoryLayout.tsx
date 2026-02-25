@@ -4,6 +4,8 @@ import MainHeader from "@/components/layout/MainHeader";
 import MainNav from "@/components/layout/MainNav";
 
 //------------------------------------------------------------------------------
+import { FactoryContextProvider } from "@/components/contextProviders/FactoryContextProvider";
+import { CameraContextProvider } from "@/components/contextProviders/CameraContextProvider";
 import { SelectedContextProvider } from "@/contexts/SelectedContext";
 
 //------------------------------------------------------------------------------
@@ -14,15 +16,19 @@ const FactoryLayout = ({ currentRoute }: { currentRoute: string }) => {
     //--------------------------------------------------------------------------
     return (
         <SelectedContextProvider>
-            <div className="relative flex-1">
-                <Viewer />
-                <div className="absolute bottom-0 left-0 flex flex-col w-full h-full p-2 pointer-events-none">
-                    <MainHeader className="self-start" />
-                    <div className="flex items-end justify-center grow pb-8">
-                        <MainNav />
+            <CameraContextProvider>
+                <FactoryContextProvider>
+                    <div className="relative flex-1">
+                        <Viewer />
+                        <div className="absolute bottom-0 left-0 flex flex-col w-full h-full p-2 pointer-events-none">
+                            <MainHeader className="self-start" />
+                            <div className="flex items-end justify-center grow pb-8">
+                                <MainNav />
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
+                </FactoryContextProvider>
+            </CameraContextProvider>
         </SelectedContextProvider>
     );
 };
