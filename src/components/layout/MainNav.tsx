@@ -1,9 +1,11 @@
 //------------------------------------------------------------------------------
-import React, { useContext } from "react";
-import { useCallback, useMemo, type MouseEvent } from "react";
+import React, { useContext, useCallback, useMemo, type MouseEvent } from "react";
+import { faHome } from "@fortawesome/sharp-light-svg-icons";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
+import { Icon } from "@/components/common/Icon";
+import Button from "@/components/common/Button";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
@@ -29,7 +31,13 @@ const MainNav = () => {
     const itemClickedHandler = useCallback((node: FactoryGraphNode) => setSelectedNode(node), [setSelectedNode]);
 
     //--------------------------------------------------------------------------
+    const factoryClickHandler = useCallback(() => {
+        if (nodeGraph) setSelectedNode(nodeGraph);
+    }, [nodeGraph, setSelectedNode]);
+
+    //--------------------------------------------------------------------------
     // Render
+    if (!nodeGraph?.areas?.length) return null;
     return (
         <ViewerPanel
             as="nav"
@@ -37,7 +45,12 @@ const MainNav = () => {
         >
             <div className="flex flex-col divide-y divide-muted/50">
                 <div className="p-1">
-                    <ul className="flex items-start gap-1">
+                    <ul className="flex gap-1">
+                        <li className="">
+                            <Button variant="ghost" size="xs" className="h-full" onClick={factoryClickHandler}>
+                                <Icon icon={faHome} size="lg" />
+                            </Button>
+                        </li>
                         {nodeGraph?.areas.map((area) => (
                             <AreaNode key={area.entity.euid.value} area={area} onClick={itemClickedHandler} />
                         ))}
@@ -141,7 +154,7 @@ const CellNode = ({
         <li>
             <button
                 className={cn(
-                    "text-xs bg-[white]/60 hover:bg-[white] rounded-md px-3 py-1 cursor-pointer transition-colors duration-200",
+                    "px-3 py-1 text-xs capitalize bg-[white]/60 hover:bg-[white] rounded-md cursor-pointer transition-colors duration-200",
                     areaIsActive ? "bg-[white]/10 hover:bg-[white]/15" : "",
                     isActive ? "text-accent bg-white hover:bg-[white]" : "",
                 )}

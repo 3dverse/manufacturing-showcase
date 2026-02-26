@@ -4,11 +4,11 @@ import { GaugeComponent } from "react-gauge-component";
 //------------------------------------------------------------------------------
 interface OEEGaugeProps {
     value?: number;
-    size?: number;
+    className?: string;
 }
 
 //------------------------------------------------------------------------------
-export const OEEGauge: React.FC<OEEGaugeProps> = ({ value }) => {
+export const OEEGauge: React.FC<OEEGaugeProps> = ({ value, className }) => {
     return (
         <GaugeComponent
             value={value}
@@ -38,9 +38,9 @@ export const OEEGauge: React.FC<OEEGaugeProps> = ({ value }) => {
                     formatTextValue: (e) => "".concat(e.toFixed(1), "%"),
                     matchColorWithArc: true,
                     style: {
-                        translate: "4px 6px",
-                        fontSize: "60px",
-                        fontWeight: "medium",
+                        // translate: "4px 6px",
+                        fontSize: "60%",
+                        fontWeight: "semibold",
                         letterSpacing: "-0.08em",
                         fontVariantNumeric: "tabular-nums",
                         textShadow: "none",
@@ -54,6 +54,7 @@ export const OEEGauge: React.FC<OEEGaugeProps> = ({ value }) => {
             }}
             startAngle={-90}
             endAngle={90}
+            className={className}
         />
     );
 };
