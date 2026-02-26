@@ -1,6 +1,7 @@
 //------------------------------------------------------------------------------
 import { useCallback, useContext } from "react";
 import { faGrid } from "@fortawesome/pro-solid-svg-icons";
+import { faClock } from "@fortawesome/sharp-regular-svg-icons";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
@@ -52,16 +53,18 @@ const MainHeader = ({ className }: { className?: string }) => {
 
             <ViewerPanel className="flex items-start gap-x-4 rounded-none rounded-e-md border border-muted/50 border-l-0 opacity-0 appear-in-from-left [--animation-delay:1s]">
                 <div className="flex flex-col justify-center divide-y divide-muted/50" onClick={factoryClickHandler}>
-                    <div className="flex items-baseline gap-2 px-3 py-2">
+                    <div className="flex flex-col gap--1 px-3 py-2">
                         <p className="text-base font-medium">{currentFactory?.name}</p>
-                        <p className="text-xs text-muted">{currentFactory?.location}</p>
+                        <div className="flex items-baseline gap-x-2 text-xs text-muted">
+                            <p className="text-[95%]">{currentFactory?.location}</p>
+                            <p className="text-2xs">
+                                <Icon icon={faClock} size="sm" />
+                                <span className="pl-1 tabular-nums">11:30</span>
+                            </p>
+                        </div>
                     </div>
                 </div>
                 <div className="px-3 pt-2 pb-1">
-                    {/* OEE
-                    <span className="text-xl text-accent font-medium pl-2">
-                        95<span className="text-xs font-bold">%</span>
-                    </span> */}
                     <OEEGauge value={95} className="w-20!" />
                     <p className="text-2xs text-subtle tracking-wide text-center -translate-y-1">OEE</p>
                 </div>

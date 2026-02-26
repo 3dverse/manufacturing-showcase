@@ -1,6 +1,7 @@
 import { useCallback, useContext, useMemo, useState, type HTMLAttributes } from "react";
 import type { Entity, Vec3 } from "@3dverse/livelink";
 import { DOM3DElement, ViewportContext } from "@3dverse/livelink-react";
+import { cn } from "./cn";
 
 //------------------------------------------------------------------------------
 type Point = { x: number; y: number };
@@ -49,6 +50,7 @@ export function QuadLayout({
     right,
     bottom,
     left,
+    className,
     ...divProps
 }: {
     entity: Entity;
@@ -62,6 +64,7 @@ export function QuadLayout({
     right?: React.ReactNode;
     bottom?: React.ReactNode;
     left?: React.ReactNode;
+    className?: string;
 } & HTMLAttributes<HTMLDivElement>) {
     const faces = computeBoundingBoxQuads(entity);
     const { viewport } = useContext(ViewportContext);
@@ -109,7 +112,10 @@ export function QuadLayout({
                 <span />
             </DOM3DElement>
             <div
-                className="absolute left-0 top-0 origin-top-left w-full h-full pointer-events-auto text-4xl"
+                className={cn(
+                    "absolute left-0 top-0 origin-top-left w-full h-full pointer-events-auto text-4xl",
+                    className,
+                )}
                 style={{
                     width: dimensions.width,
                     height: dimensions.height,
