@@ -4,10 +4,12 @@ import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 import { QuadLayout } from "@/utils/QuadLayout";
-import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import type { AreaNode } from "@/content/type";
+
+//------------------------------------------------------------------------------
+const EMPTY_SPACE_PERCENTAGE = 0.3;
 
 //------------------------------------------------------------------------------
 export function AreaStorageWidget({ area }: { area: AreaNode }) {
@@ -15,7 +17,6 @@ export function AreaStorageWidget({ area }: { area: AreaNode }) {
     const [childrenEntities, setChildrenEntities] = useState<Entity[]>([]);
 
     //--------------------------------------------------------------------------
-    // Effects
     useEffect(() => {
         area.entity
             .getChildren()
@@ -24,41 +25,49 @@ export function AreaStorageWidget({ area }: { area: AreaNode }) {
     }, [area.entity]);
 
     //--------------------------------------------------------------------------
-    return (
-        <div className="pointer-events-none">
-            {childrenEntities.map((entity, index) => (
-                <Fragment key={entity.name}>
-                    <QuadLayout
-                        entity={entity}
-                        face="top"
-                        center={
-                            <div
-                                className={cn(
-                                    "w-full h-full",
-                                    index === childrenEntities.length - 1
-                                        ? "bg-linear-to-t from-accent/80 from-50% to-accent/10 to-51%"
-                                        : "bg-accent/60",
-                                )}
-                            />
+    return childrenEntities.map((entity, index) => (
+        <Fragment key={entity.name}>
+            <QuadLayout
+                entity={entity}
+                face="top"
+                center={
+                    <div
+                        className="w-full h-full bg-accent/85"
+                        style={
+                            index === childrenEntities.length - 1
+                                ? ({
+                                      "--prct": `${EMPTY_SPACE_PERCENTAGE * 100}%`,
+                                      backgroundColor: "transparent",
+                                      backgroundImage: `linear-gradient(to top, var(--color-accent) var(--prct), transparent var(--prct))`,
+                                      opacity: 0.8,
+                                  } as React.CSSProperties)
+                                : undefined
                         }
                     />
-                    <QuadLayout
-                        entity={entity}
-                        face="right"
-                        center={
-                            <div
-                                className={cn(
-                                    "w-full h-full",
-                                    index === childrenEntities.length - 1
-                                        ? "bg-linear-to-r from-accent/80 from-50% to-accent/10 to-51%"
-                                        : "bg-accent/60",
-                                )}
-                            />
+                }
+                className="pointer-events-none"
+            />
+            <QuadLayout
+                entity={entity}
+                face="right"
+                center={
+                    <div
+                        className="w-full h-full bg-accent/60"
+                        style={
+                            index === childrenEntities.length - 1
+                                ? ({
+                                      "--prct": `${EMPTY_SPACE_PERCENTAGE * 100}%`,
+                                      backgroundColor: "transparent",
+                                      backgroundImage: `linear-gradient(to right, var(--color-accent) var(--prct), transparent var(--prct))`,
+                                      opacity: 0.8,
+                                  } as React.CSSProperties)
+                                : undefined
                         }
                     />
-                    <QuadLayout entity={entity} face="front" center={<div className="w-full h-full bg-accent/60" />} />
-                </Fragment>
-            ))}
-        </div>
-    );
+                }
+                className="pointer-events-none"
+            />
+            <QuadLayout entity={entity} face="front" center={<div className="w-full h-full bg-accent/90" />} />
+        </Fragment>
+    ));
 }
