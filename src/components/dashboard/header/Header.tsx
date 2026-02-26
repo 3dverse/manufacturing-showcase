@@ -3,7 +3,7 @@ import { faClock } from "@fortawesome/sharp-regular-svg-icons";
 import { faGrid } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
-import { WrapperPanel } from "@/components/common/panel/WrapperPanel";
+import { PanelWrapper } from "@/components/common/panel/PanelWrapper";
 import { Icon } from "@/components/common/Icon";
 import { KeyStatusIndicators } from "./StatusIndicators";
 
@@ -40,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({ keyStatus }) => {
     }
     //--------------------------------------------------------------------------
     return (
-        <WrapperPanel
+        <PanelWrapper
             as="header"
             className="@container relative flex gap-2 pl-15 py-3 bg-neutral-0/70 border-b border-muted/90 shadow-lg/3"
         >
@@ -78,6 +78,6 @@ export const Header: React.FC<HeaderProps> = ({ keyStatus }) => {
                     className="shrink"
                 />
             </div>
-        </WrapperPanel>
+        </PanelWrapper>
     );
 };

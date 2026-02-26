@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 //------------------------------------------------------------------------------
 import Button from "@/components/common/Button";
-import { WrapperPanel } from "@/components/common/panel/WrapperPanel";
+import { PanelWrapper } from "@/components/common/panel/PanelWrapper";
 import RefreshNotifier from "@/components/common/RefreshNotifier";
 
 //------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ export const LiveDashboard: React.FC = () => {
     return (
         <div className="flex flex-col h-full grow overflow-y-hidden">
             <Header keyStatus={data.keyStatus} />
-            <WrapperPanel className="p-0 flex flex-col overflow-y-auto overflow-x-hidden divide-y divide-slate-0">
+            <PanelWrapper className="p-0 flex flex-col overflow-y-auto overflow-x-hidden divide-y divide-slate-0">
                 <OEEPanel
                     oeeValue={data.oee}
                     oeeHistory={oeeHistory}
@@ -164,7 +164,7 @@ export const LiveDashboard: React.FC = () => {
                         </MetricCard>
                     </>
                 )} */}
-            </WrapperPanel>
+            </PanelWrapper>
         </div>
     );
 };

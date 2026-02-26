@@ -1,7 +1,6 @@
 //------------------------------------------------------------------------------
-import { ViewerPanel } from "@/components/common/ViewerPanel";
-import { AreaStorageWidget } from "./AreaStorageWidget";
-import { AreaStoragePanel } from "./AreaStoragePanel";
+import { AreaStorageWidget } from "@/components/viewer/areas/storage/AreaStorageWidget";
+import { AreaStoragePanel } from "@/components/viewer/areas/storage/AreaStoragePanel";
 
 //------------------------------------------------------------------------------
 import { QuadLayout } from "@/utils/QuadLayout";
@@ -28,8 +27,8 @@ export function AreaWidget({
                 center={
                     <div
                         className={cn(
-                            "w-full h-full cursor-pointer rounded-xl outline-accent-500/20 transition-colors duration-200 pointer-events-auto",
-                            isSelected ? "outline-100 " : "bg-accent-500/10 hover:bg-accent-500/20",
+                            "w-full h-full cursor-pointer rounded-xl border-white outline-accent-500/20 transition-colors duration-200 pointer-events-auto",
+                            isSelected ? "border-4 outline-100" : "bg-accent-500/10 hover:bg-accent-500/20",
                         )}
                         onClick={onClick}
                     />

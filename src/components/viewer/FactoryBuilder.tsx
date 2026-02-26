@@ -1,7 +1,7 @@
 import { useCallback, useContext } from "react";
 
 //------------------------------------------------------------------------------
-import { AreaWidget } from "@/components/viewer/AreaWidget";
+import { AreaWidget } from "@/components/viewer/areas/AreaWidget";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";

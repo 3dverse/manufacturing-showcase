@@ -1,7 +1,7 @@
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-export const WrapperPanel = ({
+export const PanelWrapper = ({
     as = "div",
     className,
     children,
