@@ -10,9 +10,9 @@ import {
 } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
-import StationLabels from "@/components/stations/StationLabels";
 import { ViewerController } from "@/components/viewer/ViewerController";
 import FactoryBuilder from "@/components/viewer/FactoryBuilder";
+import Labels from "@/components/viewer/overlays/Labels";
 import { DebugOverlay } from "@/components/viewer/overlays/DebugOverlay";
 
 //------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ const Viewer = () => {
                 {/* eslint-disable-next-line no-constant-binary-expression */}
                 {false && <ViewerController hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} />}
                 <CameraController ref={cameraControllerRef} />
-                <StationLabels cameraController={cameraControllerRef.current} />
+                <Labels cameraController={cameraControllerRef.current} />
                 <DOM3DOverlay>
                     <FactoryBuilder />
                 </DOM3DOverlay>
