@@ -8,7 +8,7 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-import type { AreaNode } from "@/content/type";
+import type { AreaNode, FactoryGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 const FactoryBuilder = () => {
@@ -30,13 +30,11 @@ const FactoryBuilderItem = ({ area }: { area: AreaNode }) => {
 
     //--------------------------------------------------------------------------
     // Handlers
-    const clickHandler = useCallback(() => setSelectedNode(area), [setSelectedNode, area]);
+    const clickHandler = useCallback((node: FactoryGraphNode) => setSelectedNode(node), [setSelectedNode]);
 
     //--------------------------------------------------------------------------
     // Render
-    return (
-        <AreaWidget key={area.euid} area={area} isSelected={selectedNode?.euid === area.euid} onClick={clickHandler} />
-    );
+    return <AreaWidget key={area.euid} area={area} selectedNode={selectedNode} onClick={clickHandler} />;
 };
 
 export default FactoryBuilder;
