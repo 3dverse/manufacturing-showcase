@@ -290,12 +290,25 @@ function quatFromMat3(m: number[]): Quat {
 }
 
 //------------------------------------------------------------------------------
+const DEFAULT_ORIENTATION: Quat = [-0.16043, 0.37687, 0.06645, 0.91072];
+
+const ORIENTATION_BY_NODE_TYPE: Record<string, Quat> = {
+    FACTORY: [-0.44003356996275617, 0.05388425132186897, 0.026463849189241398, 0.8959724378860116],
+    AREA: [-0.1172819510102272, 0.4298095107078552, 0.05641791224479675, 0.8934907913208008],
+    CELL: [-0.16281971476827492, 0.30383855316504915, 0.052784601893145586, 0.9372223108186922],
+    MACHINE: [-0.010867751372844726, 0.3934001860658572, 0.004650729594915339, 0.9192913337444676],
+};
+
+export const getDefaultOrientationForNodeType = (nodeType: string): Quat =>
+    ORIENTATION_BY_NODE_TYPE[nodeType] ?? DEFAULT_ORIENTATION;
+
+//------------------------------------------------------------------------------
 export const moveCamera = (
     entity: Entity,
     cameraController: DefaultCameraController,
     viewport: Viewport,
     cameraEntity: Entity,
-    orientation: Quat = [-0.16043, 0.37687, 0.06645, 0.91072] as Quat,
+    orientation: Quat = DEFAULT_ORIENTATION,
 ) => {
     const aspect = viewport.width / viewport.height;
     const viewpoint = AABBViewpoint({

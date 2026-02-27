@@ -3,8 +3,7 @@ import { useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
-import { PanelWrapper } from "@/components/common/panel/PanelWrapper";
-import { PanelTitle } from "@/components/common/panel/PanelTitle";
+import { PanelTitle, PanelWrapper, PanelShadow } from "@/components/common/panel";
 import { AreaStorageKpiCharts } from "@/components/viewer/areas/storage/AreaStorageKpiCharts";
 import type { AreaStorageKpiData } from "@/components/viewer/areas/storage/AreaStorageKpiCharts";
 
@@ -58,27 +57,34 @@ export function AreaStoragePanel({ area }: { area: AreaNode }) {
         <>
             <QuadLayout
                 entity={area.entity}
-                face="top"
+                face="right"
                 center={
-                    <div className="flex flex-col justify-end items-end w-full h-full scale-[-1_1]">
-                        <ViewerPanel className="flex flex-col gap-4 w-fit text-base rounded-lg shadow-none [outline:3px_solid_white] outline-offset-3 pointer-events-auto">
+                    <div className="relative flex flex-col justify-end items-start w-fit h-full">
+                        <PanelShadow />
+                        <ViewerPanel
+                            className="flex flex-col gap-4 w-fit mb-1 text-base rounded-xl shadow-none [outline:2px_solid_#ffffff90] outline-offset-3 pointer-events-auto"
+                            style={{
+                                cornerShape: "bevel",
+                            }}
+                        >
                             <PanelWrapper className="py-4">
                                 <PanelTitle>{area.name} AREA</PanelTitle>
                                 <AreaStorageKpiCharts data={kpiData} />
                             </PanelWrapper>
                         </ViewerPanel>
+                        <div className="shrink-0 self-center h-10 w-[2px] bg-[#ffffff90]" />
                     </div>
                 }
                 className="pointer-events-none"
             />
-            <QuadLayout
+            {/* <QuadLayout
                 entity={area.entity}
                 face="front"
                 right={
                     <div className="w-[3px] bg-slate-0 h-[calc(100%-8px)] -translate-x-16 translate-y-2 rounded-sm" />
                 }
                 className="pointer-events-none"
-            />
+            /> */}
         </>
     );
 }

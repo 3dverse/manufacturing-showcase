@@ -1,5 +1,9 @@
+//------------------------------------------------------------------------------
 import type { Entity, Quat, Vec3 } from "@3dverse/livelink";
 import type { DefaultCameraController } from "@3dverse/livelink-react";
+
+//------------------------------------------------------------------------------
+import { applyQuaternionToVector3 } from "./math";
 
 //------------------------------------------------------------------------------
 export const moveCamera = (entity: Entity, cameraController: DefaultCameraController) => {
@@ -24,27 +28,6 @@ export const moveCamera = (entity: Entity, cameraController: DefaultCameraContro
 
 //------------------------------------------------------------------------------
 const neutralForward = [0, 0, -1] as Vec3;
-
-//------------------------------------------------------------------------------
-// Helper functions to perform vector and quaternion math without external libraries
-function applyQuaternionToVector3(v: Vec3, q: Quat): Vec3 {
-    // Quaternion rotation: v' = q * v * q^-1
-    const [x, y, z] = v;
-    const [qx, qy, qz, qw] = q;
-
-    // Calculate quat * vector
-    const ix = qw * x + qy * z - qz * y;
-    const iy = qw * y + qz * x - qx * z;
-    const iz = qw * z + qx * y - qy * x;
-    const iw = -qx * x - qy * y - qz * z;
-
-    // Calculate result * inverse quat
-    return [
-        ix * qw + iw * -qx + iy * -qz - iz * -qy,
-        iy * qw + iw * -qy + iz * -qx - ix * -qz,
-        iz * qw + iw * -qz + ix * -qy - iy * -qx,
-    ];
-}
 
 //------------------------------------------------------------------------------
 function addVec3(a: Vec3, b: Vec3): Vec3 {

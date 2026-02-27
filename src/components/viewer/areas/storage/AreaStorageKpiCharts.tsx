@@ -5,8 +5,10 @@ import { curveLinear } from "@visx/curve";
 import { Group } from "@visx/group";
 
 //------------------------------------------------------------------------------
+import { PanelLabel } from "@/components/common/panel";
+
+//------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
-import { PanelLabel } from "@/components/common/panel/PanelLabel";
 
 //------------------------------------------------------------------------------
 export type TimeSeriesPoint = { date: Date; value: number };
@@ -22,7 +24,7 @@ export type AreaStorageKpiData = {
 
 const CHART_WIDTH = 180;
 const LINE_CHART_HEIGHT = 40;
-const PIE_SIZE = 120;
+const PIE_SIZE = 90;
 
 //------------------------------------------------------------------------------
 /** Pie slice path: angle 0 = 3 o'clock, angles increase counterclockwise (math convention). */
@@ -59,13 +61,7 @@ function OccupancyPieChart({
             height={size}
             className={cn("overflow-visible -rotate-90 scale-[1_-1] bg-accent-200 rounded-full", className)}
         >
-            <path
-                d={slicePath}
-                fill="var(--color-accent)"
-                stroke="var(--color-slate-0)"
-                strokeWidth={1}
-                className="origin-center scale-[.92]"
-            />
+            <path d={slicePath} fill="var(--color-accent)" className="origin-center scale-[.95]" />
         </svg>
     );
 }
@@ -107,29 +103,27 @@ function KpiLineChart({
         range: [innerHeight, 0],
     });
     return (
-        <div className={cn("flex flex-col gap-0.5", className)}>
-            {(currentValue || label) && (
-                <div className="flex justify-between items-baseline gap-2">
-                    {label && <PanelLabel>{label}</PanelLabel>}
-                    {currentValue && (
-                        <p className="text-xl font-medium tabular-nums" style={{ color: color as string }}>
-                            {valueFormat(currentValue)}
-                        </p>
-                    )}
-                </div>
-            )}
-            <svg width={width} height={height}>
-                <Group left={margin.left} top={margin.top}>
-                    <LinePath<TimeSeriesPoint>
-                        data={data}
-                        x={(d) => xScale(d.date.getTime())}
-                        y={(d) => yScale(d.value)}
-                        curve={curveLinear}
-                        stroke={color}
-                        strokeWidth={3}
-                    />
-                </Group>
-            </svg>
+        <div className={cn("flex flex-col gap-1", className)}>
+            {label && <PanelLabel>{label}</PanelLabel>}
+            <div className="flex justify-between">
+                {currentValue && (
+                    <p className="text-xl font-medium tabular-nums" style={{ color: color as string }}>
+                        {valueFormat(currentValue)}
+                    </p>
+                )}
+                <svg width={width} height={height}>
+                    <Group left={margin.left} top={margin.top}>
+                        <LinePath<TimeSeriesPoint>
+                            data={data}
+                            x={(d) => xScale(d.date.getTime())}
+                            y={(d) => yScale(d.value)}
+                            curve={curveLinear}
+                            stroke={color}
+                            strokeWidth={3}
+                        />
+                    </Group>
+                </svg>
+            </div>
         </div>
     );
 }

@@ -8,10 +8,12 @@ import { Icon } from "@/components/common/Icon";
 import Button from "@/components/common/Button";
 
 //------------------------------------------------------------------------------
+import { CameraContext } from "@/contexts/CameraContext";
 import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
+import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -23,12 +25,32 @@ import { NodeTypes } from "@/content/enums";
 const MainNav = () => {
     //--------------------------------------------------------------------------
     // Context
+    const { cameraControllerRef, viewportRef, cameraEntity } = useContext(CameraContext);
     const { nodeGraph } = useContext(FactoryContext);
-    const { setSelectedNode } = useContext(SelectionContext);
+    const { selectedNode, setSelectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
     // Handlers
-    const itemClickedHandler = useCallback((node: FactoryGraphNode) => setSelectedNode(node), [setSelectedNode]);
+    const itemClickedHandler = useCallback(
+        (node: FactoryGraphNode) => {
+            if (node !== selectedNode) {
+                setSelectedNode(node);
+            } else {
+                const controller = cameraControllerRef?.current;
+                const viewport = viewportRef?.current;
+                if (controller && viewport && cameraEntity) {
+                    moveCamera(
+                        node.entity,
+                        controller,
+                        viewport,
+                        cameraEntity,
+                        getDefaultOrientationForNodeType(node.type),
+                    );
+                }
+            }
+        },
+        [setSelectedNode, cameraControllerRef, viewportRef, cameraEntity, selectedNode],
+    );
 
     //--------------------------------------------------------------------------
     const factoryClickHandler = useCallback(() => {
@@ -46,7 +68,7 @@ const MainNav = () => {
             <div className="flex flex-col divide-y divide-muted/50">
                 <div className="p-1">
                     <ul className="flex gap-1">
-                        <li className="">
+                        <li>
                             <Button variant="ghost" size="xs" className="h-full" onClick={factoryClickHandler}>
                                 <Icon icon={faHome} size="lg" />
                             </Button>

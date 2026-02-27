@@ -72,3 +72,50 @@ export function rotateVec3ByQuat(v: Vec3, q: Quat): Vec3 {
     // v' = v + qw * t + cross(q.xyz, t)
     return [vx + qw * tx + (qy * tz - qz * ty), vy + qw * ty + (qz * tx - qx * tz), vz + qw * tz + (qx * ty - qy * tx)];
 }
+
+//------------------------------------------------------------------------------
+// Helper functions to perform vector and quaternion math without external libraries
+export function applyQuaternionToVector3(v: Vec3, q: Quat): Vec3 {
+    // Quaternion rotation: v' = q * v * q^-1
+    const [x, y, z] = v;
+    const [qx, qy, qz, qw] = q;
+
+    // Calculate quat * vector
+    const ix = qw * x + qy * z - qz * y;
+    const iy = qw * y + qz * x - qx * z;
+    const iz = qw * z + qx * y - qy * x;
+    const iw = -qx * x - qy * y - qz * z;
+
+    // Calculate result * inverse quat
+    return [
+        ix * qw + iw * -qx + iy * -qz - iz * -qy,
+        iy * qw + iw * -qy + iz * -qx - ix * -qz,
+        iz * qw + iw * -qz + ix * -qy - iy * -qx,
+    ];
+}
+
+//------------------------------------------------------------------------------
+/** Returns a quaternion that rotates neutralForward [0, 0, -1] to the given direction. */
+export function vector3ToQuaternion(direction: Vec3): Quat {
+    const [x, y, z] = direction;
+    const len = Math.sqrt(x * x + y * y + z * z);
+    if (len < 1e-10) return [0, 0, 0, 1];
+
+    const nx = x / len;
+    const ny = y / len;
+    const nz = z / len;
+
+    const dot = -nz; // dot(neutralForward, dir) = [0,0,-1]·(nx,ny,nz)
+    const ax = 0 * nz - -1 * ny; // cross(neutralForward, dir)
+    const ay = -1 * nx - 0 * nz;
+    const az = 0 * ny - 0 * nx;
+
+    const axisLen = Math.sqrt(ax * ax + ay * ay + az * az);
+    if (axisLen < 1e-10) {
+        return dot >= 0 ? [0, 0, 0, 1] : [0, 1, 0, 0]; // 180° around Y
+    }
+
+    const halfAngle = Math.acos(Math.max(-1, Math.min(1, dot))) * 0.5;
+    const s = Math.sin(halfAngle) / axisLen;
+    return [ax * s, ay * s, az * s, Math.cos(halfAngle)];
+}
