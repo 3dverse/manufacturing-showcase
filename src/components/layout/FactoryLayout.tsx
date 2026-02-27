@@ -15,9 +15,9 @@ const FactoryLayout = ({ currentRoute }: { currentRoute: string }) => {
 
     //--------------------------------------------------------------------------
     return (
-        <FactoryContextProvider>
-            <SelectionContextProvider>
-                <CameraContextProvider>
+        <CameraContextProvider>
+            <FactoryContextProvider>
+                <SelectionContextProvider>
                     <div className="relative flex-1">
                         <Viewer />
                         <div className="absolute bottom-0 left-0 flex flex-col w-full h-full p-2 pointer-events-none">
@@ -27,9 +27,9 @@ const FactoryLayout = ({ currentRoute }: { currentRoute: string }) => {
                             </div>
                         </div>
                     </div>
-                </CameraContextProvider>
-            </SelectionContextProvider>
-        </FactoryContextProvider>
+                </SelectionContextProvider>
+            </FactoryContextProvider>
+        </CameraContextProvider>
     );
 };
 

@@ -28,7 +28,7 @@ const Viewer = () => {
     //--------------------------------------------------------------------------
     // Contexts
     const { isConnecting } = useContext(LivelinkContext);
-    const { selectedNode, setSelectedNode } = useContext(SelectionContext);
+    const { setSelectedNode } = useContext(SelectionContext);
     const { nodeGraph } = useContext(FactoryContext);
     const { viewportRef, setCameraEntity, cameraControllerRef } = useContext(CameraContext);
 
@@ -51,19 +51,6 @@ const Viewer = () => {
     //--------------------------------------------------------------------------
     // Effects
     useEffect(() => {
-        if (selectedNode && cameraControllerRef.current && viewportRef.current && cameraEntity) {
-            moveCamera(
-                selectedNode.entity,
-                cameraControllerRef.current,
-                viewportRef.current,
-                cameraEntity,
-                getDefaultOrientationForNodeType(selectedNode.type),
-            );
-        }
-    }, [selectedNode, cameraControllerRef, viewportRef, cameraEntity]);
-
-    //--------------------------------------------------------------------------
-    useEffect(() => {
         setCameraEntity(cameraEntity);
     }, [setCameraEntity, cameraEntity]);
 
@@ -80,6 +67,13 @@ const Viewer = () => {
             ) {
                 viewerInitialized.current = true;
                 setSelectedNode(nodeGraph);
+                moveCamera(
+                    nodeGraph.entity,
+                    cameraControllerRef.current,
+                    viewportRef.current,
+                    cameraEntity,
+                    getDefaultOrientationForNodeType(nodeGraph.type),
+                );
             } else {
                 setTimeout(check, 200);
             }

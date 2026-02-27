@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 //------------------------------------------------------------------------------
 import { SelectionContext } from "@/contexts/SelectionContext";
@@ -12,17 +12,45 @@ export type AreaCategory = "Reception" | "Production" | "Storage" | "Control";
 export type Element = { type: ElementType; id: string; count: string; entity: Entity; category?: AreaCategory };
 
 //------------------------------------------------------------------------------
+import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2";
+import { CameraContext } from "@/contexts/CameraContext";
+
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export function SelectionContextProvider({ children }: { children: ReactNode }) {
+    //--------------------------------------------------------------------------
+    // Context
+    const { viewportRef, cameraControllerRef, cameraEntity } = useContext(CameraContext);
+
     //--------------------------------------------------------------------------
     // State
     const [selectedNode, _setSelectedNode] = useState<FactoryGraphNode>();
 
     //--------------------------------------------------------------------------
     // Handlers
-    const setSelectedNode = useCallback((node: FactoryGraphNode | undefined) => {
-        _setSelectedNode(node);
-    }, []);
+    const cameraHandler = useCallback(
+        (node: FactoryGraphNode) => {
+            if (node && cameraControllerRef.current && viewportRef.current && cameraEntity) {
+                moveCamera(
+                    node.entity,
+                    cameraControllerRef.current,
+                    viewportRef.current,
+                    cameraEntity,
+                    getDefaultOrientationForNodeType(node.type),
+                );
+            }
+        },
+        [cameraControllerRef, viewportRef, cameraEntity],
+    );
+
+    //--------------------------------------------------------------------------
+    const setSelectedNode = useCallback(
+        (node: FactoryGraphNode | undefined) => {
+            _setSelectedNode(node);
+            node && cameraHandler(node);
+        },
+        [cameraHandler],
+    );
 
     //--------------------------------------------------------------------------
     const setSelectedNodeByEntity = useCallback((entity: Entity | undefined) => {
