@@ -2,23 +2,40 @@ import { useCallback, useContext } from "react";
 
 //------------------------------------------------------------------------------
 import { AreaWidget } from "@/components/viewer/areas/AreaWidget";
+import { AreaProductionPanel } from "@/components/viewer/areas/production/AreaProductionPanel";
+import { CellPanel } from "@/components/viewer/cells/CellPanel";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-import type { AreaNode, FactoryGraphNode } from "@/content/type";
+import type { AreaNode, CellNode, FactoryGraphNode } from "@/content/type";
+import { NodeTypes } from "@/content/enums";
 
 //------------------------------------------------------------------------------
 const FactoryBuilder = () => {
     //--------------------------------------------------------------------------
     // Context
     const { nodeGraph } = useContext(FactoryContext);
+    const { selectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
     // Render
-    return nodeGraph?.areas.map((area) => <FactoryBuilderItem key={area.euid} area={area} />);
+    return (
+        <>
+            {/* Overlays and QuadPanels */}
+            {nodeGraph?.areas.map((area) => (
+                <FactoryBuilderItem key={area.euid} area={area} />
+            ))}
+
+            {/* Panels */}
+            {selectedNode?.type === NodeTypes.area && selectedNode.name === "production" && (
+                <AreaProductionPanel area={selectedNode as AreaNode} />
+            )}
+            {selectedNode?.type === NodeTypes.cell && <CellPanel cell={selectedNode as CellNode} />}
+        </>
+    );
 };
 
 //------------------------------------------------------------------------------

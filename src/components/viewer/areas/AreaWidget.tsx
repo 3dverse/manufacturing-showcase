@@ -2,7 +2,6 @@
 import { AreaStorageOverlay } from "@/components/viewer/areas/storage/AreaStorageOverlay";
 import { AreaStorageQuadPanel } from "@/components/viewer/areas/storage/AreaStorageQuadPanel";
 import { AreaProductionQuadPanel } from "@/components/viewer/areas/production/AreaProductionQuadPanel";
-import { AreaProductionPanel } from "@/components/viewer/areas/production/AreaProductionPanel";
 import { CellWidget } from "@/components/viewer/cells/CellWidget";
 
 //------------------------------------------------------------------------------
@@ -24,6 +23,7 @@ export function AreaWidget({
 }) {
     //--------------------------------------------------------------------------
     const isAreaSelected = selectedNode?.euid === area.euid;
+
     // TODO: Implement this
     const isAreaAParentOfSelectedNode = isAreaSelected;
 
@@ -77,7 +77,6 @@ export function AreaWidget({
             {(isAreaSelected || isAreaAParentOfSelectedNode) && area.name === "production" && (
                 <>
                     <AreaProductionQuadPanel area={area} />
-                    <AreaProductionPanel area={area} />
                 </>
             )}
         </div>
