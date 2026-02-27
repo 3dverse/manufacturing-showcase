@@ -12,7 +12,7 @@ import type { AreaNode } from "@/content/type";
 const EMPTY_SPACE_PERCENTAGE = 0.3;
 
 //------------------------------------------------------------------------------
-export function AreaStorageWidget({ area }: { area: AreaNode }) {
+export function AreaStorageOverlay({ area }: { area: AreaNode }) {
     //--------------------------------------------------------------------------
     const [childrenEntities, setChildrenEntities] = useState<Entity[]>([]);
 

@@ -3,7 +3,7 @@ import { useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
-import { PanelTitle, PanelWrapper, PanelShadow } from "@/components/common/panel";
+import { PanelTitle, PanelWrapper, PanelShadow, PanelAnchorLine } from "@/components/common/panel";
 import { AreaStorageKpiCharts } from "@/components/viewer/areas/storage/AreaStorageKpiCharts";
 import type { AreaStorageKpiData } from "@/components/viewer/areas/storage/AreaStorageKpiCharts";
 
@@ -48,7 +48,7 @@ function useAreaStorageKpiData(area: AreaNode): AreaStorageKpiData {
 }
 
 //------------------------------------------------------------------------------
-export function AreaStoragePanel({ area }: { area: AreaNode }) {
+export function AreaStorageQuadPanel({ area }: { area: AreaNode }) {
     //--------------------------------------------------------------------------
     const kpiData = useAreaStorageKpiData(area);
 
@@ -72,7 +72,7 @@ export function AreaStoragePanel({ area }: { area: AreaNode }) {
                                 <AreaStorageKpiCharts data={kpiData} />
                             </PanelWrapper>
                         </ViewerPanel>
-                        <div className="shrink-0 self-center h-10 w-[2px] bg-[#ffffff90]" />
+                        <PanelAnchorLine />
                     </div>
                 }
                 className="pointer-events-none"

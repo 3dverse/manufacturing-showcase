@@ -36,12 +36,14 @@ export function CellWidget({
                 center={
                     <div
                         className={cn(
-                            "w-full h-full border-2 rounded-xl border-slate-0 transition-colors duration-200",
+                            "w-full h-full p-2 border-2 rounded-xl border-slate-0 transition-colors duration-200",
                             isSelected ? "opacity-0" : "hover:bg-slate-0/40 cursor-pointer",
                         )}
                         onClick={onClick}
                     >
-                        <p className="text-slate-800 text-lg capitalize px-4 py-2">{cell.name} CELL</p>
+                        <p className="px-3 py-1 w-fit text-slate-800 text-base capitalize bg-slate-0/50 border border-slate-0/50 rounded-lg backdrop-blur-sm">
+                            {cell.name} cell
+                        </p>
                     </div>
                 }
             />

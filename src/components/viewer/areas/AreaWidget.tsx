@@ -1,6 +1,8 @@
 //------------------------------------------------------------------------------
-import { AreaStorageWidget } from "@/components/viewer/areas/storage/AreaStorageWidget";
-import { AreaStoragePanel } from "@/components/viewer/areas/storage/AreaStoragePanel";
+import { AreaStorageOverlay } from "@/components/viewer/areas/storage/AreaStorageOverlay";
+import { AreaStorageQuadPanel } from "@/components/viewer/areas/storage/AreaStorageQuadPanel";
+import { AreaProductionQuadPanel } from "@/components/viewer/areas/production/AreaProductionQuadPanel";
+import { AreaProductionPanel } from "@/components/viewer/areas/production/AreaProductionPanel";
 import { CellWidget } from "@/components/viewer/cells/CellWidget";
 
 //------------------------------------------------------------------------------
@@ -22,6 +24,8 @@ export function AreaWidget({
 }) {
     //--------------------------------------------------------------------------
     const isAreaSelected = selectedNode?.euid === area.euid;
+    // TODO: Implement this
+    const isAreaAParentOfSelectedNode = isAreaSelected;
 
     //--------------------------------------------------------------------------
     return (
@@ -63,10 +67,17 @@ export function AreaWidget({
                     />
                 ))}
 
-            {isAreaSelected && area.name === "storage" && (
+            {(isAreaSelected || isAreaAParentOfSelectedNode) && area.name === "storage" && (
                 <>
-                    <AreaStorageWidget area={area} />
-                    <AreaStoragePanel area={area} />
+                    <AreaStorageOverlay area={area} />
+                    <AreaStorageQuadPanel area={area} />
+                </>
+            )}
+
+            {(isAreaSelected || isAreaAParentOfSelectedNode) && area.name === "production" && (
+                <>
+                    <AreaProductionQuadPanel area={area} />
+                    <AreaProductionPanel area={area} />
                 </>
             )}
         </div>

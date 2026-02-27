@@ -105,14 +105,7 @@ export const LiveDashboard: React.FC = () => {
                     <OrderPanel order={orders[0]} />
                 </article>
                 <article className={cn("py-4 pr-4", paddingLeftClassName)}>
-                    <PlanningPanel
-                        dailyProductionData={dailyProductionData.map((d) => ({
-                            date: d.date.toISOString().split("T")[0],
-                            products: d.qualityProducts + d.nonQualityProducts,
-                            nonQualityProducts: d.nonQualityProducts,
-                            qualityProducts: d.qualityProducts,
-                        }))}
-                    />
+                    <PlanningPanel />
                 </article>
                 <article className="flex flex-col gap-5 py-4 pl-15 pr-4">
                     <ProductionPanel

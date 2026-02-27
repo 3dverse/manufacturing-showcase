@@ -3,14 +3,14 @@ import type { Order } from "@/content/type";
 
 //------------------------------------------------------------------------------
 export const orderStatus = {
-    planned: { name: "Planned", color: "pr-1 text-neutral-700", icon: faCalendarDays },
+    planned: { name: "Planned", color: "text-neutral-700", icon: faCalendarDays },
     inProgress: {
         name: "In Progress",
-        color: "pl-[6px] pr-1 py-px bg-accent text-accent-50 rounded-sm",
+        color: "text-accent",
         icon: faClockRotateLeft,
     },
-    completed: { name: "Completed", color: "pr-1 text-positive-700", icon: faCheckCircle },
-    cancelled: { name: "Cancelled", color: "pr-1 text-negative", icon: faXmarkCircle },
+    completed: { name: "Completed", color: "text-positive-700", icon: faCheckCircle },
+    cancelled: { name: "Cancelled", color: "text-negative", icon: faXmarkCircle },
 };
 
 //------------------------------------------------------------------------------
