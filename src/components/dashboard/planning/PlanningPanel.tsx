@@ -64,8 +64,12 @@ export const PlanningPanel = () => {
                                     >
                                         {order.ref}
                                     </p>
-                                    <p className="hidden @sm:block text-2xs pt-px text-subtle">{order.startDate}</p>
-                                    <p className="hidden @sm:block text-2xs pt-px text-subtle">{order.endDate}</p>
+                                    <p className="hidden @sm:block text-2xs pt-px text-subtle">
+                                        {order.startDate.toLocaleTimeString()}
+                                    </p>
+                                    <p className="hidden @sm:block text-2xs pt-px text-subtle">
+                                        {order.endDate.toLocaleTimeString()}
+                                    </p>
                                     <p className="tabular-nums tracking-tight text-right">
                                         <span
                                             className={cn(

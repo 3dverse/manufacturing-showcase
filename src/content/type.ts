@@ -78,8 +78,8 @@ export type Order = {
     ref: string;
     description?: string;
     status: OrderStatus;
-    startDate: string;
-    endDate: string;
+    startDate: Date;
+    endDate: Date;
     unitsPlanned: number;
     unitsCompleted: number;
 };
