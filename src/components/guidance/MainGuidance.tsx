@@ -15,7 +15,7 @@ const MainGuidance = () => {
     return (
         <aside
             data-theme="dark"
-            className="relative w-full h-24 bg-slate-1000 text-default shadow-[0_-4px_32px_-1px_color-mix(in_oklch,var(--color-accent-200)_20%,transparent)] overflow-hidden z-100"
+            className="relative w-full h-24 bg-slate-0 text-default shadow-[0_-4px_32px_-1px_color-mix(in_oklch,var(--color-accent-200)_20%,transparent)] overflow-hidden z-100"
         >
             <div className="flex items-center justify-between h-full px-10">
                 <a href={LANDING_3DVERSE_URL} target="_blank" rel="noopener noreferrer" className="flex flex-col">
@@ -26,25 +26,25 @@ const MainGuidance = () => {
                 </a>
 
                 <div className="relative flex-1 flex flex-col text-center items-center justify-center">
-                    <h2 className="text-base tracking-wider">Explore use-cases</h2>
-                    <ul className="list-none flex gap-1 mt-2">
+                    <h2 className="text-sm font-semibold">Explore use-cases</h2>
+                    <ul className="list-none flex items-start gap-2 mt-2">
                         {useCases.map((useCase, index) => (
                             <li
                                 key={index}
-                                className="text-xs bg-slate-200/0 border border-slate-300 rounded-full px-4 py-2"
+                                className="flex items-center text-left text-subtle hover:text-default transition-colors duration-200 w-48 bg-slate-200/0 border border-slate-300 rounded-sm overflow-hidden cursor-pointer"
                             >
-                                {useCase.name}
+                                <img src={useCase.image} alt={useCase.name} className="w-12 h-12 object-cover" />
+                                <p className="py-px px-3 text-xs">{useCase.name}</p>
                             </li>
                         ))}
                     </ul>
-                    <span className="absolute -top-40 left-1/2 -translate-x-1/2 w-[50%] aspect-square rounded-full border border-subtle"></span>
                 </div>
 
-                <div>
+                {/* <div>
                     <Button onClick={handleContact} variant="ghost" size="xs">
                         Contact 3dverse
                     </Button>
-                </div>
+                </div> */}
             </div>
         </aside>
     );

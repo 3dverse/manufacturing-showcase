@@ -72,26 +72,33 @@ function AppLayout() {
 
     //--------------------------------------------------------------------------
     const renderContent = () => {
-        if (currentRoute === "/") {
-            return <HomePage />;
-        } else if (currentRoute === "/theme") {
+        if (currentRoute === "/theme") {
             return <Theme onBack={() => navigate("/")} />;
         } else if (currentRoute.startsWith("/factory/")) {
             const factoryId = currentRoute.split("/")[2];
             const factory = factories.find((f) => f.id === factoryId);
 
             if (!factory) {
-                return <HomePage />;
+                return (
+                    <>
+                        <HomePage />
+                        <MainGuidance />
+                    </>
+                );
             }
             return (
                 <Livelink sceneId={factory.scene_id} token={TOKEN_3DVERSE} LoadingPanel={LoadingOverlay}>
                     <FactoryLayout currentRoute={currentRoute} />
-                    {/* eslint-disable-next-line no-constant-binary-expression */}
-                    {false && <MainGuidance />}
+                    <MainGuidance />
                 </Livelink>
             );
         }
-        return <HomePage />;
+        return (
+            <>
+                <HomePage />
+                <MainGuidance />
+            </>
+        );
     };
 
     //--------------------------------------------------------------------------

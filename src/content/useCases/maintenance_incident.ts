@@ -2,8 +2,9 @@ import type { UseCase } from "@/content/type";
 
 export const maintenance_incident: UseCase = {
     id: "maintenance_incident",
-    name: "Maintenaince incident",
+    name: "Maintenance incident",
     description: "Vibration anormale du moteur",
+    image: "/assets/useCases/maintenance_incident.png",
 
     steps: [
         {
