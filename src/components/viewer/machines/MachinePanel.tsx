@@ -1,9 +1,6 @@
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
-import { PanelLabel, PanelTitle, PanelWrapper } from "@/components/common/panel";
-
-//------------------------------------------------------------------------------
-import { cn } from "@/utils/cn";
+import { PanelTitle, PanelWrapper } from "@/components/common/panel";
 
 //------------------------------------------------------------------------------
 import type { MachineNode } from "@/content/type";

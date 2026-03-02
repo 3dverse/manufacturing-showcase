@@ -84,7 +84,12 @@ export function AreaWidget({
                 center={
                     <div
                         className="w-full h-full"
-                        onMouseEnter={() => !isAreaSelected && setIsTooltipVisible(true)}
+                        onMouseEnter={(e) => {
+                            if (!isAreaSelected) {
+                                setIsTooltipVisible(true);
+                                updatePosition(e);
+                            }
+                        }}
                         onMouseLeave={() => setIsTooltipVisible(false)}
                         onMouseMoveCapture={(e) => !isAreaSelected && updatePosition(e)}
                     >
