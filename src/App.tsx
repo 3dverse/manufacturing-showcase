@@ -12,11 +12,13 @@ import MainGuidance from "@/components/guidance/MainGuidance";
 import IntroductionModal from "@/components/guidance/IntroductionModal";
 
 //------------------------------------------------------------------------------
-import { factories } from "@/content/factory";
-import { TOKEN_3DVERSE } from "@/content/3dverse";
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { useNavigationStore } from "@/store/useNavigationStore";
-import { LOCAL_STORAGE_KEYS, useLocalStorage } from "./hooks/useLocalStorage";
+import { LOCAL_STORAGE_KEYS, useLocalStorage } from "@/hooks/useLocalStorage";
+
+//------------------------------------------------------------------------------
+import { TOKEN_3DVERSE } from "@/content/3dverse";
+import { factories } from "@/content/factory";
 
 //------------------------------------------------------------------------------
 export function App() {

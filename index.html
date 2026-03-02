@@ -2,15 +2,44 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <link rel="icon" type="image/svg+xml" href="/3dverse.svg" />
+        <title>{{seo_title}}</title>
+        <meta name="description" content="{{seo_description}}" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
             href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Manrope:wght@200..800&display=swap"
             rel="stylesheet"
         />
-        <title>Showcase Manufacturing</title>
+
+        <link rel="icon" type="image/svg+xml" href="/socials/favicon.svg" />
+        <link rel="icon" href="/socials/favicon.png" />
+
+        <link rel="manifest" href="/socials/manifest.json" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#080A12" />
+
+        <meta name="application-name" content="{{app_name}}" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="{{app_name}}" />
+        <meta name="msapplication-TileColor" content="#080A12" />
+        <meta name="msapplication-config" content="/socials/browserconfig.xml" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="{{url}}" />
+        <meta property="og:title" content="{{seo_title}}" />
+        <meta property="og:description" content="{{seo_description}}" />
+        <meta property="og:image" content="{{og_image}}" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta property="twitter:domain" content="{{url}}" />
+        <meta property="twitter:url" content="{{url}}" />
+        <meta name="twitter:title" content="{{seo_title}}" />
+        <meta name="twitter:description" content="{{seo_description}}" />
+        <meta name="twitter:image" content="{{og_image}}" />
+
+        {{structured_data}}
     </head>
     <body>
         <div id="root"></div>
