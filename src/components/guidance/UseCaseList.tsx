@@ -24,7 +24,7 @@ const MainGuidance = () => {
 
                 <div className="relative flex-1 flex justify-center">
                     <h2 className="text-xs text-guidance tracking-wider font-normal bg-neutral-200/0 border border-guidance/30 rounded-md px-9 py-3">
-                        Choose a use-case
+                        Choose a use case
                     </h2>
                     <span className="absolute -top-40 left-1/2 -translate-x-1/2 w-[50%] aspect-square rounded-full border border-subtle"></span>
                 </div>

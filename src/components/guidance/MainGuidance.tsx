@@ -1,21 +1,14 @@
-import Button from "@/components/common/Button";
-
 //------------------------------------------------------------------------------
-import { CONTACT_URL, LANDING_3DVERSE_URL } from "@/content/routes";
+import { LANDING_3DVERSE_URL } from "@/content/routes";
 import { useCases } from "@/content/useCases";
 
 //------------------------------------------------------------------------------
 const MainGuidance = () => {
     //--------------------------------------------------------------------------
-    const handleContact = () => {
-        window.open(CONTACT_URL, "_blank", "noopener,noreferrer");
-    };
-
-    //--------------------------------------------------------------------------
     return (
         <aside
             data-theme="dark"
-            className="relative w-full h-24 bg-slate-0 text-default shadow-[0_-4px_32px_-1px_color-mix(in_oklch,var(--color-accent-200)_20%,transparent)] overflow-hidden z-100"
+            className="relative w-full shrink-0 h-24 bg-slate-0 text-default shadow-[0_-4px_32px_-1px_color-mix(in_oklch,var(--color-accent-200)_20%,transparent)] overflow-hidden z-100"
         >
             <div className="flex items-center justify-between h-full px-10">
                 <a href={LANDING_3DVERSE_URL} target="_blank" rel="noopener noreferrer" className="flex flex-col">
@@ -26,7 +19,7 @@ const MainGuidance = () => {
                 </a>
 
                 <div className="relative flex-1 flex flex-col text-center items-center justify-center">
-                    <h2 className="text-sm font-semibold">Explore use-cases</h2>
+                    <h2 className="text-sm font-semibold">Explore use cases</h2>
                     <ul className="list-none flex items-start gap-2 mt-2">
                         {useCases.map((useCase, index) => (
                             <li
@@ -39,12 +32,6 @@ const MainGuidance = () => {
                         ))}
                     </ul>
                 </div>
-
-                {/* <div>
-                    <Button onClick={handleContact} variant="ghost" size="xs">
-                        Contact 3dverse
-                    </Button>
-                </div> */}
             </div>
         </aside>
     );

@@ -89,6 +89,7 @@ export type UseCase = {
     id: string;
     name: string;
     description: string;
+    image?: string;
     steps: UseCaseStep[];
 };
 

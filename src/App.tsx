@@ -16,6 +16,7 @@ import { factories } from "@/content/factory";
 import { TOKEN_3DVERSE } from "@/content/3dverse";
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { useNavigationStore } from "@/store/useNavigationStore";
+import { LOCAL_STORAGE_KEYS, useLocalStorage } from "./hooks/useLocalStorage";
 
 //------------------------------------------------------------------------------
 export function App() {
@@ -26,7 +27,10 @@ export function App() {
 function AppLayout() {
     //--------------------------------------------------------------------------
     const [currentRoute, setCurrentRoute] = useState(() => window.location.pathname);
-    const [isIntroductionModalOpen, setIsIntroductionModalOpen] = useState<boolean>(false);
+    const [isIntroductionModalOpen, setIsIntroductionModalOpen] = useLocalStorage<boolean>(
+        LOCAL_STORAGE_KEYS.IS_INTRODUCTION_MODAL_OPEN,
+        true,
+    );
     const { setCurrentFactory, clearCurrentFactory } = useFactoryStore();
     const setNavigate = useNavigationStore((state) => state.setNavigate);
 
