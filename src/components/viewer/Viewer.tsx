@@ -14,6 +14,8 @@ import { ViewerController } from "@/components/viewer/ViewerController";
 import FactoryBuilder from "@/components/viewer/FactoryBuilder";
 import Labels from "@/components/viewer/overlays/Labels";
 import { DebugOverlay } from "@/components/viewer/overlays/DebugOverlay";
+import { AreaProductionPanel } from "@/components/viewer/areas/production/AreaProductionPanel";
+import { CellPanel } from "@/components/viewer/cells/CellPanel";
 
 //------------------------------------------------------------------------------
 import { CameraContext } from "@/contexts/CameraContext";
@@ -24,11 +26,15 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2";
 
 //------------------------------------------------------------------------------
+import { NodeTypes } from "@/content/enums";
+import type { AreaNode, CellNode } from "@/content/type";
+
+//------------------------------------------------------------------------------
 const Viewer = () => {
     //--------------------------------------------------------------------------
     // Contexts
     const { isConnecting } = useContext(LivelinkContext);
-    const { setSelectedNode } = useContext(SelectionContext);
+    const { selectedNode, setSelectedNode } = useContext(SelectionContext);
     const { nodeGraph } = useContext(FactoryContext);
     const { viewportRef, setCameraEntity, cameraControllerRef } = useContext(CameraContext);
 
@@ -103,6 +109,13 @@ const Viewer = () => {
                 <DOM3DOverlay>
                     <FactoryBuilder />
                 </DOM3DOverlay>
+
+                {/* Panels */}
+                {selectedNode?.type === NodeTypes.area && selectedNode.name === "production" && (
+                    <AreaProductionPanel area={selectedNode as AreaNode} />
+                )}
+                {selectedNode?.type === NodeTypes.cell && <CellPanel cell={selectedNode as CellNode} />}
+
                 {false && <DebugOverlay />}
             </Viewport>
             {/* Light overlay */}
