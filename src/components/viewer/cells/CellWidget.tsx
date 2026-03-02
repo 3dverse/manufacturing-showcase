@@ -54,7 +54,7 @@ export function CellWidget({
                         onMouseMoveCapture={onMouseMoveCapture}
                     >
                         <p className="px-3 py-1 w-fit text-slate-800 text-base capitalize bg-slate-0/50 border border-slate-0/50 rounded-lg backdrop-blur-sm">
-                            {cell.name} cell
+                            {cell.name}
                         </p>
                     </div>
                 }
