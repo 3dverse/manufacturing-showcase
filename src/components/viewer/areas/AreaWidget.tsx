@@ -12,7 +12,7 @@ import { QuadLayout } from "@/utils/QuadLayout";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import type { AreaNode, FactoryGraphNode } from "@/content/type";
+import type { AreaNode, CellNode, FactoryGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 export function AreaWidget({
@@ -27,10 +27,13 @@ export function AreaWidget({
     //--------------------------------------------------------------------------
     const tooltipRef = useRef<HTMLDivElement>(null);
     const frame = useRef<number | null>(null);
-    const [visible, setVisible] = useState<boolean>(false);
+    const [isTooltipVisible, setIsTooltipVisible] = useState<boolean>(false);
+    const [tooltipCellContent, setTooltipCellContent] = useState<{ cell?: CellNode } | null>(null);
 
     //--------------------------------------------------------------------------
     const isAreaSelected = selectedNode?.euid === area.euid;
+    // TODO: Implement this
+    const isAreaAParentOfSelectedNode = isAreaSelected;
 
     //--------------------------------------------------------------------------
     const updatePosition = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -49,31 +52,30 @@ export function AreaWidget({
         return () => cancelAnimationFrame(frame.current as number);
     }, []);
 
+    // Hide tooltip when selected node changes
     useEffect(() => {
-        if (isAreaSelected) {
-            setVisible(false);
-        }
-    }, [isAreaSelected]);
-
-    // TODO: Implement this
-    const isAreaAParentOfSelectedNode = isAreaSelected;
+        setIsTooltipVisible(false);
+    }, [selectedNode]);
 
     //--------------------------------------------------------------------------
     return (
         <div className="pointer-events-none">
-            {visible && (
+            {isTooltipVisible && (
                 <div
                     ref={tooltipRef}
                     className="
                         fixed top-0 left-0 z-50
                         px-2 py-1
-                        text-white text-xs uppercase tracking-wide bg-accent
+                        text-white bg-accent
                         rounded-sm shadow-lg
                         transition-opacity duration-150
                         pointer-events-none
                     "
                 >
-                    {area.name} AREA
+                    <p className="text-xs uppercase tracking-wide">{area.name} AREA</p>
+                    {tooltipCellContent && (
+                        <p className="text-xs capitalize opacity-80">{tooltipCellContent.cell?.name}</p>
+                    )}
                 </div>
             )}
             <QuadLayout
@@ -82,8 +84,8 @@ export function AreaWidget({
                 center={
                     <div
                         className="w-full h-full"
-                        onMouseEnter={() => !isAreaSelected && setVisible(true)}
-                        onMouseLeave={() => !isAreaSelected && setVisible(false)}
+                        onMouseEnter={() => !isAreaSelected && setIsTooltipVisible(true)}
+                        onMouseLeave={() => setIsTooltipVisible(false)}
                         onMouseMoveCapture={(e) => !isAreaSelected && updatePosition(e)}
                     >
                         <div
@@ -111,14 +113,28 @@ export function AreaWidget({
             />
 
             {area.cells.length > 0 &&
-                area.cells.map((cell) => (
-                    <CellWidget
-                        key={cell.euid}
-                        cell={cell}
-                        isSelected={selectedNode?.euid === cell.euid}
-                        onClick={() => onClick(cell)}
-                    />
-                ))}
+                area.cells.map((cell) => {
+                    const isCellSelected = selectedNode?.euid === cell.euid;
+                    return (
+                        <CellWidget
+                            key={cell.euid}
+                            cell={cell}
+                            isSelected={isCellSelected}
+                            onMouseEnter={() => {
+                                if (!isCellSelected) {
+                                    setIsTooltipVisible(true);
+                                    setTooltipCellContent({ cell });
+                                }
+                            }}
+                            onMouseLeave={() => {
+                                setIsTooltipVisible(false);
+                                setTooltipCellContent(null);
+                            }}
+                            onMouseMoveCapture={(e) => !isCellSelected && updatePosition(e)}
+                            onClick={() => onClick(cell)}
+                        />
+                    );
+                })}
 
             {(isAreaSelected || isAreaAParentOfSelectedNode) && area.name === "storage" && (
                 <>

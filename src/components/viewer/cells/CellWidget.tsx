@@ -9,10 +9,16 @@ import type { CellNode } from "@/content/type";
 export function CellWidget({
     cell,
     isSelected = false,
+    onMouseEnter,
+    onMouseLeave,
+    onMouseMoveCapture,
     onClick,
 }: {
     cell: CellNode;
     isSelected?: boolean;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
+    onMouseMoveCapture?: (e: React.MouseEvent<HTMLDivElement>) => void;
     onClick?: () => void;
 }) {
     return (
@@ -27,7 +33,10 @@ export function CellWidget({
                             isSelected ? "" : "bg-slate-0/50 hover:bg-slate-0/70 cursor-pointer",
                         )}
                         onClick={onClick}
-                    ></div>
+                        onMouseEnter={onMouseEnter}
+                        onMouseLeave={onMouseLeave}
+                        onMouseMoveCapture={onMouseMoveCapture}
+                    />
                 }
             />
             <QuadLayout
@@ -40,6 +49,9 @@ export function CellWidget({
                             isSelected ? "opacity-0" : "hover:bg-slate-0/40 cursor-pointer",
                         )}
                         onClick={onClick}
+                        onMouseEnter={onMouseEnter}
+                        onMouseLeave={onMouseLeave}
+                        onMouseMoveCapture={onMouseMoveCapture}
                     >
                         <p className="px-3 py-1 w-fit text-slate-800 text-base capitalize bg-slate-0/50 border border-slate-0/50 rounded-lg backdrop-blur-sm">
                             {cell.name} cell
