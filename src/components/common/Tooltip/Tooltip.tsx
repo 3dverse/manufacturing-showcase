@@ -247,33 +247,73 @@ function Tooltip({
             </div>
 
             {/* Always render tooltip but control visibility with CSS */}
-            <div
+            <TooltipContent
                 ref={tooltipRef}
-                className={`tooltip ${className} ${isVisible ? "tooltip-visible" : ""} ${hoverable ? "tooltip-hoverable" : ""}`}
-                style={{
-                    ...tooltipStyle,
-                    pointerEvents: hoverable && isVisible ? "auto" : "none",
-                }}
-                role="tooltip"
-                data-position={position}
-                aria-hidden={!isVisible}
                 onMouseEnter={hoverable ? handleTooltipMouseEnter : undefined}
                 onMouseLeave={hoverable ? handleTooltipMouseLeave : undefined}
-            >
-                <div className={`tooltip-content ${noPadding ? "p-0!" : ""}`}>{content}</div>
-                {showArrow && (
-                    <div
-                        className="tooltip-arrow"
-                        style={
-                            {
-                                "--tooltip-offset": `${offset}px`,
-                            } as React.CSSProperties
-                        }
-                    />
-                )}
-            </div>
+                content={content}
+                className={className}
+                isVisible={isVisible}
+                hoverable={hoverable}
+                tooltipStyle={tooltipStyle}
+                position={position}
+                offset={offset}
+                showArrow={showArrow}
+                noPadding={noPadding}
+            />
         </>
     );
 }
 
 export default Tooltip;
+
+//------------------------------------------------------------------------------
+type TooltipContentProps = Omit<TooltipProps, "children" | "content"> & {
+    content: ReactNode | null;
+    isVisible: boolean;
+    tooltipStyle: React.CSSProperties;
+} & Omit<React.HTMLAttributes<HTMLDivElement>, "content">;
+
+const TooltipContent = React.forwardRef<HTMLDivElement, TooltipContentProps>(
+    (
+        {
+            content,
+            className,
+            isVisible,
+            hoverable,
+            tooltipStyle,
+            position,
+            offset,
+            showArrow,
+            noPadding,
+            ...divProps
+        },
+        ref,
+    ) => (
+        <div
+            ref={ref}
+            className={`tooltip ${className} ${isVisible ? "tooltip-visible" : ""} ${hoverable ? "tooltip-hoverable" : ""}`}
+            style={{
+                ...tooltipStyle,
+                pointerEvents: hoverable && isVisible ? "auto" : "none",
+            }}
+            role="tooltip"
+            data-position={position}
+            aria-hidden={!isVisible}
+            {...divProps}
+        >
+            <div className={`tooltip-content ${noPadding ? "p-0!" : ""}`}>{content}</div>
+            {showArrow && (
+                <div
+                    className="tooltip-arrow"
+                    style={
+                        {
+                            "--tooltip-offset": `${offset}px`,
+                        } as React.CSSProperties
+                    }
+                />
+            )}
+        </div>
+    ),
+);
+TooltipContent.displayName = "TooltipContent";
