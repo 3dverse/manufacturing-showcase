@@ -135,7 +135,8 @@ type _FactoryGraphNode = {
     name: string;
 };
 export type FactoryNode = _FactoryGraphNode & { type: NodeTypes.factory; areas: AreaNode[] };
-export type FlowSplinePoint = { position: [number, number, number] };
+/** One 3D point [x, y, z] on a flow spline. */
+export type FlowSplinePoint = [number, number, number];
 
 export type FlowPair = {
     in: FlowInNode;

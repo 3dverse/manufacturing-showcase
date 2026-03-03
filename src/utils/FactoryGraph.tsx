@@ -246,29 +246,15 @@ export const sortAreas = (a: AreaNode, b: AreaNode, order: string[]) => {
 };
 
 //------------------------------------------------------------------------------
-const MOCK_SPLINE_1 = [
-    {
-        position: [9.13, 0, 32.64],
-    },
-    {
-        position: [9, 0, 29.22],
-    },
-    {
-        position: [10, 0.64, 25.11],
-    },
-    {
-        position: [10.33, 0.64, 18.66],
-    },
-] as FlowSplinePoint[];
+const MOCK_SPLINE_1: FlowSplinePoint[] = [
+    [9.13, 0, 32.64],
+    [9, 0, 29.22],
+    [10, 0.64, 25.11],
+    [10.33, 0.64, 18.66],
+];
 
-const MOCK_SPLINE_2 = [
-    {
-        position: [9, 0, 29.2],
-    },
-    {
-        position: [7.76, 0.6, 25],
-    },
-    {
-        position: [7.61, 0.6, 18.4],
-    },
-] as FlowSplinePoint[];
+const MOCK_SPLINE_2: FlowSplinePoint[] = [
+    [9, 0, 29.2],
+    [7.76, 0.6, 25],
+    [7.61, 0.6, 18.4],
+];

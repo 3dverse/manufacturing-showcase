@@ -57,9 +57,7 @@ export function FlowWidget({ pair, className }: { pair: FlowPair; className?: st
             ? hasSpline
                 ? {
                       kind: "spline" as const,
-                      points: pair.spline!.map(({ position }) =>
-                          viewport.projectWorldToScreen({ world_position: position }),
-                      ),
+                      points: pair.spline!.map((point) => viewport.projectWorldToScreen({ world_position: point })),
                   }
                 : {
                       kind: "line" as const,
