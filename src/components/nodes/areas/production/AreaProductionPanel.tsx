@@ -11,7 +11,7 @@ export function AreaProductionPanel({ area }: { area: AreaNode }) {
     return (
         <ViewerPanel
             as="article"
-            className="absolute right-2 bottom-10 w-96 2xl:w-120 h-fit pb-24 divide-y divide-slate-100 pointer-events-auto appear-in-from-right opacity-0 [--animation-delay:.75s]"
+            className="w-full h-fit divide-y divide-slate-100 pointer-events-auto appear-in-from-left opacity-0"
         >
             <PanelWrapper className="flex items-center justify-between py-2 pl-3 pr-4">
                 <PanelTitle className="mb-0 text-sm text-default">{area.name} AREA</PanelTitle>

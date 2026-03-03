@@ -17,7 +17,7 @@ export const FactoryPanel = () => {
             as="article"
             className="w-full h-fit border border-accent-400 divide-y divide-slate-100 shadow-[0_36px_56px_-20px_var(--color-slate-200)] pointer-events-auto appear-in-from-left opacity-0 [--animation-delay:.75s]"
         >
-            <article className="p-2 pt-3">
+            <article className="p-2">
                 <OrderPanel order={orders[2]} />
             </article>
 

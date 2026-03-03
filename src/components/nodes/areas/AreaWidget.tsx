@@ -2,10 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 
 //------------------------------------------------------------------------------
-import { AreaStorageOverlay } from "@/components/viewer/areas/storage/AreaStorageOverlay";
-import { AreaStorageQuadPanel } from "@/components/viewer/areas/storage/AreaStorageQuadPanel";
-import { AreaProductionQuadPanel } from "@/components/viewer/areas/production/AreaProductionQuadPanel";
-import { CellWidget } from "@/components/viewer/cells/CellWidget";
+import { AreaStorageOverlay } from "@/components/nodes/areas/storage/AreaStorageOverlay";
+import { AreaStorageQuadPanel } from "@/components/nodes/areas/storage/AreaStorageQuadPanel";
+import { AreaProductionQuadPanel } from "@/components/nodes/areas/production/AreaProductionQuadPanel";
+import { CellWidget } from "@/components/nodes/cells/CellWidget";
 
 //------------------------------------------------------------------------------
 import { QuadLayout } from "@/utils/QuadLayout";
@@ -76,9 +76,19 @@ export function AreaWidget({
                         pointer-events-none
                     "
                 >
-                    <p className="text-xs uppercase tracking-wide">{area.name} AREA</p>
+                    <p
+                        className="text-xs uppercase tracking-wide transition-all duration-200 origin-top-left"
+                        style={{
+                            transform: tooltipCellContent ? "scale(0.8)" : undefined,
+                            opacity: tooltipCellContent ? 0.8 : 1,
+                        }}
+                    >
+                        {area.name} AREA
+                    </p>
                     {tooltipCellContent && (
-                        <p className="text-xs capitalize opacity-80">{tooltipCellContent.cell?.name}</p>
+                        <p className="text-sm leading-tight capitalize -translate-y-px opacity-100 scale-100 starting:opacity-0 starting:scale-70 transition-all origin-bottom-left duration-200">
+                            {tooltipCellContent.cell?.name}
+                        </p>
                     )}
                 </div>
             )}

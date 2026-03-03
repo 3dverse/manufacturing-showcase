@@ -10,6 +10,7 @@ import HomePage from "@/pages/HomePage";
 import FactoryLayout from "@/components/layout/FactoryLayout";
 import MainGuidance from "@/components/guidance/MainGuidance";
 import IntroductionModal from "@/components/guidance/IntroductionModal";
+import { FactoryProviders } from "@/components/layout/FactoryProviders";
 
 //------------------------------------------------------------------------------
 import { useFactoryStore } from "@/store/useFactoryStore";
@@ -94,7 +95,9 @@ function AppLayout() {
             }
             return (
                 <Livelink sceneId={factory.scene_id} token={TOKEN_3DVERSE} LoadingPanel={LoadingOverlay}>
-                    <FactoryLayout currentRoute={currentRoute} />
+                    <FactoryProviders>
+                        <FactoryLayout currentRoute={currentRoute} />
+                    </FactoryProviders>
                     <MainGuidance />
                 </Livelink>
             );

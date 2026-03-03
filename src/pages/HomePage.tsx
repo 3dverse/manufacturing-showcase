@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { FactoryTile } from "@/components/factory/FactoryTile";
+import { FactoryTile } from "@/components/nodes/factory/FactoryTile";
 
 //------------------------------------------------------------------------------
 import { factories } from "@/content/factory";

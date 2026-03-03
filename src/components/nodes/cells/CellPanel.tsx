@@ -3,8 +3,8 @@ import { ViewerPanel } from "@/components/common/ViewerPanel";
 import { PanelLabel, PanelTitle, PanelWrapper } from "@/components/common/panel";
 import { KpiBlock, MiniSparkline } from "@/components/common/kpi/KpiBlock";
 import OEEGauge from "@/components/dashboard/OEE/OEEGauge";
-import { MachinePanel } from "@/components/viewer/machines/MachinePanel";
-import { useCellKpis } from "./useCellKpis";
+import { MachinePanel } from "@/components/nodes/machines/MachinePanel";
+import { useCellKpis } from "@/components/nodes/cells/useCellKpis";
 
 //------------------------------------------------------------------------------
 import type { CellNode } from "@/content/type";
@@ -14,11 +14,8 @@ export function CellPanel({ cell }: { cell: CellNode }) {
     const kpis = useCellKpis(cell);
 
     return (
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-2 w-96 2xl:w-120 max-h-[85vh] pointer-events-auto z-10">
-            <ViewerPanel
-                as="article"
-                className="relative divide-y divide-slate-100 z-10 appear-in-from-right opacity-0 [--animation-delay:.75s]"
-            >
+        <div className="flex flex-col gap-1 w-full pointer-events-auto z-10">
+            <ViewerPanel as="article" className="relative divide-y divide-slate-100 z-10 appear-in-from-left opacity-0">
                 <PanelWrapper as="header" className="flex items-center justify-between py-2 pl-3 pr-4">
                     <PanelTitle className="mb-0 text-sm text-default">{cell.name} CELL</PanelTitle>
                     <p className="text-right text-2xs leading-tight text-muted/80">No incidents reported</p>

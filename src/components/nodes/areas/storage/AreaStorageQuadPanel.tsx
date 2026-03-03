@@ -4,8 +4,8 @@ import { useMemo } from "react";
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
 import { PanelTitle, PanelWrapper, PanelShadow, PanelAnchorLine } from "@/components/common/panel";
-import { AreaStorageKpiCharts } from "@/components/viewer/areas/storage/AreaStorageKpiCharts";
-import type { AreaStorageKpiData } from "@/components/viewer/areas/storage/AreaStorageKpiCharts";
+import { AreaStorageKpiCharts } from "@/components/nodes/areas/storage/AreaStorageKpiCharts";
+import type { AreaStorageKpiData } from "@/components/nodes/areas/storage/AreaStorageKpiCharts";
 
 //------------------------------------------------------------------------------
 import { QuadLayout } from "@/utils/QuadLayout";

@@ -1,12 +1,16 @@
 //------------------------------------------------------------------------------
-import type { Factory } from "@/content/factory";
-import { TOKEN_3DVERSE } from "@/content/3dverse";
-import { LoadingOverlay } from "@3dverse/livelink-react-ui";
 import { CameraController, Canvas, Livelink, useCameraEntity, Viewport } from "@3dverse/livelink-react";
+import { LoadingOverlay } from "@3dverse/livelink-react-ui";
+
+//------------------------------------------------------------------------------
+import { Triangle } from "@/components/common/icons/Triangle";
 
 //------------------------------------------------------------------------------
 import { useNavigate } from "@/hooks/useNavigate";
-import { Triangle } from "../common/icons/Triangle";
+
+//------------------------------------------------------------------------------
+import type { Factory } from "@/content/factory";
+import { TOKEN_3DVERSE } from "@/content/3dverse";
 
 //------------------------------------------------------------------------------
 export const FactoryTile = ({ factoryItem }: { factoryItem: Factory }) => {
