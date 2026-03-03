@@ -3,14 +3,14 @@ import { useEffect, useRef, useState } from "react";
 
 //------------------------------------------------------------------------------
 import { AreaStorageOverlay } from "@/components/nodes/areas/storage/AreaStorageOverlay";
-import { CellWidget } from "@/components/nodes/cells/CellWidget";
+import { AreaChildWidget } from "@/components/nodes/areas/AreaChildWidget";
 
 //------------------------------------------------------------------------------
 import { QuadLayout } from "@/utils/QuadLayout";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import type { AreaNode, CellNode, FactoryGraphNode } from "@/content/type";
+import type { AreaNode, CellNode, FactoryGraphNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 
 //------------------------------------------------------------------------------
@@ -27,12 +27,13 @@ export function AreaWidget({
     const tooltipRef = useRef<HTMLDivElement>(null);
     const frame = useRef<number | null>(null);
     const [isTooltipVisible, setIsTooltipVisible] = useState<boolean>(false);
-    const [tooltipCellContent, setTooltipCellContent] = useState<{ cell?: CellNode } | null>(null);
+    const [tooltipCellContent, setTooltipCellContent] = useState<LineNode | CellNode | null>(null);
 
     //--------------------------------------------------------------------------
     const isAreaSelected = selectedNode?.euid === area.euid;
     const isAreaAParentOfSelectedNode =
         selectedNode?.type === NodeTypes.cell && selectedNode?.parent?.euid === area.euid;
+    const children = [...area.lines, ...area.cells];
 
     //--------------------------------------------------------------------------
     const updatePosition = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -64,32 +65,7 @@ export function AreaWidget({
     return (
         <div className="pointer-events-none">
             {isTooltipVisible && (
-                <div
-                    ref={tooltipRef}
-                    className="
-                        fixed top-4 left-4 z-40
-                        px-2 py-1
-                        text-white bg-accent
-                        rounded-sm shadow-lg
-                        transition-opacity duration-150
-                        pointer-events-none
-                    "
-                >
-                    <p
-                        className="text-xs uppercase tracking-wide transition-all duration-200 origin-top-left"
-                        style={{
-                            transform: tooltipCellContent ? "scale(0.8)" : undefined,
-                            opacity: tooltipCellContent ? 0.8 : 1,
-                        }}
-                    >
-                        {area.name} AREA
-                    </p>
-                    {tooltipCellContent && (
-                        <p className="text-sm leading-tight capitalize -translate-y-px opacity-100 scale-100 starting:opacity-0 starting:scale-70 transition-all origin-bottom-left duration-200">
-                            {tooltipCellContent.cell?.name}
-                        </p>
-                    )}
-                </div>
+                <TooltipContent node={tooltipCellContent} areaName={area.name} tooltipRef={tooltipRef} />
             )}
             <QuadLayout
                 entity={area.entity}
@@ -130,26 +106,26 @@ export function AreaWidget({
                 }
             />
 
-            {area.cells.length > 0 &&
-                area.cells.map((cell) => {
-                    const isCellSelected = selectedNode?.euid === cell.euid;
+            {children.length > 0 &&
+                children.map((child) => {
+                    const isChildSelected = selectedNode?.euid === child.euid;
                     return (
-                        <CellWidget
-                            key={cell.euid}
-                            cell={cell}
-                            isSelected={isCellSelected}
+                        <AreaChildWidget
+                            key={child.euid}
+                            node={child}
+                            isSelected={isChildSelected}
                             onMouseEnter={() => {
-                                if (!isCellSelected) {
+                                if (!isChildSelected) {
                                     setIsTooltipVisible(true);
-                                    setTooltipCellContent({ cell });
+                                    setTooltipCellContent(child);
                                 }
                             }}
                             onMouseLeave={() => {
                                 setIsTooltipVisible(false);
                                 setTooltipCellContent(null);
                             }}
-                            onMouseMoveCapture={(e) => !isCellSelected && updatePosition(e)}
-                            onClick={() => onClick(cell)}
+                            onMouseMoveCapture={(e) => !isChildSelected && updatePosition(e)}
+                            onClick={() => onClick(child)}
                         />
                     );
                 })}
@@ -160,3 +136,43 @@ export function AreaWidget({
         </div>
     );
 }
+
+//------------------------------------------------------------------------------
+const TooltipContent = ({
+    node,
+    areaName,
+    tooltipRef,
+}: {
+    node: LineNode | CellNode | null;
+    areaName: string;
+    tooltipRef: React.RefObject<HTMLDivElement | null>;
+}) => {
+    return (
+        <div
+            ref={tooltipRef}
+            className="
+                fixed top-4 left-4 z-40
+                px-2 py-1
+                text-white bg-accent
+                rounded-sm shadow-lg
+                transition-opacity duration-150
+                pointer-events-none
+            "
+        >
+            <p
+                className="text-xs uppercase tracking-wide transition-all duration-200 origin-top-left"
+                style={{
+                    transform: node ? "scale(0.8)" : undefined,
+                    opacity: node ? 0.8 : 1,
+                }}
+            >
+                {areaName} AREA
+            </p>
+            {node && (
+                <p className="text-sm leading-tight capitalize -translate-y-px opacity-100 scale-100 starting:opacity-0 starting:scale-70 transition-all origin-bottom-left duration-200">
+                    {node?.name}
+                </p>
+            )}
+        </div>
+    );
+};

@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 import { useRef, useEffect, useState } from "react";
-import { DOM3DElement, DOM3DOverlay } from "@3dverse/livelink-react";
+import { DOM3DAnchor, DOM3DOverlay } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
 import type { DebugElement } from "@/utils/trash";
@@ -29,7 +29,11 @@ export const DebugOverlay = () => {
     //--------------------------------------------------------------------------
     return (
         <div ref={domOverlayRef}>
-            <DOM3DOverlay>{debugPoints?.map((i, index) => <DebugItem key={index} item={i} />)}</DOM3DOverlay>
+            <DOM3DOverlay>
+                {debugPoints?.map((i, index) => (
+                    <DebugItem key={index} item={i} />
+                ))}
+            </DOM3DOverlay>
         </div>
     );
 };
@@ -37,10 +41,10 @@ export const DebugOverlay = () => {
 //------------------------------------------------------------------------------
 const DebugItem = ({ item }: { item: DebugElement }) => {
     return (
-        <DOM3DElement worldPosition={item.position}>
+        <DOM3DAnchor worldPosition={item.position}>
             <div className="h-4 w-auto px-2 items-center justify-center bg-black text-xs text-white rounded-full">
                 {item.label}
             </div>
-        </DOM3DElement>
+        </DOM3DAnchor>
     );
 };

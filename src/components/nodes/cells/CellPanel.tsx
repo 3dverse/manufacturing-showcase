@@ -14,8 +14,8 @@ export function CellPanel({ cell }: { cell: CellNode }) {
     const kpis = useCellKpis(cell);
 
     return (
-        <div className="flex flex-col gap-1 w-full pointer-events-auto z-10">
-            <ViewerPanel as="article" className="relative divide-y divide-slate-100 z-10 appear-in-from-left opacity-0">
+        <div className="flex flex-col gap-1 w-full pointer-events-auto">
+            <ViewerPanel as="article" className="divide-y divide-slate-100 appear-in-from-left opacity-0">
                 <PanelWrapper as="header" className="flex items-center justify-between py-2 pl-3 pr-4">
                     <PanelTitle className="mb-0 text-sm text-default">{cell.name} CELL</PanelTitle>
                     <p className="text-right text-2xs leading-tight text-muted/80">No incidents reported</p>

@@ -6,7 +6,8 @@ import { Viewer } from "@/components/viewer/Viewer";
 import { MainHeader } from "@/components/layout/MainHeader";
 import { MainNav } from "@/components/layout/MainNav";
 import { FactoryPanel } from "@/components/nodes/factory/FactoryPanel";
-import { AreaProductionPanel } from "@/components/nodes/areas/production/AreaProductionPanel";
+import { GenericAreaPanel } from "@/components/nodes/areas/GenericAreaPanel";
+import { LinePanel } from "@/components/nodes/lines/LinePanel";
 import { CellPanel } from "@/components/nodes/cells/CellPanel";
 
 //------------------------------------------------------------------------------
@@ -14,7 +15,6 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
-import type { AreaNode, CellNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 const FactoryLayout = ({ currentRoute }: { currentRoute: string }) => {
@@ -30,10 +30,9 @@ const FactoryLayout = ({ currentRoute }: { currentRoute: string }) => {
                 <div className="flex flex-col items-start gap-1 w-96 2xl:w-120">
                     <MainHeader />
                     <FactoryPanel />
-                    {selectedNode?.type === NodeTypes.area && selectedNode.name === "production" && (
-                        <AreaProductionPanel area={selectedNode as AreaNode} />
-                    )}
-                    {selectedNode?.type === NodeTypes.cell && <CellPanel cell={selectedNode as CellNode} />}
+                    {selectedNode?.type === NodeTypes.area && <GenericAreaPanel area={selectedNode} />}
+                    {selectedNode?.type === NodeTypes.line && <LinePanel line={selectedNode} />}
+                    {selectedNode?.type === NodeTypes.cell && <CellPanel cell={selectedNode} />}
                 </div>
 
                 <div className="flex items-end justify-center grow pb-8">

@@ -1,3 +1,7 @@
+//------------------------------------------------------------------------------
+import type { Entity } from "@3dverse/livelink";
+
+//------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
 import type {
     FactoryNode,
@@ -10,7 +14,6 @@ import type {
     FlowOutNode,
     FlowSplinePoint,
 } from "@/content/type";
-import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 export const buildFactoryGraph = (params: {

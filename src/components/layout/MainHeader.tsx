@@ -19,11 +19,10 @@ import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 export const MainHeader = ({ className }: { className?: string }) => {
-    const { currentFactory } = useFactoryStore();
-    const navigate = useNavigate();
-
     //--------------------------------------------------------------------------
     // Contexts
+    const { currentFactory } = useFactoryStore();
+    const navigate = useNavigate();
     const { setSelectedNode } = useContext(SelectionContext);
     const { nodeGraph } = useContext(FactoryContext);
 
@@ -33,16 +32,14 @@ export const MainHeader = ({ className }: { className?: string }) => {
         navigate("/");
     }, [navigate]);
 
-    //--------------------------------------------------------------------------
     const factoryClickHandler = useCallback(() => {
         if (nodeGraph) setSelectedNode(nodeGraph);
     }, [nodeGraph, setSelectedNode]);
 
-    // shadow-[-10px_10px_100px_35px_#ffffff50] overflow-hidden
     //--------------------------------------------------------------------------
     return (
         <header className={cn("flex w-full h-fit pointer-events-auto", className)}>
-            <ViewerPanel className="flex items-start p-2 bg-accent/90 shadow-none rounded-none rounded-s-md border border-accent-600 z-10">
+            <ViewerPanel className="flex items-start p-2 bg-accent-600/90 shadow-none rounded-none rounded-s-md border border-accent-600 z-10">
                 <button
                     className="p-1 aspect-square rounded-sm text-xs text-slate-0 bg-accent-100/10 hover:bg-accent-100/20 transition-colors duration-200 cursor-pointer"
                     onClick={homeClickHandler}
@@ -51,7 +48,7 @@ export const MainHeader = ({ className }: { className?: string }) => {
                 </button>
             </ViewerPanel>
 
-            <ViewerPanel className="basis-full flex justify-between items-start gap-x-4 bg-accent/90 text-slate-0 rounded-none rounded-e-md border border-accent border-l-0 opacity-0 appear-in-from-left [--animation-delay:1s]">
+            <ViewerPanel className="basis-full flex justify-between items-start gap-x-4 bg-accent-600/90 text-slate-0 rounded-none rounded-e-md border border-accent-600 border-l-0 opacity-0 appear-in-from-left [--animation-delay:1s]">
                 <div className="flex flex-col justify-center divide-y divide-muted/50" onClick={factoryClickHandler}>
                     <div className="flex flex-col gap--1 px-3 py-2">
                         <p className="text-base font-medium">{currentFactory?.name}</p>

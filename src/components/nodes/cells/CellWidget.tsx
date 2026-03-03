@@ -45,7 +45,7 @@ export function CellWidget({
                 center={
                     <div
                         className={cn(
-                            "w-full h-full p-2 border-2 rounded-xl border-slate-0 transition-colors duration-200",
+                            "w-full h-full min-h-96 p-2 border-2 rounded-xl border-slate-0 transition-colors duration-200",
                             isSelected ? "opacity-0" : "hover:bg-slate-0/40 cursor-pointer",
                         )}
                         onClick={onClick}

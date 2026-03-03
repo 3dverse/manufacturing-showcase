@@ -1,6 +1,6 @@
 import { useCallback, useContext, useMemo, useState } from "react";
 import type { Entity, Vec3 } from "@3dverse/livelink";
-import { DOM3DElement, ViewportContext } from "@3dverse/livelink-react";
+import { DOM3DAnchor, ViewportContext } from "@3dverse/livelink-react";
 import { quadToMatrix3d } from "@/utils/QuadLayout";
 import type { QuadPoint } from "@/utils/QuadLayout";
 import { cn } from "@/utils/cn";
@@ -114,9 +114,9 @@ export function FlowWidget({ pair, className }: { pair: FlowPair; className?: st
     if (splineState) {
         return (
             <>
-                <DOM3DElement worldPosition={[0, 0, 0]} onProjectionChange={handleProjectionChange}>
+                <DOM3DAnchor worldPosition={[0, 0, 0]} onProjectionChange={handleProjectionChange}>
                     <span />
-                </DOM3DElement>
+                </DOM3DAnchor>
                 <div
                     className={cn("absolute left-0 top-0 pointer-events-none", className)}
                     style={{
@@ -157,9 +157,9 @@ export function FlowWidget({ pair, className }: { pair: FlowPair; className?: st
 
     return (
         <>
-            <DOM3DElement worldPosition={[0, 0, 0]} onProjectionChange={handleProjectionChange}>
+            <DOM3DAnchor worldPosition={[0, 0, 0]} onProjectionChange={handleProjectionChange}>
                 <span />
-            </DOM3DElement>
+            </DOM3DAnchor>
             <div
                 className={cn(
                     "absolute left-0 top-0 origin-top-left pointer-events-none",

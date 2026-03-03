@@ -1,6 +1,6 @@
 import { useCallback, useContext, useMemo, useState, type HTMLAttributes } from "react";
 import type { Entity, Vec3 } from "@3dverse/livelink";
-import { DOM3DElement, ViewportContext } from "@3dverse/livelink-react";
+import { DOM3DAnchor, ViewportContext } from "@3dverse/livelink-react";
 import { cn } from "./cn";
 
 //------------------------------------------------------------------------------
@@ -51,6 +51,7 @@ export function QuadLayout({
     bottom,
     left,
     className,
+    containerClassName,
     ...divProps
 }: {
     entity: Entity;
@@ -65,6 +66,7 @@ export function QuadLayout({
     bottom?: React.ReactNode;
     left?: React.ReactNode;
     className?: string;
+    containerClassName?: string;
 } & HTMLAttributes<HTMLDivElement>) {
     const faces = computeBoundingBoxQuads(entity);
     const { viewport } = useContext(ViewportContext);
@@ -108,9 +110,9 @@ export function QuadLayout({
 
     return (
         <>
-            <DOM3DElement worldPosition={[0, 0, 0]} onProjectionChange={handleProjectionChange}>
+            <DOM3DAnchor worldPosition={[0, 0, 0]} onProjectionChange={handleProjectionChange}>
                 <span />
-            </DOM3DElement>
+            </DOM3DAnchor>
             <div
                 className={cn(
                     "absolute left-0 top-0 origin-top-left w-full h-full pointer-events-auto text-4xl",
@@ -124,7 +126,7 @@ export function QuadLayout({
                 {...divProps}
             >
                 {(center || debug) && (
-                    <div className="absolute left-0 top-0 w-full h-full">
+                    <div className={cn("absolute left-0 top-0 w-full h-full", containerClassName)}>
                         {debug && <DebugQuadrant quadrant="center" />}
                         {center}
                     </div>
@@ -132,7 +134,7 @@ export function QuadLayout({
 
                 {(left || debug) && (
                     <div
-                        className="absolute flex justify-end"
+                        className={cn("absolute flex justify-end", containerClassName)}
                         style={{ left: -outskirt, top: 0, width: outskirt, height: baseH }}
                     >
                         {debug && <DebugQuadrant quadrant="left" />}
@@ -142,7 +144,7 @@ export function QuadLayout({
 
                 {(top || debug) && (
                     <div
-                        className="absolute flex justify-end items-end"
+                        className={cn("absolute flex justify-end items-end", containerClassName)}
                         style={{ left: 0, top: -outskirt, width: baseW, height: outskirt }}
                     >
                         {debug && <DebugQuadrant quadrant="top" />}
@@ -151,14 +153,20 @@ export function QuadLayout({
                 )}
 
                 {(right || debug) && (
-                    <div className="absolute" style={{ left: baseW, top: 0, width: outskirt, height: baseH }}>
+                    <div
+                        className={cn("absolute", containerClassName)}
+                        style={{ left: baseW, top: 0, width: outskirt, height: baseH }}
+                    >
                         {debug && <DebugQuadrant quadrant="right" />}
                         {right}
                     </div>
                 )}
 
                 {(bottom || debug) && (
-                    <div className="absolute" style={{ left: 0, top: baseH, width: baseW, height: outskirt }}>
+                    <div
+                        className={cn("absolute", containerClassName)}
+                        style={{ left: 0, top: baseH, width: baseW, height: outskirt }}
+                    >
                         {debug && <DebugQuadrant quadrant="bottom" />}
                         {bottom}
                     </div>
