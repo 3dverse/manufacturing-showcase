@@ -135,11 +135,20 @@ type _FactoryGraphNode = {
     name: string;
 };
 export type FactoryNode = _FactoryGraphNode & { type: NodeTypes.factory; areas: AreaNode[] };
+export type FlowSplinePoint = { position: [number, number, number] };
+
+export type FlowPair = {
+    in: FlowInNode;
+    out: FlowOutNode;
+    /** Optional 3D spline points for curved flow path. */
+    spline?: FlowSplinePoint[];
+};
+
 export type AreaFlows = {
     ins: FlowInNode[];
     outs: FlowOutNode[];
     /** Pairs of in/out with matching names across different areas (in from this area, out from another). */
-    pairs: Array<{ in: FlowInNode; out: FlowOutNode }>;
+    pairs: FlowPair[];
 };
 
 export type AreaNode = _FactoryGraphNode & {

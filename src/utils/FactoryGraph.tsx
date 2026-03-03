@@ -8,6 +8,7 @@ import type {
     MachineNode,
     FlowInNode,
     FlowOutNode,
+    FlowSplinePoint,
 } from "@/content/type";
 import type { Entity } from "@3dverse/livelink";
 
@@ -169,6 +170,19 @@ export function buildFactoryGraph(params: { entities: Entity[]; area_categories_
         buildFlowPairsAcrossAreas(areaNodes);
 
         factory.areas = areaNodes;
+
+        factory.areas[1].flows.pairs[0] = {
+            in: factory.areas[1].flows.pairs[0].in,
+            out: factory.areas[1].flows.pairs[0].out,
+            spline: MOCK_SPLINE_1,
+        };
+
+        factory.areas[1].flows.pairs[1] = {
+            in: factory.areas[1].flows.pairs[1].in,
+            out: factory.areas[1].flows.pairs[1].out,
+            spline: MOCK_SPLINE_2,
+        };
+
         return factory;
     });
     const graph = factoryNodes.length > 0 ? factoryNodes[0] : undefined;
@@ -213,3 +227,31 @@ const sortAreas = (a: AreaNode, b: AreaNode, order: string[]) => {
     };
     return indexOf(a.name) - indexOf(b.name);
 };
+
+//------------------------------------------------------------------------------
+const MOCK_SPLINE_1 = [
+    {
+        position: [9.13, 0, 32.64],
+    },
+    {
+        position: [9, 0, 29.22],
+    },
+    {
+        position: [10, 0.64, 25.11],
+    },
+    {
+        position: [10.33, 0.64, 18.66],
+    },
+] as FlowSplinePoint[];
+
+const MOCK_SPLINE_2 = [
+    {
+        position: [9, 0, 29.2],
+    },
+    {
+        position: [7.76, 0.6, 25],
+    },
+    {
+        position: [7.61, 0.6, 18.4],
+    },
+] as FlowSplinePoint[];
