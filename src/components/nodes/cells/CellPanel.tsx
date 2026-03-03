@@ -1,8 +1,8 @@
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
 import { PanelLabel, PanelTitle, PanelWrapper } from "@/components/common/panel";
-import { KpiBlock, MiniSparkline } from "@/components/common/kpi/KpiBlock";
-import OEEGauge from "@/components/dashboard/OEE/OEEGauge";
+import { MetricBlock, MiniSparkline } from "@/components/common/metrics/MetricBlock";
+import { Gauge } from "@/components/common/metrics/Gauge";
 import { MachinePanel } from "@/components/nodes/machines/MachinePanel";
 import { useCellKpis } from "@/components/nodes/cells/useCellKpis";
 
@@ -22,7 +22,7 @@ export function CellPanel({ cell }: { cell: CellNode }) {
                 </PanelWrapper>
 
                 <section className="flex justify-between gap-4 px-3 pt-4 pb-2">
-                    <OEEGauge value={kpis.oee} className="w-32!" />
+                    <Gauge value={kpis.oee} className="w-32!" />
                     <div className="grow">
                         <PanelLabel>OEE</PanelLabel>
                         <MiniSparkline
@@ -35,7 +35,7 @@ export function CellPanel({ cell }: { cell: CellNode }) {
 
                 <section className="p-2">
                     <div className="grid grid-cols-2 gap-x-4 rounded-lg bg-slate-0/30 border border-slate-200/50 px-3 py-2">
-                        <KpiBlock
+                        <MetricBlock
                             label="Scrap rate"
                             value={kpis.scrapRate.toFixed(1)}
                             unit="%"
@@ -43,13 +43,13 @@ export function CellPanel({ cell }: { cell: CellNode }) {
                             sparklineData={kpis.scrapRateHistory}
                             sparklineInvert
                         />
-                        <KpiBlock
+                        <MetricBlock
                             label="Unit production cost"
                             value={kpis.unitProductionCost.toFixed(1)}
                             unit="€"
                             subtitle="per unit"
                         />
-                        <KpiBlock
+                        <MetricBlock
                             label="On-Time Delivery"
                             value={kpis.otd}
                             unit="%"
@@ -62,13 +62,18 @@ export function CellPanel({ cell }: { cell: CellNode }) {
                             }
                         />
                         <div className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-2 pt-2 mt-1 border-t border-slate-200/60">
-                            <KpiBlock
+                            <MetricBlock
                                 label="MTBF"
                                 value={kpis.mtbfHours}
                                 unit="h"
                                 subtitle="Mean Time Between Failures"
                             />
-                            <KpiBlock label="MTTR" value={kpis.mttrMinutes} unit="min" subtitle="Mean Time To Repair" />
+                            <MetricBlock
+                                label="MTTR"
+                                value={kpis.mttrMinutes}
+                                unit="min"
+                                subtitle="Mean Time To Repair"
+                            />
                         </div>
                     </div>
                 </section>

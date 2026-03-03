@@ -13,6 +13,7 @@ import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import type { AreaNode, CellNode, FactoryGraphNode } from "@/content/type";
+import { NodeTypes } from "@/content/enums";
 
 //------------------------------------------------------------------------------
 export function AreaWidget({
@@ -32,8 +33,8 @@ export function AreaWidget({
 
     //--------------------------------------------------------------------------
     const isAreaSelected = selectedNode?.euid === area.euid;
-    // TODO: Implement this
-    const isAreaAParentOfSelectedNode = selectedNode?.parent?.euid === area.euid;
+    const isAreaAParentOfSelectedNode =
+        selectedNode?.type === NodeTypes.cell && selectedNode?.parent?.euid === area.euid;
 
     //--------------------------------------------------------------------------
     const updatePosition = (e: React.MouseEvent<HTMLDivElement>) => {

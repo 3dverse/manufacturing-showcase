@@ -6,6 +6,7 @@ import { faClock } from "@fortawesome/sharp-regular-svg-icons";
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
 import { Icon } from "@/components/common/Icon";
+import { Gauge } from "@/components/common/metrics/Gauge";
 
 //------------------------------------------------------------------------------
 import { SelectionContext } from "@/contexts/SelectionContext";
@@ -15,7 +16,6 @@ import { useNavigate } from "@/hooks/useNavigate";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
-import OEEGauge from "../dashboard/OEE/OEEGauge";
 
 //------------------------------------------------------------------------------
 const MainHeader = ({ className }: { className?: string }) => {
@@ -65,7 +65,7 @@ const MainHeader = ({ className }: { className?: string }) => {
                     </div>
                 </div>
                 <div className="px-3 pt-2 pb-1 bg-slate-0/90 rounded-e-[5px]">
-                    <OEEGauge value={95} className="w-20!" />
+                    <Gauge value={95} className="w-20!" />
                     <p className="text-2xs text-subtle tracking-wide text-center -translate-y-1">OEE</p>
                 </div>
             </ViewerPanel>

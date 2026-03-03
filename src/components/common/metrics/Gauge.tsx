@@ -2,13 +2,13 @@
 import { GaugeComponent } from "react-gauge-component";
 
 //------------------------------------------------------------------------------
-interface OEEGaugeProps {
+interface GaugeProps {
     value?: number;
     className?: string;
 }
 
 //------------------------------------------------------------------------------
-export const OEEGauge: React.FC<OEEGaugeProps> = ({ value, className }) => {
+export const Gauge = ({ value, className }: GaugeProps) => {
     return (
         <GaugeComponent
             value={value}
@@ -58,6 +58,3 @@ export const OEEGauge: React.FC<OEEGaugeProps> = ({ value, className }) => {
         />
     );
 };
-
-//------------------------------------------------------------------------------
-export default OEEGauge;

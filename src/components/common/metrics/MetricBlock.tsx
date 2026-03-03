@@ -56,7 +56,7 @@ export function MiniSparkline({
 }
 
 //------------------------------------------------------------------------------
-export function KpiBlock({
+export function MetricBlock({
     label,
     value,
     unit,

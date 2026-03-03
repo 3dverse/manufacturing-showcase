@@ -2,11 +2,11 @@
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
+import { Gauge } from "@/components/common/metrics/Gauge";
 import { Badge } from "@/components/common/Badge";
 
 //------------------------------------------------------------------------------
 import { OEEChart } from "./OEEChart";
-import { OEEGauge } from "./OEEGauge";
 
 //------------------------------------------------------------------------------
 interface OEEPanelProps {
@@ -33,7 +33,7 @@ const OEEPanel: React.FC<OEEPanelProps> = ({
                     <Badge className="-translate-x-1">Last 30 days</Badge>
                 </div>
                 <div className="max-w-32 h-16 flex items-center gap-6">
-                    <OEEGauge value={oeeValue} />
+                    <Gauge value={oeeValue} />
                 </div>
             </div>
             <OEEChart data={oeeHistory} incidents={incidents} height={80} />
