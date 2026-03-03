@@ -18,7 +18,7 @@ import { useNavigate } from "@/hooks/useNavigate";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-const MainHeader = ({ className }: { className?: string }) => {
+export const MainHeader = ({ className }: { className?: string }) => {
     const { currentFactory } = useFactoryStore();
     const navigate = useNavigate();
 
@@ -72,5 +72,3 @@ const MainHeader = ({ className }: { className?: string }) => {
         </header>
     );
 };
-
-export default MainHeader;

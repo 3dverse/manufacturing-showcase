@@ -1,9 +1,10 @@
 import { NodeTypes } from "@/content/enums";
 import type {
+    FactoryNode,
     AreaNode,
     CellNode,
     FactoryGraphNode,
-    FactoryNode,
+    LineNode,
     MachineNode,
     FlowInNode,
     FlowOutNode,
@@ -78,11 +79,26 @@ export function buildFactoryGraph(params: { entities: Entity[]; area_categories_
                     type: NodeTypes.area,
                     name: parseName(areaEntity),
                     parent: factory,
+                    lines: [],
                     cells: [],
                     flows: { ins: [], outs: [], pairs: [] },
                 };
-
                 list.push(area);
+
+                const lineNodes: LineNode[] = lines
+                    .filter((l) => inLineage(l, area.euid))
+                    .map((lineEntity) => {
+                        const line: LineNode = {
+                            entity: lineEntity,
+                            euid: lineEntity.euid.value,
+                            type: NodeTypes.line,
+                            name: parseName(lineEntity),
+                            parent: area,
+                        };
+                        list.push(line);
+                        return line;
+                    });
+                area.lines = lineNodes;
 
                 const cellNodes: CellNode[] = cells
                     .filter((c) => inLineage(c, area.euid))
@@ -115,6 +131,7 @@ export function buildFactoryGraph(params: { entities: Entity[]; area_categories_
                         cell.machines = machineNodes;
                         return cell;
                     });
+                area.cells = cellNodes;
 
                 const flowInNodes: FlowInNode[] = flowIns
                     .filter((f) => inLineage(f, area.euid))
@@ -144,7 +161,6 @@ export function buildFactoryGraph(params: { entities: Entity[]; area_categories_
                         return flowOut;
                     });
 
-                area.cells = cellNodes;
                 const pairs = buildFlowPairs(flowInNodes, flowOutNodes);
                 area.flows = { ins: flowInNodes, outs: flowOutNodes, pairs };
                 return area;

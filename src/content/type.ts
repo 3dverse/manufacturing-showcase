@@ -145,12 +145,15 @@ export type AreaFlows = {
 export type AreaNode = _FactoryGraphNode & {
     type: NodeTypes.area;
     parent: FactoryNode;
+    lines: LineNode[];
     cells: CellNode[];
     flows: AreaFlows;
 };
+
+export type LineNode = _FactoryGraphNode & { type: NodeTypes.line; parent: AreaNode };
 export type CellNode = _FactoryGraphNode & { type: NodeTypes.cell; parent: AreaNode; machines: MachineNode[] };
 export type MachineNode = _FactoryGraphNode & { type: NodeTypes.machine; parent: CellNode };
 export type FlowInNode = _FactoryGraphNode & { type: NodeTypes.flowIn; parent: AreaNode };
 export type FlowOutNode = _FactoryGraphNode & { type: NodeTypes.flowOut; parent: AreaNode };
 
-export type FactoryGraphNode = FactoryNode | AreaNode | CellNode | MachineNode | FlowInNode | FlowOutNode;
+export type FactoryGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode | FlowInNode | FlowOutNode;

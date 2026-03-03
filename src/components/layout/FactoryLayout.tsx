@@ -2,9 +2,9 @@
 import { useContext } from "react";
 
 //------------------------------------------------------------------------------
-import Viewer from "@/components/viewer/Viewer";
-import MainHeader from "@/components/layout/MainHeader";
-import MainNav from "@/components/layout/MainNav";
+import { Viewer } from "@/components/viewer/Viewer";
+import { MainHeader } from "@/components/layout/MainHeader";
+import { MainNav } from "@/components/layout/MainNav";
 import { FactoryPanel } from "@/components/nodes/factory/FactoryPanel";
 import { AreaProductionPanel } from "@/components/nodes/areas/production/AreaProductionPanel";
 import { CellPanel } from "@/components/nodes/cells/CellPanel";

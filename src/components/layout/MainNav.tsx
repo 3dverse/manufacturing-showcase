@@ -17,12 +17,12 @@ import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2"
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import type { AreaNode, CellNode, FactoryGraphNode } from "@/content/type";
+import type { AreaNode, CellNode, FactoryGraphNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const MainNav = () => {
+export const MainNav = () => {
     //--------------------------------------------------------------------------
     // Context
     const { cameraControllerRef, viewportRef, cameraEntity } = useContext(CameraContext);
@@ -93,9 +93,12 @@ const AreaNode = ({ area, onClick }: { area: AreaNode; onClick?: (node: FactoryG
     //--------------------------------------------------------------------------
     // Memos
     const isActive = useMemo(
-        () => area === selectedNode || (selectedNode?.type === NodeTypes.cell && area === selectedNode?.parent),
+        () => area === selectedNode || area === (selectedNode as LineNode | CellNode)?.parent,
         [area, selectedNode],
     );
+
+    //--------------------------------------------------------------------------
+    const children = [...area.lines, ...area.cells];
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -122,15 +125,15 @@ const AreaNode = ({ area, onClick }: { area: AreaNode; onClick?: (node: FactoryG
             }
             onClick={clickHandler}
         >
-            <p className="px-1 text-[70%] uppercase">{area.name} area</p>
-            <ul className="flex flex-wrap">
-                {area.cells.map((cell, index) => (
-                    <CellNode
-                        key={cell.entity.euid.value}
+            <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
+            <ul className="flex overflow-x-auto">
+                {children.map((child, index) => (
+                    <ChildNode
+                        key={child.entity.euid.value}
+                        isAreaActive={isActive}
                         isFirst={index === 0}
-                        isLast={index === area.cells.length - 1}
-                        area={area}
-                        cell={cell}
+                        isLast={index === children.length - 1}
+                        node={child}
                         onClick={onClick}
                     />
                 ))}
@@ -141,17 +144,17 @@ const AreaNode = ({ area, onClick }: { area: AreaNode; onClick?: (node: FactoryG
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const CellNode = ({
-    area,
-    cell,
+const ChildNode = ({
+    node,
     isFirst,
     isLast,
+    isAreaActive,
     onClick,
 }: {
-    area: AreaNode;
-    cell: CellNode;
+    node: LineNode | CellNode;
     isFirst: boolean;
     isLast: boolean;
+    isAreaActive: boolean;
     onClick?: (node: FactoryGraphNode) => void;
 }) => {
     //--------------------------------------------------------------------------
@@ -160,25 +163,16 @@ const CellNode = ({
 
     //--------------------------------------------------------------------------
     // Memos
-    const isActive = useMemo(() => selectedNode === cell, [selectedNode, cell]);
-
-    //--------------------------------------------------------------------------
-    const areaIsActive = useMemo(
-        () =>
-            selectedNode === area ||
-            (selectedNode?.type === NodeTypes.cell && selectedNode.parent === area) ||
-            isActive,
-        [selectedNode, area, isActive],
-    );
+    const isActive = useMemo(() => selectedNode === node, [selectedNode, node]);
 
     //--------------------------------------------------------------------------
     // Handlers
     const clickHandler = useCallback(
         (e: MouseEvent) => {
             e.stopPropagation();
-            onClick?.(cell);
+            onClick?.(node);
         },
-        [onClick, cell],
+        [onClick, node],
     );
 
     //--------------------------------------------------------------------------
@@ -187,8 +181,8 @@ const CellNode = ({
         <li>
             <button
                 className={cn(
-                    "relative px-2 py-1 text-xs capitalize bg-slate-0 hover:text-accent border border-slate-100 rounded-md cursor-pointer transition-colors duration-200",
-                    areaIsActive ? "bg-accent-500 hover:bg-accent-700 hover:text-slate-0 border-accent-400" : "",
+                    "relative px-2 py-1 text-xs capitalize whitespace-nowrap bg-slate-0 hover:text-accent border border-slate-100 rounded-md cursor-pointer transition-colors duration-200",
+                    isAreaActive ? "bg-accent-500 hover:bg-accent-700 hover:text-slate-0 border-accent-400" : "",
                     isActive ? "text-accent hover:text-accent bg-slate-0 hover:bg-slate-100 border-slate-0" : "",
                 )}
                 style={
@@ -212,10 +206,8 @@ const CellNode = ({
                         }
                     />
                 )}
-                {cell.name}
+                {node.name}
             </button>
         </li>
     );
 };
-
-export default MainNav;

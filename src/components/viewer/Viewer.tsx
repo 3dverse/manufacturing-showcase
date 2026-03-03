@@ -25,7 +25,7 @@ import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2"
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const Viewer = () => {
+export const Viewer = () => {
     //--------------------------------------------------------------------------
     // Contexts
     const { isConnecting } = useContext(LivelinkContext);
@@ -113,5 +113,3 @@ const Viewer = () => {
         </Canvas>
     );
 };
-
-export default Viewer;
