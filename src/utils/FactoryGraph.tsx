@@ -15,12 +15,11 @@ import type { Entity } from "@3dverse/livelink";
 //------------------------------------------------------------------------------
 export const buildFactoryGraph = (params: {
     entities: Entity[];
-    area_categories_sort: string[];
 }): {
     graph?: FactoryNode;
     list: FactoryGraphNode[];
 } => {
-    const { entities, area_categories_sort } = params;
+    const { entities } = params;
     const factories: Entity[] = [];
     const areas: Entity[] = [];
     const lines: Entity[] = [];
@@ -238,7 +237,7 @@ function inLineage(child: Entity, ancestorEuid: string): boolean {
 }
 
 //------------------------------------------------------------------------------
-const sortAreas = (a: AreaNode, b: AreaNode, order: string[]) => {
+export const sortAreas = (a: AreaNode, b: AreaNode, order: string[]) => {
     const indexOf = (category: string) => {
         const i = order.findIndex((s) => s.toLowerCase() === category.toLowerCase());
         return i === -1 ? Infinity : i;
