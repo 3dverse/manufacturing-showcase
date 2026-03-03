@@ -13,10 +13,13 @@ import type {
 import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
-export function buildFactoryGraph(params: { entities: Entity[]; area_categories_sort: string[] }): {
+export const buildFactoryGraph = (params: {
+    entities: Entity[];
+    area_categories_sort: string[];
+}): {
     graph?: FactoryNode;
     list: FactoryGraphNode[];
-} {
+} => {
     const { entities, area_categories_sort } = params;
     const factories: Entity[] = [];
     const areas: Entity[] = [];
@@ -60,7 +63,8 @@ export function buildFactoryGraph(params: { entities: Entity[]; area_categories_
 
     const list: FactoryGraphNode[] = [];
 
-    const factoryNodes: FactoryNode[] = factories.map((factoryEntity) => {
+    //--------------------------------------------------------------------------
+    const mapFactoryEntity = (factoryEntity: Entity) => {
         const factory: FactoryNode = {
             entity: factoryEntity,
             euid: factoryEntity.euid.value,
@@ -69,107 +73,118 @@ export function buildFactoryGraph(params: { entities: Entity[]; area_categories_
             areas: [],
         };
 
+        factory.areas = areas.map((e) => mapAreaEntity(e, factory));
+
         list.push(factory);
+        return factory;
+    };
 
-        const areaNodes: AreaNode[] = areas
-            .filter((a) => inLineage(a, factory.euid))
-            .map((areaEntity) => {
-                const area: AreaNode = {
-                    entity: areaEntity,
-                    euid: areaEntity.euid.value,
-                    type: NodeTypes.area,
-                    name: parseName(areaEntity),
-                    parent: factory,
-                    lines: [],
-                    cells: [],
-                    flows: { ins: [], outs: [], pairs: [] },
-                };
-                list.push(area);
+    //--------------------------------------------------------------------------
+    const mapAreaEntity = (areaEntity: Entity, parent: FactoryNode) => {
+        const area: AreaNode = {
+            entity: areaEntity,
+            euid: areaEntity.euid.value,
+            type: NodeTypes.area,
+            name: parseName(areaEntity),
+            parent,
+            lines: [],
+            cells: [],
+            flows: { ins: [], outs: [], pairs: [] },
+        };
 
-                const lineNodes: LineNode[] = lines
-                    .filter((l) => inLineage(l, area.euid))
-                    .map((lineEntity) => {
-                        const line: LineNode = {
-                            entity: lineEntity,
-                            euid: lineEntity.euid.value,
-                            type: NodeTypes.line,
-                            name: parseName(lineEntity),
-                            parent: area,
-                        };
-                        list.push(line);
-                        return line;
-                    });
-                area.lines = lineNodes;
+        area.lines = lines.filter((l) => inLineage(l, area.euid)).map((e) => mapLineEntity(e, area));
 
-                const cellNodes: CellNode[] = cells
-                    .filter((c) => inLineage(c, area.euid))
-                    .map((cellEntity) => {
-                        const cell: CellNode = {
-                            entity: cellEntity,
-                            euid: cellEntity.euid.value,
-                            type: NodeTypes.cell,
-                            name: parseName(cellEntity),
-                            parent: area,
-                            machines: [],
-                        };
+        area.cells = cells
+            .filter((c) => inLineage(c, area.euid) && area.lines.every((l) => !inLineage(c, l.euid)))
+            .map((e) => mapCellEntity(e, area));
 
-                        list.push(cell);
+        area.flows = {
+            ins: flowIns.filter((f) => inLineage(f, area.euid)).map((e) => mapFlowInEntity(e, area)),
+            outs: flowOuts.filter((f) => inLineage(f, area.euid)).map((e) => mapFlowOutEntity(e, area)),
+            pairs: [],
+        };
 
-                        const machineNodes: MachineNode[] = machines
-                            .filter((m) => inLineage(m, cell.euid))
-                            .map((machineEntity) => {
-                                const machine: MachineNode = {
-                                    entity: machineEntity,
-                                    euid: machineEntity.euid.value,
-                                    type: NodeTypes.machine,
-                                    name: parseName(machineEntity),
-                                    parent: cell,
-                                };
-                                list.push(machine);
-                                return machine;
-                            });
+        list.push(area);
+        return area;
+    };
 
-                        cell.machines = machineNodes;
-                        return cell;
-                    });
-                area.cells = cellNodes;
+    //--------------------------------------------------------------------------
+    const mapLineEntity = (lineEntity: Entity, parent: AreaNode) => {
+        const line: LineNode = {
+            entity: lineEntity,
+            euid: lineEntity.euid.value,
+            type: NodeTypes.line,
+            name: parseName(lineEntity),
+            parent,
+            cells: [],
+        };
 
-                const flowInNodes: FlowInNode[] = flowIns
-                    .filter((f) => inLineage(f, area.euid))
-                    .map((flowInEntity) => {
-                        const flowIn: FlowInNode = {
-                            entity: flowInEntity,
-                            euid: flowInEntity.euid.value,
-                            type: NodeTypes.flowIn,
-                            name: parseName(flowInEntity),
-                            parent: area,
-                        };
-                        list.push(flowIn);
-                        return flowIn;
-                    });
+        line.cells = cells.filter((c) => inLineage(c, lineEntity.euid.value)).map((e) => mapCellEntity(e, parent));
 
-                const flowOutNodes: FlowOutNode[] = flowOuts
-                    .filter((f) => inLineage(f, area.euid))
-                    .map((flowOutEntity) => {
-                        const flowOut: FlowOutNode = {
-                            entity: flowOutEntity,
-                            euid: flowOutEntity.euid.value,
-                            type: NodeTypes.flowOut,
-                            name: parseName(flowOutEntity),
-                            parent: area,
-                        };
-                        list.push(flowOut);
-                        return flowOut;
-                    });
-                area.flows = { ins: flowInNodes, outs: flowOutNodes, pairs: [] };
+        list.push(line);
+        return line;
+    };
 
-                return area;
-            })
-            .sort((a, b) => sortAreas(a, b, area_categories_sort));
+    //--------------------------------------------------------------------------
+    const mapCellEntity = (cellEntity: Entity, parent: AreaNode) => {
+        const cell: CellNode = {
+            entity: cellEntity,
+            euid: cellEntity.euid.value,
+            type: NodeTypes.cell,
+            name: parseName(cellEntity),
+            parent,
+            machines: [],
+        };
+        cell.machines = machines.filter((m) => inLineage(m, cell.euid)).map((e) => mapMachineEntity(e, cell));
+        list.push(cell);
+        return cell;
+    };
 
-        buildFlowPairsAcrossAreas(areaNodes);
+    //--------------------------------------------------------------------------
+    const mapMachineEntity = (machineEntity: Entity, parent: CellNode) => {
+        const machine: MachineNode = {
+            entity: machineEntity,
+            euid: machineEntity.euid.value,
+            type: NodeTypes.machine,
+            name: parseName(machineEntity),
+            parent,
+        };
+        list.push(machine);
+        return machine;
+    };
 
-        factory.areas = areaNodes;
+    //--------------------------------------------------------------------------
+    const mapFlowInEntity = (flowInEntity: Entity, parent: AreaNode) => {
+        const flowIn: FlowInNode = {
+            entity: flowInEntity,
+            euid: flowInEntity.euid.value,
+            type: NodeTypes.flowIn,
+            name: parseName(flowInEntity),
+            parent,
+        };
+        list.push(flowIn);
+        return flowIn;
+    };
+
+    //--------------------------------------------------------------------------
+    const mapFlowOutEntity = (flowOutEntity: Entity, parent: AreaNode) => {
+        const flowOut: FlowOutNode = {
+            entity: flowOutEntity,
+            euid: flowOutEntity.euid.value,
+            type: NodeTypes.flowOut,
+            name: parseName(flowOutEntity),
+            parent,
+        };
+
+        list.push(flowOut);
+        return flowOut;
+    };
+
+    //--------------------------------------------------------------------------
+    const factoryNodes: FactoryNode[] = factories.map((factoryEntity) => {
+        const factory: FactoryNode = mapFactoryEntity(factoryEntity);
+
+        buildFlowPairsAcrossAreas(factory.areas);
 
         factory.areas[1].flows.pairs[0] = {
             in: factory.areas[1].flows.pairs[0].in,
@@ -183,11 +198,14 @@ export function buildFactoryGraph(params: { entities: Entity[]; area_categories_
             spline: MOCK_SPLINE_2,
         };
 
+        console.log(factory);
+
         return factory;
     });
+
     const graph = factoryNodes.length > 0 ? factoryNodes[0] : undefined;
     return { graph, list };
-}
+};
 
 //------------------------------------------------------------------------------
 /** Pairs IN nodes with OUT nodes from a *different* area (same name). Each pair is attached to the area of the IN. */
