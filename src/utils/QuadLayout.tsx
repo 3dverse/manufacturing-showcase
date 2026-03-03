@@ -4,8 +4,8 @@ import { DOM3DElement, ViewportContext } from "@3dverse/livelink-react";
 import { cn } from "./cn";
 
 //------------------------------------------------------------------------------
-type Point = { x: number; y: number };
-type QuadPoint = [Point, Point, Point, Point];
+export type Point = { x: number; y: number };
+export type QuadPoint = [Point, Point, Point, Point];
 type QuadData = {
     quad: QuadPoint;
     dimensions: { width: number; height: number };
@@ -188,7 +188,7 @@ function DebugQuadrant({ quadrant }: { quadrant: "center" | "top" | "right" | "b
  * Maps a rectangle [0..w, 0..h] to an arbitrary screen quad (tl,tr,br,bl)
  * and returns a CSS matrix3d(...) string.
  */
-function quadToMatrix3d({ quad, dimensions }: QuadData): string {
+export function quadToMatrix3d({ quad, dimensions }: QuadData): string {
     const { width: w, height: h } = dimensions;
     const src: [Point, Point, Point, Point] = [
         { x: 0, y: 0 },

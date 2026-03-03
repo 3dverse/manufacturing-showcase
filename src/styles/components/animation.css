@@ -103,3 +103,13 @@
         background-position: -250% 0;
     }
 }
+
+/* Flow direction: stripes move along the flow (out → in) */
+@keyframes flow-stripes {
+    from {
+        background-position: 12px 0;
+    }
+    to {
+        background-position: 0 0;
+    }
+}

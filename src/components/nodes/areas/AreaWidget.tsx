@@ -108,10 +108,10 @@ export function AreaWidget({
                     >
                         <div
                             className={cn(
-                                "w-full h-full rounded-xl border-3 border-accent/80 outline-accent-500/20 transition-colors duration-200 pointer-events-auto",
+                                "w-full h-full rounded-xl border-3 border-accent/80 outline-accent-500/0 outline-40 transition-all duration-200 pointer-events-auto",
                                 isAreaSelected
                                     ? "border-3 outline-80"
-                                    : "bg-accent-500/05 hover:bg-accent-500/10 hover:outline-80 hover:border-accent cursor-pointer",
+                                    : "bg-accent-500/05 hover:bg-accent-500/10 hover:outline-80 hover:outline-accent-500/20 hover:border-accent cursor-pointer",
                             )}
                             onClick={() => onClick(area)}
                         />

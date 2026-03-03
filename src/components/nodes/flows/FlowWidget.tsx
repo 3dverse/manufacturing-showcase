@@ -1,11 +1,14 @@
 import { useCallback, useContext, useMemo, useState } from "react";
 import type { Entity, Vec3 } from "@3dverse/livelink";
 import { DOM3DElement, ViewportContext } from "@3dverse/livelink-react";
+import { quadToMatrix3d } from "@/utils/QuadLayout";
+import type { QuadPoint } from "@/utils/QuadLayout";
 import { cn } from "@/utils/cn";
 import type { FlowInNode, FlowOutNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 const LINE_THICKNESS = 8;
+const STRIPE_WIDTH = 12;
 
 function getEntityCenter(entity: Entity): Vec3 {
     const min = entity.global_aabb.min;
@@ -34,43 +37,35 @@ export function FlowWidget({ pair, className }: { pair: { in: FlowInNode; out: F
               }
             : null;
 
-    // Rectangle band between from and to: 4 corners in screen space (quad)
-    const quad =
+    // Quad in screen space (tl, tr, br, bl) for quadToMatrix3d; dimensions = length × thickness.
+    const boxState =
         projected != null
             ? (() => {
                   const [x1, y1] = projected.from;
                   const [x2, y2] = projected.to;
                   const dx = x2 - x1;
                   const dy = y2 - y1;
-                  const len = Math.hypot(dx, dy);
-                  if (len < 1) return null;
-                  const nx = -dy / len;
-                  const ny = dx / len;
+                  const length = Math.hypot(dx, dy);
+                  if (length < 1) return null;
+                  const nx = -dy / length;
+                  const ny = dx / length;
                   const h = LINE_THICKNESS / 2;
-                  return {
-                      points: [
-                          [x1 + nx * h, y1 + ny * h],
-                          [x1 - nx * h, y1 - ny * h],
-                          [x2 - nx * h, y2 - ny * h],
-                          [x2 + nx * h, y2 + ny * h],
-                      ] as [number, number][],
-                      bounds: {
-                          minX: Math.min(x1, x2) - h,
-                          minY: Math.min(y1, y2) - h,
-                          maxX: Math.max(x1, x2) + h,
-                          maxY: Math.max(y1, y2) + h,
-                      },
-                  };
+                  const quad: QuadPoint = [
+                      { x: x1 + nx * h, y: y1 + ny * h },
+                      { x: x2 + nx * h, y: y2 + ny * h },
+                      { x: x2 - nx * h, y: y2 - ny * h },
+                      { x: x1 - nx * h, y: y1 - ny * h },
+                  ];
+                  const matrix = quadToMatrix3d({
+                      quad,
+                      dimensions: { width: length, height: LINE_THICKNESS },
+                  });
+                  if (!matrix) return null;
+                  return { length, matrix };
               })()
             : null;
 
-    if (!projected || !quad) return null;
-
-    const w = quad.bounds.maxX - quad.bounds.minX;
-    const h = quad.bounds.maxY - quad.bounds.minY;
-    const polygonPoints = quad.points
-        .map(([x, y]) => `${x - quad.bounds.minX},${y - quad.bounds.minY}`)
-        .join(" ");
+    if (!projected || !boxState) return null;
 
     return (
         <>
@@ -79,25 +74,21 @@ export function FlowWidget({ pair, className }: { pair: { in: FlowInNode; out: F
                 <span />
             </DOM3DElement>
             <div
-                className="absolute pointer-events-none overflow-visible"
+                className={cn(
+                    "absolute left-0 top-0 origin-top-left pointer-events-none",
+                    "rounded-sm overflow-hidden",
+                    className,
+                )}
                 style={{
-                    left: quad.bounds.minX,
-                    top: quad.bounds.minY,
-                    width: w,
-                    height: h,
+                    width: boxState.length,
+                    height: LINE_THICKNESS,
+                    transform: boxState.matrix,
+                    backgroundImage: `repeating-linear-gradient(90deg, color-mix(in oklch, var(--color-guidance) 55%, transparent) 0, color-mix(in oklch, var(--color-guidance) 55%, transparent) ${STRIPE_WIDTH / 2}px, transparent ${STRIPE_WIDTH / 2}px, transparent ${STRIPE_WIDTH}px)`,
+                    backgroundSize: `${STRIPE_WIDTH}px 100%`,
+                    animation: "flow-stripes 0.6s linear infinite",
                 }}
                 aria-hidden
-            >
-                <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="block">
-                    <polygon
-                        points={polygonPoints}
-                        className={cn(
-                            "fill-accent/40 transition-colors duration-200",
-                            className,
-                        )}
-                    />
-                </svg>
-            </div>
+            />
         </>
     );
 }
