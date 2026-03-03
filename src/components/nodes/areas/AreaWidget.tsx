@@ -33,7 +33,7 @@ export function AreaWidget({
     //--------------------------------------------------------------------------
     const isAreaSelected = selectedNode?.euid === area.euid;
     // TODO: Implement this
-    const isAreaAParentOfSelectedNode = isAreaSelected;
+    const isAreaAParentOfSelectedNode = selectedNode?.parent?.euid === area.euid;
 
     //--------------------------------------------------------------------------
     const updatePosition = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -109,10 +109,10 @@ export function AreaWidget({
                     >
                         <div
                             className={cn(
-                                "w-full h-full cursor-pointer rounded-xl border-5 border-accent/80 outline-accent-500/20 transition-colors duration-200 pointer-events-auto",
+                                "w-full h-full cursor-pointer rounded-xl border-3 border-accent/80 outline-accent-500/20 transition-colors duration-200 pointer-events-auto",
                                 isAreaSelected
-                                    ? "border-3 outline-100 hover:outline-accent/30"
-                                    : "hover:outline-100 bg-accent-500/05 hover:bg-accent-500/10",
+                                    ? "border-3 outline-80 hover:outline-accent/30"
+                                    : "bg-accent-500/05 hover:bg-accent-500/10 hover:outline-80 hover:border-accent",
                             )}
                             onClick={() => onClick(area)}
                         />
