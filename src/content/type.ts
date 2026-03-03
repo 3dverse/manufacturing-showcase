@@ -135,8 +135,22 @@ type _FactoryGraphNode = {
     name: string;
 };
 export type FactoryNode = _FactoryGraphNode & { type: NodeTypes.factory; areas: AreaNode[] };
-export type AreaNode = _FactoryGraphNode & { type: NodeTypes.area; parent: FactoryNode; cells: CellNode[] };
+export type AreaFlows = {
+    ins: FlowInNode[];
+    outs: FlowOutNode[];
+    /** Pairs of in/out with matching names (relation by similar name). */
+    pairs: Array<{ in: FlowInNode; out: FlowOutNode }>;
+};
+
+export type AreaNode = _FactoryGraphNode & {
+    type: NodeTypes.area;
+    parent: FactoryNode;
+    cells: CellNode[];
+    flows: AreaFlows;
+};
 export type CellNode = _FactoryGraphNode & { type: NodeTypes.cell; parent: AreaNode; machines: MachineNode[] };
 export type MachineNode = _FactoryGraphNode & { type: NodeTypes.machine; parent: CellNode };
+export type FlowInNode = _FactoryGraphNode & { type: NodeTypes.flowIn; parent: AreaNode };
+export type FlowOutNode = _FactoryGraphNode & { type: NodeTypes.flowOut; parent: AreaNode };
 
-export type FactoryGraphNode = FactoryNode | AreaNode | CellNode | MachineNode;
+export type FactoryGraphNode = FactoryNode | AreaNode | CellNode | MachineNode | FlowInNode | FlowOutNode;
