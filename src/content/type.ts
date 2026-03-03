@@ -138,7 +138,7 @@ export type FactoryNode = _FactoryGraphNode & { type: NodeTypes.factory; areas: 
 export type AreaFlows = {
     ins: FlowInNode[];
     outs: FlowOutNode[];
-    /** Pairs of in/out with matching names (relation by similar name). */
+    /** Pairs of in/out with matching names across different areas (in from this area, out from another). */
     pairs: Array<{ in: FlowInNode; out: FlowOutNode }>;
 };
 

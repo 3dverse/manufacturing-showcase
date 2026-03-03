@@ -3,8 +3,6 @@ import { useEffect, useRef, useState } from "react";
 
 //------------------------------------------------------------------------------
 import { AreaStorageOverlay } from "@/components/nodes/areas/storage/AreaStorageOverlay";
-import { AreaStorageQuadPanel } from "@/components/nodes/areas/storage/AreaStorageQuadPanel";
-import { AreaProductionQuadPanel } from "@/components/nodes/areas/production/AreaProductionQuadPanel";
 import { CellWidget } from "@/components/nodes/cells/CellWidget";
 
 //------------------------------------------------------------------------------
@@ -157,16 +155,7 @@ export function AreaWidget({
                 })}
 
             {(isAreaSelected || isAreaAParentOfSelectedNode) && area.name === "storage" && (
-                <>
-                    <AreaStorageOverlay area={area} />
-                    <AreaStorageQuadPanel area={area} />
-                </>
-            )}
-
-            {(isAreaSelected || isAreaAParentOfSelectedNode) && area.name === "production" && (
-                <>
-                    <AreaProductionQuadPanel area={area} />
-                </>
+                <AreaStorageOverlay area={area} />
             )}
         </div>
     );

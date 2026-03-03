@@ -160,12 +160,13 @@ export function buildFactoryGraph(params: { entities: Entity[]; area_categories_
                         list.push(flowOut);
                         return flowOut;
                     });
+                area.flows = { ins: flowInNodes, outs: flowOutNodes, pairs: [] };
 
-                const pairs = buildFlowPairs(flowInNodes, flowOutNodes);
-                area.flows = { ins: flowInNodes, outs: flowOutNodes, pairs };
                 return area;
             })
             .sort((a, b) => sortAreas(a, b, area_categories_sort));
+
+        buildFlowPairsAcrossAreas(areaNodes);
 
         factory.areas = areaNodes;
         return factory;
@@ -175,19 +176,21 @@ export function buildFactoryGraph(params: { entities: Entity[]; area_categories_
 }
 
 //------------------------------------------------------------------------------
-function buildFlowPairs(ins: FlowInNode[], outs: FlowOutNode[]): Array<{ in: FlowInNode; out: FlowOutNode }> {
+/** Pairs IN nodes with OUT nodes from a *different* area (same name). Each pair is attached to the area of the IN. */
+function buildFlowPairsAcrossAreas(areaNodes: AreaNode[]): void {
     const key = (n: FlowInNode | FlowOutNode) => n.name.trim().toLowerCase();
-    const pairs: Array<{ in: FlowInNode; out: FlowOutNode }> = [];
-    const usedOuts = new Set<FlowOutNode>();
-    for (const flowIn of ins) {
-        const k = key(flowIn);
-        const out = outs.find((o) => !usedOuts.has(o) && key(o) === k);
-        if (out) {
-            usedOuts.add(out);
-            pairs.push({ in: flowIn, out });
+    for (const area of areaNodes) {
+        for (const flowIn of area.flows.ins) {
+            const k = key(flowIn);
+            const out = areaNodes
+                .filter((a) => a.euid !== area.euid)
+                .flatMap((a) => a.flows.outs)
+                .find((o) => key(o) === k);
+            if (out) {
+                area.flows.pairs.push({ in: flowIn, out });
+            }
         }
     }
-    return pairs;
 }
 
 //------------------------------------------------------------------------------
