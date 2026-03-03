@@ -34,7 +34,7 @@ export const PlanningPanel = () => {
                             <Tooltip
                                 content={
                                     <p className="flex items-center text-2xs">
-                                        Open order <span className="tabular-nums ml-1">{order.ref}</span>
+                                        Open <span className="tabular-nums ml-1">{order.ref}</span>
                                         <img src="/logo/sap.svg" alt="SAP" className="h-3 ml-2" />
                                     </p>
                                 }

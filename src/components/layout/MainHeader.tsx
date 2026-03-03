@@ -41,7 +41,7 @@ const MainHeader = ({ className }: { className?: string }) => {
     // shadow-[-10px_10px_100px_35px_#ffffff50] overflow-hidden
     //--------------------------------------------------------------------------
     return (
-        <header className={cn("flex h-fit pointer-events-auto", className)}>
+        <header className={cn("flex w-full h-fit pointer-events-auto", className)}>
             <ViewerPanel className="flex items-start p-2 rounded-none rounded-s-md border border-muted/50 z-10">
                 <button
                     className="p-1 aspect-square rounded-sm text-xs text-accent bg-accent-100/30 hover:bg-accent-100/50 transition-colors duration-200 cursor-pointer"
@@ -51,7 +51,7 @@ const MainHeader = ({ className }: { className?: string }) => {
                 </button>
             </ViewerPanel>
 
-            <ViewerPanel className="flex items-start gap-x-4 rounded-none rounded-e-md border border-muted/50 border-l-0 opacity-0 appear-in-from-left [--animation-delay:1s]">
+            <ViewerPanel className="basis-full flex justify-between items-start gap-x-4 rounded-none rounded-e-md border border-muted/50 border-l-0 opacity-0 appear-in-from-left [--animation-delay:1s]">
                 <div className="flex flex-col justify-center divide-y divide-muted/50" onClick={factoryClickHandler}>
                     <div className="flex flex-col gap--1 px-3 py-2">
                         <p className="text-base font-medium">{currentFactory?.name}</p>

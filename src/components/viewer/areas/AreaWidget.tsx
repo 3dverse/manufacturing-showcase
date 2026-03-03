@@ -39,9 +39,13 @@ export function AreaWidget({
     const updatePosition = (e: React.MouseEvent<HTMLDivElement>) => {
         if (frame.current) return;
 
+        if (e.clientX == 0 && e.clientY == 0) {
+            return;
+        }
+
         frame.current = requestAnimationFrame(() => {
             if (tooltipRef.current) {
-                tooltipRef.current.style.transform = `translate(${e.clientX + 12}px, ${e.clientY + 12}px)`;
+                tooltipRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
             }
             frame.current = null;
         });
@@ -64,7 +68,7 @@ export function AreaWidget({
                 <div
                     ref={tooltipRef}
                     className="
-                        fixed top-0 left-0 z-50
+                        fixed top-4 left-4 z-40
                         px-2 py-1
                         text-white bg-accent
                         rounded-sm shadow-lg
@@ -95,10 +99,10 @@ export function AreaWidget({
                     >
                         <div
                             className={cn(
-                                "w-full h-full cursor-pointer rounded-xl border-white/40 outline-accent-500/20 transition-colors duration-200 pointer-events-auto",
+                                "w-full h-full cursor-pointer rounded-xl border-5 border-accent/80 outline-accent-500/20 transition-colors duration-200 pointer-events-auto",
                                 isAreaSelected
                                     ? "border-3 outline-100 hover:outline-accent/30"
-                                    : "hover:border-3 hover:outline-100 bg-accent-500/10 hover:bg-accent-500/20",
+                                    : "hover:outline-100 bg-accent-500/05 hover:bg-accent-500/10",
                             )}
                             onClick={() => onClick(area)}
                         />

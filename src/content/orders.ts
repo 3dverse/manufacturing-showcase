@@ -1,4 +1,4 @@
-import { faCalendarDays, faCheckCircle, faClockRotateLeft, faXmarkCircle } from "@fortawesome/pro-solid-svg-icons";
+import { faCalendarDays, faCheckCircle, faClockRotateLeft, faXmarkCircle } from "@fortawesome/pro-light-svg-icons";
 import type { Order } from "@/content/type";
 
 //------------------------------------------------------------------------------
@@ -16,7 +16,8 @@ export const orderStatus = {
 //------------------------------------------------------------------------------
 export const orders: Order[] = [
     {
-        ref: "123456",
+        ref: "OF 123456",
+        client: "ABC Inc.",
         startDate: new Date("2026-02-27T08:30:00"),
         endDate: new Date("2026-02-27T16:00:00"),
         unitsPlanned: 134,
@@ -24,7 +25,8 @@ export const orders: Order[] = [
         status: orderStatus.completed,
     },
     {
-        ref: "123457",
+        ref: "OF 123457",
+        client: "ABC Inc.",
         startDate: new Date("2026-02-27T08:30:00"),
         endDate: new Date("2026-02-27T16:00:00"),
         unitsPlanned: 143,
@@ -32,7 +34,8 @@ export const orders: Order[] = [
         status: orderStatus.completed,
     },
     {
-        ref: "123458",
+        ref: "OF 123458",
+        client: "ABC Inc.",
         startDate: new Date("2026-02-27T08:30:00"),
         endDate: new Date("2026-02-27T16:00:00"),
         unitsPlanned: 152,
@@ -40,7 +43,8 @@ export const orders: Order[] = [
         status: orderStatus.inProgress,
     },
     {
-        ref: "123459",
+        ref: "OF 123459",
+        client: "ABC Inc.",
         startDate: new Date("2026-02-28T08:30:00"),
         endDate: new Date("2026-02-28T16:00:00"),
         unitsPlanned: 161,
@@ -48,7 +52,8 @@ export const orders: Order[] = [
         status: orderStatus.planned,
     },
     {
-        ref: "123460",
+        ref: "OF 123460",
+        client: "ABC Inc.",
         startDate: new Date("2026-01-30T08:30:00"),
         endDate: new Date("2026-01-30T16:00:00"),
         unitsPlanned: 170,
@@ -56,7 +61,8 @@ export const orders: Order[] = [
         status: orderStatus.planned,
     },
     {
-        ref: "123461",
+        ref: "OF 123461",
+        client: "ABC Inc.",
         startDate: new Date("2026-01-31T08:30:00"),
         endDate: new Date("2026-01-31T16:00:00"),
         unitsPlanned: 179,

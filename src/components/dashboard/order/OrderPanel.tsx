@@ -2,7 +2,6 @@
 import React, { useCallback, useMemo } from "react";
 
 //------------------------------------------------------------------------------
-import { Icon } from "@/components/common/Icon";
 import { PanelLabel } from "@/components/common/panel";
 import { ProgressBar } from "@/components/common/ProgressBar";
 
@@ -42,17 +41,17 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({ order, className }) => {
     //--------------------------------------------------------------------------
     return (
         <div className={cn("@container flex flex-col", className)}>
-            <header className="flex items-start justify-between px-1 pb-2">
+            <header className="flex items-start justify-between px-1 pb-3">
                 <div>
                     <PanelLabel className="text-xs text-default">Current Order</PanelLabel>
-
-                    <p className="text-accent text-base font-medium tabular-nums tracking-wide">
-                        <Icon icon={order.status.icon} className="text-xs text-accent-400 mr-1 -translate-y-[2px]" />
+                    <p className="mt-px text-accent text-lg leading-tight font-semibold tabular-nums tracking-tight">
                         {order.ref}
                     </p>
+                    <p className="text-2xs leading-tight text-muted">Client {order.client}</p>
                 </div>
-                <div className="flex flex-col items-end py-1 pr-1">
-                    <div className="text-xl  tabular-nums tracking-tighter leading-5">
+                <div className="flex flex-col items-end pr-1">
+                    <p className="text-2xs text-muted/80">No incidents reported</p>
+                    <div className="pt-1 text-xl tabular-nums tracking-tighter leading-5">
                         <span className="text-accent font-semibold">{order.unitsCompleted}</span> / {order.unitsPlanned}
                     </div>
                     <p className="text-2xs">Units</p>
@@ -65,6 +64,11 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({ order, className }) => {
                 rightMarker={`End today at ${formatDate(order.endDate)}`}
                 elapsedTime={elapsedTime}
             />
+
+            <p className="mt-4 ml-px flex items-center gap-1 w-fit text-2xs text-muted rounded-sm bg-slate-50 hover:text-subtle hover:bg-slate-100 transition-colors duration-200 pl-px pr-2 py-px cursor-pointer">
+                <img src="/logo/sap.svg" alt="SAP" className="h-3" />
+                Updated 1m ago
+            </p>
         </div>
     );
 };

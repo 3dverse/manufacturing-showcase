@@ -63,7 +63,7 @@ const MainNav = () => {
     return (
         <ViewerPanel
             as="nav"
-            className="h-fit flex divide-x divide-muted/50 rounded-md border border-muted/50 shadow-[-10px_10px_100px_35px_#ffffff50] overflow-hidden pointer-events-auto appear-in-from-bottom"
+            className="h-fit flex divide-x divide-muted/50 rounded-md border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] overflow-hidden pointer-events-auto appear-in-from-bottom"
         >
             <div className="flex flex-col divide-y divide-muted/50">
                 <div className="p-1">
@@ -123,9 +123,16 @@ const AreaNode = ({ area, onClick }: { area: AreaNode; onClick?: (node: FactoryG
             onClick={clickHandler}
         >
             <p className="px-1 text-[70%] uppercase">{area.name} area</p>
-            <ul className="flex gap-1">
-                {area.cells.map((cell) => (
-                    <CellNode key={cell.entity.euid.value} area={area} cell={cell} onClick={onClick} />
+            <ul className="flex flex-wrap">
+                {area.cells.map((cell, index) => (
+                    <CellNode
+                        key={cell.entity.euid.value}
+                        isFirst={index === 0}
+                        isLast={index === area.cells.length - 1}
+                        area={area}
+                        cell={cell}
+                        onClick={onClick}
+                    />
                 ))}
             </ul>
         </li>
@@ -137,10 +144,14 @@ const AreaNode = ({ area, onClick }: { area: AreaNode; onClick?: (node: FactoryG
 const CellNode = ({
     area,
     cell,
+    isFirst,
+    isLast,
     onClick,
 }: {
     area: AreaNode;
     cell: CellNode;
+    isFirst: boolean;
+    isLast: boolean;
     onClick?: (node: FactoryGraphNode) => void;
 }) => {
     //--------------------------------------------------------------------------
@@ -176,17 +187,31 @@ const CellNode = ({
         <li>
             <button
                 className={cn(
-                    "px-3 py-1 text-xs capitalize bg-[white]/60 hover:bg-[white] rounded-md cursor-pointer transition-colors duration-200",
-                    areaIsActive ? "bg-[white]/10 hover:bg-[white]/15" : "",
-                    isActive ? "text-accent bg-white hover:bg-[white]" : "",
+                    "relative px-2 py-1 text-xs capitalize bg-slate-0 hover:text-accent border border-slate-100 rounded-md cursor-pointer transition-colors duration-200",
+                    areaIsActive ? "bg-accent-500 hover:bg-accent-700 hover:text-slate-0 border-accent-400" : "",
+                    isActive ? "text-accent hover:text-accent bg-slate-0 hover:bg-slate-100 border-slate-0" : "",
                 )}
                 style={
                     {
-                        cornerShape: "squircle",
+                        paddingInlineStart: isFirst ? undefined : "16px",
+                        borderStartStartRadius: isFirst ? "6px" : "0",
+                        borderStartEndRadius: isLast ? "6px" : "0",
+                        borderEndStartRadius: isFirst ? "6px" : "0",
+                        borderEndEndRadius: isLast ? "6px" : "0",
                     } as React.CSSProperties
                 }
                 onClick={clickHandler}
             >
+                {!isLast && (
+                    <span
+                        className="absolute -top-px box-content -right-2 h-full w-2 bg-inherit aspect-square rounded-s-none rounded-ee-[50%] z-10 border-r border-t border-b border-inherit transition-colors duration-200"
+                        style={
+                            {
+                                cornerShape: "squircle superellipse(.4) superellipse(.4) squircle",
+                            } as React.CSSProperties
+                        }
+                    />
+                )}
                 {cell.name}
             </button>
         </li>

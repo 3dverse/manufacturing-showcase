@@ -29,8 +29,8 @@ export function CellWidget({
                 center={
                     <div
                         className={cn(
-                            "w-full h-full bg-slate-0/20 rounded-xl transition-colors duration-200",
-                            isSelected ? "" : "bg-slate-0/50 hover:bg-slate-0/70 cursor-pointer",
+                            "w-full h-full rounded-xl transition-colors duration-200",
+                            isSelected ? "" : "hover:bg-slate-0/20 cursor-pointer",
                         )}
                         onClick={onClick}
                         onMouseEnter={onMouseEnter}

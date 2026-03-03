@@ -76,6 +76,7 @@ export type OrderStatus = {
 //------------------------------------------------------------------------------
 export type Order = {
     ref: string;
+    client: string;
     description?: string;
     status: OrderStatus;
     startDate: Date;
