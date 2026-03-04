@@ -7,7 +7,7 @@ import { cn } from "@/utils/cn";
 import type { FlowPair } from "@/content/type";
 
 //------------------------------------------------------------------------------
-const LINE_THICKNESS = 6;
+const LINE_THICKNESS = 3;
 const STRIPE_WIDTH = 12;
 
 function getEntityCenter(entity: Entity): Vec3 {

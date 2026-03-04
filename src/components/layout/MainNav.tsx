@@ -18,6 +18,7 @@ import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import type { AreaNode, CellNode, FactoryGraphNode, LineNode } from "@/content/type";
+import { NodeTypes } from "@/content/enums";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -163,6 +164,9 @@ const ChildNode = ({
     //--------------------------------------------------------------------------
     // Memos
     const isActive = useMemo(() => selectedNode === node, [selectedNode, node]);
+    const isActiveChildOfLine = useMemo(() => {
+        return !!(selectedNode && selectedNode.type === NodeTypes.cell && selectedNode.parent?.type === NodeTypes.line);
+    }, [selectedNode]);
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -182,7 +186,9 @@ const ChildNode = ({
                 className={cn(
                     "relative px-2 py-1 text-xs capitalize whitespace-nowrap bg-slate-0 hover:text-accent border border-slate-100 rounded-md cursor-pointer transition-colors duration-200",
                     isAreaActive ? "bg-accent-500 hover:bg-accent-700 hover:text-slate-0 border-accent-400" : "",
-                    isActive ? "text-accent hover:text-accent bg-slate-0 hover:bg-slate-100 border-slate-0" : "",
+                    isActive || isActiveChildOfLine
+                        ? "text-accent hover:text-accent bg-slate-0 hover:bg-slate-100 border-slate-0"
+                        : "",
                 )}
                 style={
                     {
@@ -205,7 +211,7 @@ const ChildNode = ({
                         }
                     />
                 )}
-                {node.name}
+                {node.name} {node.type === NodeTypes.line && "Line"}
             </button>
         </li>
     );
