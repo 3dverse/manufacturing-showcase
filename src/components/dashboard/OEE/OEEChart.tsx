@@ -39,6 +39,8 @@ function formatTooltipDate(d: Date): string {
     });
 }
 
+const showGradation = false;
+
 //------------------------------------------------------------------------------
 export const OEEChart: React.FC<OEEChartProps> = ({ data, incidents = [], height = CHART_HEIGHT, className }) => {
     const [hovered, setHovered] = useState<{ date: Date; value: number; incidentCount?: number } | null>(null);
@@ -118,7 +120,7 @@ export const OEEChart: React.FC<OEEChartProps> = ({ data, incidents = [], height
             {hasData && (
                 <svg width={width} height={height}>
                     <Group left={margin.left} top={margin.top}>
-                        {false && (
+                        {showGradation && (
                             <>
                                 <GridRows
                                     scale={yScale}
@@ -153,7 +155,7 @@ export const OEEChart: React.FC<OEEChartProps> = ({ data, incidents = [], height
                             strokeWidth={1}
                         />
                         {/* Add dots for each day */}
-                        {false &&
+                        {showGradation &&
                             data.map((d, i) => (
                                 <circle
                                     key={i}

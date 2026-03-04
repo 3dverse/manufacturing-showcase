@@ -1,8 +1,8 @@
 import { useCallback, useContext, useMemo, useState } from "react";
 import type { Entity, Vec3 } from "@3dverse/livelink";
 import { DOM3DAnchor, ViewportContext } from "@3dverse/livelink-react";
-import { quadToMatrix3d } from "@/utils/QuadLayout";
-import type { QuadPoint } from "@/utils/QuadLayout";
+import { quadToMatrix3d } from "@/utils/trash";
+import type { QuadPoint } from "@/content/type";
 import { cn } from "@/utils/cn";
 import type { FlowPair } from "@/content/type";
 

@@ -1,6 +1,6 @@
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type { StationId } from "./stations/enum";
-import type { Entity } from "@3dverse/livelink";
+import type { Entity, Vec3 } from "@3dverse/livelink";
 import type { NodeTypes } from "./enums";
 
 //------------------------------------------------------------------------------
@@ -172,3 +172,13 @@ export type FlowInNode = _FactoryGraphNode & { type: NodeTypes.flowIn; parent: A
 export type FlowOutNode = _FactoryGraphNode & { type: NodeTypes.flowOut; parent: AreaNode };
 
 export type FactoryGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode | FlowInNode | FlowOutNode;
+
+//------------------------------------------------------------------------------
+// TODO delete VVV
+export type Point = { x: number; y: number };
+export type QuadPoint = [Point, Point, Point, Point];
+export type QuadData = {
+    quad: QuadPoint;
+    dimensions: { width: number; height: number };
+};
+export type Quad = [Vec3, Vec3, Vec3, Vec3]; // tl, tr, br, bl
