@@ -2,6 +2,7 @@ import { useCallback, useContext, useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { AreaWidget } from "@/components/nodes/areas/AreaWidget";
+import { AreaChildWidget } from "@/components/nodes/areas/AreaChildWidget";
 import { CellWidget } from "@/components/nodes/cells/CellWidget";
 import { FlowWidget } from "@/components/nodes/flows/FlowWidget";
 import { AreaStorageQuadPanel } from "@/components/nodes/areas/storage/AreaStorageQuadPanel";
@@ -12,10 +13,9 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-
+import type { AreaNode, CellNode, FactoryGraphNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 
-import type { AreaNode, CellNode, FactoryGraphNode } from "@/content/type";
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 const FactoryBuilder = () => {
@@ -50,11 +50,25 @@ const FactoryBuilder = () => {
 
     //--------------------------------------------------------------------------
     // Render
+    // Note: Always render Area and its children (Line/Cell) + flows
+    // Show children nodes for selected Line
     return (
         <>
-            {nodeGraph?.areas.map((area) => <AreaBuilderItem key={area.euid} area={area} />)}
+            {nodeGraph?.areas.map((area) => (
+                <AreaBuilderItem key={area.euid} area={area} />
+            ))}
+            {nodeGraph?.areas
+                .flatMap((area) => area.lines)
+                .map((line) => (
+                    <ChildNodeBuilderItem key={line.euid} node={line} />
+                ))}
+            {nodeGraph?.areas
+                .flatMap((area) => area.cells)
+                .map((cell) => (
+                    <ChildNodeBuilderItem key={cell.euid} node={cell} />
+                ))}
             {shownCells.map((cell) => (
-                <CellBuilderItem key={cell.euid} cell={cell} />
+                <InnerCellBuilderItem key={cell.euid} cell={cell} />
             ))}
             {shownFlowPairs.map((pair) => (
                 <FlowWidget key={pair.in.euid} pair={pair} />
@@ -67,7 +81,23 @@ const FactoryBuilder = () => {
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const CellBuilderItem = ({ cell }: { cell: CellNode }) => {
+const ChildNodeBuilderItem = ({ node }: { node: LineNode | CellNode }) => {
+    //--------------------------------------------------------------------------
+    // Context
+    const { selectedNode, setSelectedNode } = useContext(SelectionContext);
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    const clickHandler = useCallback((node: FactoryGraphNode) => setSelectedNode(node), [setSelectedNode]);
+
+    //--------------------------------------------------------------------------
+    // Render
+    return <AreaChildWidget key={node.euid} node={node} selectedNode={selectedNode} onClick={clickHandler} />;
+};
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+const InnerCellBuilderItem = ({ cell }: { cell: CellNode }) => {
     //--------------------------------------------------------------------------
     // Context
     const { selectedNode, setSelectedNode } = useContext(SelectionContext);
@@ -110,9 +140,9 @@ const QuadPanels = () => {
     return (
         <>
             {selectedNode.name === "storage" ? (
-                <AreaStorageQuadPanel area={selectedNode as AreaNode} />
+                <AreaStorageQuadPanel area={selectedNode} />
             ) : (
-                <GenericAreaQuadPanel area={selectedNode as AreaNode} />
+                <GenericAreaQuadPanel area={selectedNode} />
             )}
         </>
     );

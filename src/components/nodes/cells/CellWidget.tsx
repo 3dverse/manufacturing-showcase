@@ -42,41 +42,22 @@ export function CellWidget({
     //--------------------------------------------------------------------------
     // Render
     return (
-        <>
-            <QuadLayout
-                entity={cell.entity}
-                face="bottom"
-                center={
-                    <div
-                        className={cn(
-                            "w-full h-full rounded-xl transition-colors duration-200",
-                            isCellSelected ? "border-8 border-accent-500" : "hover:bg-slate-0/20 cursor-pointer",
-                        )}
-                        onClick={clickHandler}
-                        onMouseEnter={onMouseEnter}
-                        onMouseLeave={onMouseLeave}
-                    />
-                }
-            />
-            <QuadLayout
-                entity={cell.entity}
-                face="right"
-                center={
-                    <div
-                        className={cn(
-                            "w-full h-full min-h-96 p-2 border-2 rounded-xl border-slate-0 transition-colors duration-200",
-                            isCellSelected ? "opacity-0" : "hover:bg-slate-0/40 cursor-pointer",
-                        )}
-                        onClick={clickHandler}
-                        onMouseEnter={onMouseEnter}
-                        onMouseLeave={onMouseLeave}
-                    >
-                        <p className="px-3 py-1 w-fit text-slate-800 text-base capitalize bg-slate-0/50 border border-slate-0/50 rounded-lg backdrop-blur-sm">
-                            {cell.name}
-                        </p>
-                    </div>
-                }
-            />
-        </>
+        <QuadLayout
+            entity={cell.entity}
+            face="right"
+            center={
+                <div
+                    className={cn("transition-colors duration-200", isCellSelected ? "opacity-0" : "cursor-pointer")}
+                    onClick={clickHandler}
+                    onMouseEnter={onMouseEnter}
+                    onMouseLeave={onMouseLeave}
+                >
+                    <p className="px-3 py-1 w-fit text-slate-800 text-base capitalize bg-slate-0/50 border border-slate-0/50 rounded-full backdrop-blur-sm">
+                        {cell.name}
+                    </p>
+                </div>
+            }
+            containerClassName="flex justify-center items-center"
+        />
     );
 }

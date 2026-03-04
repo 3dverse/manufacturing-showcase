@@ -69,33 +69,26 @@ export const ViewerToolTips = () => {
 
     //--------------------------------------------------------------------------
     // Render
+    if (!isTooltipVisible) return null;
     return (
-        isTooltipVisible && (
-            <div
-                ref={tooltipRef}
-                className="
-                        fixed top-4 left-4 z-40
-                        px-2 py-1
-                        text-white bg-accent
-                        rounded-sm shadow-lg
-                        transition-opacity duration-150
-                    "
+        <div
+            ref={tooltipRef}
+            className="fixed top-4 left-4 z-40 px-2 py-1 text-white bg-accent rounded-sm shadow-lg transition-opacity duration-150"
+        >
+            <p
+                className="text-xs uppercase tracking-wide transition-all duration-200 origin-top-left"
+                style={{
+                    transform: hoveredChildren ? "scale(0.8)" : undefined,
+                    opacity: hoveredChildren ? 0.8 : 1,
+                }}
             >
-                <p
-                    className="text-xs uppercase tracking-wide transition-all duration-200 origin-top-left"
-                    style={{
-                        transform: hoveredChildren ? "scale(0.8)" : undefined,
-                        opacity: hoveredChildren ? 0.8 : 1,
-                    }}
-                >
-                    {hoveredArea?.name} AREA{" "}
+                {hoveredArea?.name} AREA{" "}
+            </p>
+            {hoveredChildren && (
+                <p className="text-sm leading-tight capitalize -translate-y-px opacity-100 scale-100 starting:opacity-0 starting:scale-70 transition-all origin-bottom-left duration-200">
+                    {hoveredChildren.name} {hoveredChildren.type === NodeTypes.line && "Line"}
                 </p>
-                {hoveredChildren && (
-                    <p className="text-sm leading-tight capitalize -translate-y-px opacity-100 scale-100 starting:opacity-0 starting:scale-70 transition-all origin-bottom-left duration-200">
-                        {hoveredChildren.name}
-                    </p>
-                )}
-            </div>
-        )
+            )}
+        </div>
     );
 };
