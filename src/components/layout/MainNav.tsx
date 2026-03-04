@@ -19,6 +19,7 @@ import { cn } from "@/utils/cn";
 //------------------------------------------------------------------------------
 import type { AreaNode, CellNode, FactoryGraphNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
+import { sortNode } from "@/utils/FactoryGraph";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -98,7 +99,7 @@ const AreaNode = ({ area, onClick }: { area: AreaNode; onClick?: (node: FactoryG
     );
 
     //--------------------------------------------------------------------------
-    const children = [...area.lines, ...area.cells];
+    const children = useMemo(() => [...area.lines, ...area.cells].sort(sortNode), [area]);
 
     //--------------------------------------------------------------------------
     // Handlers

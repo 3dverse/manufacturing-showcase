@@ -164,7 +164,7 @@ export type LineNode = _FactoryGraphNode & { type: NodeTypes.line; parent: AreaN
 
 export type CellNode = _FactoryGraphNode & {
     type: NodeTypes.cell;
-    parent: AreaNode | CellNode;
+    parent: AreaNode | LineNode;
     machines: MachineNode[];
 };
 export type MachineNode = _FactoryGraphNode & { type: NodeTypes.machine; parent: CellNode };

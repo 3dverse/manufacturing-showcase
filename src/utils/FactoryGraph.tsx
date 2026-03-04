@@ -75,7 +75,7 @@ export const buildFactoryGraph = (params: {
             areas: [],
         };
 
-        factory.areas = areas.map((e) => mapAreaEntity(e, factory));
+        factory.areas = areas.map((e) => mapAreaEntity(e, factory)).sort(sortNode);
 
         list.push(factory);
         return factory;
@@ -94,15 +94,25 @@ export const buildFactoryGraph = (params: {
             flows: { ins: [], outs: [], pairs: [] },
         };
 
-        area.lines = lines.filter((l) => inLineage(l, area.euid)).map((e) => mapLineEntity(e, area));
+        area.lines = lines
+            .filter((l) => inLineage(l, area.euid))
+            .map((e) => mapLineEntity(e, area))
+            .sort(sortNode);
 
         area.cells = cells
             .filter((c) => inLineage(c, area.euid) && area.lines.every((l) => !inLineage(c, l.euid)))
-            .map((e) => mapCellEntity(e, area));
+            .map((e) => mapCellEntity(e, area))
+            .sort(sortNode);
 
         area.flows = {
-            ins: flowIns.filter((f) => inLineage(f, area.euid)).map((e) => mapFlowInEntity(e, area)),
-            outs: flowOuts.filter((f) => inLineage(f, area.euid)).map((e) => mapFlowOutEntity(e, area)),
+            ins: flowIns
+                .filter((f) => inLineage(f, area.euid))
+                .map((e) => mapFlowInEntity(e, area))
+                .sort(sortNode),
+            outs: flowOuts
+                .filter((f) => inLineage(f, area.euid))
+                .map((e) => mapFlowOutEntity(e, area))
+                .sort(sortNode),
             pairs: [],
         };
 
@@ -121,7 +131,10 @@ export const buildFactoryGraph = (params: {
             cells: [],
         };
 
-        line.cells = cells.filter((c) => inLineage(c, lineEntity.euid.value)).map((e) => mapCellEntity(e, parent));
+        line.cells = cells
+            .filter((c) => inLineage(c, lineEntity.euid.value))
+            .map((e) => mapCellEntity(e, parent))
+            .sort(sortNode);
 
         list.push(line);
         return line;
@@ -137,7 +150,10 @@ export const buildFactoryGraph = (params: {
             parent,
             machines: [],
         };
-        cell.machines = machines.filter((m) => inLineage(m, cell.euid)).map((e) => mapMachineEntity(e, cell));
+        cell.machines = machines
+            .filter((m) => inLineage(m, cell.euid))
+            .map((e) => mapMachineEntity(e, cell))
+            .sort(sortNode);
         list.push(cell);
         return cell;
     };
@@ -246,6 +262,13 @@ export const sortAreas = (a: AreaNode, b: AreaNode, order: string[]) => {
         return i === -1 ? Infinity : i;
     };
     return indexOf(a.name) - indexOf(b.name);
+};
+
+//------------------------------------------------------------------------------
+export const sortNode = (a: FactoryGraphNode, b: FactoryGraphNode) => {
+    if (!a.entity.lineage) return -1;
+    if (!b.entity.lineage) return 1;
+    return a.entity.lineage.ordinal - b.entity.lineage.ordinal;
 };
 
 //------------------------------------------------------------------------------
