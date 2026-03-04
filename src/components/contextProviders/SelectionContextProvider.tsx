@@ -47,7 +47,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
     const setSelectedNode = useCallback(
         (node: FactoryGraphNode | undefined) => {
             _setSelectedNode(node);
-            node && cameraHandler(node);
+            if (node) cameraHandler(node);
         },
         [cameraHandler],
     );
