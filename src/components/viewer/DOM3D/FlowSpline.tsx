@@ -6,6 +6,7 @@ import { cn } from "@/utils/cn";
 //------------------------------------------------------------------------------
 const LINE_THICKNESS = 3;
 const STRIPE_WIDTH = 12;
+const POINT_RADIUS = 4;
 
 type Point2 = { x: number; y: number };
 
@@ -62,8 +63,9 @@ export function FlowSpline({ flow, className }: { flow: FlowNode; className?: st
                   const maxY = Math.max(...pts.map((p) => p.y)) + padding;
                   const w = maxX - minX;
                   const h = maxY - minY;
-                  const pathD = buildSmoothPath(pts.map((p) => ({ x: p.x - minX, y: p.y - minY })));
-                  return { pathD, minX, minY, w, h };
+                  const localPoints = pts.map((p) => ({ x: p.x - minX, y: p.y - minY }));
+                  const pathD = buildSmoothPath(localPoints);
+                  return { pathD, minX, minY, w, h, localPoints };
               })()
             : null;
 
@@ -102,6 +104,16 @@ export function FlowSpline({ flow, className }: { flow: FlowNode; className?: st
                         strokeDasharray={`${STRIPE_WIDTH} 4`}
                         style={{ animation: "flow-stripes-stroke .8s linear infinite" }}
                     />
+                    {splineState.localPoints.map((p, i) => (
+                        <circle
+                            key={i}
+                            cx={p.x}
+                            cy={p.y}
+                            r={POINT_RADIUS}
+                            fill="var(--color-guidance)"
+                            fillOpacity={0.9}
+                        />
+                    ))}
                 </svg>
             </div>
         </>
