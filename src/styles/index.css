@@ -40,3 +40,7 @@ body {
     background-image: repeating-linear-gradient(-45deg, #e1e1e1 0, #e1e1e1 1px, transparent 0, transparent 50%);
     background-size: 10px 10px;
 }
+
+[data-role="dom-3d-overlay-camera-projection"] {
+    z-index: 1;
+}

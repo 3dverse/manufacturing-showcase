@@ -6,10 +6,10 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
-import { QuadLayout } from "@/utils/QuadLayout";
 
 //------------------------------------------------------------------------------
 import type { FactoryGraphNode } from "@/content/type";
+import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
 export const FloatingLabel = ({
@@ -44,27 +44,22 @@ export const FloatingLabel = ({
     //--------------------------------------------------------------------------
     // Render
     return (
-        <QuadLayout
-            entity={node.entity}
-            face="right"
-            center={
-                <div
-                    className={cn("transition-colors duration-200", isSelected ? "opacity-0" : "cursor-pointer")}
-                    onClick={mouseClickHandler}
-                    onMouseEnter={mouseEnterHandler}
-                    onMouseLeave={mouseLeaveHandler}
+        <BoundingBoxFaceProjection entity={node.entity} face="right">
+            <div
+                className={cn("transition-colors duration-200", isSelected ? "opacity-0" : "cursor-pointer")}
+                onClick={mouseClickHandler}
+                onMouseEnter={mouseEnterHandler}
+                onMouseLeave={mouseLeaveHandler}
+            >
+                <p
+                    className={cn(
+                        "px-3 py-1 w-fit text-base capitalize text-slate-0 bg-accent-600/90 border border-slate-0/50 rounded-full backdrop-blur-sm",
+                        isHoverable ? "hover:bg-slate-0/70 hover:text-accent-600 hover:scale-110 transition-all duration-200" : "",
+                    )}
                 >
-                    <p
-                        className={cn(
-                            "px-3 py-1 w-fit text-slate-800 text-base capitalize bg-slate-0/50 border border-slate-0/50 rounded-full backdrop-blur-sm",
-                            isHoverable ? "hover:bg-slate-0/70" : "",
-                        )}
-                    >
-                        {node.name}
-                    </p>
-                </div>
-            }
-            containerClassName="flex justify-center items-center"
-        />
+                    {node.name}
+                </p>
+            </div>
+        </BoundingBoxFaceProjection>
     );
 };

@@ -6,7 +6,7 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
-import { QuadLayout } from "@/utils/QuadLayout";
+import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
 import type { FactoryGraphNode } from "@/content/type";
@@ -44,21 +44,17 @@ export const FloorRegion = ({
     //--------------------------------------------------------------------------
     // Render
     return (
-        <QuadLayout
-            entity={node.entity}
-            face="bottom"
-            center={
-                <div
-                    className={cn(
-                        "w-full h-full rounded-xl transition-colors duration-200",
-                        isSelected ? "border-8 border-accent-500" : "",
-                        isHoverable ? "hover:bg-slate-0/20 cursor-pointer" : "pointer-events-none",
-                    )}
-                    onClick={mouseClickHandler}
-                    onMouseEnter={mouseEnterHandler}
-                    onMouseLeave={mouseLeaveHandler}
-                />
-            }
-        />
+        <BoundingBoxFaceProjection entity={node.entity} face="bottom">
+            <div
+                className={cn(
+                    "w-full h-full rounded-xl transition-colors duration-200",
+                    isSelected ? "border-8 border-accent-500" : "",
+                    isHoverable ? "hover:bg-slate-0/20 cursor-pointer" : "pointer-events-none",
+                )}
+                onClick={mouseClickHandler}
+                onMouseEnter={mouseEnterHandler}
+                onMouseLeave={mouseLeaveHandler}
+            />
+        </BoundingBoxFaceProjection>
     );
 };

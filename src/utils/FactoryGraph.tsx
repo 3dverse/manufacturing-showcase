@@ -61,12 +61,7 @@ export const buildFactoryGraph = async (params: {
     // Resolve flow children
     const flowChildrenByEuid = new Map<
         string,
-        [
-            entityInEUID: string | undefined,
-            entityOutEUID: string | undefined,
-            paths: Vec3[][],
-            machineEntities: Entity[],
-        ]
+        [entityInEUID: string | undefined, entityOutEUID: string | undefined, paths: Vec3[], machineEntities: Entity[]]
     >();
     await Promise.all(
         flows.map(async (f) => {
@@ -74,10 +69,15 @@ export const buildFactoryGraph = async (params: {
             const joinEntity = children.find((c) => c.joint);
             const entityInEUID = joinEntity ? joinEntity.joint?.constrainee.originalEUID : undefined;
             const entityOutEUID = joinEntity ? joinEntity.joint?.constrainer.originalEUID : undefined;
-            const splineEntities = children.filter((c) => c.spline);
-            const paths = await Promise.all(splineEntities.map((c) => c.getChildren())).then((children) =>
-                children.map((c) => c.map((c) => c.global_transform.position)),
-            );
+            // Get the first spline entity
+            const splineEntities = children.filter((c) => c.spline)[0];
+            const paths = await splineEntities
+                .getChildren()
+                .then((entity) =>
+                    entity
+                        .sort((a, b) => a.lineage!.ordinal - b.lineage!.ordinal)
+                        .map((e) => e.global_transform.position),
+                );
             const machineEntities = children.filter((c) => c.scene_ref);
             flowChildrenByEuid.set(f.euid.value, [entityInEUID, entityOutEUID, paths, machineEntities]);
         }),
@@ -187,7 +187,7 @@ export const buildFactoryGraph = async (params: {
                 flowChildrenByEuid.get(flowEntity.euid.value) as [
                     string | undefined,
                     string | undefined,
-                    Vec3[][],
+                    Vec3[],
                     Entity[],
                 ],
             ),
@@ -200,7 +200,7 @@ export const buildFactoryGraph = async (params: {
         [entityInEUID, entityOutEUID, paths, machineEntities]: [
             string | undefined,
             string | undefined,
-            Vec3[][],
+            Vec3[],
             Entity[],
         ],
     ) => {

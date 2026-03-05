@@ -3,10 +3,8 @@ import { Fragment, useEffect, useState } from "react";
 import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
-import { QuadLayout } from "@/utils/QuadLayout";
-
-//------------------------------------------------------------------------------
 import type { AreaNode } from "@/content/type";
+import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
 const EMPTY_SPACE_PERCENTAGE = 0.3;
@@ -28,47 +26,36 @@ export function AreaStorageOverlay({ area }: { area: AreaNode }) {
     //--------------------------------------------------------------------------
     return childrenEntities.map((entity, index) => (
         <Fragment key={entity.name}>
-            <QuadLayout
-                entity={entity}
-                face="top"
-                center={
-                    <div
-                        className="w-full h-full bg-accent/85"
-                        style={
-                            index === childrenEntities.length - 1
-                                ? ({
-                                      "--prct": `${EMPTY_SPACE_PERCENTAGE * 100}%`,
-                                      backgroundColor: "transparent",
-                                      backgroundImage: `linear-gradient(to top, var(--color-accent) var(--prct), transparent var(--prct))`,
-                                      opacity: 0.8,
-                                  } as React.CSSProperties)
-                                : undefined
-                        }
-                    />
-                }
-                className="pointer-events-none"
-            />
-            <QuadLayout
-                entity={entity}
-                face="right"
-                center={
-                    <div
-                        className="w-full h-full bg-accent/60"
-                        style={
-                            index === childrenEntities.length - 1
-                                ? ({
-                                      "--prct": `${EMPTY_SPACE_PERCENTAGE * 100}%`,
-                                      backgroundColor: "transparent",
-                                      backgroundImage: `linear-gradient(to right, var(--color-accent) var(--prct), transparent var(--prct))`,
-                                      opacity: 0.8,
-                                  } as React.CSSProperties)
-                                : undefined
-                        }
-                    />
-                }
-                className="pointer-events-none"
-            />
-            <QuadLayout entity={entity} face="front" center={<div className="w-full h-full bg-accent/90" />} />
+            <BoundingBoxFaceProjection entity={entity} face="top">
+                <div
+                    className="w-full h-full bg-accent/85"
+                    style={
+                        index === childrenEntities.length - 1
+                            ? ({
+                                  "--prct": `${EMPTY_SPACE_PERCENTAGE * 100}%`,
+                                  backgroundColor: "transparent",
+                                  backgroundImage: `linear-gradient(to top, var(--color-accent) var(--prct), transparent var(--prct))`,
+                                  opacity: 0.8,
+                              } as React.CSSProperties)
+                            : undefined
+                    }
+                />
+            </BoundingBoxFaceProjection>
+            <BoundingBoxFaceProjection entity={entity} face="right">
+                <div
+                    className="w-full h-full bg-accent/60"
+                    style={
+                        index === childrenEntities.length - 1
+                            ? ({
+                                  "--prct": `${EMPTY_SPACE_PERCENTAGE * 100}%`,
+                                  backgroundColor: "transparent",
+                                  backgroundImage: `linear-gradient(to right, var(--color-accent) var(--prct), transparent var(--prct))`,
+                                  opacity: 0.8,
+                              } as React.CSSProperties)
+                            : undefined
+                    }
+                />
+            </BoundingBoxFaceProjection>
         </Fragment>
     ));
 }

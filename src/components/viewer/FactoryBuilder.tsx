@@ -8,8 +8,8 @@ import { FloorOutline } from "./DOM3D/FloorOutline";
 import { FloorRegion } from "./DOM3D/FloorRegion";
 import { NodeSummary } from "./DOM3D/NodeSummary";
 import { FlowSpline } from "./DOM3D/FlowSpline";
-import { AreaStorageOverlay } from "../nodes/areas/storage/AreaStorageOverlay";
 import { TopPanel } from "./DOM3D/TopPanel";
+import { AreaStorageOverlay } from "../nodes/areas/storage/AreaStorageOverlay";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
@@ -74,6 +74,9 @@ const FactoryBuilder = () => {
     // Show children nodes for selected Line
     return (
         <>
+            {nodeGraph?.flows.map((flow) => (
+                <FlowSpline key={flow.euid} flow={flow} />
+            ))}
             {nodeGraph?.areas.map((area) => (
                 <AreaBuilderItem key={area.euid} area={area} />
             ))}
@@ -82,9 +85,6 @@ const FactoryBuilder = () => {
             ))}
             {shownCells.map((cell) => (
                 <CellBuilderItem key={cell.euid} cell={cell} />
-            ))}
-            {nodeGraph?.flows.map((flow) => (
-                <FlowSpline key={flow.euid} flow={flow} />
             ))}
         </>
     );

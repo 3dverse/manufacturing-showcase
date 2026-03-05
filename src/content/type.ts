@@ -159,7 +159,7 @@ export type FlowNode = _FactoryGraphNode & {
     entityInEUID: string;
     entityOutEUID: string;
     machines: Entity[];
-    paths: Vec3[][];
+    paths: Vec3[];
 };
 
 export type FactoryGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode;

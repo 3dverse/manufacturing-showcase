@@ -87,13 +87,13 @@ export function QuadLayout({
     const projectedQuad =
         viewport && viewport.camera_projection && faceQuad
             ? doInvert(
-                  faceQuad.map((p) => {
-                      const [x, y] = viewport.projectWorldToScreen({
-                          world_position: p,
-                      });
-                      return { x, y } as Point;
-                  }) as QuadPoint,
-              )
+                faceQuad.map((p) => {
+                    const [x, y] = viewport.projectWorldToScreen({
+                        world_position: p,
+                    });
+                    return { x, y } as Point;
+                }) as QuadPoint,
+            )
             : null;
 
     if (!projectedQuad || !dimensions) return null;

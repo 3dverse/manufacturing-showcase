@@ -1,6 +1,11 @@
+//------------------------------------------------------------------------------
 import { useCallback, useContext, useMemo, useState } from "react";
 import { DOM3DAnchor, ViewportContext } from "@3dverse/livelink-react";
+
+//------------------------------------------------------------------------------
 import type { FlowNode } from "@/content/type";
+
+//------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -8,6 +13,11 @@ const LINE_THICKNESS = 3;
 const STRIPE_WIDTH = 12;
 const POINT_RADIUS = 4;
 
+//------------------------------------------------------------------------------
+const DEBUG_SHOW_ALL_DOTS = false;
+const DEBUG_SHOW_ENDPOINTS = true;
+
+//------------------------------------------------------------------------------
 type Point2 = { x: number; y: number };
 
 /** Build smooth cubic Bezier path through points (Catmull-Rom style). */
@@ -31,46 +41,60 @@ function buildSmoothPath(points: Point2[]): string {
 
 //------------------------------------------------------------------------------
 export function FlowSpline({ flow, className }: { flow: FlowNode; className?: string }) {
+    //--------------------------------------------------------------------------
+    // Context
     const { viewport } = useContext(ViewportContext);
+
+    //--------------------------------------------------------------------------
+    // State
     const [, setProjectionTick] = useState(0);
+
+    //--------------------------------------------------------------------------
+    // Handlers
     const handleProjectionChange = useCallback(() => {
         setProjectionTick((tick) => tick + 1);
     }, []);
 
+    //--------------------------------------------------------------------------
+    // Memos
     const splinePoints = useMemo(() => {
-        const path = flow.paths.find((p) => p.length >= 2);
-        return path ?? null;
+        return flow.paths;
     }, [flow.paths]);
 
+    //--------------------------------------------------------------------------
+    // Memos
     const hasSpline = splinePoints != null && splinePoints.length >= 2;
 
+    //--------------------------------------------------------------------------
     const projected =
         viewport && viewport.camera_projection && hasSpline
             ? {
-                  kind: "spline" as const,
-                  points: splinePoints.map((point) => viewport.projectWorldToScreen({ world_position: point })),
-              }
+                kind: "spline" as const,
+                points: splinePoints.map((point) => viewport.projectWorldToScreen({ world_position: point })),
+            }
             : null;
 
+    //--------------------------------------------------------------------------
     const splineState =
         projected?.kind === "spline" && projected.points.length >= 2
             ? (() => {
-                  const pts = projected.points.map(([x, y]) => ({ x, y }));
-                  const padding = LINE_THICKNESS;
-                  const minX = Math.min(...pts.map((p) => p.x)) - padding;
-                  const minY = Math.min(...pts.map((p) => p.y)) - padding;
-                  const maxX = Math.max(...pts.map((p) => p.x)) + padding;
-                  const maxY = Math.max(...pts.map((p) => p.y)) + padding;
-                  const w = maxX - minX;
-                  const h = maxY - minY;
-                  const localPoints = pts.map((p) => ({ x: p.x - minX, y: p.y - minY }));
-                  const pathD = buildSmoothPath(localPoints);
-                  return { pathD, minX, minY, w, h, localPoints };
-              })()
+                const pts = projected.points.map(([x, y]) => ({ x, y }));
+                const padding = LINE_THICKNESS;
+                const minX = Math.min(...pts.map((p) => p.x)) - padding;
+                const minY = Math.min(...pts.map((p) => p.y)) - padding;
+                const maxX = Math.max(...pts.map((p) => p.x)) + padding;
+                const maxY = Math.max(...pts.map((p) => p.y)) + padding;
+                const w = maxX - minX;
+                const h = maxY - minY;
+                const localPoints = pts.map((p) => ({ x: p.x - minX, y: p.y - minY }));
+                const pathD = buildSmoothPath(localPoints);
+                return { pathD, minX, minY, w, h, localPoints };
+            })()
             : null;
 
+    //--------------------------------------------------------------------------
+    // Render
     if (!splineState) return null;
-
     return (
         <>
             <DOM3DAnchor worldPosition={[0, 0, 0]} onProjectionChange={handleProjectionChange}>
@@ -104,7 +128,12 @@ export function FlowSpline({ flow, className }: { flow: FlowNode; className?: st
                         strokeDasharray={`${STRIPE_WIDTH} 4`}
                         style={{ animation: "flow-stripes-stroke .8s linear infinite" }}
                     />
-                    {splineState.localPoints.map((p, i) => (
+                    {(DEBUG_SHOW_ALL_DOTS
+                        ? splineState.localPoints
+                        : DEBUG_SHOW_ENDPOINTS && splineState.localPoints.length >= 2
+                            ? [splineState.localPoints[0], splineState.localPoints[splineState.localPoints.length - 1]]
+                            : []
+                    ).map((p, i) => (
                         <circle
                             key={i}
                             cx={p.x}
