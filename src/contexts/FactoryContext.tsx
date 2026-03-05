@@ -2,9 +2,11 @@ import { createContext } from "react";
 
 //------------------------------------------------------------------------------
 import type { FactoryGraphNode, FactoryNode } from "@/content/type";
+import type { Factory } from "@/content/factory";
 
 //------------------------------------------------------------------------------
 type FactoryContextType = {
+    factory: Factory;
     nodeGraph?: FactoryNode;
     nodeList: FactoryGraphNode[];
 };

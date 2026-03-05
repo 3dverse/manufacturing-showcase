@@ -9,10 +9,11 @@ import { buildFactoryGraph } from "@/utils/FactoryGraph";
 
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";
+import type { Factory } from "@/content/factory";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const FactoryContextProvider = ({ children }: { children: ReactNode }) => {
+export const FactoryContextProvider = ({ factory, children }: { factory: Factory; children: ReactNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const { entities } = useEntities({ mandatory_components: ["scene_ref"] });
@@ -24,10 +25,11 @@ export const FactoryContextProvider = ({ children }: { children: ReactNode }) =>
             entities,
         });
         return {
+            factory,
             nodeGraph: graph,
             nodeList: list,
         };
-    }, [entities]);
+    }, [factory, entities]);
 
     //--------------------------------------------------------------------------
     // Render

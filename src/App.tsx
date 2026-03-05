@@ -1,16 +1,11 @@
 //------------------------------------------------------------------------------
 import { useState, useEffect } from "react";
-import { Livelink } from "@3dverse/livelink-react";
-import { LoadingOverlay } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
 import Theme from "@/pages/Theme";
-import HomePage from "@/pages/HomePage";
+
 //------------------------------------------------------------------------------
-import FactoryLayout from "@/components/layout/FactoryLayout";
-import MainGuidance from "@/components/guidance/MainGuidance";
 import IntroductionModal from "@/components/guidance/IntroductionModal";
-import { FactoryProviders } from "@/components/layout/FactoryProviders";
 
 //------------------------------------------------------------------------------
 import { useFactoryStore } from "@/store/useFactoryStore";
@@ -18,8 +13,8 @@ import { useNavigationStore } from "@/store/useNavigationStore";
 import { LOCAL_STORAGE_KEYS, useLocalStorage } from "@/hooks/useLocalStorage";
 
 //------------------------------------------------------------------------------
-import { TOKEN_3DVERSE } from "@/content/3dverse";
 import { factories } from "@/content/factory";
+import HomePageAlt from "./pages/HomePageAlt";
 
 //------------------------------------------------------------------------------
 export function App() {
@@ -81,33 +76,30 @@ function AppLayout() {
     const renderContent = () => {
         if (currentRoute === "/theme") {
             return <Theme onBack={() => navigate("/")} />;
-        } else if (currentRoute.startsWith("/factory/")) {
-            const factoryId = currentRoute.split("/")[2];
-            const factory = factories.find((f) => f.id === factoryId);
-
-            if (!factory) {
-                return (
-                    <>
-                        <HomePage />
-                        <MainGuidance />
-                    </>
-                );
-            }
-            return (
-                <Livelink sceneId={factory.scene_id} token={TOKEN_3DVERSE} LoadingPanel={LoadingOverlay}>
-                    <FactoryProviders>
-                        <FactoryLayout currentRoute={currentRoute} />
-                    </FactoryProviders>
-                    <MainGuidance />
-                </Livelink>
-            );
         }
-        return (
-            <>
-                <HomePage />
-                <MainGuidance />
-            </>
-        );
+        return <HomePageAlt />;
+
+        /* if (currentRoute.startsWith("/factory/")) {
+*     const factoryId = currentRoute.split("/")[2];
+*     const factory = factories.find((f) => f.id === factoryId);
+
+*     if (factory) {
+*         return (
+*             <Livelink sceneId={factory.scene_id} token={TOKEN_3DVERSE} LoadingPanel={LoadingOverlay}>
+*                 <FactoryProviders factory={factory}>
+*                     <FactoryLayout />
+*                 </FactoryProviders>
+*                 <MainGuidance />
+*             </Livelink>
+*         );
+*     }
+* }
+* return (
+*     <>
+*         <HomePage />
+*         <MainGuidance />
+*     </>
+* ); */
     };
 
     //--------------------------------------------------------------------------

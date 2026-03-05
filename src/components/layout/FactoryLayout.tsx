@@ -11,33 +11,46 @@ import { LinePanel } from "@/components/nodes/lines/LinePanel";
 import { CellPanel } from "@/components/nodes/cells/CellPanel";
 
 //------------------------------------------------------------------------------
+import { cn } from "@/utils/cn";
+
+//------------------------------------------------------------------------------
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
 
 //------------------------------------------------------------------------------
-const FactoryLayout = ({ currentRoute }: { currentRoute: string }) => {
+const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onBack?: () => void }) => {
     //--------------------------------------------------------------------------
-    console.log("FactoryLayout", currentRoute);
+    // Context
     const { selectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
+    // Render
     return (
-        <div className="relative flex-1">
-            <Viewer />
-            <div className="absolute bottom-0 left-0 flex flex-col w-full h-full p-2 pointer-events-none z-50">
-                <div className="flex flex-col items-start gap-1 w-96 2xl:w-120">
-                    <MainHeader />
-                    <FactoryPanel />
-                    {selectedNode?.type === NodeTypes.area && <GenericAreaPanel area={selectedNode} />}
-                    {selectedNode?.type === NodeTypes.line && <LinePanel line={selectedNode} />}
-                    {selectedNode?.type === NodeTypes.cell && <CellPanel cell={selectedNode} />}
+        <div className="relative flex-1 h-full w-full">
+            <Viewer thumbnailMode={thumbnailMode} />
+            <div
+                className={cn(
+                    "absolute bottom-0 left-0 flex flex-col w-full h-full pointer-events-none z-50 transition-all",
+                    thumbnailMode ? "p-0" : "p-2",
+                )}
+            >
+                <div className={thumbnailMode ? "" : "flex flex-col items-start gap-1 w-96 2xl:w-120"}>
+                    <MainHeader thumbnailMode={thumbnailMode} onBack={onBack} />
+                    {!thumbnailMode && <FactoryPanel />}
+                    {!thumbnailMode && selectedNode?.type === NodeTypes.area && (
+                        <GenericAreaPanel area={selectedNode} />
+                    )}
+                    {!thumbnailMode && selectedNode?.type === NodeTypes.line && <LinePanel line={selectedNode} />}
+                    {!thumbnailMode && selectedNode?.type === NodeTypes.cell && <CellPanel cell={selectedNode} />}
                 </div>
 
-                <div className="flex items-end justify-center grow pb-8">
-                    <MainNav />
-                </div>
+                {!thumbnailMode && (
+                    <div className="flex items-end justify-center grow pb-8">
+                        <MainNav />
+                    </div>
+                )}
             </div>
         </div>
     );

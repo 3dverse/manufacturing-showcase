@@ -26,7 +26,7 @@ import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2"
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const Viewer = () => {
+export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     //--------------------------------------------------------------------------
     // Contexts
     const { isConnecting } = useContext(LivelinkContext);
@@ -98,17 +98,20 @@ export const Viewer = () => {
                         Connected
                     </div>
                 )}
-                {/* eslint-disable-next-line no-constant-binary-expression */}
-                {false && <ViewerController hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} />}
                 <CameraController ref={cameraControllerRef} />
-                <Labels cameraController={cameraControllerRef.current} />
-                <ViewerToolTips />
-                <DOM3DOverlay>
-                    <FactoryBuilder />
-                </DOM3DOverlay>
-
-                {/* eslint-disable-next-line no-constant-binary-expression */}
-                {false && <DebugOverlay />}
+                {!thumbnailMode && (
+                    <>
+                        {/* eslint-disable-next-line no-constant-binary-expression */}
+                        {false && <ViewerController hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} />}
+                        <Labels cameraController={cameraControllerRef.current} />
+                        <ViewerToolTips />
+                        <DOM3DOverlay>
+                            <FactoryBuilder />
+                        </DOM3DOverlay>
+                        {/* eslint-disable-next-line no-constant-binary-expression */}
+                        {false && <DebugOverlay />}
+                    </>
+                )}
             </Viewport>
             {/* Light overlay */}
             {/* <span className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-accent to-transparent mix-blend-multiply pointer-events-none opacity-80" /> */}
