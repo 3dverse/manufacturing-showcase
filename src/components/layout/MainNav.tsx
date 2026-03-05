@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 import React, { useContext, useCallback, useMemo, type MouseEvent } from "react";
-import { faHome } from "@fortawesome/sharp-light-svg-icons";
+import { faArrowTurnDownRight, faHome } from "@fortawesome/sharp-light-svg-icons";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
@@ -74,8 +74,14 @@ export const MainNav = () => {
                                 <Icon icon={faHome} size="lg" />
                             </Button>
                         </li>
-                        {nodeGraph?.areas.map((area) => (
-                            <AreaNode key={area.entity.euid.value} area={area} onClick={itemClickedHandler} />
+                        {nodeGraph?.areas.map((area, index) => (
+                            <AreaNode
+                                key={area.entity.euid.value}
+                                area={area}
+                                isFirst={index === 0}
+                                index={index}
+                                onClick={itemClickedHandler}
+                            />
                         ))}
                     </ul>
                 </div>
@@ -86,7 +92,17 @@ export const MainNav = () => {
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const AreaNode = ({ area, onClick }: { area: AreaNode; onClick?: (node: FactoryGraphNode) => void }) => {
+const AreaNode = ({
+    area,
+    isFirst,
+    index,
+    onClick,
+}: {
+    area: AreaNode;
+    isFirst: boolean;
+    index: number;
+    onClick?: (node: FactoryGraphNode) => void;
+}) => {
     //--------------------------------------------------------------------------
     // Contexts
     const { selectedNode } = useContext(SelectionContext);
@@ -116,16 +132,25 @@ const AreaNode = ({ area, onClick }: { area: AreaNode; onClick?: (node: FactoryG
     return (
         <li
             className={cn(
-                "flex flex-col gap-1 p-1 bg-muted/5 border border-muted/50 rounded-xl cursor-pointer",
+                "relative flex flex-col gap-1 p-1 bg-muted/5 border border-muted/50 rounded-xl cursor-pointer",
                 isActive ? "text-accent-100 bg-accent-500 border-accent-500" : "",
             )}
             style={
                 {
                     cornerShape: "squircle",
+                    borderEndEndRadius: isFirst ? "1.5rem" : undefined,
+                    cornerEndEndShape: isFirst ? "scoop" : undefined,
+                    borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
+                    cornerEndStartShape: index === 1 ? "scoop" : undefined,
                 } as React.CSSProperties
             }
             onClick={clickHandler}
         >
+            {index === 0 && (
+                <span className="absolute -bottom-px -right-6 flex items-center justify-center w-[43px] h-5 bg-muted/5 border border-muted/50 rounded-t-3xl cursor-pointer">
+                    <Icon icon={faArrowTurnDownRight} size="2xs" className="text-default mt-1" />
+                </span>
+            )}
             <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
             <ul className="flex overflow-x-auto">
                 {children.map((child, index) => (

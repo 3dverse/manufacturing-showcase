@@ -50,8 +50,9 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({ order, className }) => {
                     <p className="text-2xs text-accent">Client {order.client}</p>
                 </div>
                 <div className="flex flex-col items-end pt-2 pr-1">
-                    <div className="pt-1 text-2xl tabular-nums tracking-tighter leading-5">
-                        <span className="text-accent font-semibold">{order.unitsCompleted}</span> / {order.unitsPlanned}
+                    <div className="pt-1 text-2xl tabular-nums tracking-tighter leading-5 ">
+                        <span className="text-accent font-normal">{order.unitsCompleted}</span> /{" "}
+                        <span className="font-semibold">{order.unitsPlanned}</span>
                     </div>
                     <p className="text-2xs">Units</p>
                 </div>
@@ -69,7 +70,10 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({ order, className }) => {
                     <img src="/logo/sap.svg" alt="SAP" className="h-3" />
                     Updated 1m ago
                 </p>
-                <p className="text-2xs text-muted/80">No incidents reported</p>
+                <div className="flex items-center gap-2">
+                    <p className="text-2xs text-muted/80">No delay</p>
+                    <p className="text-2xs text-muted/80">No incidents reported</p>
+                </div>
             </footer>
         </div>
     );
