@@ -133,7 +133,7 @@ const AreaNode = ({
         <li
             className={cn(
                 "relative flex flex-col gap-1 p-1 bg-muted/5 border border-muted/50 rounded-xl cursor-pointer",
-                isActive ? "text-accent-100 bg-accent-500 border-accent-500" : "",
+                isActive ? "text-accent-100 bg-accent-500 border-accent-600" : "hover:border-muted",
             )}
             style={
                 {
@@ -146,11 +146,8 @@ const AreaNode = ({
             }
             onClick={clickHandler}
         >
-            {index === 0 && (
-                <span className="absolute -bottom-px -right-6 flex items-center justify-center w-[43px] h-5 bg-muted/5 border border-muted/50 rounded-t-3xl cursor-pointer">
-                    <Icon icon={faArrowTurnDownRight} size="2xs" className="text-default mt-1" />
-                </span>
-            )}
+            {/* Show a flow button for the first area. Just to try */}
+            {index === 0 && <FlowNode isActive={isActive} />}
             <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
             <ul className="flex overflow-x-auto">
                 {children.map((child, index) => (
@@ -165,6 +162,20 @@ const AreaNode = ({
                 ))}
             </ul>
         </li>
+    );
+};
+
+//------------------------------------------------------------------------------
+const FlowNode = ({ isActive }: { isActive: boolean }) => {
+    return (
+        <span
+            className={cn(
+                "absolute -bottom-px -right-6 flex items-center justify-center w-[43px] h-5 text-default bg-muted/5 border border-muted/50 rounded-t-3xl cursor-pointer",
+                isActive ? "bg-guidance border-guidance-600 text-guidance-900" : "hover:border-muted",
+            )}
+        >
+            <Icon icon={faArrowTurnDownRight} size="2xs" className="mt-1" />
+        </span>
     );
 };
 
@@ -214,7 +225,7 @@ const ChildNode = ({
                     isAreaActive ? "bg-accent-500 hover:bg-accent-700 hover:text-slate-0 border-accent-400" : "",
                     isActive || isActiveChildOfLine
                         ? "text-accent hover:text-accent bg-slate-0 hover:bg-slate-100 border-slate-0"
-                        : "",
+                        : "hover:border-muted",
                 )}
                 style={
                     {
