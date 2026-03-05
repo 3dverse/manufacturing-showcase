@@ -9,6 +9,8 @@ import { FloorRegion } from "./DOM3D/FloorRegion";
 import { NodeSummary } from "./DOM3D/NodeSummary";
 import { FlowSpline } from "./DOM3D/FlowSpline";
 import { AreaStorageOverlay } from "../nodes/areas/storage/AreaStorageOverlay";
+import { TopPanel } from "./DOM3D/TopPanel";
+
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
@@ -164,6 +166,9 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
                 <AnchoredPanel node={area}>
                     {area.name === "storage" && <AreaStorageQuadPanel area={area} />}
                 </AnchoredPanel>
+            )}
+            {selectedNode?.type === NodeTypes.factory && (
+                <TopPanel node={area} className="appear-in-from-left opacity-0 [--animation-delay:.75s]" />
             )}
         </>
     );
