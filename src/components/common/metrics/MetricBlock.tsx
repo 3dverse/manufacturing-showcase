@@ -76,7 +76,7 @@ export function MetricBlock({
     return (
         <div className="flex flex-col min-w-0">
             <PanelLabel className="text-2xs text-muted/90">{label}</PanelLabel>
-            {subtitle && <p className="text-2xs text-muted/80">{subtitle}</p>}
+            {subtitle && <p className="text-2xs text-muted/80 leading-none pb-1">{subtitle}</p>}
             <div className="flex items-baseline justify-between gap-2">
                 <span className={cn("text-xl font-semibold tabular-nums tracking-tight", valueClassName)}>
                     {value}
