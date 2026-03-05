@@ -133,7 +133,7 @@ export const buildFactoryGraph = (params: {
 
         line.cells = cells
             .filter((c) => inLineage(c, lineEntity.euid.value))
-            .map((e) => mapCellEntity(e, parent))
+            .map((e) => mapCellEntity(e, line))
             .sort(sortNode);
 
         list.push(line);
@@ -141,7 +141,7 @@ export const buildFactoryGraph = (params: {
     };
 
     //--------------------------------------------------------------------------
-    const mapCellEntity = (cellEntity: Entity, parent: AreaNode) => {
+    const mapCellEntity = (cellEntity: Entity, parent: AreaNode | LineNode) => {
         const cell: CellNode = {
             entity: cellEntity,
             euid: cellEntity.euid.value,
@@ -215,8 +215,6 @@ export const buildFactoryGraph = (params: {
             out: factory.areas[1].flows.pairs[1].out,
             spline: MOCK_SPLINE_2,
         };
-
-        console.log(factory);
 
         return factory;
     });

@@ -11,9 +11,10 @@ import {
 
 //------------------------------------------------------------------------------
 import { ViewerController } from "@/components/viewer/ViewerController";
+import { ViewerToolTips } from "@/components/viewer/ViewerToolTips";
+import { DebugOverlay } from "@/components/viewer/overlays/DebugOverlay";
 import FactoryBuilder from "@/components/viewer/FactoryBuilder";
 import Labels from "@/components/viewer/overlays/Labels";
-import { DebugOverlay } from "@/components/viewer/overlays/DebugOverlay";
 
 //------------------------------------------------------------------------------
 import { CameraContext } from "@/contexts/CameraContext";
@@ -101,6 +102,7 @@ export const Viewer = () => {
                 {false && <ViewerController hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} />}
                 <CameraController ref={cameraControllerRef} />
                 <Labels cameraController={cameraControllerRef.current} />
+                <ViewerToolTips />
                 <DOM3DOverlay>
                     <FactoryBuilder />
                 </DOM3DOverlay>

@@ -2,13 +2,8 @@
 import { useMemo } from "react";
 
 //------------------------------------------------------------------------------
-import { ViewerPanel } from "@/components/common/ViewerPanel";
-import { PanelTitle, PanelWrapper, PanelShadow, PanelAnchorLine } from "@/components/common/panel";
 import { AreaStorageKpiCharts } from "@/components/nodes/areas/storage/AreaStorageKpiCharts";
 import type { AreaStorageKpiData } from "@/components/nodes/areas/storage/AreaStorageKpiCharts";
-
-//------------------------------------------------------------------------------
-import { QuadLayout } from "@/utils/QuadLayout";
 
 //------------------------------------------------------------------------------
 import type { AreaNode } from "@/content/type";
@@ -53,38 +48,5 @@ export function AreaStorageQuadPanel({ area }: { area: AreaNode }) {
     const kpiData = useAreaStorageKpiData(area);
 
     //--------------------------------------------------------------------------
-    return (
-        <>
-            <QuadLayout
-                entity={area.entity}
-                face="right"
-                center={
-                    <div className="relative flex flex-col justify-end items-start w-fit h-full">
-                        <PanelShadow />
-                        <ViewerPanel
-                            className="flex flex-col gap-4 w-fit mb-1 text-base rounded-xl shadow-none [outline:2px_solid_#ffffff90] outline-offset-3 pointer-events-auto"
-                            style={{
-                                cornerShape: "bevel",
-                            }}
-                        >
-                            <PanelWrapper className="py-4">
-                                <PanelTitle>{area.name} AREA</PanelTitle>
-                                <AreaStorageKpiCharts data={kpiData} />
-                            </PanelWrapper>
-                        </ViewerPanel>
-                        <PanelAnchorLine />
-                    </div>
-                }
-                className="pointer-events-none"
-            />
-            {/* <QuadLayout
-                entity={area.entity}
-                face="front"
-                right={
-                    <div className="w-[3px] bg-slate-0 h-[calc(100%-8px)] -translate-x-16 translate-y-2 rounded-sm" />
-                }
-                className="pointer-events-none"
-            /> */}
-        </>
-    );
+    return <AreaStorageKpiCharts data={kpiData} />;
 }

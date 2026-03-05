@@ -7,14 +7,15 @@ import { PanelTitle, PanelWrapper, PanelShadow, PanelAnchorLine } from "@/compon
 import { QuadLayout } from "@/utils/QuadLayout";
 
 //------------------------------------------------------------------------------
-import type { AreaNode } from "@/content/type";
+import type { ReactNode } from "react";
+import type { FactoryGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export function GenericAreaQuadPanel({ area }: { area: AreaNode }) {
+export function AnchoredPanel({ node, children }: { node: FactoryGraphNode; children?: ReactNode }) {
     //--------------------------------------------------------------------------
     return (
         <QuadLayout
-            entity={area.entity}
+            entity={node.entity}
             face="right"
             center={
                 <div className="relative flex flex-col justify-end items-start w-fit h-full">
@@ -26,7 +27,10 @@ export function GenericAreaQuadPanel({ area }: { area: AreaNode }) {
                         }}
                     >
                         <PanelWrapper className="py-4">
-                            <PanelTitle>{area.name} AREA</PanelTitle>
+                            <PanelTitle>
+                                {node.name} {node.type}
+                            </PanelTitle>
+                            {children}
                         </PanelWrapper>
                     </ViewerPanel>
                     <PanelAnchorLine />

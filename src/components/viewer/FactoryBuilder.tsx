@@ -1,13 +1,14 @@
 import { useCallback, useContext, useMemo } from "react";
 
 //------------------------------------------------------------------------------
-import { AreaWidget } from "@/components/nodes/areas/AreaWidget";
-import { AreaChildWidget } from "@/components/nodes/areas/AreaChildWidget";
-import { CellWidget } from "@/components/nodes/cells/CellWidget";
 import { FlowWidget } from "@/components/nodes/flows/FlowWidget";
 import { AreaStorageQuadPanel } from "@/components/nodes/areas/storage/AreaStorageQuadPanel";
-import { GenericAreaQuadPanel } from "@/components/nodes/areas/GenericAreaQuadPanel";
-
+import { FloatingLabel } from "./DOM3D/FloatingLabel";
+import { AnchoredPanel } from "./DOM3D/AnchoredPanel";
+import { FloorOutline } from "./DOM3D/FloorOutline";
+import { FloorRegion } from "./DOM3D/FloorRegion";
+import { NodeSummary } from "./DOM3D/NodeSummary";
+import { AreaStorageOverlay } from "../nodes/areas/storage/AreaStorageOverlay";
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
@@ -25,15 +26,40 @@ const FactoryBuilder = () => {
     const { selectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
+    const shownLines = useMemo(() => {
+        if (!selectedNode) return [];
+        switch (selectedNode.type) {
+            case NodeTypes.cell:
+                if (selectedNode.parent.type === NodeTypes.area) {
+                    return selectedNode.parent.lines;
+                }
+                if (selectedNode.parent.type === NodeTypes.line) {
+                    return [];
+                }
+                return [];
+            case NodeTypes.line:
+                return selectedNode.parent.lines;
+            case NodeTypes.area:
+                return selectedNode.lines;
+            default:
+                return [];
+        }
+    }, [selectedNode]);
+
+    //--------------------------------------------------------------------------
     const shownCells = useMemo(() => {
         switch (selectedNode?.type) {
             case NodeTypes.factory:
                 return selectedNode.areas.reduce((acc: CellNode[], area) => {
                     acc.push(...area.cells);
+                    for (const line of area.lines) {
+                        acc.push(...line.cells);
+                    }
                     return acc;
                 }, []);
-            case NodeTypes.line:
             case NodeTypes.area:
+                return selectedNode.cells;
+            case NodeTypes.line:
                 return selectedNode.cells;
             default:
                 return [];
@@ -57,34 +83,25 @@ const FactoryBuilder = () => {
             {nodeGraph?.areas.map((area) => (
                 <AreaBuilderItem key={area.euid} area={area} />
             ))}
-            {nodeGraph?.areas
-                .flatMap((area) => area.lines)
-                .map((line) => (
-                    <ChildNodeBuilderItem key={line.euid} node={line} />
-                ))}
-            {nodeGraph?.areas
-                .flatMap((area) => area.cells)
-                .map((cell) => (
-                    <ChildNodeBuilderItem key={cell.euid} node={cell} />
-                ))}
+            {shownLines.map((line) => (
+                <LineBuilderItem key={line.euid} line={line} />
+            ))}
             {shownCells.map((cell) => (
-                <InnerCellBuilderItem key={cell.euid} cell={cell} />
+                <CellBuilderItem key={cell.euid} cell={cell} />
             ))}
             {shownFlowPairs.map((pair) => (
                 <FlowWidget key={pair.in.euid} pair={pair} />
             ))}
-
-            <QuadPanels />
         </>
     );
 };
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const ChildNodeBuilderItem = ({ node }: { node: LineNode | CellNode }) => {
+const LineBuilderItem = ({ line }: { line: LineNode }) => {
     //--------------------------------------------------------------------------
     // Context
-    const { selectedNode, setSelectedNode } = useContext(SelectionContext);
+    const { setSelectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -92,15 +109,20 @@ const ChildNodeBuilderItem = ({ node }: { node: LineNode | CellNode }) => {
 
     //--------------------------------------------------------------------------
     // Render
-    return <AreaChildWidget key={node.euid} node={node} selectedNode={selectedNode} onClick={clickHandler} />;
+    return (
+        <>
+            <FloorRegion node={line} onClick={clickHandler} />
+            <NodeSummary node={line} onClick={clickHandler} />
+        </>
+    );
 };
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const InnerCellBuilderItem = ({ cell }: { cell: CellNode }) => {
+const CellBuilderItem = ({ cell }: { cell: CellNode }) => {
     //--------------------------------------------------------------------------
     // Context
-    const { selectedNode, setSelectedNode } = useContext(SelectionContext);
+    const { setSelectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -108,7 +130,16 @@ const InnerCellBuilderItem = ({ cell }: { cell: CellNode }) => {
 
     //--------------------------------------------------------------------------
     // Render
-    return <CellWidget key={cell.euid} cell={cell} selectedNode={selectedNode} onClick={clickHandler} />;
+    if (cell.parent.type === NodeTypes.area) {
+        return (
+            <>
+                <FloorRegion node={cell} onClick={clickHandler} />
+                <NodeSummary node={cell} onClick={clickHandler} />
+            </>
+        );
+    } else {
+        return <FloatingLabel node={cell} onClick={clickHandler} />;
+    }
 };
 
 //------------------------------------------------------------------------------
@@ -119,30 +150,28 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
     const { selectedNode, setSelectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
+    // Memos
+    const isSelected = useMemo(() => area === selectedNode, [area, selectedNode]);
+    const isChildSelected = selectedNode?.type === NodeTypes.cell && selectedNode?.parent?.euid === area.euid;
+
+    //--------------------------------------------------------------------------
     // Handlers
     const clickHandler = useCallback((node: FactoryGraphNode) => setSelectedNode(node), [setSelectedNode]);
 
     //--------------------------------------------------------------------------
     // Render
-    return <AreaWidget key={area.euid} area={area} selectedNode={selectedNode} onClick={clickHandler} />;
-};
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-const QuadPanels = () => {
-    //--------------------------------------------------------------------------
-    const { selectedNode } = useContext(SelectionContext);
-    const isAreaSelected = selectedNode?.type === NodeTypes.area;
-
-    //--------------------------------------------------------------------------
-    if (!selectedNode || !isAreaSelected) return null;
-    //--------------------------------------------------------------------------
     return (
         <>
-            {selectedNode.name === "storage" ? (
-                <AreaStorageQuadPanel area={selectedNode} />
-            ) : (
-                <GenericAreaQuadPanel area={selectedNode} />
+            <FloorOutline node={area} onClick={clickHandler} />
+            {(isSelected || isChildSelected) && area.name === "storage" && (
+                <div className="pointer-events-none">
+                    <AreaStorageOverlay area={area} />
+                </div>
+            )}
+            {isSelected && (
+                <AnchoredPanel node={area}>
+                    {area.name === "storage" && <AreaStorageQuadPanel area={area} />}
+                </AnchoredPanel>
             )}
         </>
     );
