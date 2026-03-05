@@ -1,17 +1,21 @@
+//------------------------------------------------------------------------------
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-
+import { Livelink } from "@3dverse/livelink-react";
 import { LoadingOverlay } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
-import type { Factory } from "@/content/factory";
-import { factories } from "@/content/factory";
-import { Livelink } from "@3dverse/livelink-react";
 import { FactoryProviders } from "@/components/layout/FactoryProviders";
 import FactoryLayout from "@/components/layout/FactoryLayout";
 import MainGuidance from "@/components/guidance/MainGuidance";
-import { TOKEN_3DVERSE } from "@/content/3dverse";
+
+//------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
+
+//------------------------------------------------------------------------------
+import { TOKEN_3DVERSE } from "@/content/3dverse";
+import { factories } from "@/content/factory";
+import type { Factory } from "@/content/factory";
 
 //------------------------------------------------------------------------------
 export default function HomePageAlt() {
@@ -57,6 +61,7 @@ export default function HomePageAlt() {
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-6 grow">
                     {factories.map((factory) => (
                         <div
+                            key={factory.id}
                             className={cn(
                                 "transition-opacity",
                                 selectedFactoryId && selectedFactoryId !== factory.id ? "opacity-0 " : "opacity-100",
