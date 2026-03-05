@@ -214,7 +214,6 @@ export const buildFactoryGraph = async (params: {
             paths: paths,
             machines: machineEntities,
         };
-        list.push(flow);
         return flow;
     };
 

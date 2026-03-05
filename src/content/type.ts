@@ -162,7 +162,7 @@ export type FlowNode = _FactoryGraphNode & {
     paths: Vec3[][];
 };
 
-export type FactoryGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode | FlowNode;
+export type FactoryGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode;
 
 //------------------------------------------------------------------------------
 // TODO delete VVV
