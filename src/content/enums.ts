@@ -4,6 +4,5 @@ export enum NodeTypes {
     line = "LINE",
     cell = "CELL",
     machine = "MACHINE",
-    flowIn = "FLOW_IN",
-    flowOut = "FLOW_OUT",
+    flow = "FLOW",
 }

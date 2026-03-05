@@ -1,6 +1,6 @@
+import type { Entity, Vec3 } from "@3dverse/livelink";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type { StationId } from "./stations/enum";
-import type { Entity, Vec3 } from "@3dverse/livelink";
 import type { NodeTypes } from "./enums";
 
 //------------------------------------------------------------------------------
@@ -134,30 +134,15 @@ type _FactoryGraphNode = {
     euid: string;
     name: string;
 };
-export type FactoryNode = _FactoryGraphNode & { type: NodeTypes.factory; areas: AreaNode[] };
+export type FactoryNode = _FactoryGraphNode & { type: NodeTypes.factory; areas: AreaNode[]; flows: FlowNode[] };
 /** One 3D point [x, y, z] on a flow spline. */
 export type FlowSplinePoint = [number, number, number];
-
-export type FlowPair = {
-    in: FlowInNode;
-    out: FlowOutNode;
-    /** Optional 3D spline points for curved flow path. */
-    spline?: FlowSplinePoint[];
-};
-
-export type AreaFlows = {
-    ins: FlowInNode[];
-    outs: FlowOutNode[];
-    /** Pairs of in/out with matching names across different areas (in from this area, out from another). */
-    pairs: FlowPair[];
-};
 
 export type AreaNode = _FactoryGraphNode & {
     type: NodeTypes.area;
     parent: FactoryNode;
     lines: LineNode[];
     cells: CellNode[];
-    flows: AreaFlows;
 };
 
 export type LineNode = _FactoryGraphNode & { type: NodeTypes.line; parent: AreaNode; cells: CellNode[] };
@@ -168,10 +153,16 @@ export type CellNode = _FactoryGraphNode & {
     machines: MachineNode[];
 };
 export type MachineNode = _FactoryGraphNode & { type: NodeTypes.machine; parent: CellNode };
-export type FlowInNode = _FactoryGraphNode & { type: NodeTypes.flowIn; parent: AreaNode };
-export type FlowOutNode = _FactoryGraphNode & { type: NodeTypes.flowOut; parent: AreaNode };
 
-export type FactoryGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode | FlowInNode | FlowOutNode;
+export type FlowNode = _FactoryGraphNode & {
+    type: NodeTypes.flow;
+    entityInEUID: string;
+    entityOutEUID: string;
+    machines: Entity[];
+    paths: Vec3[][];
+};
+
+export type FactoryGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode | FlowNode;
 
 //------------------------------------------------------------------------------
 // TODO delete VVV

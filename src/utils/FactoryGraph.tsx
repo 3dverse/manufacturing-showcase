@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import type { Entity } from "@3dverse/livelink";
+import type { Entity, Vec3 } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
@@ -10,28 +10,26 @@ import type {
     FactoryGraphNode,
     LineNode,
     MachineNode,
-    FlowInNode,
-    FlowOutNode,
-    FlowSplinePoint,
+    FlowNode,
 } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export const buildFactoryGraph = (params: {
+export const buildFactoryGraph = async (params: {
     entities: Entity[];
-}): {
+    tagEntities: Entity[];
+}): Promise<{
     graph?: FactoryNode;
     list: FactoryGraphNode[];
-} => {
-    const { entities } = params;
+}> => {
+    const { entities, tagEntities } = params;
     const factories: Entity[] = [];
     const areas: Entity[] = [];
     const lines: Entity[] = [];
     const cells: Entity[] = [];
     const machines: Entity[] = [];
-    const flowIns: Entity[] = [];
-    const flowOuts: Entity[] = [];
+    const flows: Entity[] = [];
 
-    for (const e of entities) {
+    for (const e of [...entities, ...tagEntities]) {
         const name = e.name.toLowerCase();
         if (!name.includes(":")) continue;
 
@@ -54,14 +52,36 @@ export const buildFactoryGraph = (params: {
             case "machine":
                 machines.push(e);
                 break;
-            case "flow-in":
-                flowIns.push(e);
-                break;
-            case "flow-out":
-                flowOuts.push(e);
+            case "flow":
+                flows.push(e);
                 break;
         }
     }
+
+    // Resolve flow children
+    const flowChildrenByEuid = new Map<
+        string,
+        [
+            entityInEUID: string | undefined,
+            entityOutEUID: string | undefined,
+            paths: Vec3[][],
+            machineEntities: Entity[],
+        ]
+    >();
+    await Promise.all(
+        flows.map(async (f) => {
+            const children = await f.getChildren();
+            const joinEntity = children.find((c) => c.joint);
+            const entityInEUID = joinEntity ? joinEntity.joint?.constrainee.originalEUID : undefined;
+            const entityOutEUID = joinEntity ? joinEntity.joint?.constrainer.originalEUID : undefined;
+            const splineEntities = children.filter((c) => c.spline);
+            const paths = await Promise.all(splineEntities.map((c) => c.getChildren())).then((children) =>
+                children.map((c) => c.map((c) => c.global_transform.position)),
+            );
+            const machineEntities = children.filter((c) => c.scene_ref);
+            flowChildrenByEuid.set(f.euid.value, [entityInEUID, entityOutEUID, paths, machineEntities]);
+        }),
+    );
 
     const list: FactoryGraphNode[] = [];
 
@@ -73,6 +93,7 @@ export const buildFactoryGraph = (params: {
             type: NodeTypes.factory,
             name: parseName(factoryEntity),
             areas: [],
+            flows: [],
         };
 
         factory.areas = areas.map((e) => mapAreaEntity(e, factory)).sort(sortNode);
@@ -91,7 +112,6 @@ export const buildFactoryGraph = (params: {
             parent,
             lines: [],
             cells: [],
-            flows: { ins: [], outs: [], pairs: [] },
         };
 
         area.lines = lines
@@ -103,18 +123,6 @@ export const buildFactoryGraph = (params: {
             .filter((c) => inLineage(c, area.euid) && area.lines.every((l) => !inLineage(c, l.euid)))
             .map((e) => mapCellEntity(e, area))
             .sort(sortNode);
-
-        area.flows = {
-            ins: flowIns
-                .filter((f) => inLineage(f, area.euid))
-                .map((e) => mapFlowInEntity(e, area))
-                .sort(sortNode),
-            outs: flowOuts
-                .filter((f) => inLineage(f, area.euid))
-                .map((e) => mapFlowOutEntity(e, area))
-                .sort(sortNode),
-            pairs: [],
-        };
 
         list.push(area);
         return area;
@@ -172,74 +180,56 @@ export const buildFactoryGraph = (params: {
     };
 
     //--------------------------------------------------------------------------
-    const mapFlowInEntity = (flowInEntity: Entity, parent: AreaNode) => {
-        const flowIn: FlowInNode = {
-            entity: flowInEntity,
-            euid: flowInEntity.euid.value,
-            type: NodeTypes.flowIn,
-            name: parseName(flowInEntity),
-            parent,
-        };
-        list.push(flowIn);
-        return flowIn;
+    const mapFactoryFlows = (flows: Entity[]) => {
+        return flows.map((flowEntity) =>
+            mapFlowEntity(
+                flowEntity,
+                flowChildrenByEuid.get(flowEntity.euid.value) as [
+                    string | undefined,
+                    string | undefined,
+                    Vec3[][],
+                    Entity[],
+                ],
+            ),
+        );
     };
 
     //--------------------------------------------------------------------------
-    const mapFlowOutEntity = (flowOutEntity: Entity, parent: AreaNode) => {
-        const flowOut: FlowOutNode = {
-            entity: flowOutEntity,
-            euid: flowOutEntity.euid.value,
-            type: NodeTypes.flowOut,
-            name: parseName(flowOutEntity),
-            parent,
+    const mapFlowEntity = (
+        flowEntity: Entity,
+        [entityInEUID, entityOutEUID, paths, machineEntities]: [
+            string | undefined,
+            string | undefined,
+            Vec3[][],
+            Entity[],
+        ],
+    ) => {
+        const flow: FlowNode = {
+            entity: flowEntity,
+            euid: flowEntity.euid.value,
+            type: NodeTypes.flow,
+            name: parseName(flowEntity),
+            entityInEUID: entityInEUID ?? "",
+            entityOutEUID: entityOutEUID ?? "",
+            paths: paths,
+            machines: machineEntities,
         };
-
-        list.push(flowOut);
-        return flowOut;
+        list.push(flow);
+        return flow;
     };
 
     //--------------------------------------------------------------------------
     const factoryNodes: FactoryNode[] = factories.map((factoryEntity) => {
         const factory: FactoryNode = mapFactoryEntity(factoryEntity);
+        factory.flows = mapFactoryFlows(flows);
 
-        buildFlowPairsAcrossAreas(factory.areas);
-
-        factory.areas[1].flows.pairs[0] = {
-            in: factory.areas[1].flows.pairs[0].in,
-            out: factory.areas[1].flows.pairs[0].out,
-            spline: MOCK_SPLINE_1,
-        };
-
-        factory.areas[1].flows.pairs[1] = {
-            in: factory.areas[1].flows.pairs[1].in,
-            out: factory.areas[1].flows.pairs[1].out,
-            spline: MOCK_SPLINE_2,
-        };
-
+        console.log(factory);
         return factory;
     });
 
     const graph = factoryNodes.length > 0 ? factoryNodes[0] : undefined;
     return { graph, list };
 };
-
-//------------------------------------------------------------------------------
-/** Pairs IN nodes with OUT nodes from a *different* area (same name). Each pair is attached to the area of the IN. */
-function buildFlowPairsAcrossAreas(areaNodes: AreaNode[]): void {
-    const key = (n: FlowInNode | FlowOutNode) => n.name.trim().toLowerCase();
-    for (const area of areaNodes) {
-        for (const flowIn of area.flows.ins) {
-            const k = key(flowIn);
-            const out = areaNodes
-                .filter((a) => a.euid !== area.euid)
-                .flatMap((a) => a.flows.outs)
-                .find((o) => key(o) === k);
-            if (out) {
-                area.flows.pairs.push({ in: flowIn, out });
-            }
-        }
-    }
-}
 
 //------------------------------------------------------------------------------
 function parseName(entity: Entity): string {
@@ -268,17 +258,3 @@ export const sortNode = (a: FactoryGraphNode, b: FactoryGraphNode) => {
     if (!b.entity.lineage) return 1;
     return a.entity.lineage.ordinal - b.entity.lineage.ordinal;
 };
-
-//------------------------------------------------------------------------------
-const MOCK_SPLINE_1: FlowSplinePoint[] = [
-    [9.13, 0, 32.64],
-    [9, 0, 29.22],
-    [10, 0.64, 25.11],
-    [10.33, 0.64, 18.66],
-];
-
-const MOCK_SPLINE_2: FlowSplinePoint[] = [
-    [9, 0, 29.2],
-    [7.76, 0.6, 25],
-    [7.61, 0.6, 18.4],
-];

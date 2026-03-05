@@ -1,13 +1,13 @@
 import { useCallback, useContext, useMemo } from "react";
 
 //------------------------------------------------------------------------------
-import { FlowWidget } from "@/components/nodes/flows/FlowWidget";
 import { AreaStorageQuadPanel } from "@/components/nodes/areas/storage/AreaStorageQuadPanel";
 import { FloatingLabel } from "./DOM3D/FloatingLabel";
 import { AnchoredPanel } from "./DOM3D/AnchoredPanel";
 import { FloorOutline } from "./DOM3D/FloorOutline";
 import { FloorRegion } from "./DOM3D/FloorRegion";
 import { NodeSummary } from "./DOM3D/NodeSummary";
+import { FlowSpline } from "./DOM3D/FlowSpline";
 import { AreaStorageOverlay } from "../nodes/areas/storage/AreaStorageOverlay";
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
@@ -67,14 +67,6 @@ const FactoryBuilder = () => {
     }, [selectedNode]);
 
     //--------------------------------------------------------------------------
-    const shownFlowPairs = useMemo(() => {
-        if (selectedNode && [NodeTypes.line, NodeTypes.cell, NodeTypes.machine].includes(selectedNode.type)) {
-            return [];
-        }
-        return nodeGraph?.areas.flatMap((area) => area.flows.pairs) || [];
-    }, [nodeGraph, selectedNode]);
-
-    //--------------------------------------------------------------------------
     // Render
     // Note: Always render Area and its children (Line/Cell) + flows
     // Show children nodes for selected Line
@@ -89,8 +81,8 @@ const FactoryBuilder = () => {
             {shownCells.map((cell) => (
                 <CellBuilderItem key={cell.euid} cell={cell} />
             ))}
-            {shownFlowPairs.map((pair) => (
-                <FlowWidget key={pair.in.euid} pair={pair} />
+            {nodeGraph?.flows.map((flow) => (
+                <FlowSpline key={flow.euid} flow={flow} />
             ))}
         </>
     );

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useEntities } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
@@ -10,6 +10,7 @@ import { buildFactoryGraph } from "@/utils/FactoryGraph";
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";
 import type { Factory } from "@/content/factory";
+import type { FactoryGraphNode, FactoryNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -17,19 +18,25 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
     //--------------------------------------------------------------------------
     // Hooks
     const { entities } = useEntities({ mandatory_components: ["scene_ref"] });
+    const { entities: tagEntities } = useEntities({ mandatory_components: ["tags"] });
 
     //--------------------------------------------------------------------------
-    // Memos
-    const value = useMemo(() => {
-        const { graph, list } = buildFactoryGraph({
-            entities,
+    const [graph, setGraph] = useState<FactoryNode | undefined>(undefined);
+    const [list, setList] = useState<FactoryGraphNode[]>([]);
+
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        buildFactoryGraph({ entities, tagEntities }).then(({ graph: g, list: l }) => {
+            setGraph(g);
+            setList(l);
         });
-        return {
-            factory,
-            nodeGraph: graph,
-            nodeList: list,
-        };
-    }, [factory, entities]);
+    }, [entities, tagEntities]);
+
+    const value = {
+        factory,
+        nodeGraph: graph,
+        nodeList: list,
+    };
 
     //--------------------------------------------------------------------------
     // Render
