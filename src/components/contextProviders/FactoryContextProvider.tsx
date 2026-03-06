@@ -19,9 +19,6 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
     // Hooks
     const { entities: sceneRefEntities } = useEntities({ mandatory_components: ["scene_ref"] });
     const { entities: tagEntities } = useEntities({ mandatory_components: ["tags"] });
-    const entities = [...sceneRefEntities, ...tagEntities].filter(
-        (e, index, self) => index === self.findIndex((t) => t.euid.value === e.euid.value),
-    );
 
     //--------------------------------------------------------------------------
     const [graph, setGraph] = useState<FactoryNode | undefined>(undefined);
@@ -29,11 +26,15 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
 
     //--------------------------------------------------------------------------
     useEffect(() => {
+        // Merge entities and remove duplicates
+        const entities = [...sceneRefEntities, ...tagEntities].filter(
+            (e, index, self) => index === self.findIndex((t) => t.euid.value === e.euid.value),
+        );
         buildFactoryGraph({ entities }).then(({ graph: g, list: l }) => {
             setGraph(g);
             setList(l);
         });
-    }, [entities]);
+    }, [sceneRefEntities, tagEntities]);
 
     const value = {
         factory,
