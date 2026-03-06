@@ -2,6 +2,7 @@ import { useCallback, useContext, useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { AreaStorageQuadPanel } from "@/components/nodes/areas/storage/AreaStorageQuadPanel";
+import { AreaStorageOverlay } from "@/components/nodes/areas/storage/AreaStorageOverlay";
 import { FloatingLabel } from "./DOM3D/FloatingLabel";
 import { AnchoredPanel } from "./DOM3D/AnchoredPanel";
 import { FloorOutline } from "./DOM3D/FloorOutline";
@@ -9,7 +10,6 @@ import { FloorRegion } from "./DOM3D/FloorRegion";
 import { NodeSummary } from "./DOM3D/NodeSummary";
 import { FlowSpline } from "./DOM3D/FlowSpline";
 import { TopPanel } from "./DOM3D/TopPanel";
-import { AreaStorageOverlay } from "../nodes/areas/storage/AreaStorageOverlay";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
@@ -43,6 +43,11 @@ const FactoryBuilder = () => {
                 return selectedNode.parent.lines;
             case NodeTypes.area:
                 return selectedNode.lines;
+            case NodeTypes.factory:
+                return selectedNode.areas.reduce((acc: LineNode[], area) => {
+                    acc.push(...area.lines);
+                    return acc;
+                }, []);
             default:
                 return [];
         }
@@ -83,6 +88,8 @@ const FactoryBuilder = () => {
             {shownLines.map((line) => (
                 <LineBuilderItem key={line.euid} line={line} />
             ))}
+
+            {/* TODO: When factory is selected, show only the cells floors, not the NodeSummary */}
             {shownCells.map((cell) => (
                 <CellBuilderItem key={cell.euid} cell={cell} />
             ))}

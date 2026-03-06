@@ -1,4 +1,6 @@
+//------------------------------------------------------------------------------
 import { useCallback, useContext, useMemo } from "react";
+import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
 import { HoverContext } from "@/contexts/HoverContext";
@@ -6,7 +8,6 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
-import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
 import type { FactoryGraphNode } from "@/content/type";
