@@ -20,6 +20,7 @@ export const buildFactoryGraph = async (params: {
     graph: FactoryNode;
     list: FactoryGraphNode[];
 }> => {
+    console.log("buildFactoryGraph");
     const { entities } = params;
     const factories: Entity[] = [];
     const areas: Entity[] = [];
@@ -28,7 +29,7 @@ export const buildFactoryGraph = async (params: {
     const machines: Entity[] = [];
     const flows: Entity[] = [];
 
-    for (const e of [...entities]) {
+    for (const e of entities) {
         const name = e.name.toLowerCase();
         if (!name.includes(":")) continue;
 
