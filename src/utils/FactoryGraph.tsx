@@ -16,12 +16,11 @@ import type {
 //------------------------------------------------------------------------------
 export const buildFactoryGraph = async (params: {
     entities: Entity[];
-    tagEntities: Entity[];
 }): Promise<{
     graph?: FactoryNode;
     list: FactoryGraphNode[];
 }> => {
-    const { entities, tagEntities } = params;
+    const { entities } = params;
     const factories: Entity[] = [];
     const areas: Entity[] = [];
     const lines: Entity[] = [];
@@ -29,7 +28,7 @@ export const buildFactoryGraph = async (params: {
     const machines: Entity[] = [];
     const flows: Entity[] = [];
 
-    for (const e of [...entities, ...tagEntities]) {
+    for (const e of [...entities]) {
         const name = e.name.toLowerCase();
         if (!name.includes(":")) continue;
 
