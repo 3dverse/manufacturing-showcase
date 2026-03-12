@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Livelink } from "@3dverse/livelink-react";
 import { LoadingOverlay } from "@3dverse/livelink-react-ui";
@@ -10,13 +10,22 @@ import FactoryLayout from "@/components/layout/FactoryLayout";
 import MainGuidance from "@/components/guidance/MainGuidance";
 
 //------------------------------------------------------------------------------
+import { Router, type RouteChangeEvent } from "@/core/Router";
 import { cn } from "@/utils/cn";
+
+//------------------------------------------------------------------------------
+import { DisconnectedOverlay } from "@/components/viewer/overlays/DisconnectedOverlay";
+import { CameraContextProvider } from "@/components/contextProviders/CameraContextProvider";
+import { GhettoReconnectContextProvider } from "@/components/contextProviders/GhettoReconnectContextProvider";
 
 //------------------------------------------------------------------------------
 import { TOKEN_3DVERSE } from "@/content/3dverse";
 import { factories } from "@/content/factory";
 import type { Factory } from "@/content/factory";
-import { Router, type RouteChangeEvent } from "@/core/Router";
+import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
+import { InactiveOverlay } from "@/components/viewer/overlays/InactiveOverlay";
+
+//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 export default function HomePageAlt() {
@@ -102,13 +111,15 @@ export default function HomePageAlt() {
                             )}
                         >
                             {(!transitionDone || selectedFactorySlug === factory.slug) && (
-                                <FactoryItem
-                                    key={factory.slug}
-                                    factory={factory}
-                                    selectedFactorySlug={selectedFactorySlug}
-                                    onSelect={selectionHandler}
-                                    setTransitionDone={setTransitionDone}
-                                />
+                                <GhettoReconnectContextProvider>
+                                    <FactoryItem
+                                        key={factory.slug}
+                                        factory={factory}
+                                        selectedFactorySlug={selectedFactorySlug}
+                                        onSelect={selectionHandler}
+                                        setTransitionDone={setTransitionDone}
+                                    />
+                                </GhettoReconnectContextProvider>
                             )}
                         </div>
                     ))}
@@ -131,6 +142,10 @@ const FactoryItem = ({
     setTransitionDone?: (done: boolean) => void;
     onSelect?: (factory: Factory | undefined) => void;
 }) => {
+    //--------------------------------------------------------------------------
+    // Contexts
+    const { reconnector } = useContext(GhettoReconnectContext);
+
     //--------------------------------------------------------------------------
     // Memo
     const isOpen = useMemo(() => selectedFactorySlug === factory.slug, [selectedFactorySlug, factory]);
@@ -171,13 +186,23 @@ const FactoryItem = ({
                 isOpen && "fixed inset-0 z-50 m-0 rounded-none border-0",
             )}
         >
-            <div className="w-full h-full">
-                <Livelink sceneId={factory.scene_id} token={TOKEN_3DVERSE} LoadingPanel={LoadingOverlay}>
-                    <FactoryProviders factory={factory}>
-                        <FactoryLayout thumbnailMode={!isOpen} onBack={deselectHandler} />
-                    </FactoryProviders>
-                    {isOpen && <MainGuidance />}
-                </Livelink>
+            <div className="relative w-full h-full">
+                <CameraContextProvider>
+                    <Livelink
+                        sceneId={factory.scene_id}
+                        token={TOKEN_3DVERSE}
+                        isTransient={reconnector}
+                        LoadingPanel={LoadingOverlay}
+                        ConnectionErrorPanel={DisconnectedOverlay}
+                        InactivityWarningPanel={InactiveOverlay}
+                    >
+                        <FactoryProviders factory={factory}>
+                            <FactoryLayout thumbnailMode={!isOpen} onBack={deselectHandler} />
+
+                            {isOpen && <MainGuidance />}
+                        </FactoryProviders>
+                    </Livelink>
+                </CameraContextProvider>
             </div>
         </motion.div>
     );

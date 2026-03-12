@@ -23,7 +23,7 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     //--------------------------------------------------------------------------
     // Contexts
     const { isConnecting } = useContext(LivelinkContext);
-    const { viewportRef, setCameraEntity, cameraControllerRef } = useContext(CameraContext);
+    const { connectionPOV, viewportRef, cameraControllerRef, setCameraEntity } = useContext(CameraContext);
 
     //--------------------------------------------------------------------------
     // State
@@ -32,16 +32,29 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
 
     //--------------------------------------------------------------------------
     // Hooks
-    const { cameraEntity } = useCameraEntity({
-        position: [1000, 1000, -1000],
-        orientation: [-0.70710678, 0, 0, 0.70710678],
-    });
+    const { cameraEntity } = useCameraEntity(connectionPOV.current);
 
     //--------------------------------------------------------------------------
     // Effects
     useEffect(() => {
         setCameraEntity(cameraEntity);
-    }, [setCameraEntity, cameraEntity]);
+        if (cameraEntity) {
+            cameraEntity.local_transform.position = connectionPOV.current.position;
+            cameraEntity.local_transform.orientation = connectionPOV.current.orientation;
+        }
+    }, [setCameraEntity, cameraEntity, connectionPOV]);
+
+    //--------------------------------------------------------------------------
+    // Hack zone
+    const { instance } = useContext(LivelinkContext);
+    useEffect(() => {
+        if (instance) {
+            //instance.activity_watcher.setTimeouts({
+            //     warn_after_seconds: 10,
+            //     timeout_after_seconds: 15,
+            // });
+        }
+    }, [instance]);
 
     //--------------------------------------------------------------------------
     return (
