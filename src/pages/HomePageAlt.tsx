@@ -16,31 +16,63 @@ import { cn } from "@/utils/cn";
 import { TOKEN_3DVERSE } from "@/content/3dverse";
 import { factories } from "@/content/factory";
 import type { Factory } from "@/content/factory";
+import { Router, type RouteChangeEvent } from "@/core/Router";
 
 //------------------------------------------------------------------------------
 export default function HomePageAlt() {
     //--------------------------------------------------------------------------
     // State
-    const [selectedFactoryId, setSelectedFactoryId] = useState<string | undefined>();
-    const [hideUnselected, setHideUnselected] = useState<string | undefined>();
+    const [selectedFactorySlug, setSelectedFactorySlug] = useState<string | undefined>();
+    const [transitionDone, setTransitionDone] = useState<boolean>();
 
     //--------------------------------------------------------------------------
     // Handlers
-    const selectionHandler = useCallback((factoryId: string | undefined) => {
-        if (!factoryId) setHideUnselected?.(undefined);
-        setSelectedFactoryId(factoryId);
-    }, []);
+    const selectionHandler = useCallback(
+        (factory: Factory | undefined) => {
+            if (selectedFactorySlug === factory?.slug) return;
+            if (!factory) {
+                setTransitionDone?.(false);
+                setSelectedFactorySlug(undefined);
+                Router.push({});
+            } else {
+                setSelectedFactorySlug(factory?.slug);
+                Router.push({ factorySlug: factory.slug });
+            }
+        },
+        [selectedFactorySlug],
+    );
 
     //--------------------------------------------------------------------------
     // Effects
     useEffect(() => {
-        if (!selectedFactoryId) return;
+        if (!selectedFactorySlug) return;
         const prev = document.body.style.overflow;
         document.body.style.overflow = "hidden";
         return () => {
             document.body.style.overflow = prev;
         };
-    }, [selectedFactoryId]);
+    }, [selectedFactorySlug]);
+
+    //--------------------------------------------------------------------------
+    const routeChangeHandler = useCallback((event: RouteChangeEvent) => {
+        switch (event.source) {
+            case "pop":
+                setTransitionDone(false);
+                setSelectedFactorySlug(event.route.factorySlug);
+                break;
+            case "init":
+                setSelectedFactorySlug(event.route.factorySlug);
+                break;
+        }
+    }, []);
+
+    //--------------------------------------------------------------------------
+    useEffect(() => Router.onChange(routeChangeHandler), [routeChangeHandler]);
+
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        Router.init();
+    }, []);
 
     //--------------------------------------------------------------------------
     // Render
@@ -61,19 +93,21 @@ export default function HomePageAlt() {
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-6 grow">
                     {factories.map((factory) => (
                         <div
-                            key={factory.id}
+                            key={factory.slug}
                             className={cn(
                                 "transition-opacity",
-                                selectedFactoryId && selectedFactoryId !== factory.id ? "opacity-0 " : "opacity-100",
+                                selectedFactorySlug && selectedFactorySlug !== factory.slug
+                                    ? "opacity-0 "
+                                    : "opacity-100",
                             )}
                         >
-                            {(!hideUnselected || selectedFactoryId === factory.id) && (
+                            {(!transitionDone || selectedFactorySlug === factory.slug) && (
                                 <FactoryItem
-                                    key={factory.id}
+                                    key={factory.slug}
                                     factory={factory}
-                                    selectedFactoryId={selectedFactoryId}
+                                    selectedFactorySlug={selectedFactorySlug}
                                     onSelect={selectionHandler}
-                                    setHideUnselected={setHideUnselected}
+                                    setTransitionDone={setTransitionDone}
                                 />
                             )}
                         </div>
@@ -88,34 +122,34 @@ export default function HomePageAlt() {
 //------------------------------------------------------------------------------
 const FactoryItem = ({
     factory,
-    selectedFactoryId,
+    selectedFactorySlug,
     onSelect,
-    setHideUnselected,
+    setTransitionDone,
 }: {
     factory: Factory;
-    selectedFactoryId: string | undefined;
-    setHideUnselected?: (factoryId: string | undefined) => void;
-    onSelect?: (factoryId: string | undefined) => void;
+    selectedFactorySlug: string | undefined;
+    setTransitionDone?: (done: boolean) => void;
+    onSelect?: (factory: Factory | undefined) => void;
 }) => {
     //--------------------------------------------------------------------------
     // Memo
-    const isOpen = useMemo(() => selectedFactoryId === factory.id, [selectedFactoryId, factory]);
+    const isOpen = useMemo(() => selectedFactorySlug === factory.slug, [selectedFactorySlug, factory]);
 
     //--------------------------------------------------------------------------
-    const selectHandler = useCallback(() => onSelect?.(factory.id), [onSelect, factory]);
+    const selectHandler = useCallback(() => onSelect?.(factory), [onSelect, factory]);
 
     //--------------------------------------------------------------------------
     const deselectHandler = useCallback(() => onSelect?.(undefined), [onSelect]);
 
     //--------------------------------------------------------------------------
     const transitionStartHandler = useCallback(() => {
-        setHideUnselected?.(undefined);
-    }, [setHideUnselected]);
+        setTransitionDone?.(false);
+    }, [setTransitionDone]);
 
     //--------------------------------------------------------------------------
     const transitionEndHandler = useCallback(() => {
-        if (selectedFactoryId === factory.id) setHideUnselected?.(factory.id);
-    }, [setHideUnselected, selectedFactoryId, factory.id]);
+        if (selectedFactorySlug === factory.slug) setTransitionDone?.(true);
+    }, [setTransitionDone, selectedFactorySlug, factory.slug]);
 
     //--------------------------------------------------------------------------
     // Render

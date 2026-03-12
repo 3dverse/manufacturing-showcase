@@ -220,8 +220,6 @@ export const buildFactoryGraph = async (params: {
     const factoryNodes: FactoryNode[] = factories.map((factoryEntity) => {
         const factory: FactoryNode = mapFactoryEntity(factoryEntity);
         factory.flows = mapFactoryFlows(flows);
-
-        console.log(factory);
         return factory;
     });
 

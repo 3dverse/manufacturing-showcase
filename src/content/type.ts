@@ -173,3 +173,8 @@ export type QuadData = {
     dimensions: { width: number; height: number };
 };
 export type Quad = [Vec3, Vec3, Vec3, Vec3]; // tl, tr, br, bl
+
+//------------------------------------------------------------------------------
+export type ElementType = "factory" | "area" | "line" | "cell" | "machine";
+export type AreaCategory = "Reception" | "Production" | "Storage" | "Control";
+export type Element = { type: ElementType; id: string; count: string; entity: Entity; category?: AreaCategory };

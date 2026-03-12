@@ -5,7 +5,7 @@ import { useEntities } from "@3dverse/livelink-react";
 import { FactoryContext } from "@/contexts/FactoryContext";
 
 //------------------------------------------------------------------------------
-import { buildFactoryGraph } from "@/utils/FactoryGraph";
+import { buildFactoryGraph } from "@/core/FactoryGraph";
 
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";

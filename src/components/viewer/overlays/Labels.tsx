@@ -7,6 +7,7 @@ import { moveCamera } from "@/utils/camera";
 //------------------------------------------------------------------------------
 export const Labels = ({ cameraController }: { cameraController: DefaultCameraController | null }) => {
     //--------------------------------------------------------------------------
+    // Hookes
     const { entities } = useEntities({ mandatory_components: ["label"] }, ["label"]);
 
     //--------------------------------------------------------------------------

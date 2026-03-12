@@ -8,9 +8,6 @@ import type { FactoryGraphNode } from "@/content/type";
 //------------------------------------------------------------------------------
 import type { Entity } from "@3dverse/livelink";
 import { SelectionContext } from "@/contexts/SelectionContext";
-export type ElementType = "factory" | "area" | "line" | "cell" | "machine";
-export type AreaCategory = "Reception" | "Production" | "Storage" | "Control";
-export type Element = { type: ElementType; id: string; count: string; entity: Entity; category?: AreaCategory };
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------

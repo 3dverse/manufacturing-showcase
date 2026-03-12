@@ -2,6 +2,7 @@
 export type Factory = {
     id: string;
     name: string;
+    slug: string;
     location: string;
     description?: string;
     scene_id: string;
@@ -11,6 +12,7 @@ export type Factory = {
 export const factories: Factory[] = [
     {
         id: "phone-factory",
+        slug: "phone-factory",
         name: "Phone Factory",
         description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
         location: "Paris, France",
@@ -18,6 +20,7 @@ export const factories: Factory[] = [
     },
     {
         id: "y-factory",
+        slug: "y-factory",
         name: "Y Factory",
         description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
         location: "Tokyo, Japan",

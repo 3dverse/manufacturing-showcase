@@ -19,7 +19,7 @@ import { cn } from "@/utils/cn";
 //------------------------------------------------------------------------------
 import type { AreaNode, CellNode, FactoryGraphNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
-import { sortNode } from "@/utils/FactoryGraph";
+import { sortNode } from "@/core/FactoryGraph";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ export const MainNav = () => {
     // Handlers
     const itemClickedHandler = useCallback(
         (node: FactoryGraphNode) => {
-            if (node !== selectedNode) {
+            if (node.euid !== selectedNode?.euid) {
                 setSelectedNode(node);
             } else {
                 const controller = cameraControllerRef?.current;
@@ -109,10 +109,10 @@ const AreaNode = ({
 
     //--------------------------------------------------------------------------
     // Memos
-    const isActive = useMemo(
-        () => area === selectedNode || area === (selectedNode as LineNode | CellNode)?.parent,
-        [area, selectedNode],
-    );
+    const isActive = useMemo(() => {
+        const parentEuid = selectedNode && "parent" in selectedNode && selectedNode.parent.euid;
+        return area.euid === selectedNode?.euid || area.euid === parentEuid;
+    }, [area, selectedNode]);
 
     //--------------------------------------------------------------------------
     const children = useMemo(() => [...area.lines, ...area.cells].sort(sortNode), [area]);
@@ -200,7 +200,7 @@ const ChildNode = ({
 
     //--------------------------------------------------------------------------
     // Memos
-    const isActive = useMemo(() => selectedNode === node, [selectedNode, node]);
+    const isActive = useMemo(() => selectedNode?.euid === node?.euid, [selectedNode, node]);
     const isActiveChildOfLine = useMemo(() => {
         return !!(selectedNode && selectedNode.type === NodeTypes.cell && selectedNode.parent?.type === NodeTypes.line);
     }, [selectedNode]);

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState } from "react";
 import type { Entity } from "@3dverse/livelink";
 import {
     Canvas,
@@ -16,11 +16,6 @@ import FactoryBuilder from "@/components/viewer/FactoryBuilder";
 
 //------------------------------------------------------------------------------
 import { CameraContext } from "@/contexts/CameraContext";
-import { SelectionContext } from "@/contexts/SelectionContext";
-import { FactoryContext } from "@/contexts/FactoryContext";
-
-//------------------------------------------------------------------------------
-import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -28,18 +23,12 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     //--------------------------------------------------------------------------
     // Contexts
     const { isConnecting } = useContext(LivelinkContext);
-    const { setSelectedNode } = useContext(SelectionContext);
-    const { nodeGraph } = useContext(FactoryContext);
     const { viewportRef, setCameraEntity, cameraControllerRef } = useContext(CameraContext);
 
     //--------------------------------------------------------------------------
     // State
     const [hoveredEntity, setHoveredEntity] = useState<{ entity: Entity } | null>(null);
     const [pickedEntity, setPickedEntity] = useState<{ entity: Entity } | null>(null);
-
-    //--------------------------------------------------------------------------
-    // Refs
-    const viewerInitialized = useRef<boolean>(false);
 
     //--------------------------------------------------------------------------
     // Hooks
@@ -53,33 +42,6 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     useEffect(() => {
         setCameraEntity(cameraEntity);
     }, [setCameraEntity, cameraEntity]);
-
-    //--------------------------------------------------------------------------
-    useEffect(() => {
-        // Initialize the view
-        function check() {
-            if (
-                !viewerInitialized.current &&
-                nodeGraph &&
-                cameraControllerRef.current &&
-                viewportRef.current &&
-                cameraEntity
-            ) {
-                viewerInitialized.current = true;
-                setSelectedNode(nodeGraph);
-                moveCamera(
-                    nodeGraph.entity,
-                    cameraControllerRef.current,
-                    viewportRef.current,
-                    cameraEntity,
-                    getDefaultOrientationForNodeType(nodeGraph.type),
-                );
-            } else {
-                setTimeout(check, 200);
-            }
-        }
-        check();
-    }, [setSelectedNode, viewerInitialized, nodeGraph, cameraControllerRef, viewportRef, cameraEntity]);
 
     //--------------------------------------------------------------------------
     return (
