@@ -55,7 +55,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
         (node: FactoryGraphNode | undefined) => {
             if (factory.slug === Router.activeFactorySlug) {
                 const factorySlug = factory.slug;
-                const nodeSlug = node && node.type !== NodeTypes.factory ? Router.uuidToSlug(node?.euid) : undefined;
+                const nodeSlug = node && node.type !== NodeTypes.factory ? Router.uuidToSlug(node?.hash) : undefined;
                 Router.push({ factorySlug, nodeSlug });
             }
             _setSelectedNode(node);
@@ -81,7 +81,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
                 case "pop":
                     if (event.route?.nodeSlug) {
                         const nodeSlug = event.route.nodeSlug;
-                        const node = nodeList.find((n) => n.euid.startsWith(nodeSlug)) || nodeGraph;
+                        const node = nodeList.find((n) => n.hash.startsWith(nodeSlug)) || nodeGraph;
                         _setSelectedNode(node);
                         if (node) cameraHandler(node);
                     } else if (nodeGraph) {
@@ -115,7 +115,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
                 let node: FactoryGraphNode = nodeGraph;
                 if (initialNodeSlug.current) {
                     const nodeSlug = initialNodeSlug.current;
-                    node = nodeList.find((n) => n.euid.startsWith(nodeSlug)) || nodeGraph;
+                    node = nodeList.find((n) => n.hash.startsWith(nodeSlug)) || nodeGraph;
                 }
                 _setSelectedNode(node);
                 cameraHandler(node);

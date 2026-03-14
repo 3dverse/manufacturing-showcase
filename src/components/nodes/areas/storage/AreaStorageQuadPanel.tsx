@@ -12,7 +12,7 @@ import type { AreaNode } from "@/content/type";
 /** Deterministic mock KPI data per area (replace with real API when available). */
 function useAreaStorageKpiData(area: AreaNode): AreaStorageKpiData {
     return useMemo(() => {
-        const seed = area.euid.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+        const seed = area.hash.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
         const periods = 6;
         const now = new Date();
         const monthAgo = (i: number) => {
@@ -39,7 +39,7 @@ function useAreaStorageKpiData(area: AreaNode): AreaStorageKpiData {
             storageDensityByTime,
             inventoryTurnoverByTime,
         };
-    }, [area.euid]);
+    }, [area.hash]);
 }
 
 //------------------------------------------------------------------------------

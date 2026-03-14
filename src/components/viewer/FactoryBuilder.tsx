@@ -1,4 +1,4 @@
-import { useCallback, useContext, useMemo } from "react";
+import { useContext, useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { AreaStorageQuadPanel } from "@/components/nodes/areas/storage/AreaStorageQuadPanel";
@@ -16,8 +16,9 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-import type { AreaNode, CellNode, FactoryGraphNode, LineNode } from "@/content/type";
+import type { AreaNode, CellNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
+import { useNavNode } from "../navigation/hooks";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -80,18 +81,18 @@ const FactoryBuilder = () => {
     return (
         <>
             {nodeGraph?.flows.map((flow) => (
-                <FlowSpline key={flow.euid} flow={flow} />
+                <FlowSpline key={flow.hash} flow={flow} />
             ))}
             {nodeGraph?.areas.map((area) => (
-                <AreaBuilderItem key={area.euid} area={area} />
+                <AreaBuilderItem key={area.hash} area={area} />
             ))}
             {shownLines.map((line) => (
-                <LineBuilderItem key={line.euid} line={line} />
+                <LineBuilderItem key={line.hash} line={line} />
             ))}
 
             {/* TODO: When factory is selected, show only the cells floors, not the NodeSummary */}
             {shownCells.map((cell) => (
-                <CellBuilderItem key={cell.euid} cell={cell} />
+                <CellBuilderItem key={cell.hash} cell={cell} />
             ))}
         </>
     );
@@ -101,19 +102,11 @@ const FactoryBuilder = () => {
 //------------------------------------------------------------------------------
 const LineBuilderItem = ({ line }: { line: LineNode }) => {
     //--------------------------------------------------------------------------
-    // Context
-    const { setSelectedNode } = useContext(SelectionContext);
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    const clickHandler = useCallback((node: FactoryGraphNode) => setSelectedNode(node), [setSelectedNode]);
-
-    //--------------------------------------------------------------------------
     // Render
     return (
         <>
-            <FloorRegion node={line} onClick={clickHandler} />
-            <NodeSummary node={line} onClick={clickHandler} />
+            <FloorRegion node={line} />
+            <NodeSummary node={line} />
         </>
     );
 };
@@ -122,24 +115,16 @@ const LineBuilderItem = ({ line }: { line: LineNode }) => {
 //------------------------------------------------------------------------------
 const CellBuilderItem = ({ cell }: { cell: CellNode }) => {
     //--------------------------------------------------------------------------
-    // Context
-    const { setSelectedNode } = useContext(SelectionContext);
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    const clickHandler = useCallback((node: FactoryGraphNode) => setSelectedNode(node), [setSelectedNode]);
-
-    //--------------------------------------------------------------------------
     // Render
     if (cell.parent.type === NodeTypes.area) {
         return (
             <>
-                <FloorRegion node={cell} onClick={clickHandler} />
-                <NodeSummary node={cell} onClick={clickHandler} />
+                <FloorRegion node={cell} />
+                <NodeSummary node={cell} />
             </>
         );
     } else {
-        return <FloatingLabel node={cell} onClick={clickHandler} />;
+        return <FloatingLabel node={cell} />;
     }
 };
 
@@ -147,23 +132,18 @@ const CellBuilderItem = ({ cell }: { cell: CellNode }) => {
 //------------------------------------------------------------------------------
 const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
     //--------------------------------------------------------------------------
+    // Hooks
+    const { isSelected, isChildSelected } = useNavNode(area, "dom3d");
+
+    //--------------------------------------------------------------------------
     // Context
-    const { selectedNode, setSelectedNode } = useContext(SelectionContext);
-
-    //--------------------------------------------------------------------------
-    // Memos
-    const isSelected = useMemo(() => area === selectedNode, [area, selectedNode]);
-    const isChildSelected = selectedNode?.type === NodeTypes.cell && selectedNode?.parent?.euid === area.euid;
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    const clickHandler = useCallback((node: FactoryGraphNode) => setSelectedNode(node), [setSelectedNode]);
+    const { selectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
     // Render
     return (
         <>
-            <FloorOutline node={area} onClick={clickHandler} />
+            <FloorOutline node={area} />
             {(isSelected || isChildSelected) && area.name === "storage" && (
                 <div className="pointer-events-none">
                     <AreaStorageOverlay area={area} />

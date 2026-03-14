@@ -129,11 +129,11 @@ const Navigation = ({
     //--------------------------------------------------------------------------
     return (
         <Tabs className={cn("text-sm", className)}>
-            <TabItem isActive={activeTab === "global"} onClick={() => setActiveTab("global")}>
+            <TabItem isSelected={activeTab === "global"} onClick={() => setActiveTab("global")}>
                 Global
             </TabItem>
             {modules?.map((module) => (
-                <TabItem key={module.id} isActive={activeTab === module.id} onClick={() => setActiveTab(module.id)}>
+                <TabItem key={module.id} isSelected={activeTab === module.id} onClick={() => setActiveTab(module.id)}>
                     {module.name}
                 </TabItem>
             ))}

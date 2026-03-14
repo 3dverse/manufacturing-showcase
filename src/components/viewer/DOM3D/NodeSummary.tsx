@@ -1,45 +1,34 @@
 //------------------------------------------------------------------------------
-import { useCallback, useContext, useMemo } from "react";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
-import { HoverContext } from "@/contexts/HoverContext";
-import { SelectionContext } from "@/contexts/SelectionContext";
-
-//------------------------------------------------------------------------------
+import { useNavNode } from "@/components/navigation/hooks";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
 import type { FactoryGraphNode } from "@/content/type";
+import { useMemo } from "react";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const NodeSummary = ({
-    node,
-    onClick,
-}: {
-    node: FactoryGraphNode;
-    onClick?: (node: FactoryGraphNode) => void;
-}) => {
+export const NodeSummary = ({ node }: { node: FactoryGraphNode }) => {
     //--------------------------------------------------------------------------
-    // Context
-    const { selectedNode } = useContext(SelectionContext);
-    const { setHoveredNode } = useContext(HoverContext);
+    // Hooks
+    const { clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } = useNavNode(node, "dom3d");
 
     //--------------------------------------------------------------------------
     // Memos
-    const isSelected = useMemo(() => node === selectedNode, [node, selectedNode]);
+    const stateClassName = useMemo(() => {
+        const classNames = [isSelected ? "pointer-events-none" : "cursor-pointer"];
+        if (!isSelected && isHovered) classNames.push("bg-slate-0/20 border-accent");
+        return cn(...classNames);
+    }, [isSelected, isHovered]);
 
     //--------------------------------------------------------------------------
-    // Handlers
-    const mouseEnterHandler = useCallback(() => setHoveredNode(node), [setHoveredNode, node]);
-
-    //--------------------------------------------------------------------------
-    const mouseLeaveHandler = useCallback(() => setHoveredNode(undefined), [setHoveredNode]);
-
-    //--------------------------------------------------------------------------
-    const mouseClickHandler = useCallback(() => onClick?.(node), [onClick, node]);
+    const pStateClassName = useMemo(() => {
+        return isHovered ? "bg-accent text-slate-0 border-accent-600" : "";
+    }, [isHovered]);
 
     //--------------------------------------------------------------------------
     // Render
@@ -48,20 +37,23 @@ export const NodeSummary = ({
             entity={node.entity}
             face="right"
             className="flex items-end pb-4"
-            style={{
-                display: isSelected ? "none" : undefined,
-            }}
+            style={{ display: isSelected ? "none" : undefined }}
         >
             <div
                 className={cn(
                     "group w-full h-48 p-2 border-2 rounded-xl border-slate-0 transition-colors duration-200",
-                    isSelected ? "" : "hover:bg-slate-0/20 hover:border-accent cursor-pointer",
+                    stateClassName,
                 )}
-                onClick={mouseClickHandler}
+                onClick={clickHandler}
                 onMouseEnter={mouseEnterHandler}
                 onMouseLeave={mouseLeaveHandler}
             >
-                <p className="px-3 py-1 w-fit text-slate-800 text-base capitalize bg-slate-0/50 border border-slate-0/50 group-hover:bg-accent group-hover:text-slate-0 group-hover:border-accent-600 rounded-lg backdrop-blur-sm">
+                <p
+                    className={cn(
+                        "px-3 py-1 w-fit text-slate-800 text-base capitalize bg-slate-0/50 border border-slate-0/50 rounded-lg backdrop-blur-sm transition-colors duration-200",
+                        pStateClassName,
+                    )}
+                >
                     {node.name} {node.type === NodeTypes.line && "LINE"}
                 </p>
             </div>

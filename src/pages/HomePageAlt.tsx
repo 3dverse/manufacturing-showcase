@@ -14,6 +14,7 @@ import { Router, type RouteChangeEvent } from "@/core/Router";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
+import { InactiveOverlay } from "@/components/viewer/overlays/InactiveOverlay";
 import { DisconnectedOverlay } from "@/components/viewer/overlays/DisconnectedOverlay";
 import { CameraContextProvider } from "@/components/contextProviders/CameraContextProvider";
 import { GhettoReconnectContextProvider } from "@/components/contextProviders/GhettoReconnectContextProvider";
@@ -23,10 +24,8 @@ import { TOKEN_3DVERSE } from "@/content/3dverse";
 import { factories } from "@/content/factory";
 import type { Factory } from "@/content/factory";
 import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
-import { InactiveOverlay } from "@/components/viewer/overlays/InactiveOverlay";
 
 //------------------------------------------------------------------------------
-
 //------------------------------------------------------------------------------
 export default function HomePageAlt() {
     //--------------------------------------------------------------------------

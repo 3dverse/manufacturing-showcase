@@ -19,14 +19,17 @@ export function HoverContextProvider({ children }: { children: ReactNode }) {
     //--------------------------------------------------------------------------
     // State
     const [hoveredNode, _setHoveredNode] = useState<FactoryGraphNode>();
+    const [hoverSource, setHoverSource] = useState<"nav" | "dom3d">();
 
     //--------------------------------------------------------------------------
     // Handlers
     const setHoveredNode = useCallback(
-        (node: FactoryGraphNode | undefined) => {
+        (node: FactoryGraphNode | undefined, source: "nav" | "dom3d") => {
             if (selectedNode === node) {
+                setHoverSource(undefined);
                 _setHoveredNode(undefined);
             } else {
+                setHoverSource(source);
                 _setHoveredNode(node);
             }
         },
@@ -42,6 +45,7 @@ export function HoverContextProvider({ children }: { children: ReactNode }) {
     // Effects
     useEffect(() => {
         if (selectedNode === hoveredNode) {
+            setHoverSource(undefined);
             _setHoveredNode(undefined);
         }
     }, [selectedNode, hoveredNode]);
@@ -50,10 +54,11 @@ export function HoverContextProvider({ children }: { children: ReactNode }) {
     const value = useMemo(
         () => ({
             hoveredNode,
+            hoverSource,
             setHoveredNode,
             setHoveredNodeByEntity,
         }),
-        [hoveredNode, setHoveredNode, setHoveredNodeByEntity],
+        [hoveredNode, hoverSource, setHoveredNode, setHoveredNodeByEntity],
     );
 
     return <HoverContext.Provider value={value}>{children}</HoverContext.Provider>;

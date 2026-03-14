@@ -1,58 +1,36 @@
 //------------------------------------------------------------------------------
-import { useCallback, useContext, useMemo } from "react";
+import { useMemo } from "react";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
-import { HoverContext } from "@/contexts/HoverContext";
-import { SelectionContext } from "@/contexts/SelectionContext";
-
-//------------------------------------------------------------------------------
+import { useNavNode } from "@/components/navigation/hooks";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import type { FactoryGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export const FloorRegion = ({
-    node,
-    onClick,
-}: {
-    node: FactoryGraphNode;
-    onClick?: (node: FactoryGraphNode) => void;
-}) => {
+//------------------------------------------------------------------------------
+export const FloorRegion = ({ node }: { node: FactoryGraphNode }) => {
     //--------------------------------------------------------------------------
-    // Context
-    const { selectedNode } = useContext(SelectionContext);
-    const { setHoveredNode } = useContext(HoverContext);
+    // Hooks
+    const { clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } = useNavNode(node, "dom3d");
 
     //--------------------------------------------------------------------------
     // Memos
-    const isSelected = useMemo(() => node === selectedNode, [node, selectedNode]);
-
-    //--------------------------------------------------------------------------
-    const isHoverable = useMemo(() => !isSelected, [isSelected]);
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    const mouseEnterHandler = useCallback(() => setHoveredNode(node), [setHoveredNode, node]);
-
-    //--------------------------------------------------------------------------
-    const mouseLeaveHandler = useCallback(() => setHoveredNode(undefined), [setHoveredNode]);
-
-    //--------------------------------------------------------------------------
-    const mouseClickHandler = useCallback(() => onClick?.(node), [onClick, node]);
+    const stateClassName = useMemo(() => {
+        const classNames = [isSelected ? "pointer-events-none" : "cursor-pointer"];
+        if (!isSelected && isHovered) classNames.push("bg-slate-0/20");
+        return cn(...classNames);
+    }, [isSelected, isHovered]);
 
     //--------------------------------------------------------------------------
     // Render
     return (
         <BoundingBoxFaceProjection entity={node.entity} face="bottom">
             <div
-                className={cn(
-                    "w-full h-full rounded-xl transition-colors duration-200",
-                    isSelected ? "border-8 border-accent-500" : "",
-                    isHoverable ? "hover:bg-slate-0/20 cursor-pointer" : "pointer-events-none",
-                )}
-                onClick={mouseClickHandler}
+                className={cn("w-full h-full rounded-xl transition-colors duration-200", stateClassName)}
+                onClick={clickHandler}
                 onMouseEnter={mouseEnterHandler}
                 onMouseLeave={mouseLeaveHandler}
             />

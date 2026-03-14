@@ -17,7 +17,7 @@ import type {
 export const buildFactoryGraph = async (params: {
     entities: Entity[];
 }): Promise<{
-    graph?: FactoryNode;
+    graph: FactoryNode;
     list: FactoryGraphNode[];
 }> => {
     const { entities } = params;
@@ -87,8 +87,8 @@ export const buildFactoryGraph = async (params: {
     //--------------------------------------------------------------------------
     const mapFactoryEntity = (factoryEntity: Entity) => {
         const factory: FactoryNode = {
+            hash: hashEntity(factoryEntity),
             entity: factoryEntity,
-            euid: factoryEntity.euid.value,
             type: NodeTypes.factory,
             name: parseName(factoryEntity),
             areas: [],
@@ -104,8 +104,8 @@ export const buildFactoryGraph = async (params: {
     //--------------------------------------------------------------------------
     const mapAreaEntity = (areaEntity: Entity, parent: FactoryNode) => {
         const area: AreaNode = {
+            hash: hashEntity(areaEntity),
             entity: areaEntity,
-            euid: areaEntity.euid.value,
             type: NodeTypes.area,
             name: parseName(areaEntity),
             parent,
@@ -114,12 +114,15 @@ export const buildFactoryGraph = async (params: {
         };
 
         area.lines = lines
-            .filter((l) => inLineage(l, area.euid))
+            .filter((l) => inLineage(l, areaEntity.euid.value))
             .map((e) => mapLineEntity(e, area))
             .sort(sortNode);
 
         area.cells = cells
-            .filter((c) => inLineage(c, area.euid) && area.lines.every((l) => !inLineage(c, l.euid)))
+            .filter(
+                (c) =>
+                    inLineage(c, areaEntity.euid.value) && area.lines.every((l) => !inLineage(c, l.entity.euid.value)),
+            )
             .map((e) => mapCellEntity(e, area))
             .sort(sortNode);
 
@@ -130,8 +133,8 @@ export const buildFactoryGraph = async (params: {
     //--------------------------------------------------------------------------
     const mapLineEntity = (lineEntity: Entity, parent: AreaNode) => {
         const line: LineNode = {
+            hash: hashEntity(lineEntity),
             entity: lineEntity,
-            euid: lineEntity.euid.value,
             type: NodeTypes.line,
             name: parseName(lineEntity),
             parent,
@@ -150,15 +153,15 @@ export const buildFactoryGraph = async (params: {
     //--------------------------------------------------------------------------
     const mapCellEntity = (cellEntity: Entity, parent: AreaNode | LineNode) => {
         const cell: CellNode = {
+            hash: hashEntity(cellEntity),
             entity: cellEntity,
-            euid: cellEntity.euid.value,
             type: NodeTypes.cell,
             name: parseName(cellEntity),
             parent,
             machines: [],
         };
         cell.machines = machines
-            .filter((m) => inLineage(m, cell.euid))
+            .filter((m) => inLineage(m, cellEntity.euid.value))
             .map((e) => mapMachineEntity(e, cell))
             .sort(sortNode);
         list.push(cell);
@@ -168,8 +171,8 @@ export const buildFactoryGraph = async (params: {
     //--------------------------------------------------------------------------
     const mapMachineEntity = (machineEntity: Entity, parent: CellNode) => {
         const machine: MachineNode = {
+            hash: hashEntity(machineEntity),
             entity: machineEntity,
-            euid: machineEntity.euid.value,
             type: NodeTypes.machine,
             name: parseName(machineEntity),
             parent,
@@ -204,8 +207,8 @@ export const buildFactoryGraph = async (params: {
         ],
     ) => {
         const flow: FlowNode = {
+            hash: hashEntity(flowEntity),
             entity: flowEntity,
-            euid: flowEntity.euid.value,
             type: NodeTypes.flow,
             name: parseName(flowEntity),
             entityInEUID: entityInEUID ?? "",
@@ -224,6 +227,9 @@ export const buildFactoryGraph = async (params: {
     });
 
     const graph = factoryNodes.length > 0 ? factoryNodes[0] : undefined;
+    if (!graph) {
+        throw new Error();
+    }
     return { graph, list };
 };
 
@@ -237,6 +243,21 @@ function parseName(entity: Entity): string {
 function inLineage(child: Entity, ancestorEuid: string): boolean {
     const lin = child.lineage?.value ?? "";
     return lin.includes(ancestorEuid);
+}
+
+//------------------------------------------------------------------------------
+function hashEntity(entity: Entity): string {
+    const EUIDs = [entity.euid.value];
+    if (entity.lineage) EUIDs.push(...entity.lineage.value);
+    const str = EUIDs.join("|");
+
+    let hash = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+        hash ^= str.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+    }
+
+    return (hash >>> 0).toString(16).padStart(8, "0").slice(0, 8);
 }
 
 //------------------------------------------------------------------------------

@@ -131,7 +131,7 @@ export type Action = {
 //------------------------------------------------------------------------------
 type _FactoryGraphNode = {
     entity: Entity;
-    euid: string;
+    hash: string;
     name: string;
 };
 export type FactoryNode = _FactoryGraphNode & { type: NodeTypes.factory; areas: AreaNode[]; flows: FlowNode[] };

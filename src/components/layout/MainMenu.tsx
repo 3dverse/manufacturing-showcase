@@ -14,13 +14,13 @@ import { mainMenuItems } from "@/content/mainMenuItems";
 const MenuItem = ({
     label,
     icon,
-    isActive,
+    isSelected,
     isDisabled,
     onClick,
 }: {
     label: string;
     icon: IconDefinition;
-    isActive: boolean;
+    isSelected: boolean;
     isDisabled?: boolean;
     onClick: () => void;
 }) => {
@@ -31,7 +31,7 @@ const MenuItem = ({
                 className={cn(
                     "flex flex-col items-center justify-center gap-1 p-1 aspect-square rounded-md transition-colors duration-200 cursor-pointer",
                     "hover:bg-accent/5 hover:text-accent",
-                    isActive ? "bg-accent! text-accent-100!" : "text-muted",
+                    isSelected ? "bg-accent! text-accent-100!" : "text-muted",
                     isDisabled ? "opacity-50 cursor-not-allowed" : "",
                 )}
             >
@@ -70,7 +70,7 @@ const MainMenu = ({
                         <MenuItem
                             key={item.label}
                             {...item}
-                            isActive={currentRoute === item.href}
+                            isSelected={currentRoute === item.href}
                             isDisabled={!!item.isDisabled}
                             onClick={() => handleClick(item.href)}
                         />

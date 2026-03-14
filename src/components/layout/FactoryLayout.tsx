@@ -4,7 +4,7 @@ import { useContext } from "react";
 //------------------------------------------------------------------------------
 import { Viewer } from "@/components/viewer/Viewer";
 import { MainHeader } from "@/components/layout/MainHeader";
-import { MainNav } from "@/components/layout/MainNav";
+import { Navigation } from "@/components/navigation/Navigation";
 import { FactoryPanel } from "@/components/nodes/factory/FactoryPanel";
 import { GenericAreaPanel } from "@/components/nodes/areas/GenericAreaPanel";
 import { LinePanel } from "@/components/nodes/lines/LinePanel";
@@ -48,7 +48,7 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
 
                 {!thumbnailMode && (
                     <div className="flex items-end justify-center grow pb-8">
-                        <MainNav />
+                        <Navigation />
                     </div>
                 )}
             </div>

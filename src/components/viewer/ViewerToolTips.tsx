@@ -9,7 +9,7 @@ import { NodeTypes } from "@/content/enums";
 export const ViewerToolTips = () => {
     //--------------------------------------------------------------------------
     // Context
-    const { hoveredNode } = useContext(HoverContext);
+    const { hoveredNode, hoverSource } = useContext(HoverContext);
 
     //--------------------------------------------------------------------------
     // Refs
@@ -18,7 +18,7 @@ export const ViewerToolTips = () => {
 
     //--------------------------------------------------------------------------
     // Memos
-    const isTooltipVisible = useMemo(() => Boolean(hoveredNode), [hoveredNode]);
+    const isTooltipVisible = useMemo(() => Boolean(hoverSource === "dom3d" && hoveredNode), [hoveredNode, hoverSource]);
 
     //--------------------------------------------------------------------------
     const hoveredArea = useMemo(() => {

@@ -7,7 +7,7 @@ import type { Factory } from "@/content/factory";
 //------------------------------------------------------------------------------
 type FactoryContextType = {
     factory: Factory;
-    nodeGraph?: FactoryNode;
+    nodeGraph: FactoryNode;
     nodeList: FactoryGraphNode[];
 };
 

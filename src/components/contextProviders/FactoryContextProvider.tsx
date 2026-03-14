@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useEntities } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
@@ -21,28 +21,36 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
     const { entities: tagEntities } = useEntities({ mandatory_components: ["tags"] });
 
     //--------------------------------------------------------------------------
-    const [graph, setGraph] = useState<FactoryNode | undefined>(undefined);
-    const [list, setList] = useState<FactoryGraphNode[]>([]);
+    // State
+    const [nodeGraph, setNodeGraph] = useState<FactoryNode | undefined>(undefined);
+    const [nodeList, setNodeList] = useState<FactoryGraphNode[] | undefined>(undefined);
 
     //--------------------------------------------------------------------------
+    // Effects
     useEffect(() => {
         // Merge entities and remove duplicates
         const entities = [...sceneRefEntities, ...tagEntities].filter(
             (e, index, self) => index === self.findIndex((t) => t.euid.value === e.euid.value),
         );
-        buildFactoryGraph({ entities }).then(({ graph: g, list: l }) => {
-            setGraph(g);
-            setList(l);
-        });
+        buildFactoryGraph({ entities })
+            .then(({ graph, list }) => {
+                setNodeGraph(graph);
+                setNodeList(list);
+            })
+            .catch(() => {
+                console.warn("error loading entities");
+            });
     }, [sceneRefEntities, tagEntities]);
 
-    const value = {
-        factory,
-        nodeGraph: graph,
-        nodeList: list,
-    };
+    //--------------------------------------------------------------------------
+    // Memos
+    const value = useMemo(() => {
+        if (!nodeGraph || !nodeList) return;
+        return { factory, nodeGraph, nodeList };
+    }, [factory, nodeGraph, nodeList]);
 
     //--------------------------------------------------------------------------
     // Render
+    if (!value) return <></>;
     return <FactoryContext.Provider value={value}>{children}</FactoryContext.Provider>;
 };

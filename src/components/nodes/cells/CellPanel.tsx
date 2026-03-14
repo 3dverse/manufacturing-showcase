@@ -81,7 +81,7 @@ export function CellPanel({ cell }: { cell: CellNode }) {
 
             {cell.machines.map((machine, index) => (
                 <MachinePanel
-                    key={machine.euid}
+                    key={machine.hash}
                     machine={machine}
                     className="appear-in-from-right opacity-0"
                     style={

@@ -28,7 +28,7 @@ export type CellKpiData = {
 /** Deterministic mock KPI data per cell (replace with real API when available). */
 export function useCellKpis(cell: CellNode): CellKpiData {
     return useMemo(() => {
-        const seed = cell.euid.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+        const seed = cell.hash.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
         const r = (min: number, max: number, s = 0) => {
             const x = Math.sin((seed + s) * 12.989) * 43758.5453;
             return min + (x - Math.floor(x)) * (max - min);
@@ -55,5 +55,5 @@ export function useCellKpis(cell: CellNode): CellKpiData {
             oeeHistory,
             scrapRateHistory,
         };
-    }, [cell.euid]);
+    }, [cell.hash]);
 }
