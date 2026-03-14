@@ -1,7 +1,11 @@
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
+
+//------------------------------------------------------------------------------
+import { OverlayShroud } from "./_fragments/OverlayShroud";
+import { LivelinkExfilContext } from "@/contexts/LivelinkExfilContext";
 
 //------------------------------------------------------------------------------
 const INACTIVITY = "inactivity";
@@ -27,7 +31,8 @@ const getDescription = (error: string) => {
 //------------------------------------------------------------------------------
 export const DisconnectedOverlay = ({ error }: { error: string }) => {
     //--------------------------------------------------------------------------
-    const { reconnect } = useContext(GhettoReconnectContext);
+    const { canvasRef } = useContext(LivelinkExfilContext);
+    const { reconnect, backdropUrl, setBackdropUrl } = useContext(GhettoReconnectContext);
 
     //--------------------------------------------------------------------------
     // Memos
@@ -36,17 +41,23 @@ export const DisconnectedOverlay = ({ error }: { error: string }) => {
     }, [error]);
 
     //--------------------------------------------------------------------------
+    // Effects
+    useEffect(() => {
+        setBackdropUrl(canvasRef.current?.toDataURL());
+    }, [setBackdropUrl, canvasRef]);
+
+    //--------------------------------------------------------------------------
     return (
-        <div className="absolute z-100 inset-0 object-cover  backdrop-grayscale transition-[backdrop-filter] duration-500 flex items-center justify-center">
+        <OverlayShroud backdropUrl={backdropUrl} transition={true}>
             <div className="p-12 bg-white border border-gray-400 rounded text-center">
                 <p>{description}</p>
                 <button
-                    className="px-4 py-2 mt-6 bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors duration-200"
+                    className="px-4 py-2 mt-6 bg-accent-600 text-white rounded-md hover:bg-accent-700 active:bg-accent-800 transition-colors duration-200"
                     onClick={reconnect}
                 >
                     Reconnect
                 </button>
             </div>
-        </div>
+        </OverlayShroud>
     );
 };

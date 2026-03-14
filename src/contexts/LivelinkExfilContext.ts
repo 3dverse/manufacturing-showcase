@@ -3,28 +3,22 @@ import { DefaultCameraController } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
 import type { RefObject } from "react";
-import type { Entity, Quat, Vec3, Viewport } from "@3dverse/livelink";
-
-type POV = {
-    position: Vec3;
-    orientation: Quat;
-};
+import type { Entity, Viewport } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
-type CameraContextType = {
+type LivelinkExfilContextType = {
     cameraControllerRef: RefObject<DefaultCameraController | null>;
     viewportRef: RefObject<Viewport | null>;
     canvasRef: RefObject<HTMLCanvasElement | null>;
     cameraEntity: Entity | null;
     setCameraEntity: (entity: Entity | null) => void;
-    connectionPOV: RefObject<POV>;
 };
 
 //------------------------------------------------------------------------------
-export const CameraContext = createContext(
-    new Proxy({} as CameraContextType, {
+export const LivelinkExfilContext = createContext(
+    new Proxy({} as LivelinkExfilContextType, {
         get() {
-            throw new Error("CameraContext must be used within a CameraContextProvider");
+            throw new Error("LivelinkExfilContext must be used within a LivelinkExfilContextProvider");
         },
     }),
 );

@@ -7,6 +7,7 @@ import {
     useCameraEntity,
     LivelinkContext,
     DOM3DOverlay,
+    CanvasContext,
 } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
@@ -15,7 +16,8 @@ import { ViewerToolTips } from "@/components/viewer/ViewerToolTips";
 import FactoryBuilder from "@/components/viewer/FactoryBuilder";
 
 //------------------------------------------------------------------------------
-import { CameraContext } from "@/contexts/CameraContext";
+import { LivelinkExfilContext } from "@/contexts/LivelinkExfilContext";
+import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -23,7 +25,8 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     //--------------------------------------------------------------------------
     // Contexts
     const { isConnecting } = useContext(LivelinkContext);
-    const { connectionPOV, viewportRef, cameraControllerRef, setCameraEntity } = useContext(CameraContext);
+    const { viewportRef, cameraControllerRef, setCameraEntity } = useContext(LivelinkExfilContext);
+    const { connectionPOV } = useContext(GhettoReconnectContext);
 
     //--------------------------------------------------------------------------
     // State
@@ -50,9 +53,9 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     useEffect(() => {
         if (instance) {
             //instance.activity_watcher.setTimeouts({
-            //     warn_after_seconds: 10,
-            //     timeout_after_seconds: 15,
-            // });
+            //    warn_after_seconds: 10,
+            //    timeout_after_seconds: 15,
+            //});
         }
     }, [instance]);
 
@@ -71,6 +74,7 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
                         Connected
                     </div>
                 )}
+                <Exfil />
                 <CameraController ref={cameraControllerRef} />
                 {!thumbnailMode && (
                     <>
@@ -87,4 +91,23 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
             {/* <span className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-accent to-transparent mix-blend-multiply pointer-events-none opacity-80" /> */}
         </Canvas>
     );
+};
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+const Exfil = () => {
+    //--------------------------------------------------------------------------
+    // Contexts
+    const { canvas } = useContext(CanvasContext);
+    const { canvasRef } = useContext(LivelinkExfilContext);
+
+    //--------------------------------------------------------------------------
+    // Effects
+    useEffect(() => {
+        canvasRef.current = canvas;
+    }, [canvasRef, canvas]);
+
+    //--------------------------------------------------------------------------
+    // Render
+    return <></>;
 };

@@ -1,12 +1,16 @@
-import { CameraContext } from "@/contexts/CameraContext";
 import { useContext, useEffect } from "react";
+
+//------------------------------------------------------------------------------
+import { LivelinkExfilContext } from "@/contexts/LivelinkExfilContext";
+import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const InactiveOverlay = () => {
     //--------------------------------------------------------------------------
     // Contexts
-    const { connectionPOV, cameraEntity } = useContext(CameraContext);
+    const { cameraEntity } = useContext(LivelinkExfilContext);
+    const { connectionPOV } = useContext(GhettoReconnectContext);
 
     //--------------------------------------------------------------------------
     // Effects

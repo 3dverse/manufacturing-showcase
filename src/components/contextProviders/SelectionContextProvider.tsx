@@ -3,7 +3,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState, type Rea
 
 //------------------------------------------------------------------------------
 import { SelectionContext } from "@/contexts/SelectionContext";
-import { CameraContext } from "@/contexts/CameraContext";
+import { LivelinkExfilContext } from "@/contexts/LivelinkExfilContext";
 import { FactoryContext } from "@/contexts/FactoryContext";
 
 //------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
     //--------------------------------------------------------------------------
     // Context
     const { factory, nodeGraph, nodeList } = useContext(FactoryContext);
-    const { viewportRef, cameraControllerRef, cameraEntity } = useContext(CameraContext);
+    const { viewportRef, cameraControllerRef, cameraEntity } = useContext(LivelinkExfilContext);
 
     //--------------------------------------------------------------------------
     // State

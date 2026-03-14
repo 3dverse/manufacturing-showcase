@@ -2,7 +2,7 @@
 import { useContext, useCallback, useMemo, type MouseEvent } from "react";
 
 //------------------------------------------------------------------------------
-import { CameraContext } from "@/contexts/CameraContext";
+import { LivelinkExfilContext } from "@/contexts/LivelinkExfilContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ export const useNavNode = (node: FactoryGraphNode, source: "nav" | "dom3d") => {
     // Contexts
     const { selectedNode, setSelectedNode } = useContext(SelectionContext);
     const { hoveredNode, setHoveredNode } = useContext(HoverContext);
-    const { cameraControllerRef, viewportRef, cameraEntity } = useContext(CameraContext);
+    const { cameraControllerRef, viewportRef, cameraEntity } = useContext(LivelinkExfilContext);
 
     //--------------------------------------------------------------------------
     // Memos

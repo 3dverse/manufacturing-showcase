@@ -3,12 +3,12 @@ import { DefaultCameraController } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";
-import { CameraContext } from "@/contexts/CameraContext";
-import type { Entity, Quat, Vec3, Viewport } from "@3dverse/livelink";
+import { LivelinkExfilContext } from "@/contexts/LivelinkExfilContext";
+import type { Entity, Viewport } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const CameraContextProvider = ({ children }: { children: ReactNode }) => {
+export const LivelinkExfilContextProvider = ({ children }: { children: ReactNode }) => {
     //--------------------------------------------------------------------------
     // refs
     const cameraControllerRef = useRef<DefaultCameraController | null>(null);
@@ -18,10 +18,6 @@ export const CameraContextProvider = ({ children }: { children: ReactNode }) => 
     //--------------------------------------------------------------------------
     // State
     const [cameraEntity, setCameraEntity] = useState<Entity | null>(null);
-    const connectionPOV = useRef<{ position: Vec3; orientation: Quat }>({
-        position: [1000, 1000, -1000],
-        orientation: [-0.70710678, 0, 0, 0.70710678],
-    });
 
     //--------------------------------------------------------------------------
     // Memos
@@ -32,11 +28,10 @@ export const CameraContextProvider = ({ children }: { children: ReactNode }) => 
             canvasRef,
             cameraEntity,
             setCameraEntity,
-            connectionPOV,
         };
-    }, [cameraControllerRef, viewportRef, canvasRef, cameraEntity, connectionPOV]);
+    }, [cameraControllerRef, viewportRef, canvasRef, cameraEntity]);
 
     //--------------------------------------------------------------------------
     if (!value) return;
-    return <CameraContext.Provider value={value}>{children}</CameraContext.Provider>;
+    return <LivelinkExfilContext.Provider value={value}>{children}</LivelinkExfilContext.Provider>;
 };

@@ -2,7 +2,6 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Livelink } from "@3dverse/livelink-react";
-import { LoadingOverlay } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
 import { FactoryProviders } from "@/components/layout/FactoryProviders";
@@ -14,16 +13,19 @@ import { Router, type RouteChangeEvent } from "@/core/Router";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
+import { LoadingOverlay } from "@/components/viewer/overlays/LoadingOverlay";
 import { InactiveOverlay } from "@/components/viewer/overlays/InactiveOverlay";
 import { DisconnectedOverlay } from "@/components/viewer/overlays/DisconnectedOverlay";
-import { CameraContextProvider } from "@/components/contextProviders/CameraContextProvider";
+
+//------------------------------------------------------------------------------
+import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
+import { LivelinkExfilContextProvider } from "@/components/contextProviders/LivelinkExfilContextProvider";
 import { GhettoReconnectContextProvider } from "@/components/contextProviders/GhettoReconnectContextProvider";
 
 //------------------------------------------------------------------------------
 import { TOKEN_3DVERSE } from "@/content/3dverse";
 import { factories } from "@/content/factory";
 import type { Factory } from "@/content/factory";
-import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -186,7 +188,7 @@ const FactoryItem = ({
             )}
         >
             <div className="relative w-full h-full">
-                <CameraContextProvider>
+                <LivelinkExfilContextProvider>
                     <Livelink
                         sceneId={factory.scene_id}
                         token={TOKEN_3DVERSE}
@@ -201,7 +203,7 @@ const FactoryItem = ({
                             {isOpen && <MainGuidance />}
                         </FactoryProviders>
                     </Livelink>
-                </CameraContextProvider>
+                </LivelinkExfilContextProvider>
             </div>
         </motion.div>
     );
