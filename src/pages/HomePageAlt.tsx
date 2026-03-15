@@ -14,7 +14,6 @@ import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import { LoadingOverlay } from "@/components/viewer/overlays/LoadingOverlay";
-import { InactiveOverlay } from "@/components/viewer/overlays/InactiveOverlay";
 import { DisconnectedOverlay } from "@/components/viewer/overlays/DisconnectedOverlay";
 
 //------------------------------------------------------------------------------
@@ -195,7 +194,6 @@ const FactoryItem = ({
                         isTransient={reconnector}
                         LoadingPanel={LoadingOverlay}
                         ConnectionErrorPanel={DisconnectedOverlay}
-                        InactivityWarningPanel={InactiveOverlay}
                     >
                         <FactoryProviders factory={factory}>
                             <FactoryLayout thumbnailMode={!isOpen} onBack={deselectHandler} />

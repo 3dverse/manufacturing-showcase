@@ -6,6 +6,7 @@ import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
 //------------------------------------------------------------------------------
 import { OverlayShroud } from "./_fragments/OverlayShroud";
 import { LivelinkExfilContext } from "@/contexts/LivelinkExfilContext";
+import type { Quat, Vec3 } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 const INACTIVITY = "inactivity";
@@ -31,8 +32,8 @@ const getDescription = (error: string) => {
 //------------------------------------------------------------------------------
 export const DisconnectedOverlay = ({ error }: { error: string }) => {
     //--------------------------------------------------------------------------
-    const { canvasRef } = useContext(LivelinkExfilContext);
-    const { reconnect, backdropUrl, setBackdropUrl } = useContext(GhettoReconnectContext);
+    const { canvasRef, cameraControllerRef } = useContext(LivelinkExfilContext);
+    const { reconnect, backdropUrl, setBackdropUrl, connectionPOV } = useContext(GhettoReconnectContext);
 
     //--------------------------------------------------------------------------
     // Memos
@@ -43,8 +44,25 @@ export const DisconnectedOverlay = ({ error }: { error: string }) => {
     //--------------------------------------------------------------------------
     // Effects
     useEffect(() => {
+        connectionPOV.current = {
+            position: cameraControllerRef.current
+                ? ([
+                      cameraControllerRef.current.position.x,
+                      cameraControllerRef.current.position.y,
+                      cameraControllerRef.current?.position.z,
+                  ] as Vec3)
+                : connectionPOV.current.position,
+            orientation: cameraControllerRef.current
+                ? ([
+                      cameraControllerRef.current.orientation._w,
+                      cameraControllerRef.current.orientation._x,
+                      cameraControllerRef.current.orientation._y,
+                      cameraControllerRef.current.orientation._z,
+                  ] as Quat)
+                : connectionPOV.current.orientation,
+        };
         setBackdropUrl(canvasRef.current?.toDataURL());
-    }, [setBackdropUrl, canvasRef]);
+    }, [setBackdropUrl, canvasRef, cameraControllerRef, connectionPOV]);
 
     //--------------------------------------------------------------------------
     return (
