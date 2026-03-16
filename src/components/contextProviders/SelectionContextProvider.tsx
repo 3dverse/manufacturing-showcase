@@ -54,7 +54,8 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
     const setSelectedNode = useCallback(
         (node: NavGraphNode | undefined) => {
             const factorySlug = factory.slug;
-            const nodeSlug = node && isFactory(node) ? Router.uuidToSlug(node?.hash) : undefined;
+            const nodeSlug = node && !isFactory(node) ? Router.uuidToSlug(node?.hash) : undefined;
+
             Router.push({ factorySlug, nodeSlug });
             _setSelectedNode(node);
             if (node) cameraHandler(node);
@@ -109,7 +110,6 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
                 cameraEntity
             ) {
                 viewerInitialized.current = true;
-
                 let node: NavGraphNode = nodeGraph;
                 if (initialNodeSlug.current) {
                     const nodeSlug = initialNodeSlug.current;

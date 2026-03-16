@@ -3,16 +3,22 @@ import { useContext } from "react";
 //------------------------------------------------------------------------------
 import { Livelink } from "@3dverse/livelink-react";
 import { LoadingOverlay } from "@/components/viewer/overlays/LoadingOverlay";
-import { DisconnectedOverlay } from "@/components/viewer/overlays/DisconnectedOverlay";
 
 //------------------------------------------------------------------------------
 import { TOKEN_3DVERSE } from "@/content/3dverse";
 import type { Factory } from "@/content/type";
-import { FactoryProviders } from "@/components/layout/FactoryProviders";
-import { LivelinkExfilContextProvider } from "@/components/contextProviders/LivelinkExfilContextProvider";
-import FactoryLayout from "@/components/layout/FactoryLayout";
-import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
+
+//------------------------------------------------------------------------------
 import { GhettoReconnectContextProvider } from "@/components/contextProviders/GhettoReconnectContextProvider";
+import { LivelinkExfilContextProvider } from "@/components/contextProviders/LivelinkExfilContextProvider";
+import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
+
+//------------------------------------------------------------------------------
+import { DisconnectedOverlay } from "@/components/viewer/overlays/DisconnectedOverlay";
+import { FactoryProviders } from "@/components/layout/FactoryProviders";
+
+//------------------------------------------------------------------------------
+import FactoryLayout from "@/components/layout/FactoryLayout";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------

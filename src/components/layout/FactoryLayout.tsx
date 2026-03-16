@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 
 //------------------------------------------------------------------------------
 import { Viewer } from "@/components/viewer/Viewer";
@@ -12,13 +12,12 @@ import { LinePanel } from "@/components/nodes/lines/LinePanel";
 import { CellPanel } from "@/components/nodes/cells/CellPanel";
 
 //------------------------------------------------------------------------------
+import { isArea, isLine, isCell } from "@/core/NavGraph";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import { SelectionContext } from "@/contexts/SelectionContext";
-
-//------------------------------------------------------------------------------
-import { isArea, isLine, isCell } from "@/core/NavGraph";
+import { Router } from "@/core/Router";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -26,6 +25,12 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
     //--------------------------------------------------------------------------
     // Context
     const { selectedNode } = useContext(SelectionContext);
+
+    //--------------------------------------------------------------------------
+    // Effects
+    useEffect(() => {
+        Router.init();
+    }, []);
 
     //--------------------------------------------------------------------------
     // Render

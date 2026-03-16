@@ -31,8 +31,8 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     //--------------------------------------------------------------------------
     // Contexts
     const { isConnecting } = useContext(LivelinkContext);
-    const { viewportRef, cameraControllerRef, setCameraEntity } = useContext(LivelinkExfilContext);
     const { connectionPOV } = useContext(GhettoReconnectContext);
+    const { viewportRef, cameraControllerRef, setCameraEntity } = useContext(LivelinkExfilContext);
 
     //--------------------------------------------------------------------------
     // State
