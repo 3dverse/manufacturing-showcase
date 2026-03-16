@@ -318,9 +318,6 @@ export const moveCamera = (
         orientation,
         aspect,
     });
-    const tpos = viewpoint.position || [0, 0, 0];
-    const forward = rotateVec3(viewpoint.orientation, [0, 0, -1]);
-    const target: [number, number, number] = [tpos[0] + forward[0], tpos[1] + forward[1], tpos[2] + forward[2]];
 
-    cameraController.setLookAt(...viewpoint.position, ...target, true);
+    cameraController.setLookAt(...viewpoint.position, ...entity.global_aabb.center, true);
 };
