@@ -1,32 +1,13 @@
 //------------------------------------------------------------------------------
 import { Fragment, useEffect, useState } from "react";
 import type { Entity } from "@3dverse/livelink";
-
-//------------------------------------------------------------------------------
-import type { AreaNode } from "@/content/type";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
-const MOCK_STORAGE_DATA = [
-    {
-        name: "Screen",
-        id: "screen",
-        quantity: 84,
-        maxQuantity: 300,
-    },
-    {
-        name: "Case",
-        id: "case",
-        quantity: 256,
-        maxQuantity: 350,
-    },
-    {
-        name: "Electronics",
-        id: "electronics",
-        quantity: 278,
-        maxQuantity: 320,
-    },
-];
+import { MOCK_STORAGE_DATA } from "@/components/nodes/areas/storage/content";
+
+//------------------------------------------------------------------------------
+import type { AreaNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------

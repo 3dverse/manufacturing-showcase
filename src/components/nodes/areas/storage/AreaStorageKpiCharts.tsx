@@ -1,10 +1,4 @@
 //------------------------------------------------------------------------------
-import { scaleLinear, scaleTime } from "@visx/scale";
-import { LinePath } from "@visx/shape";
-import { curveLinear } from "@visx/curve";
-import { Group } from "@visx/group";
-
-//------------------------------------------------------------------------------
 import { PanelLabel } from "@/components/common/panel";
 
 //------------------------------------------------------------------------------
@@ -22,8 +16,6 @@ export type AreaStorageKpiData = {
     inventoryTurnoverByTime: TimeSeriesPoint[];
 };
 
-const CHART_WIDTH = 180;
-const LINE_CHART_HEIGHT = 40;
 const PIE_SIZE = 90;
 
 //------------------------------------------------------------------------------
@@ -67,68 +59,6 @@ function OccupancyPieChart({
 }
 
 //------------------------------------------------------------------------------
-function KpiLineChart({
-    data,
-    label,
-    valueFormat = (v: number) => v.toFixed(0),
-    currentValue,
-    color = "var(--color-informative-500)",
-    width = CHART_WIDTH,
-    height = LINE_CHART_HEIGHT,
-    className,
-}: {
-    data: TimeSeriesPoint[];
-    label?: string;
-    valueFormat?: (v: number) => string;
-    currentValue?: number;
-    color?: string;
-    width?: number;
-    height?: number;
-    className?: string;
-}) {
-    if (data.length === 0) return null;
-    const margin = { top: 2, right: 2, bottom: 2, left: 2 };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
-    const dateExtent = [
-        Math.min(...data.map((d) => d.date.getTime())),
-        Math.max(...data.map((d) => d.date.getTime())),
-    ] as [number, number];
-    const xScale = scaleTime({ domain: dateExtent, range: [0, innerWidth] });
-    const values = data.map((d) => d.value);
-    const maxVal = Math.max(...values, 0.01);
-    const minVal = Math.min(...values, maxVal);
-    const yScale = scaleLinear({
-        domain: [Math.min(0, minVal), maxVal * 1.1],
-        range: [innerHeight, 0],
-    });
-    return (
-        <div className={cn("flex flex-col gap-1", className)}>
-            {label && <PanelLabel>{label}</PanelLabel>}
-            <div className="flex justify-between">
-                {currentValue && (
-                    <p className="text-xl font-medium tabular-nums" style={{ color: color as string }}>
-                        {valueFormat(currentValue)}
-                    </p>
-                )}
-                <svg width={width} height={height}>
-                    <Group left={margin.left} top={margin.top}>
-                        <LinePath<TimeSeriesPoint>
-                            data={data}
-                            x={(d) => xScale(d.date.getTime())}
-                            y={(d) => yScale(d.value)}
-                            curve={curveLinear}
-                            stroke={color}
-                            strokeWidth={3}
-                        />
-                    </Group>
-                </svg>
-            </div>
-        </div>
-    );
-}
-
-//------------------------------------------------------------------------------
 export function AreaStorageKpiCharts({ data, className }: { data: AreaStorageKpiData; className?: string }) {
     //--------------------------------------------------------------------------
     const occupancyCurrent = data.occupancyRateByTime[data.occupancyRateByTime.length - 1]?.value ?? 0;
@@ -138,7 +68,6 @@ export function AreaStorageKpiCharts({ data, className }: { data: AreaStorageKpi
     //--------------------------------------------------------------------------
     return (
         <div className={cn("flex flex-col gap-4 min-w-0", className)}>
-            {/* Occupancy rate: pie + line over time */}
             <div className="flex gap-4">
                 <OccupancyPieChart usedPercent={occupancyCurrent} />
                 <div className="grow flex flex-col justify-between">
@@ -148,27 +77,24 @@ export function AreaStorageKpiCharts({ data, className }: { data: AreaStorageKpi
                             {occupancyCurrent.toFixed(0)}%
                         </p>
                     </div>
-                    <KpiLineChart data={data.occupancyRateByTime} color="var(--color-accent-400)" />
                 </div>
             </div>
 
-            {/* Storage density: line over time */}
-            <KpiLineChart
-                data={data.storageDensityByTime}
-                label="Storage density"
-                valueFormat={(v) => `${v.toFixed(0)}%`}
-                currentValue={densityCurrent}
-                color="var(--color-warning-600)"
-            />
+            <div className="flex justify-between gap-4">
+                <div>
+                    <PanelLabel>Storage density</PanelLabel>
+                    <p className="text-xl text-warning font-medium tracking-tighter tabular-nums">
+                        {densityCurrent.toFixed(0)}%
+                    </p>
+                </div>
 
-            {/* Inventory turnover: line over time */}
-            <KpiLineChart
-                data={data.inventoryTurnoverByTime}
-                label="Inventory turnover"
-                valueFormat={(v) => `${v.toFixed(1)}×`}
-                currentValue={turnoverCurrent}
-                color="var(--color-informative-600)"
-            />
+                <div>
+                    <PanelLabel>Inventory turnover</PanelLabel>
+                    <p className="text-xl text-informative font-medium tracking-tighter tabular-nums">
+                        {turnoverCurrent.toFixed(1)}×
+                    </p>
+                </div>
+            </div>
         </div>
     );
 }

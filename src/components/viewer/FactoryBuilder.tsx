@@ -153,9 +153,7 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
                 </div>
             )}
             {isSelected && (
-                <AnchoredPanel node={area}>
-                    {area.name === "storage" && <AreaStorageQuadPanel area={area} />}
-                </AnchoredPanel>
+                <AnchoredPanel node={area}>{area.name === "storage" && <AreaStorageQuadPanel />}</AnchoredPanel>
             )}
             {selectedNode?.type === NodeTypes.factory && (
                 <TopPanel node={area} className="appear-in-from-left opacity-0 [--animation-delay:.75s]" />
