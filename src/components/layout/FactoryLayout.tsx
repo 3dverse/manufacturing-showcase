@@ -28,7 +28,7 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
     //--------------------------------------------------------------------------
     // Render
     return (
-        <div className="relative flex-1 h-full w-full">
+        <div className="relative flex-1 h-full w-full transition-all duration-200">
             <Viewer thumbnailMode={thumbnailMode} />
             <div
                 className={cn(

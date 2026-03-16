@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useCallback, useContext, type MouseEvent } from "react";
+import { useCallback, useContext, useMemo, type MouseEvent } from "react";
 import { faGrid } from "@fortawesome/pro-solid-svg-icons";
 import { faClock } from "@fortawesome/sharp-regular-svg-icons";
 
@@ -46,12 +46,41 @@ export const MainHeader = ({
     }, [nodeGraph, setSelectedNode]);
 
     //--------------------------------------------------------------------------
+    const panelStateClassName = useMemo(() => {
+        return thumbnailMode
+            ? "text-base bg-slate-50 group-hover:bg-accent-600 group-hover:text-slate-0"
+            : "text-slate-0 bg-accent-600";
+    }, [thumbnailMode]);
+
+    //--------------------------------------------------------------------------
+    const subpanelStateClassName = useMemo(() => {
+        return thumbnailMode ? "pl-7 pr-5 pt-5 pb-4" : "px-3 py-2";
+    }, [thumbnailMode]);
+
+    //--------------------------------------------------------------------------
+    const h2StateClassName = useMemo(() => {
+        return thumbnailMode ? "text-3xl" : "";
+    }, [thumbnailMode]);
+
+    //--------------------------------------------------------------------------
+    const widgetStateClassName = useMemo(() => {
+        return thumbnailMode
+            ? "border-b border-b-slate-100 group-hover:border-b-accent-600"
+            : "border border-accent-600 rounded-e-[5px]";
+    }, [thumbnailMode]);
+
+    //--------------------------------------------------------------------------
     return (
         <header className={cn("flex w-full h-fit pointer-events-auto", className)}>
             {!thumbnailMode && (
-                <ViewerPanel className="flex items-start p-2 bg-accent-600/90 shadow-none rounded-none rounded-s-md border border-accent-600 z-10">
+                <ViewerPanel
+                    className={cn(
+                        "flex items-start p-2 shadow-none rounded-none rounded-s-md border-0 border-r-1 border-slate-100 z-10 transition-all duration-200",
+                        panelStateClassName,
+                    )}
+                >
                     <button
-                        className="p-1 aspect-square rounded-sm text-xs text-slate-0 bg-accent-100/10 hover:bg-accent-100/20 transition-colors duration-200 cursor-pointer"
+                        className="p-1 aspect-square rounded-sm text-xs text-slate-0 bg-accent-100/10 group-hover:bg-accent-100/20 transition-colors duration-200 cursor-pointer"
                         onClick={homeClickHandler}
                     >
                         <Icon icon={faGrid} size="lg" />
@@ -59,22 +88,36 @@ export const MainHeader = ({
                 </ViewerPanel>
             )}
 
-            <ViewerPanel className="basis-full flex justify-between items-start gap-x-4 bg-accent-600/90 text-slate-0 rounded-none rounded-e-md border border-accent-600 border-l-0 opacity-0 appear-in-from-left [--animation-delay:1s]">
-                <div className="flex flex-col justify-center divide-y divide-muted/50" onClick={factoryClickHandler}>
-                    <div className="flex flex-col gap--1 px-3 py-2">
-                        <p className="text-base font-medium">{factory?.name}</p>
-                        <div className="flex items-baseline gap-x-2 text-xs opacity-70">
-                            <p className="text-[95%]">{factory?.location}</p>
-                            <p className="text-2xs">
-                                <Icon icon={faClock} size="sm" />
-                                <span className="pl-1 tabular-nums">11:30</span>
-                            </p>
-                        </div>
+            <ViewerPanel
+                className={cn(
+                    "basis-full flex justify-between items-start gap-x-4 rounded-none rounded-e-md transition-all duration-200 border-0",
+                    panelStateClassName,
+                )}
+            >
+                <div
+                    className={cn("flex flex-col gap--1 justify-center", subpanelStateClassName)}
+                    onClick={factoryClickHandler}
+                >
+                    <h2
+                        className={cn(
+                            "font-semibold text-base group-hover:text-slate-100 transition-colors duration-200",
+                            h2StateClassName,
+                        )}
+                    >
+                        {factory?.name}
+                    </h2>
+                    <div className="flex items-center gap-x-2 text-xs opacity-70">
+                        <p className="text-[95%]">{factory?.location}</p>
+                        <Icon icon={faClock} size="sm" />
+                        <span>11:30</span>
                     </div>
                 </div>
-                <div className="px-3 pt-2 pb-1 bg-slate-0/90 rounded-e-[5px]">
-                    <Gauge value={95} className="w-20!" />
-                    <p className="text-2xs text-subtle tracking-wide text-center -translate-y-1">OEE</p>
+
+                <div className={cn("flex bg-slate-0/90 h-full", widgetStateClassName)}>
+                    <div className="px-3">
+                        <Gauge value={95} className="w-20! h-10" />
+                        <p className="text-2xs text-subtle tracking-wide text-center -translate-y-5">OEE</p>
+                    </div>
                 </div>
             </ViewerPanel>
         </header>

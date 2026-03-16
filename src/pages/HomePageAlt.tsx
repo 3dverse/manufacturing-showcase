@@ -178,10 +178,12 @@ const FactoryItem = ({
             className={cn(
                 "text-left",
                 "w-full h-full",
-                "rounded-3xl border border-white/10 bg-white/5 shadow-lg",
+                "rounded-3xl bg-white/5 shadow-lg",
                 "overflow-hidden",
+                "group",
                 // when not open, behave like a normal card
-                !isOpen && "relative hover:bg-white/10",
+                !isOpen &&
+                    "relative border border-slate-100 shadow-xl hover:shadow-2xl hover:bg-white/10 hover:border-accent-600 cursor-pointer",
                 // when open, THIS SAME ELEMENT becomes fullscreen
                 isOpen && "fixed inset-0 z-50 m-0 rounded-none border-0",
             )}
