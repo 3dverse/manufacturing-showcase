@@ -7,7 +7,7 @@ import { SelectionContextProvider } from "@/components/contextProviders/Selectio
 import { HoverContextProvider } from "../contextProviders/HoverContextProvider";
 
 //------------------------------------------------------------------------------
-import type { Factory } from "@/content/factory";
+import type { Factory } from "@/content/type";
 
 //------------------------------------------------------------------------------
 export const FactoryProviders = ({ factory, children }: { factory: Factory; children: ReactNode }) => {

@@ -1,12 +1,20 @@
-//------------------------------------------------------------------------------
-import { FactoryTile } from "@/components/nodes/factory/FactoryTile";
+import { useContext } from "react";
 
 //------------------------------------------------------------------------------
-import { factories } from "@/content/factory";
+import { FactoriesContext } from "@/contexts/FactoriesContext";
 
+//------------------------------------------------------------------------------
+import { FactoryItem } from "@/components/nodes/factory/FactoryItem";
+
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export default function HomePage() {
     //--------------------------------------------------------------------------
+    // Contexts
+    const { factories } = useContext(FactoriesContext);
+
+    //--------------------------------------------------------------------------
+    // Render
     return (
         <div className="h-dvh bg-linear-to-br from-slate-50 to-slate-100 overflow-x-hidden">
             <div className="container flex flex-col h-full mx-auto pb-16">
@@ -21,10 +29,10 @@ export default function HomePage() {
                     </div>
                 </header>
 
-                <ul className="grid grid-cols-1 md:grid-cols-2 gap-6 grow">
+                <ul className="grid grid-cols-1 gap-6">
                     {factories.map((factoryItem) => (
-                        <li key={factoryItem.id}>
-                            <FactoryTile factoryItem={factoryItem} />
+                        <li key={factoryItem.slug}>
+                            <FactoryItem factoryItem={factoryItem} />
                         </li>
                     ))}
                 </ul>

@@ -15,7 +15,7 @@ import {
 //------------------------------------------------------------------------------
 import { ViewerPanelResizable } from "@/components/common/ViewerPanelResizable";
 import { ViewerController } from "@/components/viewer/ViewerController";
-import { factories } from "@/content/factory";
+import { factories } from "@/content/stories/factory";
 
 //------------------------------------------------------------------------------
 const meta = {

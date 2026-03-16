@@ -33,7 +33,7 @@ function MyComponent() {
 
 ```tsx
 import { useFactoryStore } from "@/store/useFactoryStore";
-import { factories } from "@/content/factory";
+import { factories } from "@/content/type";
 
 function FactorySelector() {
     const setCurrentFactory = useFactoryStore((state) => state.setCurrentFactory);

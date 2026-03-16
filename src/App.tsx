@@ -5,16 +5,36 @@ import { useState, useEffect } from "react";
 import Theme from "@/pages/Theme";
 
 //------------------------------------------------------------------------------
+import { getFolderAssets, setUserToken } from "@3dverse/api";
+
+//------------------------------------------------------------------------------
 import IntroductionModal from "@/components/guidance/IntroductionModal";
 
 //------------------------------------------------------------------------------
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { useNavigationStore } from "@/store/useNavigationStore";
-import { LOCAL_STORAGE_KEYS, useLocalStorage } from "@/hooks/useLocalStorage";
+import { FactoriesContext } from "@/contexts/FactoriesContext";
 
 //------------------------------------------------------------------------------
-import { factories } from "@/content/factory";
-import HomePageAlt from "./pages/HomePageAlt";
+import { LOCAL_STORAGE_KEYS, useLocalStorage } from "@/hooks/useLocalStorage";
+import { formatSlug } from "@/core/Slug";
+
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+import HomePage from "@/pages/HomePage";
+import FactoryPage from "@/pages/FactoryPage";
+
+//------------------------------------------------------------------------------
+import type { Factory } from "@/content/type";
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+const USER_TOKEN = "public_OJTstp3bLFmUw0OS";
+const PUBLIC_FOLDER_ID = "3b1c6c2a-73e1-4787-a383-a7cdd4de54de";
+
+//------------------------------------------------------------------------------
+setUserToken(USER_TOKEN);
 
 //------------------------------------------------------------------------------
 export function App() {
@@ -22,7 +42,12 @@ export function App() {
 }
 
 //------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 function AppLayout() {
+    //--------------------------------------------------------------------------
+    // State
+    const [factories, setFactories] = useState<Factory[]>([]);
+
     //--------------------------------------------------------------------------
     const [currentRoute, setCurrentRoute] = useState(() => window.location.pathname);
     const [isIntroductionModalOpen, setIsIntroductionModalOpen] = useLocalStorage<boolean>(
@@ -57,11 +82,33 @@ function AppLayout() {
     }, []);
 
     //--------------------------------------------------------------------------
+    useEffect(() => {
+        getFolderAssets({ folder_id: PUBLIC_FOLDER_ID, offset: 0, limit: 10, filter: { asset_type: "scene" } }).then(
+            (resp) => {
+                setFactories(
+                    resp.data.scenes?.map((d, index) => {
+                        const slug = formatSlug(d.name);
+                        const factory: Factory = {
+                            slug,
+                            name: d.name,
+                            location: index % 2 === 0 ? "Paris, France" : "Tokyo, Japan",
+                            description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
+                            scene_id: d.asset_id,
+                        };
+                        return factory;
+                    }) || [],
+                );
+            },
+        );
+    }, []);
+
+    //--------------------------------------------------------------------------
     // Update factory store when route changes
     useEffect(() => {
-        if (currentRoute.startsWith("/factory/")) {
-            const factoryId = currentRoute.split("/")[2];
-            const factory = factories.find((f) => f.id === factoryId);
+        const parts = currentRoute.split("/");
+        if (parts.length >= 2) {
+            const factorySlug = parts[0];
+            const factory = factories.find((f) => f.slug === factorySlug);
             if (factory) {
                 setCurrentFactory(factory);
             } else {
@@ -70,44 +117,34 @@ function AppLayout() {
         } else {
             clearCurrentFactory();
         }
-    }, [currentRoute, setCurrentFactory, clearCurrentFactory]);
+    }, [factories, currentRoute, setCurrentFactory, clearCurrentFactory]);
 
     //--------------------------------------------------------------------------
     const renderContent = () => {
         if (currentRoute === "/theme") {
             return <Theme onBack={() => navigate("/")} />;
         }
-        return <HomePageAlt />;
-
-        /* if (currentRoute.startsWith("/factory/")) {
-*     const factoryId = currentRoute.split("/")[2];
-*     const factory = factories.find((f) => f.id === factoryId);
-
-*     if (factory) {
-*         return (
-*             <Livelink sceneId={factory.scene_id} token={TOKEN_3DVERSE} LoadingPanel={LoadingOverlay}>
-*                 <FactoryProviders factory={factory}>
-*                     <FactoryLayout />
-*                 </FactoryProviders>
-*                 <MainGuidance />
-*             </Livelink>
-*         );
-*     }
-* }
-* return (
-*     <>
-*         <HomePage />
-*         <MainGuidance />
-*     </>
-* ); */
+        const parts = currentRoute.split("/");
+        if (parts.length >= 2 && parts[1] !== "") {
+            const factorySlug = parts[1];
+            const factory = factories.find((f) => f.slug === factorySlug);
+            if (factory) {
+                return <FactoryPage factory={factory} />;
+            } else {
+                return <></>;
+            }
+        }
+        return <HomePage />;
     };
 
     //--------------------------------------------------------------------------
     return (
-        <div className="flex flex-col h-dvh">
-            {renderContent()}
-            <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
-        </div>
+        <FactoriesContext.Provider value={{ factories }}>
+            <div className="flex flex-col h-dvh">
+                {renderContent()}
+                <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
+            </div>
+        </FactoriesContext.Provider>
     );
 }
 

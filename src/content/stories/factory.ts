@@ -1,17 +1,8 @@
-//------------------------------------------------------------------------------
-export type Factory = {
-    id: string;
-    name: string;
-    slug: string;
-    location: string;
-    description?: string;
-    scene_id: string;
-};
+import type { Factory } from "../type";
 
 //------------------------------------------------------------------------------
 export const factories: Factory[] = [
     {
-        id: "phone-factory",
         slug: "phone-factory",
         name: "Phone Factory",
         description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
@@ -19,7 +10,6 @@ export const factories: Factory[] = [
         scene_id: "3e23233c-0c97-43d7-ab5e-9eb8caa2f42b",
     },
     {
-        id: "y-factory",
         slug: "y-factory",
         name: "Y Factory",
         description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Factory } from "@/content/factory";
+import type { Factory } from "@/content/type";
 
 //------------------------------------------------------------------------------
 interface FactoryState {

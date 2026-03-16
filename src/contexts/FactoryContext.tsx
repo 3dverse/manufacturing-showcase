@@ -2,7 +2,7 @@ import { createContext } from "react";
 
 //------------------------------------------------------------------------------
 import type { FactoryGraphNode, FactoryNode } from "@/content/type";
-import type { Factory } from "@/content/factory";
+import type { Factory } from "@/content/type";
 
 //------------------------------------------------------------------------------
 type FactoryContextType = {

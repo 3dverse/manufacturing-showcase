@@ -140,6 +140,7 @@ export class Router {
 
     //--------------------------------------------------------------------------
     static push(data: { factorySlug?: string; nodeSlug?: string }, state: unknown = {}) {
+        console.log("push");
         Router.activeFactorySlug = data.factorySlug;
         const pathname = this.buildPath(data.factorySlug, data.nodeSlug);
 
@@ -159,6 +160,7 @@ export class Router {
 
     //--------------------------------------------------------------------------
     static replace(data: { factorySlug: string; nodeSlug?: string }, state: unknown = {}) {
+        console.log("replace");
         Router.activeFactorySlug = data.factorySlug;
         const pathname = this.buildPath(data.factorySlug, data.nodeSlug);
 

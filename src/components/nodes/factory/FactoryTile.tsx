@@ -9,7 +9,7 @@ import { Triangle } from "@/components/common/icons/Triangle";
 import { useNavigate } from "@/hooks/useNavigate";
 
 //------------------------------------------------------------------------------
-import type { Factory } from "@/content/factory";
+import type { Factory } from "@/content/type";
 import { TOKEN_3DVERSE } from "@/content/3dverse";
 
 //------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ export const FactoryTile = ({ factoryItem }: { factoryItem: Factory }) => {
     //--------------------------------------------------------------------------
     return (
         <button
-            onClick={() => navigate(`/factory/${factoryItem.id}`)}
+            onClick={() => navigate(`/${factoryItem.slug}`)}
             className="relative w-full h-full text-left bg-slate-50 rounded-3xl shadow-2xl hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group"
         >
             <div className="flex">

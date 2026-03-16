@@ -54,7 +54,7 @@ const MainMenu = ({
     const { currentFactory } = useFactoryStore();
 
     const handleClick = (href: string) => {
-        setCurrentRoute(`/factory/${currentFactory?.id}${href}`);
+        setCurrentRoute(`/${currentFactory?.slug}${href}`);
     };
 
     //--------------------------------------------------------------------------

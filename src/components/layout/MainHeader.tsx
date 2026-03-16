@@ -34,8 +34,11 @@ export const MainHeader = ({
     // Handlers
     const homeClickHandler = useCallback(
         (e: MouseEvent) => {
-            e.stopPropagation();
-            onBack?.();
+            if (onBack) {
+                e.preventDefault();
+                e.stopPropagation();
+                onBack();
+            }
         },
         [onBack],
     );
@@ -79,12 +82,14 @@ export const MainHeader = ({
                         panelStateClassName,
                     )}
                 >
-                    <button
+                    <a
+                        as="button"
                         className="p-1 aspect-square rounded-sm text-xs text-slate-0 bg-accent-100/10 group-hover:bg-accent-100/20 transition-colors duration-200 cursor-pointer"
+                        href={"/"}
                         onClick={homeClickHandler}
                     >
                         <Icon icon={faGrid} size="lg" />
-                    </button>
+                    </a>
                 </ViewerPanel>
             )}
 

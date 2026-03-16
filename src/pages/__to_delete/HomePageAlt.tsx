@@ -23,12 +23,16 @@ import { GhettoReconnectContextProvider } from "@/components/contextProviders/Gh
 
 //------------------------------------------------------------------------------
 import { TOKEN_3DVERSE } from "@/content/3dverse";
-import { factories } from "@/content/factory";
-import type { Factory } from "@/content/factory";
+import type { Factory } from "@/content/type";
+import { FactoriesContext } from "@/contexts/FactoriesContext";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export default function HomePageAlt() {
+    //--------------------------------------------------------------------------
+    // Context
+    const { factories } = useContext(FactoriesContext);
+
     //--------------------------------------------------------------------------
     // State
     const [selectedFactorySlug, setSelectedFactorySlug] = useState<string | undefined>();

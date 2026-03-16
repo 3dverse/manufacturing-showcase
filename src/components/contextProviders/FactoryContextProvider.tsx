@@ -9,7 +9,7 @@ import { buildFactoryGraph } from "@/core/FactoryGraph";
 
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";
-import type { Factory } from "@/content/factory";
+import type { Factory } from "@/content/type";
 import type { FactoryGraphNode, FactoryNode } from "@/content/type";
 
 //------------------------------------------------------------------------------

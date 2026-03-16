@@ -5,27 +5,15 @@ import type { Entity } from "@3dverse/livelink";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-
 //------------------------------------------------------------------------------
-export const ViewerController = ({
-    hoveredEntity,
-    pickedEntity,
-}: {
-    hoveredEntity: { entity: Entity } | null;
-    pickedEntity: { entity: Entity } | null;
-}) => {
+export const ViewerController = ({ pickedEntity }: { pickedEntity: { entity: Entity } | null }) => {
     //--------------------------------------------------------------------------
+    // Contexts
     const { instance } = useContext(LivelinkContext);
     const { setSelectedNodeByEntity } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
-    // Hover feedback
-    useEffect(() => {
-        console.log("hoveredEntity", hoveredEntity);
-    }, [hoveredEntity]);
-
-    //--------------------------------------------------------------------------
-    // Pick selection
+    // Effects
     useEffect(() => {
         if (!pickedEntity) return;
 

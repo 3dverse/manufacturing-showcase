@@ -53,11 +53,9 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
     //--------------------------------------------------------------------------
     const setSelectedNode = useCallback(
         (node: FactoryGraphNode | undefined) => {
-            if (factory.slug === Router.activeFactorySlug) {
-                const factorySlug = factory.slug;
-                const nodeSlug = node && node.type !== NodeTypes.factory ? Router.uuidToSlug(node?.hash) : undefined;
-                Router.push({ factorySlug, nodeSlug });
-            }
+            const factorySlug = factory.slug;
+            const nodeSlug = node && node.type !== NodeTypes.factory ? Router.uuidToSlug(node?.hash) : undefined;
+            Router.push({ factorySlug, nodeSlug });
             _setSelectedNode(node);
             if (node) cameraHandler(node);
         },
