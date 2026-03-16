@@ -1,9 +1,10 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import type { Entity } from "@3dverse/livelink";
 import {
     Canvas,
     Viewport,
     CameraController,
+    type DefaultCameraController,
     useCameraEntity,
     LivelinkContext,
     DOM3DOverlay,
@@ -22,6 +23,11 @@ import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
+    //--------------------------------------------------------------------------
+    // Camera constraints
+    const MIN_DOLLY_DISTANCE = 3;
+    const MAX_DOLLY_DISTANCE = 50;
+
     //--------------------------------------------------------------------------
     // Contexts
     const { isConnecting } = useContext(LivelinkContext);
@@ -60,6 +66,24 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     }, [instance]);
 
     //--------------------------------------------------------------------------
+    const bindCameraController = useCallback(
+        (controller: DefaultCameraController | undefined) => {
+            cameraControllerRef.current = controller ?? null;
+            if (!controller) return;
+
+            // Keep orbital camera on the upper hemisphere (avoid going under floor).
+            controller.minPolarAngle = -Math.PI / 2;
+            controller.maxPolarAngle = Math.PI / 2 - 0.01;
+
+            // Clamp dolly range.
+            controller.minDistance = MIN_DOLLY_DISTANCE;
+            controller.maxDistance = MAX_DOLLY_DISTANCE;
+            controller.infinityDolly = false;
+        },
+        [cameraControllerRef],
+    );
+
+    //--------------------------------------------------------------------------
     return (
         <Canvas className="w-full h-full filter-[ brightness(1.2)]">
             <Viewport
@@ -75,7 +99,7 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
                     </div>
                 )}
                 <Exfil />
-                <CameraController ref={cameraControllerRef} />
+                <CameraController ref={bindCameraController} />
                 {!thumbnailMode && (
                     <>
                         {/* eslint-disable-next-line no-constant-binary-expression */}
