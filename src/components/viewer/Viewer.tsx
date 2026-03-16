@@ -1,3 +1,4 @@
+//------------------------------------------------------------------------------
 import { useCallback, useContext, useEffect, useState } from "react";
 import type { Entity } from "@3dverse/livelink";
 import {
@@ -19,6 +20,7 @@ import FactoryBuilder from "@/components/viewer/FactoryBuilder";
 //------------------------------------------------------------------------------
 import { LivelinkExfilContext } from "@/contexts/LivelinkExfilContext";
 import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
+import { ON_DRAG_THRESHOLD_DISTANCE_IN_PX } from "@/hooks/useDragGuard";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -79,6 +81,11 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
             controller.minDistance = MIN_DOLLY_DISTANCE;
             controller.maxDistance = MAX_DOLLY_DISTANCE;
             controller.infinityDolly = false;
+
+            controller.lock_pointer = {
+                aim: "on-drag",
+                on_drag_threshold_in_pixels: ON_DRAG_THRESHOLD_DISTANCE_IN_PX,
+            };
         },
         [cameraControllerRef],
     );
