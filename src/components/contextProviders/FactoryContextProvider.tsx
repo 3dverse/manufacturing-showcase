@@ -28,10 +28,7 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
     //--------------------------------------------------------------------------
     // Effects
     useEffect(() => {
-        // Merge entities and remove duplicates
-        const entities = [...sceneRefEntities, ...tagEntities].filter(
-            (e, index, self) => index === self.findIndex((t) => t.euid.value === e.euid.value),
-        );
+        const entities = [...sceneRefEntities, ...tagEntities.filter((e) => !e.scene_ref)];
         buildFactoryGraph({ entities })
             .then(({ graph, list }) => {
                 setNodeGraph(graph);
