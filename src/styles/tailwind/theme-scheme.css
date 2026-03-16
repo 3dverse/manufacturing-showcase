@@ -1,3 +1,9 @@
+@theme static {
+    --color-screen: oklch(0.77 0.14 204.34);
+    --color-case: oklch(0.72 0.23 322.42);
+    --color-electronics: oklch(0.84 0.25 147.6);
+}
+
 /* Color schemes */
 @theme {
     /* Brand */
