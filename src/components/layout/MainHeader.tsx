@@ -83,7 +83,6 @@ export const MainHeader = ({
                     )}
                 >
                     <a
-                        as="button"
                         className="p-1 aspect-square rounded-sm text-xs text-slate-0 bg-accent-100/10 group-hover:bg-accent-100/20 transition-colors duration-200 cursor-pointer"
                         href={"/"}
                         onClick={homeClickHandler}

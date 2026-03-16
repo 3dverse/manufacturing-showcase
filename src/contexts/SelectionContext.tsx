@@ -3,12 +3,12 @@ import { createContext } from "react";
 import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
-import type { FactoryGraphNode } from "@/content/type";
+import type { NavGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 type SelectionContextType = {
-    selectedNode?: FactoryGraphNode;
-    setSelectedNode: (node: FactoryGraphNode | undefined) => void;
+    selectedNode?: NavGraphNode;
+    setSelectedNode: (node: NavGraphNode | undefined) => void;
     setSelectedNodeByEntity: (entity: Entity | undefined) => void;
 };
 

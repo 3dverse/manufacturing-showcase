@@ -5,12 +5,12 @@ import { useNavNode } from "@/components/navigation/hooks";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import type { FactoryGraphNode } from "@/content/type";
+import type { NavGraphNode } from "@/content/type";
 import { useMemo } from "react";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const FloatingLabel = ({ node }: { node: FactoryGraphNode }) => {
+export const FloatingLabel = ({ node }: { node: NavGraphNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const { pointerDownHandler, clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } =

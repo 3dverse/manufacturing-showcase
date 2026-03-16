@@ -17,6 +17,9 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
+import { isFactory, isArea, isLine, isCell } from "@/core/NavGraph";
+
+//------------------------------------------------------------------------------
 import type { AreaNode, CellNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 import { useNavNode } from "../navigation/hooks";
@@ -34,10 +37,10 @@ const FactoryBuilder = () => {
         if (!selectedNode) return [];
         switch (selectedNode.type) {
             case NodeTypes.cell:
-                if (selectedNode.parent.type === NodeTypes.area) {
+                if (isArea(selectedNode.parent)) {
                     return selectedNode.parent.lines;
                 }
-                if (selectedNode.parent.type === NodeTypes.line) {
+                if (isLine(selectedNode.parent)) {
                     return [];
                 }
                 return [];
@@ -94,7 +97,7 @@ const FactoryBuilder = () => {
             {shownCells.map((cell) => (
                 <CellBuilderItem key={cell.hash} cell={cell} />
             ))}
-            {selectedNode?.type === NodeTypes.cell && selectedNode.machines?.length > 0 && (
+            {selectedNode && isCell(selectedNode) && selectedNode.machines.length > 0 && (
                 <MachineInfoPanel machine={selectedNode.machines[0]} />
             )}
         </>
@@ -119,7 +122,7 @@ const LineBuilderItem = ({ line }: { line: LineNode }) => {
 const CellBuilderItem = ({ cell }: { cell: CellNode }) => {
     //--------------------------------------------------------------------------
     // Render
-    if (cell.parent.type === NodeTypes.area) {
+    if (isArea(cell.parent)) {
         return (
             <>
                 <FloorRegion node={cell} />
@@ -155,7 +158,7 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
             {isSelected && (
                 <AnchoredPanel node={area}>{area.name === "storage" && <AreaStorageQuadPanel />}</AnchoredPanel>
             )}
-            {selectedNode?.type === NodeTypes.factory && (
+            {selectedNode && isFactory(selectedNode) && (
                 <TopPanel node={area} className="appear-in-from-left opacity-0 [--animation-delay:.75s]" />
             )}
         </>

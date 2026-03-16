@@ -11,12 +11,11 @@ import Button from "@/components/common/Button";
 import { FactoryContext } from "@/contexts/FactoryContext";
 
 //------------------------------------------------------------------------------
-import { sortNode } from "@/core/FactoryGraph";
+import { isLine, sortNode } from "@/core/NavGraph";
 import { useNavNode } from "./hooks";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import { NodeTypes } from "@/content/enums";
 import type { AreaNode, CellNode, LineNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
@@ -211,7 +210,7 @@ const ChildNode = ({ node, isFirst, isLast }: { node: LineNode | CellNode; isFir
                         }
                     />
                 )}
-                {node.name} {node.type === NodeTypes.line && "Line"}
+                {node.name} {isLine(node) && "Line"}
             </button>
         </li>
     );

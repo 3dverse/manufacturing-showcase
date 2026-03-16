@@ -3,22 +3,14 @@ import type { Entity, Vec3 } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
-import type {
-    FactoryNode,
-    AreaNode,
-    CellNode,
-    FactoryGraphNode,
-    LineNode,
-    MachineNode,
-    FlowNode,
-} from "@/content/type";
+import type { FactoryNode, AreaNode, CellNode, NavGraphNode, LineNode, MachineNode, FlowNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export const buildFactoryGraph = async (params: {
+export const buildNavGraph = async (params: {
     entities: Entity[];
 }): Promise<{
     graph: FactoryNode;
-    list: FactoryGraphNode[];
+    list: NavGraphNode[];
 }> => {
     const { entities } = params;
     const factories: Entity[] = [];
@@ -82,7 +74,7 @@ export const buildFactoryGraph = async (params: {
         }),
     );
 
-    const list: FactoryGraphNode[] = [];
+    const list: NavGraphNode[] = [];
 
     //--------------------------------------------------------------------------
     const mapFactoryEntity = (factoryEntity: Entity) => {
@@ -270,8 +262,33 @@ export const sortAreas = (a: AreaNode, b: AreaNode, order: string[]) => {
 };
 
 //------------------------------------------------------------------------------
-export const sortNode = (a: FactoryGraphNode, b: FactoryGraphNode) => {
+export const sortNode = (a: NavGraphNode, b: NavGraphNode) => {
     if (!a.entity.lineage) return -1;
     if (!b.entity.lineage) return 1;
     return a.entity.lineage.ordinal - b.entity.lineage.ordinal;
+};
+
+//------------------------------------------------------------------------------
+export const isFactory = (node: NavGraphNode): node is FactoryNode => {
+    return node.type === NodeTypes.factory;
+};
+
+//------------------------------------------------------------------------------
+export const isArea = (node: NavGraphNode): node is AreaNode => {
+    return node.type === NodeTypes.area;
+};
+
+//------------------------------------------------------------------------------
+export const isLine = (node: NavGraphNode): node is LineNode => {
+    return node.type === NodeTypes.line;
+};
+
+//------------------------------------------------------------------------------
+export const isCell = (node: NavGraphNode): node is CellNode => {
+    return node.type === NodeTypes.cell;
+};
+
+//------------------------------------------------------------------------------
+export const isMachine = (node: NavGraphNode): node is MachineNode => {
+    return node.type === NodeTypes.machine;
 };

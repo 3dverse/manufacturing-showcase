@@ -6,11 +6,23 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const ViewerController = ({ pickedEntity }: { pickedEntity: { entity: Entity } | null }) => {
+export const ViewerController = ({
+    pickedEntity,
+    hoveredEntity,
+}: {
+    pickedEntity: { entity: Entity } | null;
+    hoveredEntity: { entity: Entity } | null;
+}) => {
     //--------------------------------------------------------------------------
     // Contexts
     const { instance } = useContext(LivelinkContext);
     const { setSelectedNodeByEntity } = useContext(SelectionContext);
+
+    //--------------------------------------------------------------------------
+    // Hover feedback
+    useEffect(() => {
+        console.log("hoveredEntity", hoveredEntity);
+    }, [hoveredEntity]);
 
     //--------------------------------------------------------------------------
     // Effects

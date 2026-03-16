@@ -2,7 +2,9 @@ import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 
 //------------------------------------------------------------------------------
 import { HoverContext } from "@/contexts/HoverContext";
-import { NodeTypes } from "@/content/enums";
+
+//------------------------------------------------------------------------------
+import { isFactory, isArea, isLine } from "@/core/NavGraph";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -23,8 +25,8 @@ export const ViewerToolTips = () => {
     //--------------------------------------------------------------------------
     const hoveredArea = useMemo(() => {
         let candidateNode = hoveredNode;
-        while (candidateNode && candidateNode.type !== NodeTypes.factory) {
-            if (candidateNode.type === NodeTypes.area) return candidateNode;
+        while (candidateNode && !isFactory(candidateNode)) {
+            if (isArea(candidateNode)) return candidateNode;
             candidateNode = candidateNode.parent;
         }
     }, [hoveredNode]);
@@ -86,7 +88,7 @@ export const ViewerToolTips = () => {
             </p>
             {hoveredChildren && (
                 <p className="text-sm leading-tight capitalize -translate-y-px opacity-100 scale-100 starting:opacity-0 starting:scale-70 transition-all origin-bottom-left duration-200">
-                    {hoveredChildren.name} {hoveredChildren.type === NodeTypes.line && "Line"}
+                    {hoveredChildren.name} {isLine(hoveredChildren) && "Line"}
                 </p>
             )}
         </div>

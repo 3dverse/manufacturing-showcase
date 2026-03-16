@@ -137,32 +137,32 @@ export type Action = {
 };
 
 //------------------------------------------------------------------------------
-type _FactoryGraphNode = {
+type _NavGraphNode = {
     entity: Entity;
     hash: string;
     name: string;
 };
-export type FactoryNode = _FactoryGraphNode & { type: NodeTypes.factory; areas: AreaNode[]; flows: FlowNode[] };
+export type FactoryNode = _NavGraphNode & { type: NodeTypes.factory; areas: AreaNode[]; flows: FlowNode[] };
 /** One 3D point [x, y, z] on a flow spline. */
 export type FlowSplinePoint = [number, number, number];
 
-export type AreaNode = _FactoryGraphNode & {
+export type AreaNode = _NavGraphNode & {
     type: NodeTypes.area;
     parent: FactoryNode;
     lines: LineNode[];
     cells: CellNode[];
 };
 
-export type LineNode = _FactoryGraphNode & { type: NodeTypes.line; parent: AreaNode; cells: CellNode[] };
+export type LineNode = _NavGraphNode & { type: NodeTypes.line; parent: AreaNode; cells: CellNode[] };
 
-export type CellNode = _FactoryGraphNode & {
+export type CellNode = _NavGraphNode & {
     type: NodeTypes.cell;
     parent: AreaNode | LineNode;
     machines: MachineNode[];
 };
-export type MachineNode = _FactoryGraphNode & { type: NodeTypes.machine; parent: CellNode };
+export type MachineNode = _NavGraphNode & { type: NodeTypes.machine; parent: CellNode };
 
-export type FlowNode = _FactoryGraphNode & {
+export type FlowNode = _NavGraphNode & {
     type: NodeTypes.flow;
     entityInEUID: string;
     entityOutEUID: string;
@@ -170,7 +170,8 @@ export type FlowNode = _FactoryGraphNode & {
     paths: Vec3[];
 };
 
-export type FactoryGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode;
+//------------------------------------------------------------------------------
+export type NavGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode;
 
 //------------------------------------------------------------------------------
 // TODO delete VVV

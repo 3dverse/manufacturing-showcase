@@ -3,13 +3,13 @@ import { createContext } from "react";
 import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
-import type { FactoryGraphNode } from "@/content/type";
+import type { NavGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 type HoverContextType = {
-    hoveredNode?: FactoryGraphNode;
+    hoveredNode?: NavGraphNode;
     hoverSource?: "nav" | "dom3d";
-    setHoveredNode: (node: FactoryGraphNode | undefined, source: "nav" | "dom3d") => void;
+    setHoveredNode: (node: NavGraphNode | undefined, source: "nav" | "dom3d") => void;
     setHoveredNodeByEntity: (entity: Entity | undefined, source: "nav" | "dom3d") => void;
 };
 

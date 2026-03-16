@@ -8,15 +8,16 @@ import { useDragGuard } from "@/hooks/useDragGuard";
 
 //------------------------------------------------------------------------------
 import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2";
+import { isFactory } from "@/core/NavGraph";
 
 //------------------------------------------------------------------------------
-import type { FactoryGraphNode } from "@/content/type";
+import type { NavGraphNode } from "@/content/type";
 import { HoverContext } from "@/contexts/HoverContext";
 import { NodeTypes } from "@/content/enums";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const useNavNode = (node: FactoryGraphNode, source: "nav" | "dom3d") => {
+export const useNavNode = (node: NavGraphNode, source: "nav" | "dom3d") => {
     //--------------------------------------------------------------------------
     // Contexts
     const { selectedNode, setSelectedNode } = useContext(SelectionContext);
@@ -131,17 +132,17 @@ export const useNavNode = (node: FactoryGraphNode, source: "nav" | "dom3d") => {
 };
 
 //------------------------------------------------------------------------------
-export const getParentNodes = (node: FactoryGraphNode) => {
-    function addParent(parents: FactoryGraphNode[], node: FactoryGraphNode) {
-        if (node.type === NodeTypes.factory) return parents;
+export const getParentNodes = (node: NavGraphNode) => {
+    function addParent(parents: NavGraphNode[], node: NavGraphNode) {
+        if (isFactory(node)) return parents;
         return addParent([...parents, node], node.parent);
     }
     return addParent([], node);
 };
 
 //------------------------------------------------------------------------------
-export const getChildNodes = (node: FactoryGraphNode) => {
-    function flatten(node: FactoryGraphNode): FactoryGraphNode[] {
+export const getChildNodes = (node: NavGraphNode) => {
+    function flatten(node: NavGraphNode): NavGraphNode[] {
         switch (node.type) {
             case NodeTypes.factory:
                 return [node, ...node.areas.flatMap(flatten)];

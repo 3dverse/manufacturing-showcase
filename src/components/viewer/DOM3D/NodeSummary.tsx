@@ -7,12 +7,12 @@ import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
-import type { FactoryGraphNode } from "@/content/type";
+import type { NavGraphNode } from "@/content/type";
 import { useMemo } from "react";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const NodeSummary = ({ node }: { node: FactoryGraphNode }) => {
+export const NodeSummary = ({ node }: { node: NavGraphNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const { pointerDownHandler, clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } =

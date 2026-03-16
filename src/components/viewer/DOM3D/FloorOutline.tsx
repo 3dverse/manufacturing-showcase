@@ -5,11 +5,11 @@ import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import type { FactoryGraphNode } from "@/content/type";
+import type { NavGraphNode } from "@/content/type";
 import { useNavNode } from "@/components/navigation/hooks";
 
 //------------------------------------------------------------------------------
-export const FloorOutline = ({ node }: { node: FactoryGraphNode }) => {
+export const FloorOutline = ({ node }: { node: NavGraphNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const { pointerDownHandler, clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } =

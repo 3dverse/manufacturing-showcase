@@ -3,7 +3,7 @@ import { useCallback, useContext, useEffect, useMemo, useState, type ReactNode }
 
 //------------------------------------------------------------------------------
 import { HoverContext } from "@/contexts/HoverContext";
-import type { FactoryGraphNode } from "@/content/type";
+import type { NavGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 import type { Entity } from "@3dverse/livelink";
@@ -18,13 +18,13 @@ export function HoverContextProvider({ children }: { children: ReactNode }) {
 
     //--------------------------------------------------------------------------
     // State
-    const [hoveredNode, _setHoveredNode] = useState<FactoryGraphNode>();
+    const [hoveredNode, _setHoveredNode] = useState<NavGraphNode>();
     const [hoverSource, setHoverSource] = useState<"nav" | "dom3d">();
 
     //--------------------------------------------------------------------------
     // Handlers
     const setHoveredNode = useCallback(
-        (node: FactoryGraphNode | undefined, source: "nav" | "dom3d") => {
+        (node: NavGraphNode | undefined, source: "nav" | "dom3d") => {
             if (selectedNode === node) {
                 setHoverSource(undefined);
                 _setHoveredNode(undefined);

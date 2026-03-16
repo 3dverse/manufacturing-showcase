@@ -5,12 +5,12 @@ import { useEntities } from "@3dverse/livelink-react";
 import { FactoryContext } from "@/contexts/FactoryContext";
 
 //------------------------------------------------------------------------------
-import { buildFactoryGraph } from "@/core/FactoryGraph";
+import { buildNavGraph } from "@/core/NavGraph";
 
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";
 import type { Factory } from "@/content/type";
-import type { FactoryGraphNode, FactoryNode } from "@/content/type";
+import type { NavGraphNode, FactoryNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -23,13 +23,13 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
     //--------------------------------------------------------------------------
     // State
     const [nodeGraph, setNodeGraph] = useState<FactoryNode | undefined>(undefined);
-    const [nodeList, setNodeList] = useState<FactoryGraphNode[] | undefined>(undefined);
+    const [nodeList, setNodeList] = useState<NavGraphNode[] | undefined>(undefined);
 
     //--------------------------------------------------------------------------
     // Effects
     useEffect(() => {
         const entities = [...sceneRefEntities, ...tagEntities.filter((e) => !e.scene_ref)];
-        buildFactoryGraph({ entities })
+        buildNavGraph({ entities })
             .then(({ graph, list }) => {
                 setNodeGraph(graph);
                 setNodeList(list);

@@ -6,7 +6,7 @@ import { PanelTitle, PanelWrapper } from "@/components/common/panel";
 import type { AreaNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export function GenericAreaPanel({ area }: { area: AreaNode }) {
+export function AreaPanel({ area }: { area: AreaNode }) {
     //--------------------------------------------------------------------------
     return (
         <ViewerPanel

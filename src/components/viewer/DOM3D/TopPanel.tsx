@@ -5,10 +5,10 @@ import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import type { FactoryGraphNode } from "@/content/type";
+import type { NavGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export const TopPanel = ({ node, className }: { node: FactoryGraphNode; className?: string }) => {
+export const TopPanel = ({ node, className }: { node: NavGraphNode; className?: string }) => {
     //--------------------------------------------------------------------------
     // Render
     return (

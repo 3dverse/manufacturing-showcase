@@ -7,7 +7,7 @@ import { MainHeader } from "@/components/layout/MainHeader";
 import { Navigation } from "@/components/navigation/Navigation";
 import { FactoryTimeline } from "@/components/nodes/factory/FactoryTimeline";
 import { FactoryPanel } from "@/components/nodes/factory/FactoryPanel";
-import { GenericAreaPanel } from "@/components/nodes/areas/GenericAreaPanel";
+import { AreaPanel } from "@/components/nodes/areas/AreaPanel";
 import { LinePanel } from "@/components/nodes/lines/LinePanel";
 import { CellPanel } from "@/components/nodes/cells/CellPanel";
 
@@ -18,8 +18,9 @@ import { cn } from "@/utils/cn";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-import { NodeTypes } from "@/content/enums";
+import { isArea, isLine, isCell } from "@/core/NavGraph";
 
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onBack?: () => void }) => {
     //--------------------------------------------------------------------------
@@ -40,11 +41,9 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                 <div className={thumbnailMode ? "" : "flex flex-col items-start gap-1 w-96 2xl:w-120 p-2"}>
                     <MainHeader thumbnailMode={thumbnailMode} onBack={onBack} />
                     {!thumbnailMode && <FactoryPanel />}
-                    {!thumbnailMode && selectedNode?.type === NodeTypes.area && (
-                        <GenericAreaPanel area={selectedNode} />
-                    )}
-                    {!thumbnailMode && selectedNode?.type === NodeTypes.line && <LinePanel line={selectedNode} />}
-                    {!thumbnailMode && selectedNode?.type === NodeTypes.cell && <CellPanel cell={selectedNode} />}
+                    {!thumbnailMode && selectedNode && isArea(selectedNode) && <AreaPanel area={selectedNode} />}
+                    {!thumbnailMode && selectedNode && isLine(selectedNode) && <LinePanel line={selectedNode} />}
+                    {!thumbnailMode && selectedNode && isCell(selectedNode) && <CellPanel cell={selectedNode} />}
                 </div>
 
                 {!thumbnailMode && (
