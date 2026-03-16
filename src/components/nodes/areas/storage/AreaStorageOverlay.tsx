@@ -44,7 +44,7 @@ export function AreaStorageOverlay({ area }: { area: AreaNode }) {
                     <p className="absolute bottom-1 -left-3 -translate-x-full text-xs text-accent">Quantity</p>
                     {MOCK_STORAGE_DATA.map((item) => (
                         <div
-                            key={item.name}
+                            key={item.id}
                             className="relative bg-accent/40 w-16 p-1 flex items-end text-slate-900"
                             style={
                                 {
@@ -70,7 +70,7 @@ export function AreaStorageOverlay({ area }: { area: AreaNode }) {
             </BoundingBoxFaceProjection>
             {showOverlay &&
                 childrenEntities.screen.map((entity) => (
-                    <Fragment key={entity.name}>
+                    <Fragment key={entity.euid.value}>
                         <BoundingBoxFaceProjection
                             entity={entity}
                             face="front"
@@ -90,7 +90,7 @@ export function AreaStorageOverlay({ area }: { area: AreaNode }) {
                 ))}
             {showOverlay &&
                 childrenEntities.case.map((entity) => (
-                    <Fragment key={entity.name}>
+                    <Fragment key={entity.euid.value}>
                         <BoundingBoxFaceProjection
                             entity={entity}
                             face="front"
@@ -110,7 +110,7 @@ export function AreaStorageOverlay({ area }: { area: AreaNode }) {
                 ))}
             {showOverlay &&
                 childrenEntities.electronics.map((entity) => (
-                    <Fragment key={entity.name}>
+                    <Fragment key={entity.euid.value}>
                         <BoundingBoxFaceProjection
                             entity={entity}
                             face="front"
