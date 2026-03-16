@@ -44,3 +44,50 @@ body {
 [data-role="dom-3d-overlay-camera-projection"] {
     z-index: 1;
 }
+
+.radial-dashed-circle {
+    width: 20rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+
+    outline: 4px solid var(--color-accent);
+    outline-offset: -30px;
+
+    scale: 0.9;
+    transition: scale 0.2s ease-in-out;
+
+    &:hover {
+        scale: 1;
+    }
+
+    background:
+        repeating-conic-gradient(from -90deg, var(--color-accent) 0deg 1.2deg, transparent 1.2deg 8deg),
+        repeating-conic-gradient(
+            from -90deg,
+            transparent 0deg 38deg,
+            var(--color-accent) 38deg 40deg,
+            transparent 40deg 80deg
+        );
+
+    -webkit-mask:
+        radial-gradient(
+            closest-side,
+            transparent calc(100% - 18px),
+            #000 calc(100% - 18px) calc(100% - 10px),
+            transparent calc(100% - 10px)
+        ),
+        radial-gradient(
+            closest-side,
+            transparent calc(100% - 22px),
+            #000 calc(100% - 22px) calc(100% - 8px),
+            transparent calc(100% - 8px)
+        );
+    -webkit-mask-composite: source-over;
+
+    mask: radial-gradient(
+        closest-side,
+        transparent calc(100% - 20px),
+        #000 calc(100% - 20px) calc(100% - 0px),
+        transparent calc(100% - 20px)
+    );
+}

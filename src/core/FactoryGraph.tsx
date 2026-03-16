@@ -20,7 +20,6 @@ export const buildFactoryGraph = async (params: {
     graph: FactoryNode;
     list: FactoryGraphNode[];
 }> => {
-    console.log("buildFactoryGraph");
     const { entities } = params;
     const factories: Entity[] = [];
     const areas: Entity[] = [];

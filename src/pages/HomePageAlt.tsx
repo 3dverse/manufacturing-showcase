@@ -88,12 +88,7 @@ export default function HomePageAlt() {
     return (
         <div className="h-dvh bg-linear-to-br from-slate-50 to-slate-100 overflow-x-hidden">
             <div className="container flex flex-col h-full mx-auto pb-16">
-                <header
-                    className="flex items-start gap-4 max-w-6xl py-10"
-                    style={{
-                        display: selectedFactoryId ? "none" : "block",
-                    }}
-                >
+                <header className="flex items-start gap-4 max-w-6xl py-10">
                     <span
                         role="img"
                         className="block w-8 aspect-square rounded-full bg-linear-to-tr from-accent-200 to-accent-500 shadow-[0_4px_16px_-8px_var(--color-accent)]"

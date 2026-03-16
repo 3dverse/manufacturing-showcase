@@ -9,6 +9,7 @@ import { FloorOutline } from "./DOM3D/FloorOutline";
 import { FloorRegion } from "./DOM3D/FloorRegion";
 import { NodeSummary } from "./DOM3D/NodeSummary";
 import { FlowSpline } from "./DOM3D/FlowSpline";
+import { MachineInfoPanel } from "./DOM3D/MachineInfoPanel";
 import { TopPanel } from "./DOM3D/TopPanel";
 
 //------------------------------------------------------------------------------
@@ -89,11 +90,13 @@ const FactoryBuilder = () => {
             {shownLines.map((line) => (
                 <LineBuilderItem key={line.hash} line={line} />
             ))}
-
             {/* TODO: When factory is selected, show only the cells floors, not the NodeSummary */}
             {shownCells.map((cell) => (
                 <CellBuilderItem key={cell.hash} cell={cell} />
             ))}
+            {selectedNode?.type === NodeTypes.cell && selectedNode.machines?.length > 0 && (
+                <MachineInfoPanel machine={selectedNode.machines[0]} />
+            )}
         </>
     );
 };

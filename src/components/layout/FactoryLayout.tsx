@@ -5,6 +5,7 @@ import { useContext } from "react";
 import { Viewer } from "@/components/viewer/Viewer";
 import { MainHeader } from "@/components/layout/MainHeader";
 import { Navigation } from "@/components/navigation/Navigation";
+import { FactoryTimeline } from "@/components/nodes/factory/FactoryTimeline";
 import { FactoryPanel } from "@/components/nodes/factory/FactoryPanel";
 import { GenericAreaPanel } from "@/components/nodes/areas/GenericAreaPanel";
 import { LinePanel } from "@/components/nodes/lines/LinePanel";
@@ -33,10 +34,10 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
             <div
                 className={cn(
                     "absolute bottom-0 left-0 flex flex-col w-full h-full pointer-events-none z-50 transition-all",
-                    thumbnailMode ? "p-0" : "p-2",
+                    thumbnailMode ? "p-0" : "p-0",
                 )}
             >
-                <div className={thumbnailMode ? "" : "flex flex-col items-start gap-1 w-96 2xl:w-120"}>
+                <div className={thumbnailMode ? "" : "flex flex-col items-start gap-1 w-96 2xl:w-120 p-2"}>
                     <MainHeader thumbnailMode={thumbnailMode} onBack={onBack} />
                     {!thumbnailMode && <FactoryPanel />}
                     {!thumbnailMode && selectedNode?.type === NodeTypes.area && (
@@ -49,6 +50,12 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                 {!thumbnailMode && (
                     <div className="flex items-end justify-center grow pb-8">
                         <Navigation />
+                    </div>
+                )}
+
+                {!thumbnailMode && (
+                    <div className="w-full self-end">
+                        <FactoryTimeline className="opacity-0 appear-in-from-bottom [--animation-delay:1s]" />
                     </div>
                 )}
             </div>

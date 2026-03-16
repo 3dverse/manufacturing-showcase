@@ -2,9 +2,6 @@
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
-import { ViewerPanel } from "@/components/common/ViewerPanel";
-
-//------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -17,22 +14,17 @@ export const TopPanel = ({ node, className }: { node: FactoryGraphNode; classNam
     return (
         <BoundingBoxFaceProjection
             entity={node.entity}
-            face="bottom"
-            invert
-            className="pointer-events-none! flex items-end justify-end"
+            face="top"
+            className={cn("pointer-events-none! flex items-end justify-end", className)}
         >
-            <ViewerPanel
-                className={cn(
-                    "flex items-start gap-16 px-8 rounded-xl bg-positive-800/80 shadow-[0_16px_32px_-12px_color-mix(in_oklch,var(--color-positive-500),transparent)]",
-                    className,
-                )}
-            >
-                <p className="pt-8 text-5xl font-semibold text-slate-0 tracking-wide">OEE</p>
-                <p className="p-16 pb-4 relative text-8xl font-semibold text-positive-900 scale-[1.2] origin-bottom">
-                    <span className="absolute bottom-0 left-0 right-0 w-full h-full rounded-t-[20rem] bg-positive-500 border-l-5 border-positive-400 -z-10 shadow-[-13px_0px_0px_-4px_#00000040]" />
-                    95%
-                </p>
-            </ViewerPanel>
+            <div className="top-0 left-0 w-full h-full border-8 border-accent rounded-3xl pointer-events-none">
+                <div className="absolute bottom-32 right-32 pl-4 flex items-baseline justify-center text-[4.5rem] text-accent font-semibold">
+                    <div className="absolute bottom-[-75%] left-[-50%] w-[200%] h-[300%] bg-[white] rounded-full blur-3xl -z-10" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 radial-dashed-circle" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 aspect-square animate-pulse border-10 border-accent border-double rounded-full" />
+                    89<span className="ml-1 text-[70%] opacity-80">%</span>
+                </div>
+            </div>
         </BoundingBoxFaceProjection>
     );
 };
