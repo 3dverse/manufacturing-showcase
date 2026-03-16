@@ -14,7 +14,8 @@ import type { FactoryGraphNode } from "@/content/type";
 export const FloorRegion = ({ node }: { node: FactoryGraphNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
-    const { clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } = useNavNode(node, "dom3d");
+    const { pointerDownHandler, clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } =
+        useNavNode(node, "dom3d");
 
     //--------------------------------------------------------------------------
     // Memos
@@ -30,6 +31,7 @@ export const FloorRegion = ({ node }: { node: FactoryGraphNode }) => {
         <BoundingBoxFaceProjection entity={node.entity} face="bottom">
             <div
                 className={cn("w-full h-full rounded-xl transition-colors duration-200", stateClassName)}
+                onPointerDown={pointerDownHandler}
                 onClick={clickHandler}
                 onMouseEnter={mouseEnterHandler}
                 onMouseLeave={mouseLeaveHandler}

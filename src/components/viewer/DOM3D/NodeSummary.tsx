@@ -15,7 +15,8 @@ import { useMemo } from "react";
 export const NodeSummary = ({ node }: { node: FactoryGraphNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
-    const { clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } = useNavNode(node, "dom3d");
+    const { pointerDownHandler, clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } =
+        useNavNode(node, "dom3d");
 
     //--------------------------------------------------------------------------
     // Memos
@@ -44,6 +45,7 @@ export const NodeSummary = ({ node }: { node: FactoryGraphNode }) => {
                     "group w-full h-48 p-2 border-2 rounded-xl border-slate-0 transition-colors duration-200",
                     stateClassName,
                 )}
+                onPointerDown={pointerDownHandler}
                 onClick={clickHandler}
                 onMouseEnter={mouseEnterHandler}
                 onMouseLeave={mouseLeaveHandler}

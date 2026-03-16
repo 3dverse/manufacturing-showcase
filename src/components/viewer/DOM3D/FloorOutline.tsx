@@ -12,7 +12,8 @@ import { useNavNode } from "@/components/navigation/hooks";
 export const FloorOutline = ({ node }: { node: FactoryGraphNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
-    const { clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } = useNavNode(node, "dom3d");
+    const { pointerDownHandler, clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } =
+        useNavNode(node, "dom3d");
 
     //--------------------------------------------------------------------------
     // Memos
@@ -32,6 +33,7 @@ export const FloorOutline = ({ node }: { node: FactoryGraphNode }) => {
                     "w-full h-full rounded-xl border-3 border-accent/80 outline-accent-500/0 outline-40 transition-all duration-200 pointer-events-auto",
                     stateClassName,
                 )}
+                onPointerDown={pointerDownHandler}
                 onClick={clickHandler}
                 onMouseEnter={mouseEnterHandler}
                 onMouseLeave={mouseLeaveHandler}

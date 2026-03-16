@@ -4,6 +4,7 @@ import { useContext, useCallback, useMemo, type MouseEvent } from "react";
 //------------------------------------------------------------------------------
 import { LivelinkExfilContext } from "@/contexts/LivelinkExfilContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
+import { useDragGuard } from "@/hooks/useDragGuard";
 
 //------------------------------------------------------------------------------
 import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2";
@@ -21,6 +22,7 @@ export const useNavNode = (node: FactoryGraphNode, source: "nav" | "dom3d") => {
     const { selectedNode, setSelectedNode } = useContext(SelectionContext);
     const { hoveredNode, setHoveredNode } = useContext(HoverContext);
     const { cameraControllerRef, viewportRef, cameraEntity } = useContext(LivelinkExfilContext);
+    const { pointerDownHandler, isDrag } = useDragGuard();
 
     //--------------------------------------------------------------------------
     // Memos
@@ -80,6 +82,7 @@ export const useNavNode = (node: FactoryGraphNode, source: "nav" | "dom3d") => {
     const clickHandler = useCallback(
         (e: MouseEvent) => {
             e.stopPropagation();
+            if (isDrag(e)) return;
             if (node.hash !== selectedNode?.hash) {
                 setSelectedNode(node);
             } else {
@@ -96,7 +99,7 @@ export const useNavNode = (node: FactoryGraphNode, source: "nav" | "dom3d") => {
                 }
             }
         },
-        [setSelectedNode, node, cameraControllerRef, viewportRef, cameraEntity, selectedNode],
+        [setSelectedNode, node, cameraControllerRef, viewportRef, cameraEntity, selectedNode, isDrag],
     );
 
     //--------------------------------------------------------------------------
@@ -119,9 +122,11 @@ export const useNavNode = (node: FactoryGraphNode, source: "nav" | "dom3d") => {
         isHovered,
         isParentHovered,
         isChildHovered,
+        pointerDownHandler,
         clickHandler,
         mouseEnterHandler,
         mouseLeaveHandler,
+        setSelectedNode,
     };
 };
 

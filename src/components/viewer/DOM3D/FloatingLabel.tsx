@@ -13,7 +13,8 @@ import { useMemo } from "react";
 export const FloatingLabel = ({ node }: { node: FactoryGraphNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
-    const { clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } = useNavNode(node, "dom3d");
+    const { pointerDownHandler, clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } =
+        useNavNode(node, "dom3d");
 
     //--------------------------------------------------------------------------
     // Memos
@@ -32,6 +33,7 @@ export const FloatingLabel = ({ node }: { node: FactoryGraphNode }) => {
         <BoundingBoxFaceProjection entity={node.entity} face="right">
             <div
                 className={cn("transition-colors duration-200", stateClassName)}
+                onPointerDown={pointerDownHandler}
                 onClick={clickHandler}
                 onMouseEnter={mouseEnterHandler}
                 onMouseLeave={mouseLeaveHandler}
