@@ -1,0 +1,10 @@
+{
+  "generatorName": "typescript-axios",
+  "inputSpec": "server/spec/QMS.yaml",
+  "output": "_prebuild/api-libs/qms",
+  "additionalProperties": {
+    "useSingleRequestParameter": true,
+    "supportsES6": true,
+    "typescriptThreePlus": true
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "generatorName": "typescript-axios",
+  "inputSpec": "server/spec/MES.yaml",
+  "output": "_prebuild/api-libs/mes",
+  "additionalProperties": {
+    "useSingleRequestParameter": true,
+    "supportsES6": true,
+    "typescriptThreePlus": true
+  }
+}

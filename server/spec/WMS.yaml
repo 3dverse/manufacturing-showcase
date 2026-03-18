@@ -1,0 +1,964 @@
+openapi: 3.1.0
+info:
+  title: WMS API
+  version: 0.0.1
+  description: |
+    Warehouse Management System (WMS) API for querying warehouse structure,
+    storage locations, inventory positions, handling units, inbound receipts, putaway,
+    picking, outbound shipments, and inventory count activity.
+
+    This idealized API exposes only GET endpoints and always returns HTTP 200.
+
+servers:
+  - url: /-/api/wms
+
+tags:
+  - name: WMS Warehouses
+    description: Warehouse master data and warehouse-level metadata.
+  - name: WMS Locations
+    description: Physical storage structure including zones, aisles, bins, and location status.
+  - name: WMS Inventory
+    description: On-hand inventory by warehouse, location, lot, serial number, and handling unit.
+  - name: WMS Inbound
+    description: Receipt and putaway visibility for inbound warehouse activity.
+  - name: WMS Outbound
+    description: Picking and shipment visibility for outbound warehouse activity.
+  - name: WMS Counting
+    description: Inventory count and cycle count visibility.
+
+paths:
+  /warehouses:
+    get:
+      tags: [WMS Warehouses]
+      operationId: getWarehouses
+      summary: List warehouses
+      description: |
+        Returns the warehouses managed by the WMS, including warehouse code, name,
+        operational status, and default timezone. Use this endpoint to discover the
+        warehouse scope available for downstream WMS queries.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseCodeFilter'
+        - $ref: '#/components/parameters/StatusFilter'
+      responses:
+        '200':
+          description: Warehouse list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Warehouse'
+                required: [data]
+
+  /warehouses/{warehouseId}:
+    get:
+      tags: [WMS Warehouses]
+      operationId: getWarehouseById
+      summary: Get warehouse details
+      description: |
+        Returns the details of a single warehouse, including identifying information,
+        operational status, address, and timezone. Use this endpoint when a client
+        needs warehouse context for location, inventory, receipt, or shipment data.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdPath'
+      responses:
+        '200':
+          description: Warehouse details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Warehouse'
+                required: [data]
+
+  /locations:
+    get:
+      tags: [WMS Locations]
+      operationId: getLocations
+      summary: List storage locations
+      description: |
+        Returns storage locations defined in the WMS, such as receiving docks, staging
+        lanes, reserve storage, forward pick locations, and quarantine areas. Use this
+        endpoint to browse the warehouse location hierarchy and current location state.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/ZoneQuery'
+        - $ref: '#/components/parameters/LocationTypeQuery'
+        - $ref: '#/components/parameters/StatusFilter'
+      responses:
+        '200':
+          description: Location list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Location'
+                required: [data]
+
+  /locations/{locationId}:
+    get:
+      tags: [WMS Locations]
+      operationId: getLocationById
+      summary: Get location details
+      description: |
+        Returns the details of a single storage location, including warehouse, zone,
+        coordinates within the location hierarchy, capacity indicators, and current
+        operational status.
+      parameters:
+        - $ref: '#/components/parameters/LocationIdPath'
+      responses:
+        '200':
+          description: Location details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Location'
+                required: [data]
+
+  /inventory:
+    get:
+      tags: [WMS Inventory]
+      operationId: getInventory
+      summary: List inventory positions
+      description: |
+        Returns granular on-hand inventory positions as managed by the WMS. Each record
+        represents stock visible at a warehouse and location, optionally segmented by lot,
+        serial number, and handling unit. Use this endpoint for stock inquiry and bin-level
+        inventory visibility.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/LocationIdQuery'
+        - $ref: '#/components/parameters/ItemIdQuery'
+        - $ref: '#/components/parameters/LotNumberQuery'
+        - $ref: '#/components/parameters/SerialNumberQuery'
+        - $ref: '#/components/parameters/HandlingUnitIdQuery'
+      responses:
+        '200':
+          description: Inventory position list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryPosition'
+                required: [data]
+
+  /inventory/summary:
+    get:
+      tags: [WMS Inventory]
+      operationId: getInventorySummary
+      summary: Get inventory summary
+      description: |
+        Returns summarized on-hand inventory grouped at a higher level than the detailed
+        inventory endpoint. Use this endpoint for quick stock balances by warehouse and item
+        without retrieving every location-level stock position.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/ItemIdQuery'
+      responses:
+        '200':
+          description: Inventory summary list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventorySummary'
+                required: [data]
+
+  /handling-units:
+    get:
+      tags: [WMS Inventory]
+      operationId: getHandlingUnits
+      summary: List handling units
+      description: |
+        Returns handling units tracked in the warehouse, such as pallets, cartons, totes,
+        or other license-plated units. Use this endpoint to inspect the current location,
+        contents summary, and status of warehouse-contained units.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/HandlingUnitIdQuery'
+        - $ref: '#/components/parameters/LocationIdQuery'
+        - $ref: '#/components/parameters/StatusFilter'
+      responses:
+        '200':
+          description: Handling unit list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HandlingUnit'
+                required: [data]
+
+  /lots:
+    get:
+      tags: [WMS Inventory]
+      operationId: getLots
+      summary: List lot-controlled stock
+      description: |
+        Returns lot-controlled inventory identifiers visible to the warehouse, including
+        associated item, warehouse presence, expiration date, and current quantity. Use
+        this endpoint when lot traceability is needed for warehouse stock inquiry.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/ItemIdQuery'
+        - $ref: '#/components/parameters/LotNumberQuery'
+      responses:
+        '200':
+          description: Lot list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LotStock'
+                required: [data]
+
+  /serial-numbers:
+    get:
+      tags: [WMS Inventory]
+      operationId: getSerialNumbers
+      summary: List serial-controlled stock
+      description: |
+        Returns serial-number-controlled inventory visible in the warehouse, including item,
+        current warehouse and location, and stock state. Use this endpoint when serial-level
+        warehouse traceability is required.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/ItemIdQuery'
+        - $ref: '#/components/parameters/SerialNumberQuery'
+      responses:
+        '200':
+          description: Serial number list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SerialStock'
+                required: [data]
+
+  /receipts:
+    get:
+      tags: [WMS Inbound]
+      operationId: getReceipts
+      summary: List inbound receipts
+      description: |
+        Returns inbound warehouse receipts that represent goods physically received into
+        warehouse control. Use this endpoint for receipt visibility, dock activity review,
+        and inbound status tracking inside the WMS domain.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/StatusFilter'
+        - $ref: '#/components/parameters/FromDateQuery'
+        - $ref: '#/components/parameters/ToDateQuery'
+      responses:
+        '200':
+          description: Receipt list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Receipt'
+                required: [data]
+
+  /putaway-tasks:
+    get:
+      tags: [WMS Inbound]
+      operationId: getPutawayTasks
+      summary: List putaway tasks
+      description: |
+        Returns warehouse putaway tasks generated after receipt, showing movement from
+        receiving or staging locations into final storage locations. Use this endpoint to
+        inspect inbound placement work managed by the WMS.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/StatusFilter'
+        - $ref: '#/components/parameters/FromDateQuery'
+        - $ref: '#/components/parameters/ToDateQuery'
+      responses:
+        '200':
+          description: Putaway task list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PutawayTask'
+                required: [data]
+
+  /pick-tasks:
+    get:
+      tags: [WMS Outbound]
+      operationId: getPickTasks
+      summary: List pick tasks
+      description: |
+        Returns warehouse picking tasks used to retrieve stock from storage locations for
+        outbound fulfillment. Use this endpoint to review picking activity, source and
+        destination locations, and execution status inside the WMS.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/StatusFilter'
+        - $ref: '#/components/parameters/FromDateQuery'
+        - $ref: '#/components/parameters/ToDateQuery'
+      responses:
+        '200':
+          description: Pick task list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PickTask'
+                required: [data]
+
+  /shipments:
+    get:
+      tags: [WMS Outbound]
+      operationId: getShipments
+      summary: List outbound shipments
+      description: |
+        Returns outbound shipments handled by the warehouse, including shipment identifiers,
+        staging or loading status, ship date, and warehouse context. Use this endpoint for
+        shipment visibility limited to warehouse execution and dispatch activity.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/StatusFilter'
+        - $ref: '#/components/parameters/FromDateQuery'
+        - $ref: '#/components/parameters/ToDateQuery'
+      responses:
+        '200':
+          description: Shipment list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Shipment'
+                required: [data]
+
+  /cycle-counts:
+    get:
+      tags: [WMS Counting]
+      operationId: getCycleCounts
+      summary: List cycle counts
+      description: |
+        Returns cycle count documents and count activity managed by the warehouse. Use this
+        endpoint to review counting scope, execution status, and variance results associated
+        with inventory accuracy processes inside the WMS.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/StatusFilter'
+        - $ref: '#/components/parameters/FromDateQuery'
+        - $ref: '#/components/parameters/ToDateQuery'
+      responses:
+        '200':
+          description: Cycle count list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CycleCount'
+                required: [data]
+
+components:
+  parameters:
+    WarehouseIdPath:
+      name: warehouseId
+      in: path
+      required: true
+      description: Unique identifier of the warehouse.
+      schema:
+        type: string
+
+    LocationIdPath:
+      name: locationId
+      in: path
+      required: true
+      description: Unique identifier of the storage location.
+      schema:
+        type: string
+
+    WarehouseIdQuery:
+      name: warehouseId
+      in: query
+      required: false
+      description: Filter results to a specific warehouse.
+      schema:
+        type: string
+
+    WarehouseCodeFilter:
+      name: warehouseCode
+      in: query
+      required: false
+      description: Filter warehouses by warehouse code.
+      schema:
+        type: string
+
+    ZoneQuery:
+      name: zone
+      in: query
+      required: false
+      description: Filter results to a warehouse zone.
+      schema:
+        type: string
+
+    LocationTypeQuery:
+      name: locationType
+      in: query
+      required: false
+      description: Filter locations by functional type such as PICK, RESERVE, STAGING, or QUARANTINE.
+      schema:
+        type: string
+
+    LocationIdQuery:
+      name: locationId
+      in: query
+      required: false
+      description: Filter results to a specific storage location.
+      schema:
+        type: string
+
+    ItemIdQuery:
+      name: itemId
+      in: query
+      required: false
+      description: Filter results to a specific inventory item identifier.
+      schema:
+        type: string
+
+    LotNumberQuery:
+      name: lotNumber
+      in: query
+      required: false
+      description: Filter results to a specific lot number.
+      schema:
+        type: string
+
+    SerialNumberQuery:
+      name: serialNumber
+      in: query
+      required: false
+      description: Filter results to a specific serial number.
+      schema:
+        type: string
+
+    HandlingUnitIdQuery:
+      name: handlingUnitId
+      in: query
+      required: false
+      description: Filter results to a specific handling unit or license plate.
+      schema:
+        type: string
+
+    StatusFilter:
+      name: status
+      in: query
+      required: false
+      description: Filter results by current operational or document status.
+      schema:
+        type: string
+
+    FromDateQuery:
+      name: fromDate
+      in: query
+      required: false
+      description: Filter results on or after this date.
+      schema:
+        type: string
+        format: date
+
+    ToDateQuery:
+      name: toDate
+      in: query
+      required: false
+      description: Filter results on or before this date.
+      schema:
+        type: string
+        format: date
+
+  schemas:
+    Warehouse:
+      type: object
+      description: Warehouse master record.
+      properties:
+        id:
+          type: string
+          description: Unique warehouse identifier.
+        code:
+          type: string
+          description: Human-readable warehouse code.
+        name:
+          type: string
+          description: Warehouse name.
+        status:
+          type: string
+          description: Warehouse operational status.
+        timezone:
+          type: string
+          description: IANA timezone for warehouse-local timestamps.
+        address:
+          $ref: '#/components/schemas/Address'
+      required: [id, code, name, status, timezone]
+
+    Location:
+      type: object
+      description: Physical or logical warehouse storage location.
+      properties:
+        id:
+          type: string
+          description: Unique location identifier.
+        warehouseId:
+          type: string
+          description: Warehouse that owns the location.
+        code:
+          type: string
+          description: Human-readable location code.
+        name:
+          type: string
+          description: Optional descriptive location name.
+        zone:
+          type: string
+          description: Warehouse zone or area.
+        aisle:
+          type: string
+          description: Aisle designation when applicable.
+        bay:
+          type: string
+          description: Bay designation when applicable.
+        level:
+          type: string
+          description: Rack or elevation level when applicable.
+        position:
+          type: string
+          description: Position or bin designation when applicable.
+        locationType:
+          type: string
+          description: Functional type of the location.
+        status:
+          type: string
+          description: Current usability state of the location.
+        capacityUom:
+          type: string
+          description: Unit of measure used for capacity tracking.
+        capacityValue:
+          type: number
+          format: double
+          description: Rated location capacity.
+      required: [id, warehouseId, code, zone, locationType, status]
+
+    InventoryPosition:
+      type: object
+      description: Detailed on-hand inventory at a specific warehouse position.
+      properties:
+        warehouseId:
+          type: string
+          description: Warehouse holding the stock.
+        locationId:
+          type: string
+          description: Storage location holding the stock.
+        itemId:
+          type: string
+          description: Inventory item identifier.
+        lotNumber:
+          type: string
+          nullable: true
+          description: Lot number when the item is lot-controlled.
+        serialNumber:
+          type: string
+          nullable: true
+          description: Serial number when the item is serial-controlled.
+        handlingUnitId:
+          type: string
+          nullable: true
+          description: Containing handling unit or license plate when applicable.
+        quantityOnHand:
+          type: number
+          format: double
+          description: On-hand quantity visible to the warehouse.
+        quantityAllocated:
+          type: number
+          format: double
+          description: Quantity currently allocated within warehouse execution.
+        quantityAvailable:
+          type: number
+          format: double
+          description: Available quantity for warehouse use.
+        uom:
+          type: string
+          description: Quantity unit of measure.
+        inventoryStatus:
+          type: string
+          description: Warehouse inventory state.
+        lastMovementAt:
+          type: string
+          format: date-time
+          description: Timestamp of the most recent warehouse movement affecting the position.
+      required:
+        - warehouseId
+        - locationId
+        - itemId
+        - quantityOnHand
+        - quantityAllocated
+        - quantityAvailable
+        - uom
+        - inventoryStatus
+
+    InventorySummary:
+      type: object
+      description: Summarized inventory balance for an item within a warehouse.
+      properties:
+        warehouseId:
+          type: string
+          description: Warehouse holding the summarized stock.
+        itemId:
+          type: string
+          description: Inventory item identifier.
+        quantityOnHand:
+          type: number
+          format: double
+          description: Total on-hand quantity.
+        quantityAllocated:
+          type: number
+          format: double
+          description: Total allocated quantity.
+        quantityAvailable:
+          type: number
+          format: double
+          description: Total available quantity.
+        uom:
+          type: string
+          description: Quantity unit of measure.
+      required:
+        - warehouseId
+        - itemId
+        - quantityOnHand
+        - quantityAllocated
+        - quantityAvailable
+        - uom
+
+    HandlingUnit:
+      type: object
+      description: Warehouse-tracked logistic unit such as a pallet, tote, or carton.
+      properties:
+        id:
+          type: string
+          description: Unique handling unit identifier.
+        warehouseId:
+          type: string
+          description: Warehouse where the handling unit is currently located.
+        type:
+          type: string
+          description: Handling unit type.
+        status:
+          type: string
+          description: Current handling unit status.
+        locationId:
+          type: string
+          description: Current storage or staging location.
+        parentHandlingUnitId:
+          type: string
+          nullable: true
+          description: Parent handling unit when nested.
+        itemCount:
+          type: integer
+          description: Number of distinct item lines associated with the handling unit.
+        quantityOnHand:
+          type: number
+          format: double
+          description: Total quantity contained in the handling unit.
+      required: [id, warehouseId, type, status, locationId, itemCount, quantityOnHand]
+
+    LotStock:
+      type: object
+      description: Lot-level stock visibility within the warehouse.
+      properties:
+        lotNumber:
+          type: string
+          description: Lot identifier.
+        itemId:
+          type: string
+          description: Inventory item identifier.
+        warehouseId:
+          type: string
+          description: Warehouse where the lot is present.
+        expirationDate:
+          type: string
+          format: date
+          nullable: true
+          description: Lot expiration date when maintained.
+        quantityOnHand:
+          type: number
+          format: double
+          description: Total on-hand quantity for the lot in the warehouse.
+        uom:
+          type: string
+          description: Quantity unit of measure.
+      required: [lotNumber, itemId, warehouseId, quantityOnHand, uom]
+
+    SerialStock:
+      type: object
+      description: Serial-level stock visibility within the warehouse.
+      properties:
+        serialNumber:
+          type: string
+          description: Serial number identifier.
+        itemId:
+          type: string
+          description: Inventory item identifier.
+        warehouseId:
+          type: string
+          description: Warehouse where the serial is present.
+        locationId:
+          type: string
+          description: Current warehouse location for the serial.
+        inventoryStatus:
+          type: string
+          description: Current warehouse inventory state for the serial.
+      required: [serialNumber, itemId, warehouseId, locationId, inventoryStatus]
+
+    Receipt:
+      type: object
+      description: Warehouse receipt record for inbound physical goods.
+      properties:
+        id:
+          type: string
+          description: Unique receipt identifier.
+        warehouseId:
+          type: string
+          description: Warehouse receiving the goods.
+        receiptNumber:
+          type: string
+          description: Human-readable receipt number.
+        status:
+          type: string
+          description: Current receipt status.
+        receivedAt:
+          type: string
+          format: date-time
+          description: Timestamp when receipt was recorded in the warehouse.
+        dockLocationId:
+          type: string
+          nullable: true
+          description: Receiving dock or staging location associated with the receipt.
+        lineCount:
+          type: integer
+          description: Number of item lines in the receipt.
+      required: [id, warehouseId, receiptNumber, status, receivedAt, lineCount]
+
+    PutawayTask:
+      type: object
+      description: Warehouse work task moving received inventory into storage.
+      properties:
+        id:
+          type: string
+          description: Unique putaway task identifier.
+        warehouseId:
+          type: string
+          description: Warehouse responsible for the task.
+        status:
+          type: string
+          description: Current execution status.
+        itemId:
+          type: string
+          description: Inventory item being moved.
+        quantity:
+          type: number
+          format: double
+          description: Quantity assigned to the task.
+        uom:
+          type: string
+          description: Quantity unit of measure.
+        sourceLocationId:
+          type: string
+          description: Starting receiving or staging location.
+        destinationLocationId:
+          type: string
+          nullable: true
+          description: Intended storage destination.
+        createdAt:
+          type: string
+          format: date-time
+          description: Task creation timestamp.
+      required:
+        - id
+        - warehouseId
+        - status
+        - itemId
+        - quantity
+        - uom
+        - sourceLocationId
+        - createdAt
+
+    PickTask:
+      type: object
+      description: Warehouse work task retrieving stock for outbound fulfillment.
+      properties:
+        id:
+          type: string
+          description: Unique pick task identifier.
+        warehouseId:
+          type: string
+          description: Warehouse responsible for the task.
+        status:
+          type: string
+          description: Current execution status.
+        itemId:
+          type: string
+          description: Inventory item being picked.
+        quantity:
+          type: number
+          format: double
+          description: Quantity assigned to the task.
+        uom:
+          type: string
+          description: Quantity unit of measure.
+        sourceLocationId:
+          type: string
+          description: Storage location to pick from.
+        destinationLocationId:
+          type: string
+          nullable: true
+          description: Staging or consolidation destination.
+        shipmentId:
+          type: string
+          nullable: true
+          description: Associated outbound shipment when applicable.
+        createdAt:
+          type: string
+          format: date-time
+          description: Task creation timestamp.
+      required:
+        - id
+        - warehouseId
+        - status
+        - itemId
+        - quantity
+        - uom
+        - sourceLocationId
+        - createdAt
+
+    Shipment:
+      type: object
+      description: Outbound warehouse shipment record.
+      properties:
+        id:
+          type: string
+          description: Unique shipment identifier.
+        warehouseId:
+          type: string
+          description: Shipping warehouse.
+        shipmentNumber:
+          type: string
+          description: Human-readable shipment number.
+        status:
+          type: string
+          description: Current shipment status within warehouse execution.
+        shipDate:
+          type: string
+          format: date
+          nullable: true
+          description: Planned or actual shipment date.
+        stagingLocationId:
+          type: string
+          nullable: true
+          description: Staging or loading location associated with the shipment.
+        lineCount:
+          type: integer
+          description: Number of shipment lines.
+      required: [id, warehouseId, shipmentNumber, status, lineCount]
+
+    CycleCount:
+      type: object
+      description: Warehouse inventory count document or count activity record.
+      properties:
+        id:
+          type: string
+          description: Unique cycle count identifier.
+        warehouseId:
+          type: string
+          description: Warehouse where the count is executed.
+        status:
+          type: string
+          description: Current count status.
+        countType:
+          type: string
+          description: Count classification such as CYCLE, LOCATION, or ITEM.
+        scheduledDate:
+          type: string
+          format: date
+          nullable: true
+          description: Scheduled date for the count.
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Completion timestamp when the count is finished.
+        varianceLineCount:
+          type: integer
+          description: Number of counted lines with variance.
+      required: [id, warehouseId, status, countType, varianceLineCount]
+
+    Address:
+      type: object
+      description: Postal address.
+      properties:
+        line1:
+          type: string
+        line2:
+          type: string
+          nullable: true
+        city:
+          type: string
+        state:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+      required: [line1, city, state, postalCode, country]

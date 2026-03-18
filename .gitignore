@@ -21,3 +21,6 @@ out/
 *.njsproj
 *.sln
 *.sw?
+
+server/dist
+_prebuild

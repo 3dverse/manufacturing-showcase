@@ -1,0 +1,1029 @@
+openapi: 3.1.0
+info:
+  title: MES API
+  version: 0.0.1
+  description: >
+    Manufacturing Execution System (MES) API focused on shop-floor
+    execution visibility. This specification only covers MES capabilities and
+    intentionally excludes concerns better handled by ERP, APS, WMS, EAM, or QMS.
+
+servers:
+  - url: /-/api/mes
+
+tags:
+  - name: MES
+    description: Manufacturing execution visibility endpoints
+
+paths:
+  /production-orders:
+    get:
+      tags: [MES]
+      operationId: listProductionOrders
+      summary: List production orders
+      description: >
+        Returns production orders currently known to the MES for execution
+        tracking on the shop floor. Use this endpoint to monitor order progress,
+        execution state, quantities, and planned versus actual timing.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - name: status
+          in: query
+          description: Filter production orders by execution status.
+          schema:
+            type: string
+            enum: [released, ready, in_progress, paused, completed, cancelled]
+        - name: workCenterId
+          in: query
+          description: Filter to orders currently associated with a specific work center.
+          schema:
+            type: string
+        - name: itemCode
+          in: query
+          description: Filter by produced item or material code.
+          schema:
+            type: string
+        - name: scheduledFrom
+          in: query
+          description: Return orders scheduled on or after this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: scheduledTo
+          in: query
+          description: Return orders scheduled on or before this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Successful response containing production orders.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductionOrderListResponse'
+
+  /production-orders/{productionOrderId}:
+    get:
+      tags: [MES]
+      operationId: getProductionOrder
+      summary: Get a production order
+      description: >
+        Returns detailed MES execution data for a single production order,
+        including quantities, timing, current state, and execution context.
+      parameters:
+        - $ref: '#/components/parameters/ProductionOrderId'
+      responses:
+        '200':
+          description: Successful response containing the production order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductionOrderDetailResponse'
+
+  /operations:
+    get:
+      tags: [MES]
+      operationId: listOperations
+      summary: List production operations
+      description: >
+        Returns executable production operations managed by the MES. This is
+        useful for tracking step-level progress within production orders and for
+        understanding what is running, waiting, or completed on the shop floor.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - name: productionOrderId
+          in: query
+          description: Filter operations belonging to a specific production order.
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter operations by execution state.
+          schema:
+            type: string
+            enum: [ready, in_progress, paused, completed, skipped]
+        - name: workCenterId
+          in: query
+          description: Filter operations assigned to a specific work center.
+          schema:
+            type: string
+        - name: operationCode
+          in: query
+          description: Filter by operation code or routing step identifier.
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Successful response containing operations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationListResponse'
+
+  /operations/{operationId}:
+    get:
+      tags: [MES]
+      operationId: getOperation
+      summary: Get a production operation
+      description: >
+        Returns detailed MES execution data for a single production operation,
+        including its relation to the production order, quantities, timing,
+        assigned work center, and execution status.
+      parameters:
+        - $ref: '#/components/parameters/OperationId'
+      responses:
+        '200':
+          description: Successful response containing the operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationDetailResponse'
+
+  /work-centers:
+    get:
+      tags: [MES]
+      operationId: listWorkCenters
+      summary: List work centers
+      description: >
+        Returns work centers visible to the MES. Use this endpoint to understand
+        where production is executed, along with current utilization and
+        execution status at each work center.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - name: areaCode
+          in: query
+          description: Filter work centers by manufacturing area or zone.
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by current work center execution status.
+          schema:
+            type: string
+            enum: [idle, running, blocked, starved, down, offline]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Successful response containing work centers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkCenterListResponse'
+
+  /work-centers/{workCenterId}:
+    get:
+      tags: [MES]
+      operationId: getWorkCenter
+      summary: Get a work center
+      description: >
+        Returns detailed MES information for a single work center, including its
+        current execution state, active order or operation context, and recent
+        performance indicators relevant to shop-floor execution.
+      parameters:
+        - $ref: '#/components/parameters/WorkCenterId'
+      responses:
+        '200':
+          description: Successful response containing the work center.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkCenterDetailResponse'
+
+  /dispatch-list:
+    get:
+      tags: [MES]
+      operationId: listDispatchItems
+      summary: Get the dispatch list
+      description: >
+        Returns the MES dispatch list used to present the next executable work
+        to operators or work centers. This endpoint focuses on what should be
+        run next on the shop floor, not on planning or optimization logic.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - name: workCenterId
+          in: query
+          description: Return dispatch items for a specific work center.
+          schema:
+            type: string
+        - name: productionOrderId
+          in: query
+          description: Return dispatch items for a specific production order.
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter dispatch items by readiness.
+          schema:
+            type: string
+            enum: [queued, ready, running, blocked]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Successful response containing dispatch items.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DispatchListResponse'
+
+  /production-events:
+    get:
+      tags: [MES]
+      operationId: listProductionEvents
+      summary: List production events
+      description: >
+        Returns recorded MES production events such as start, stop, complete,
+        quantity declarations, and operator-facing execution events. This
+        endpoint provides the execution history needed for shop-floor
+        traceability within MES scope.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - name: productionOrderId
+          in: query
+          description: Filter events for a specific production order.
+          schema:
+            type: string
+        - name: operationId
+          in: query
+          description: Filter events for a specific production operation.
+          schema:
+            type: string
+        - name: workCenterId
+          in: query
+          description: Filter events for a specific work center.
+          schema:
+            type: string
+        - name: eventType
+          in: query
+          description: Filter by MES production event type.
+          schema:
+            type: string
+            enum:
+              - operation_started
+              - operation_paused
+              - operation_resumed
+              - operation_completed
+              - quantity_reported
+              - scrap_reported
+              - downtime_started
+              - downtime_ended
+        - name: occurredFrom
+          in: query
+          description: Return events occurring on or after this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: occurredTo
+          in: query
+          description: Return events occurring on or before this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Successful response containing production events.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductionEventListResponse'
+
+  /downtime-events:
+    get:
+      tags: [MES]
+      operationId: listDowntimeEvents
+      summary: List downtime events
+      description: >
+        Returns production-impacting downtime events observed by the MES. This
+        endpoint is intended for execution monitoring and performance analysis,
+        not for maintenance planning or asset lifecycle management.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - name: workCenterId
+          in: query
+          description: Filter downtime events for a specific work center.
+          schema:
+            type: string
+        - name: reasonCode
+          in: query
+          description: Filter by downtime reason code.
+          schema:
+            type: string
+        - name: startedFrom
+          in: query
+          description: Return downtime events starting on or after this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: startedTo
+          in: query
+          description: Return downtime events starting on or before this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Successful response containing downtime events.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DowntimeEventListResponse'
+
+  /performance:
+    get:
+      tags: [MES]
+      operationId: getPerformance
+      summary: Get MES performance metrics
+      description: >
+        Returns aggregated MES execution metrics for production monitoring, such
+        as throughput, good quantity, scrap quantity, runtime, downtime, and
+        simple effectiveness indicators. This endpoint stays within execution
+        reporting and does not cover broader business analytics.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - name: workCenterId
+          in: query
+          description: Limit metrics to a specific work center.
+          schema:
+            type: string
+        - name: productionOrderId
+          in: query
+          description: Limit metrics to a specific production order.
+          schema:
+            type: string
+        - name: from
+          in: query
+          description: Start of the reporting window.
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: End of the reporting window.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Successful response containing MES performance metrics.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceResponse'
+
+components:
+  parameters:
+    SiteId:
+      name: siteId
+      in: query
+      description: Filter results to a specific manufacturing site.
+      schema:
+        type: string
+
+    Page:
+      name: page
+      in: query
+      description: Page number for paginated responses.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    PageSize:
+      name: pageSize
+      in: query
+      description: Number of records returned per page.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
+        default: 50
+
+    ProductionOrderId:
+      name: productionOrderId
+      in: path
+      required: true
+      description: Unique identifier of the production order.
+      schema:
+        type: string
+
+    OperationId:
+      name: operationId
+      in: path
+      required: true
+      description: Unique identifier of the production operation.
+      schema:
+        type: string
+
+    WorkCenterId:
+      name: workCenterId
+      in: path
+      required: true
+      description: Unique identifier of the work center.
+      schema:
+        type: string
+
+  schemas:
+    Pagination:
+      type: object
+      additionalProperties: false
+      properties:
+        page:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 50
+        totalItems:
+          type: integer
+          example: 237
+        totalPages:
+          type: integer
+          example: 5
+      required: [page, pageSize, totalItems, totalPages]
+
+    QuantitySummary:
+      type: object
+      additionalProperties: false
+      properties:
+        plannedQuantity:
+          type: number
+          format: double
+          example: 1000
+        producedQuantity:
+          type: number
+          format: double
+          example: 780
+        goodQuantity:
+          type: number
+          format: double
+          example: 760
+        scrapQuantity:
+          type: number
+          format: double
+          example: 20
+        uom:
+          type: string
+          example: pcs
+      required:
+        - plannedQuantity
+        - producedQuantity
+        - goodQuantity
+        - scrapQuantity
+        - uom
+
+    TimeWindow:
+      type: object
+      additionalProperties: false
+      properties:
+        scheduledStart:
+          type: string
+          format: date-time
+        scheduledEnd:
+          type: string
+          format: date-time
+        actualStart:
+          type: string
+          format: date-time
+        actualEnd:
+          type: string
+          format: date-time
+      required: [scheduledStart, scheduledEnd]
+
+    ProductionOrder:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          example: PO-2026-000184
+        orderNumber:
+          type: string
+          example: MO-000184
+        siteId:
+          type: string
+          example: PLANT-01
+        itemCode:
+          type: string
+          example: FG-100045
+        itemDescription:
+          type: string
+          example: Finished Assembly A
+        status:
+          type: string
+          enum: [released, ready, in_progress, paused, completed, cancelled]
+        priority:
+          type: integer
+          example: 2
+        workCenterId:
+          type: string
+          example: WC-ASM-01
+        quantities:
+          $ref: '#/components/schemas/QuantitySummary'
+        timing:
+          $ref: '#/components/schemas/TimeWindow'
+      required:
+        - id
+        - orderNumber
+        - siteId
+        - itemCode
+        - status
+        - quantities
+        - timing
+
+    ProductionOrderDetail:
+      allOf:
+        - $ref: '#/components/schemas/ProductionOrder'
+        - type: object
+          additionalProperties: false
+          properties:
+            operationIds:
+              type: array
+              items:
+                type: string
+            currentOperationId:
+              type: string
+              nullable: true
+            progressPercent:
+              type: number
+              format: double
+              example: 78
+            notes:
+              type: string
+              example: Order is executing normally on line 1.
+          required: [operationIds, progressPercent]
+
+    Operation:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          example: OPR-000184-20
+        productionOrderId:
+          type: string
+          example: PO-2026-000184
+        operationCode:
+          type: string
+          example: ASM-20
+        operationDescription:
+          type: string
+          example: Final assembly
+        sequence:
+          type: integer
+          example: 20
+        status:
+          type: string
+          enum: [ready, in_progress, paused, completed, skipped]
+        workCenterId:
+          type: string
+          example: WC-ASM-01
+        plannedSetupTimeMinutes:
+          type: number
+          format: double
+          example: 15
+        plannedRunTimeMinutes:
+          type: number
+          format: double
+          example: 180
+        actualSetupTimeMinutes:
+          type: number
+          format: double
+          example: 18
+        actualRunTimeMinutes:
+          type: number
+          format: double
+          example: 142
+        quantities:
+          $ref: '#/components/schemas/QuantitySummary'
+      required:
+        - id
+        - productionOrderId
+        - operationCode
+        - sequence
+        - status
+        - workCenterId
+        - quantities
+
+    OperationDetail:
+      allOf:
+        - $ref: '#/components/schemas/Operation'
+        - type: object
+          additionalProperties: false
+          properties:
+            scheduledStart:
+              type: string
+              format: date-time
+            scheduledEnd:
+              type: string
+              format: date-time
+            actualStart:
+              type: string
+              format: date-time
+            actualEnd:
+              type: string
+              format: date-time
+            progressPercent:
+              type: number
+              format: double
+              example: 65
+          required: [progressPercent]
+
+    WorkCenter:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          example: WC-ASM-01
+        siteId:
+          type: string
+          example: PLANT-01
+        code:
+          type: string
+          example: ASM-01
+        name:
+          type: string
+          example: Assembly Line 1
+        areaCode:
+          type: string
+          example: ASSEMBLY
+        status:
+          type: string
+          enum: [idle, running, blocked, starved, down, offline]
+        activeProductionOrderId:
+          type: string
+          nullable: true
+        activeOperationId:
+          type: string
+          nullable: true
+        utilizationPercent:
+          type: number
+          format: double
+          example: 86.5
+      required:
+        - id
+        - siteId
+        - code
+        - name
+        - status
+
+    WorkCenterDetail:
+      allOf:
+        - $ref: '#/components/schemas/WorkCenter'
+        - type: object
+          additionalProperties: false
+          properties:
+            queueLength:
+              type: integer
+              example: 4
+            runtimeMinutes:
+              type: number
+              format: double
+              example: 410
+            downtimeMinutes:
+              type: number
+              format: double
+              example: 35
+            goodQuantity:
+              type: number
+              format: double
+              example: 2200
+            scrapQuantity:
+              type: number
+              format: double
+              example: 54
+          required: [queueLength, runtimeMinutes, downtimeMinutes, goodQuantity, scrapQuantity]
+
+    DispatchItem:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          example: DSP-000912
+        siteId:
+          type: string
+          example: PLANT-01
+        workCenterId:
+          type: string
+          example: WC-ASM-01
+        productionOrderId:
+          type: string
+          example: PO-2026-000184
+        operationId:
+          type: string
+          example: OPR-000184-20
+        sequence:
+          type: integer
+          example: 1
+        status:
+          type: string
+          enum: [queued, ready, running, blocked]
+        dispatchPriority:
+          type: integer
+          example: 10
+        recommendedStart:
+          type: string
+          format: date-time
+        itemCode:
+          type: string
+          example: FG-100045
+        remainingQuantity:
+          type: number
+          format: double
+          example: 240
+        uom:
+          type: string
+          example: pcs
+      required:
+        - id
+        - siteId
+        - workCenterId
+        - productionOrderId
+        - operationId
+        - sequence
+        - status
+        - dispatchPriority
+
+    ProductionEvent:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          example: EVT-0000009812
+        siteId:
+          type: string
+          example: PLANT-01
+        occurredAt:
+          type: string
+          format: date-time
+        eventType:
+          type: string
+          enum:
+            - operation_started
+            - operation_paused
+            - operation_resumed
+            - operation_completed
+            - quantity_reported
+            - scrap_reported
+            - downtime_started
+            - downtime_ended
+        productionOrderId:
+          type: string
+          nullable: true
+        operationId:
+          type: string
+          nullable: true
+        workCenterId:
+          type: string
+          nullable: true
+        quantity:
+          type: number
+          format: double
+          nullable: true
+        uom:
+          type: string
+          nullable: true
+        reasonCode:
+          type: string
+          nullable: true
+        message:
+          type: string
+          example: Operator reported 40 good pieces.
+      required:
+        - id
+        - siteId
+        - occurredAt
+        - eventType
+
+    DowntimeEvent:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          example: DT-000381
+        siteId:
+          type: string
+          example: PLANT-01
+        workCenterId:
+          type: string
+          example: WC-ASM-01
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        durationMinutes:
+          type: number
+          format: double
+          example: 27
+        reasonCode:
+          type: string
+          example: MATERIAL_WAIT
+        reasonDescription:
+          type: string
+          example: Waiting for upstream supply
+        productionOrderId:
+          type: string
+          nullable: true
+        operationId:
+          type: string
+          nullable: true
+      required:
+        - id
+        - siteId
+        - workCenterId
+        - startedAt
+        - durationMinutes
+        - reasonCode
+
+    PerformanceMetrics:
+      type: object
+      additionalProperties: false
+      properties:
+        siteId:
+          type: string
+          example: PLANT-01
+        workCenterId:
+          type: string
+          nullable: true
+        productionOrderId:
+          type: string
+          nullable: true
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+        producedQuantity:
+          type: number
+          format: double
+          example: 1500
+        goodQuantity:
+          type: number
+          format: double
+          example: 1460
+        scrapQuantity:
+          type: number
+          format: double
+          example: 40
+        runtimeMinutes:
+          type: number
+          format: double
+          example: 670
+        downtimeMinutes:
+          type: number
+          format: double
+          example: 55
+        throughputPerHour:
+          type: number
+          format: double
+          example: 134.3
+        availabilityPercent:
+          type: number
+          format: double
+          example: 92.4
+        performancePercent:
+          type: number
+          format: double
+          example: 88.7
+        qualityPercent:
+          type: number
+          format: double
+          example: 97.3
+        oeePercent:
+          type: number
+          format: double
+          example: 79.8
+      required:
+        - siteId
+        - from
+        - to
+        - producedQuantity
+        - goodQuantity
+        - scrapQuantity
+        - runtimeMinutes
+        - downtimeMinutes
+        - throughputPerHour
+        - availabilityPercent
+        - performancePercent
+        - qualityPercent
+        - oeePercent
+
+    ProductionOrderListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductionOrder'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [data, pagination]
+
+    ProductionOrderDetailResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          $ref: '#/components/schemas/ProductionOrderDetail'
+      required: [data]
+
+    OperationListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [data, pagination]
+
+    OperationDetailResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          $ref: '#/components/schemas/OperationDetail'
+      required: [data]
+
+    WorkCenterListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkCenter'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [data, pagination]
+
+    WorkCenterDetailResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          $ref: '#/components/schemas/WorkCenterDetail'
+      required: [data]
+
+    DispatchListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DispatchItem'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [data, pagination]
+
+    ProductionEventListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductionEvent'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [data, pagination]
+
+    DowntimeEventListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DowntimeEvent'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required: [data, pagination]
+
+    PerformanceResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          $ref: '#/components/schemas/PerformanceMetrics'
+      required: [data]

@@ -1,10 +1,11 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 
 //------------------------------------------------------------------------------
 import { FactoriesContext } from "@/contexts/FactoriesContext";
 
 //------------------------------------------------------------------------------
 import { FactoryItem } from "@/components/nodes/factory/FactoryItem";
+import { MES } from "@/core/APIs";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -12,6 +13,14 @@ export default function HomePage() {
     //--------------------------------------------------------------------------
     // Contexts
     const { factories } = useContext(FactoriesContext);
+
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        // TODO: remove just and example
+        MES.getOperation({ operationId: "asd" }).then((resp) => {
+            console.log(resp);
+        });
+    }, []);
 
     //--------------------------------------------------------------------------
     // Render

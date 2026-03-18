@@ -1,0 +1,5 @@
+{
+  "watch": ["server", "_prebuild"],
+  "exec": "ts-node --project server/tsconfig.json server/sources/main.ts",
+  "ext": "js ts"
+}

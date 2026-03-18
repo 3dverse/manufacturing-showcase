@@ -1,0 +1,1389 @@
+openapi: 3.1.0
+info:
+  title: ERP API
+  version: 0.0.1
+  description: >
+    ERP API focused on core enterprise resource planning capabilities such as
+    master data, order-to-cash, procure-to-pay, and finance.
+
+servers:
+  - url: /-/api/erp
+
+tags:
+  - name: ERP Master Data
+    description: Core ERP reference data such as companies, customers, suppliers, items, and financial structures.
+  - name: ERP Sales
+    description: ERP order-to-cash entities such as sales orders and customer invoices.
+  - name: ERP Procurement
+    description: ERP procure-to-pay entities such as purchase orders and supplier invoices.
+  - name: ERP Finance
+    description: ERP financial data such as general ledger accounts, journal entries, payments, and fiscal periods.
+
+paths:
+  /companies:
+    get:
+      tags: [ERP Master Data]
+      summary: List companies
+      description: >
+        Returns the companies or legal entities managed by the ERP. Use this endpoint to
+        discover the organizational scope used by ERP records such as orders, invoices,
+        journal entries, and fiscal periods.
+      operationId: getCompanies
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/UpdatedSince'
+      responses:
+        '200':
+          description: Companies retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyListResponse'
+
+  /companies/{companyId}:
+    get:
+      tags: [ERP Master Data]
+      summary: Get company
+      description: >
+        Returns a single company or legal entity from the ERP, including core identifiers,
+        reporting currency, and lifecycle status.
+      operationId: getCompanyById
+      parameters:
+        - $ref: '#/components/parameters/CompanyId'
+      responses:
+        '200':
+          description: Company retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyResponse'
+
+  /currencies:
+    get:
+      tags: [ERP Master Data]
+      summary: List currencies
+      description: >
+        Returns the currencies configured in the ERP. This endpoint is useful for validating
+        monetary amounts and understanding transactional and reporting currency usage.
+      operationId: getCurrencies
+      responses:
+        '200':
+          description: Currencies retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyListResponse'
+
+  /fiscal-periods:
+    get:
+      tags: [ERP Finance]
+      summary: List fiscal periods
+      description: >
+        Returns fiscal periods defined in the ERP for financial reporting and posting control.
+        Use this endpoint to determine open, closed, or planned accounting periods by company.
+      operationId: getFiscalPeriods
+      parameters:
+        - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: year
+          in: query
+          description: Filter fiscal periods by fiscal year.
+          schema:
+            type: integer
+            minimum: 2000
+        - name: status
+          in: query
+          description: Filter fiscal periods by lifecycle status.
+          schema:
+            type: string
+            enum: [planned, open, closed]
+      responses:
+        '200':
+          description: Fiscal periods retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FiscalPeriodListResponse'
+
+  /gl-accounts:
+    get:
+      tags: [ERP Finance]
+      summary: List general ledger accounts
+      description: >
+        Returns the chart of accounts used by the ERP. This endpoint provides the account
+        structure needed to interpret journal entries, balances, and financial postings.
+      operationId: getGlAccounts
+      parameters:
+        - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: accountType
+          in: query
+          description: Filter accounts by accounting classification.
+          schema:
+            type: string
+            enum: [asset, liability, equity, revenue, expense]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: General ledger accounts retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlAccountListResponse'
+
+  /cost-centers:
+    get:
+      tags: [ERP Finance]
+      summary: List cost centers
+      description: >
+        Returns cost centers maintained in the ERP for management accounting, budgeting,
+        and financial analysis.
+      operationId: getCostCenters
+      parameters:
+        - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: status
+          in: query
+          description: Filter cost centers by lifecycle status.
+          schema:
+            type: string
+            enum: [active, inactive]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Cost centers retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostCenterListResponse'
+
+  /customers:
+    get:
+      tags: [ERP Master Data]
+      summary: List customers
+      description: >
+        Returns customer master data from the ERP. Use this endpoint for account, billing,
+        and commercial reference information used by sales orders, invoices, and receivables.
+      operationId: getCustomers
+      parameters:
+        - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: status
+          in: query
+          description: Filter customers by lifecycle status.
+          schema:
+            type: string
+            enum: [active, inactive, on_hold]
+        - $ref: '#/components/parameters/UpdatedSince'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Customers retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerListResponse'
+
+  /customers/{customerId}:
+    get:
+      tags: [ERP Master Data]
+      summary: Get customer
+      description: >
+        Returns a single customer record from the ERP, including billing terms, currency,
+        identifiers, and primary addresses.
+      operationId: getCustomerById
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '200':
+          description: Customer retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+
+  /suppliers:
+    get:
+      tags: [ERP Master Data]
+      summary: List suppliers
+      description: >
+        Returns supplier or vendor master data from the ERP. Use this endpoint for
+        procurement, payables, and supplier reference information.
+      operationId: getSuppliers
+      parameters:
+        - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: status
+          in: query
+          description: Filter suppliers by lifecycle status.
+          schema:
+            type: string
+            enum: [active, inactive, on_hold]
+        - $ref: '#/components/parameters/UpdatedSince'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Suppliers retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierListResponse'
+
+  /suppliers/{supplierId}:
+    get:
+      tags: [ERP Master Data]
+      summary: Get supplier
+      description: >
+        Returns a single supplier or vendor record from the ERP, including payment terms,
+        currency, tax identifiers, and primary addresses.
+      operationId: getSupplierById
+      parameters:
+        - $ref: '#/components/parameters/SupplierId'
+      responses:
+        '200':
+          description: Supplier retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierResponse'
+
+  /items:
+    get:
+      tags: [ERP Master Data]
+      summary: List items
+      description: >
+        Returns ERP item master data used across sales, procurement, valuation, and
+        financial reporting. This endpoint is limited to ERP item attributes and does
+        not include warehouse- or shop-floor-specific execution details.
+      operationId: getItems
+      parameters:
+        - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: itemType
+          in: query
+          description: Filter items by type.
+          schema:
+            type: string
+            enum: [finished_good, raw_material, service, non_stock]
+        - name: status
+          in: query
+          description: Filter items by lifecycle status.
+          schema:
+            type: string
+            enum: [active, inactive]
+        - $ref: '#/components/parameters/UpdatedSince'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Items retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemListResponse'
+
+  /items/{itemId}:
+    get:
+      tags: [ERP Master Data]
+      summary: Get item
+      description: >
+        Returns a single ERP item with commercial, accounting, and planning-relevant
+        attributes such as UOM, item type, standard cost, and product classification.
+      operationId: getItemById
+      parameters:
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '200':
+          description: Item retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+
+  /sales-orders:
+    get:
+      tags: [ERP Sales]
+      summary: List sales orders
+      description: >
+        Returns sales orders managed by the ERP. This endpoint supports order-to-cash
+        reporting and exposes the commercial order header and lines without extending into
+        warehouse execution or production scheduling concerns.
+      operationId: getSalesOrders
+      parameters:
+        - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: customerId
+          in: query
+          description: Filter sales orders by customer.
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter sales orders by lifecycle status.
+          schema:
+            type: string
+            enum: [draft, confirmed, partially_fulfilled, fulfilled, invoiced, cancelled]
+        - name: orderDateFrom
+          in: query
+          description: Return orders with orderDate on or after this date.
+          schema:
+            type: string
+            format: date
+        - name: orderDateTo
+          in: query
+          description: Return orders with orderDate on or before this date.
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Sales orders retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesOrderListResponse'
+
+  /sales-orders/{salesOrderId}:
+    get:
+      tags: [ERP Sales]
+      summary: Get sales order
+      description: >
+        Returns a single sales order from the ERP, including customer, totals, currency,
+        and line-level ordered quantities and pricing.
+      operationId: getSalesOrderById
+      parameters:
+        - $ref: '#/components/parameters/SalesOrderId'
+      responses:
+        '200':
+          description: Sales order retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesOrderResponse'
+
+  /purchase-orders:
+    get:
+      tags: [ERP Procurement]
+      summary: List purchase orders
+      description: >
+        Returns purchase orders managed by the ERP. This endpoint supports procure-to-pay
+        reporting and exposes procurement commitments without including warehouse tasking
+        or inventory execution behavior.
+      operationId: getPurchaseOrders
+      parameters:
+        - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: supplierId
+          in: query
+          description: Filter purchase orders by supplier.
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter purchase orders by lifecycle status.
+          schema:
+            type: string
+            enum: [draft, approved, partially_received, received, invoiced, cancelled]
+        - name: orderDateFrom
+          in: query
+          description: Return purchase orders with orderDate on or after this date.
+          schema:
+            type: string
+            format: date
+        - name: orderDateTo
+          in: query
+          description: Return purchase orders with orderDate on or before this date.
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Purchase orders retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrderListResponse'
+
+  /purchase-orders/{purchaseOrderId}:
+    get:
+      tags: [ERP Procurement]
+      summary: Get purchase order
+      description: >
+        Returns a single purchase order from the ERP, including supplier, totals, currency,
+        and line-level ordered quantities and prices.
+      operationId: getPurchaseOrderById
+      parameters:
+        - $ref: '#/components/parameters/PurchaseOrderId'
+      responses:
+        '200':
+          description: Purchase order retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrderResponse'
+
+  /invoices:
+    get:
+      tags: [ERP Sales, ERP Procurement]
+      summary: List invoices
+      description: >
+        Returns invoices recorded in the ERP, including both customer and supplier invoices.
+        This endpoint provides a unified financial document view for receivables and payables
+        reporting.
+      operationId: getInvoices
+      parameters:
+        - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: invoiceType
+          in: query
+          description: Filter invoices by business direction.
+          schema:
+            type: string
+            enum: [accounts_receivable, accounts_payable]
+        - name: status
+          in: query
+          description: Filter invoices by lifecycle status.
+          schema:
+            type: string
+            enum: [draft, posted, partially_paid, paid, cancelled]
+        - name: invoiceDateFrom
+          in: query
+          description: Return invoices with invoiceDate on or after this date.
+          schema:
+            type: string
+            format: date
+        - name: invoiceDateTo
+          in: query
+          description: Return invoices with invoiceDate on or before this date.
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Invoices retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceListResponse'
+
+  /invoices/{invoiceId}:
+    get:
+      tags: [ERP Sales, ERP Procurement]
+      summary: Get invoice
+      description: >
+        Returns a single invoice from the ERP, including document party, dates, totals,
+        currency, and invoice lines.
+      operationId: getInvoiceById
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+      responses:
+        '200':
+          description: Invoice retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
+
+  /payments:
+    get:
+      tags: [ERP Finance]
+      summary: List payments
+      description: >
+        Returns payments recorded in the ERP for receivables and payables settlement.
+        Use this endpoint to retrieve posted payment events and their invoice references.
+      operationId: getPayments
+      parameters:
+        - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: paymentType
+          in: query
+          description: Filter payments by business direction.
+          schema:
+            type: string
+            enum: [incoming, outgoing]
+        - name: paymentDateFrom
+          in: query
+          description: Return payments with paymentDate on or after this date.
+          schema:
+            type: string
+            format: date
+        - name: paymentDateTo
+          in: query
+          description: Return payments with paymentDate on or before this date.
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Payments retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentListResponse'
+
+  /journal-entries:
+    get:
+      tags: [ERP Finance]
+      summary: List journal entries
+      description: >
+        Returns journal entries posted in the ERP general ledger. Use this endpoint for
+        accounting audit, reconciliation, and financial integration use cases.
+      operationId: getJournalEntries
+      parameters:
+        - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: postingDateFrom
+          in: query
+          description: Return journal entries with postingDate on or after this date.
+          schema:
+            type: string
+            format: date
+        - name: postingDateTo
+          in: query
+          description: Return journal entries with postingDate on or before this date.
+          schema:
+            type: string
+            format: date
+        - name: fiscalPeriodId
+          in: query
+          description: Filter journal entries by fiscal period.
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Journal entries retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntryListResponse'
+
+  /journal-entries/{journalEntryId}:
+    get:
+      tags: [ERP Finance]
+      summary: Get journal entry
+      description: >
+        Returns a single journal entry from the ERP, including header information and
+        debit and credit lines by account and cost center.
+      operationId: getJournalEntryById
+      parameters:
+        - $ref: '#/components/parameters/JournalEntryId'
+      responses:
+        '200':
+          description: Journal entry retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntryResponse'
+
+components:
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Page number for paginated results.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    PageSize:
+      name: pageSize
+      in: query
+      description: Number of records to return per page.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
+        default: 50
+
+    UpdatedSince:
+      name: updatedSince
+      in: query
+      description: Return records updated on or after this timestamp.
+      schema:
+        type: string
+        format: date-time
+
+    CompanyId:
+      name: companyId
+      in: path
+      required: true
+      description: Unique company identifier.
+      schema:
+        type: string
+
+    CompanyIdQuery:
+      name: companyId
+      in: query
+      description: Filter results to a single company.
+      schema:
+        type: string
+
+    CustomerId:
+      name: customerId
+      in: path
+      required: true
+      description: Unique customer identifier.
+      schema:
+        type: string
+
+    SupplierId:
+      name: supplierId
+      in: path
+      required: true
+      description: Unique supplier identifier.
+      schema:
+        type: string
+
+    ItemId:
+      name: itemId
+      in: path
+      required: true
+      description: Unique item identifier.
+      schema:
+        type: string
+
+    SalesOrderId:
+      name: salesOrderId
+      in: path
+      required: true
+      description: Unique sales order identifier.
+      schema:
+        type: string
+
+    PurchaseOrderId:
+      name: purchaseOrderId
+      in: path
+      required: true
+      description: Unique purchase order identifier.
+      schema:
+        type: string
+
+    InvoiceId:
+      name: invoiceId
+      in: path
+      required: true
+      description: Unique invoice identifier.
+      schema:
+        type: string
+
+    JournalEntryId:
+      name: journalEntryId
+      in: path
+      required: true
+      description: Unique journal entry identifier.
+      schema:
+        type: string
+
+  schemas:
+    Pagination:
+      type: object
+      required: [page, pageSize, totalItems, totalPages]
+      properties:
+        page:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 50
+        totalItems:
+          type: integer
+          example: 234
+        totalPages:
+          type: integer
+          example: 5
+
+    Address:
+      type: object
+      properties:
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        stateOrProvince:
+          type: string
+        postalCode:
+          type: string
+        countryCode:
+          type: string
+          example: CA
+
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+          example: USD
+
+    Company:
+      type: object
+      required: [id, code, name, baseCurrency, status]
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        baseCurrency:
+          type: string
+        countryCode:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive]
+        updatedAt:
+          type: string
+          format: date-time
+
+    Currency:
+      type: object
+      required: [code, name, decimals]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        symbol:
+          type: string
+        decimals:
+          type: integer
+
+    FiscalPeriod:
+      type: object
+      required: [id, companyId, fiscalYear, periodNumber, startDate, endDate, status]
+      properties:
+        id:
+          type: string
+        companyId:
+          type: string
+        fiscalYear:
+          type: integer
+        periodNumber:
+          type: integer
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [planned, open, closed]
+
+    GlAccount:
+      type: object
+      required: [id, companyId, code, name, accountType, status]
+      properties:
+        id:
+          type: string
+        companyId:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        accountType:
+          type: string
+          enum: [asset, liability, equity, revenue, expense]
+        isPostingAllowed:
+          type: boolean
+        status:
+          type: string
+          enum: [active, inactive]
+
+    CostCenter:
+      type: object
+      required: [id, companyId, code, name, status]
+      properties:
+        id:
+          type: string
+        companyId:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        manager:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive]
+
+    Customer:
+      type: object
+      required: [id, companyId, customerNumber, name, status]
+      properties:
+        id:
+          type: string
+        companyId:
+          type: string
+        customerNumber:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        taxId:
+          type: string
+        currency:
+          type: string
+        paymentTermsCode:
+          type: string
+        billingAddress:
+          $ref: '#/components/schemas/Address'
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+        status:
+          type: string
+          enum: [active, inactive, on_hold]
+        updatedAt:
+          type: string
+          format: date-time
+
+    Supplier:
+      type: object
+      required: [id, companyId, supplierNumber, name, status]
+      properties:
+        id:
+          type: string
+        companyId:
+          type: string
+        supplierNumber:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        taxId:
+          type: string
+        currency:
+          type: string
+        paymentTermsCode:
+          type: string
+        remitToAddress:
+          $ref: '#/components/schemas/Address'
+        orderingAddress:
+          $ref: '#/components/schemas/Address'
+        status:
+          type: string
+          enum: [active, inactive, on_hold]
+        updatedAt:
+          type: string
+          format: date-time
+
+    Item:
+      type: object
+      required: [id, companyId, itemNumber, name, itemType, uom, status]
+      properties:
+        id:
+          type: string
+        companyId:
+          type: string
+        itemNumber:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        itemType:
+          type: string
+          enum: [finished_good, raw_material, service, non_stock]
+        productGroup:
+          type: string
+        uom:
+          type: string
+        standardCost:
+          $ref: '#/components/schemas/Money'
+        salesUom:
+          type: string
+        purchaseUom:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive]
+        updatedAt:
+          type: string
+          format: date-time
+
+    SalesOrderLine:
+      type: object
+      required: [lineNumber, itemId, orderedQuantity, uom, unitPrice, lineAmount]
+      properties:
+        lineNumber:
+          type: integer
+        itemId:
+          type: string
+        itemNumber:
+          type: string
+        description:
+          type: string
+        orderedQuantity:
+          type: number
+          format: double
+        uom:
+          type: string
+        unitPrice:
+          $ref: '#/components/schemas/Money'
+        lineAmount:
+          $ref: '#/components/schemas/Money'
+        requestedDate:
+          type: string
+          format: date
+
+    SalesOrder:
+      type: object
+      required: [id, companyId, orderNumber, customerId, orderDate, currency, status, lines]
+      properties:
+        id:
+          type: string
+        companyId:
+          type: string
+        orderNumber:
+          type: string
+        customerId:
+          type: string
+        customerName:
+          type: string
+        orderDate:
+          type: string
+          format: date
+        requestedDeliveryDate:
+          type: string
+          format: date
+        currency:
+          type: string
+        subtotal:
+          $ref: '#/components/schemas/Money'
+        taxAmount:
+          $ref: '#/components/schemas/Money'
+        totalAmount:
+          $ref: '#/components/schemas/Money'
+        status:
+          type: string
+          enum: [draft, confirmed, partially_fulfilled, fulfilled, invoiced, cancelled]
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesOrderLine'
+
+    PurchaseOrderLine:
+      type: object
+      required: [lineNumber, itemId, orderedQuantity, uom, unitPrice, lineAmount]
+      properties:
+        lineNumber:
+          type: integer
+        itemId:
+          type: string
+        itemNumber:
+          type: string
+        description:
+          type: string
+        orderedQuantity:
+          type: number
+          format: double
+        uom:
+          type: string
+        unitPrice:
+          $ref: '#/components/schemas/Money'
+        lineAmount:
+          $ref: '#/components/schemas/Money'
+        expectedReceiptDate:
+          type: string
+          format: date
+
+    PurchaseOrder:
+      type: object
+      required: [id, companyId, orderNumber, supplierId, orderDate, currency, status, lines]
+      properties:
+        id:
+          type: string
+        companyId:
+          type: string
+        orderNumber:
+          type: string
+        supplierId:
+          type: string
+        supplierName:
+          type: string
+        orderDate:
+          type: string
+          format: date
+        currency:
+          type: string
+        subtotal:
+          $ref: '#/components/schemas/Money'
+        taxAmount:
+          $ref: '#/components/schemas/Money'
+        totalAmount:
+          $ref: '#/components/schemas/Money'
+        status:
+          type: string
+          enum: [draft, approved, partially_received, received, invoiced, cancelled]
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/PurchaseOrderLine'
+
+    InvoiceLine:
+      type: object
+      required: [lineNumber, description, quantity, unitPrice, lineAmount]
+      properties:
+        lineNumber:
+          type: integer
+        itemId:
+          type: string
+        description:
+          type: string
+        quantity:
+          type: number
+          format: double
+        uom:
+          type: string
+        unitPrice:
+          $ref: '#/components/schemas/Money'
+        lineAmount:
+          $ref: '#/components/schemas/Money'
+
+    Invoice:
+      type: object
+      required: [id, companyId, invoiceNumber, invoiceType, invoiceDate, currency, status, totalAmount]
+      properties:
+        id:
+          type: string
+        companyId:
+          type: string
+        invoiceNumber:
+          type: string
+        invoiceType:
+          type: string
+          enum: [accounts_receivable, accounts_payable]
+        relatedOrderId:
+          type: string
+        partyId:
+          type: string
+        partyName:
+          type: string
+        invoiceDate:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date
+        currency:
+          type: string
+        subtotal:
+          $ref: '#/components/schemas/Money'
+        taxAmount:
+          $ref: '#/components/schemas/Money'
+        totalAmount:
+          $ref: '#/components/schemas/Money'
+        paidAmount:
+          $ref: '#/components/schemas/Money'
+        status:
+          type: string
+          enum: [draft, posted, partially_paid, paid, cancelled]
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceLine'
+
+    Payment:
+      type: object
+      required: [id, companyId, paymentNumber, paymentType, paymentDate, amount, currency]
+      properties:
+        id:
+          type: string
+        companyId:
+          type: string
+        paymentNumber:
+          type: string
+        paymentType:
+          type: string
+          enum: [incoming, outgoing]
+        partyId:
+          type: string
+        partyName:
+          type: string
+        invoiceId:
+          type: string
+        paymentDate:
+          type: string
+          format: date
+        method:
+          type: string
+          enum: [bank_transfer, card, check, cash, other]
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        reference:
+          type: string
+
+    JournalEntryLine:
+      type: object
+      required: [lineNumber, accountId, debit, credit]
+      properties:
+        lineNumber:
+          type: integer
+        accountId:
+          type: string
+        accountCode:
+          type: string
+        accountName:
+          type: string
+        costCenterId:
+          type: string
+        description:
+          type: string
+        debit:
+          type: number
+          format: double
+        credit:
+          type: number
+          format: double
+        currency:
+          type: string
+
+    JournalEntry:
+      type: object
+      required: [id, companyId, journalNumber, postingDate, currency, lines]
+      properties:
+        id:
+          type: string
+        companyId:
+          type: string
+        journalNumber:
+          type: string
+        postingDate:
+          type: string
+          format: date
+        documentDate:
+          type: string
+          format: date
+        fiscalPeriodId:
+          type: string
+        sourceDocumentType:
+          type: string
+        sourceDocumentId:
+          type: string
+        currency:
+          type: string
+        description:
+          type: string
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalEntryLine'
+
+    CompanyListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Company'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CompanyResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Company'
+
+    CurrencyListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Currency'
+
+    FiscalPeriodListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FiscalPeriod'
+
+    GlAccountListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlAccount'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CostCenterListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CostCenter'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CustomerListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CustomerResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Customer'
+
+    SupplierListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Supplier'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    SupplierResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Supplier'
+
+    ItemListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    ItemResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Item'
+
+    SalesOrderListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesOrder'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    SalesOrderResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/SalesOrder'
+
+    PurchaseOrderListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PurchaseOrder'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    PurchaseOrderResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/PurchaseOrder'
+
+    InvoiceListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    InvoiceResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Invoice'
+
+    PaymentListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    JournalEntryListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalEntry'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    JournalEntryResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/JournalEntry'

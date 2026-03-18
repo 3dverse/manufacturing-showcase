@@ -1,0 +1,10 @@
+{
+  "generatorName": "typescript-axios",
+  "inputSpec": "server/spec/WMS.yaml",
+  "output": "_prebuild/api-libs/wms",
+  "additionalProperties": {
+    "useSingleRequestParameter": true,
+    "supportsES6": true,
+    "typescriptThreePlus": true
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "generatorName": "typescript-axios",
+  "inputSpec": "server/spec/APS.yaml",
+  "output": "_prebuild/api-libs/aps",
+  "additionalProperties": {
+    "useSingleRequestParameter": true,
+    "supportsES6": true,
+    "typescriptThreePlus": true
+  }
+}

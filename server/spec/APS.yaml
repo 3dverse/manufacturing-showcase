@@ -1,0 +1,842 @@
+openapi: 3.1.0
+info:
+  title: APS API
+  version: 0.0.1
+  description: >
+    Advanced Planning and Scheduling (APS) API for retrieving planning,
+    scheduling, capacity, and optimization data. This specification is limited to APS
+    concerns and excludes functionality that would better belong to ERP, MES, WMS,
+    EAM, or QMS services.
+
+servers:
+  - url: /-/api/aps
+
+tags:
+  - name: APS
+    description: Advanced Planning and Scheduling endpoints
+
+paths:
+  /plans:
+    get:
+      tags: [APS]
+      operationId: getPlans
+      summary: List planning runs
+      description: >
+        Returns APS plans generated for a planning horizon. Use this endpoint to browse
+        available plans, compare plan status, and identify which planning run should be
+        used for downstream schedule and capacity analysis.
+      responses:
+        '200':
+          description: Successful response containing APS plans
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsPlan'
+                required: [data]
+
+  /plans/{planId}:
+    get:
+      tags: [APS]
+      operationId: getPlanById
+      summary: Get a plan by ID
+      description: >
+        Returns the detailed metadata and summary metrics for a single APS plan,
+        including planning horizon, version, scenario linkage, and headline performance
+        indicators.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Successful response containing the APS plan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApsPlanDetail'
+                required: [data]
+
+  /plans/{planId}/schedule:
+    get:
+      tags: [APS]
+      operationId: getPlanSchedule
+      summary: Get the detailed schedule for a plan
+      description: >
+        Returns the scheduled operations for a plan, including resource assignments,
+        planned start and end times, sequencing, and scheduling status. This endpoint
+        is used to inspect the executable production schedule produced by APS.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Successful response containing scheduled operations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsScheduledOperation'
+                required: [data]
+
+  /plans/{planId}/capacity:
+    get:
+      tags: [APS]
+      operationId: getPlanCapacity
+      summary: Get capacity utilization for a plan
+      description: >
+        Returns capacity views for the selected plan, showing available versus planned
+        load by resource or work center over time. This endpoint supports analysis of
+        overloads, underutilization, and planning feasibility.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Successful response containing capacity buckets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsCapacityBucket'
+                required: [data]
+
+  /plans/{planId}/material-availability:
+    get:
+      tags: [APS]
+      operationId: getPlanMaterialAvailability
+      summary: Get material availability results for a plan
+      description: >
+        Returns projected material availability used by APS during planning, including
+        shortages, projected inventory positions, and supply timing impacts that affect
+        feasible scheduling decisions.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Successful response containing material availability records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsMaterialAvailability'
+                required: [data]
+
+  /plans/{planId}/exceptions:
+    get:
+      tags: [APS]
+      operationId: getPlanExceptions
+      summary: Get planning and scheduling exceptions for a plan
+      description: >
+        Returns exceptions identified during planning, such as overloads, lateness,
+        unmet demand, missing material, or constraint violations. This endpoint helps
+        planners focus on issues requiring review or replanning.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Successful response containing APS exceptions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsException'
+                required: [data]
+
+  /plans/{planId}/kpis:
+    get:
+      tags: [APS]
+      operationId: getPlanKpis
+      summary: Get KPI summary for a plan
+      description: >
+        Returns key performance indicators calculated for the selected plan, such as
+        on-time performance, resource utilization, lateness, throughput, and shortage
+        counts. Use this endpoint to compare plan quality at a glance.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Successful response containing KPI values
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsKpi'
+                required: [data]
+
+  /scenarios:
+    get:
+      tags: [APS]
+      operationId: getScenarios
+      summary: List planning scenarios
+      description: >
+        Returns planning scenarios used to evaluate alternative planning assumptions,
+        constraints, or optimization strategies. This endpoint is useful for comparing
+        what-if cases before selecting a preferred plan.
+      responses:
+        '200':
+          description: Successful response containing APS scenarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsScenario'
+                required: [data]
+
+  /scenarios/{scenarioId}:
+    get:
+      tags: [APS]
+      operationId: getScenarioById
+      summary: Get a scenario by ID
+      description: >
+        Returns the assumptions, planning settings, and status of a single APS scenario.
+        Use this endpoint to understand the context behind the plans generated from a
+        specific what-if or baseline scenario.
+      parameters:
+        - $ref: '#/components/parameters/ScenarioId'
+      responses:
+        '200':
+          description: Successful response containing the APS scenario
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApsScenarioDetail'
+                required: [data]
+
+  /resources:
+    get:
+      tags: [APS]
+      operationId: getResources
+      summary: List planning resources
+      description: >
+        Returns APS planning resources and work centers that participate in scheduling.
+        This endpoint focuses on planning-related resource definitions such as finite
+        capacity, calendars, and scheduling attributes.
+      responses:
+        '200':
+          description: Successful response containing planning resources
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsResource'
+                required: [data]
+
+  /resources/{resourceId}:
+    get:
+      tags: [APS]
+      operationId: getResourceById
+      summary: Get a planning resource by ID
+      description: >
+        Returns detailed APS resource information, including capacity model, calendar
+        reference, scheduling constraints, and planning classification used by the APS
+        engine.
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Successful response containing the planning resource
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApsResourceDetail'
+                required: [data]
+
+  /resources/{resourceId}/load:
+    get:
+      tags: [APS]
+      operationId: getResourceLoad
+      summary: Get projected load for a planning resource
+      description: >
+        Returns the projected load profile for a specific APS resource across time
+        buckets. Use this endpoint to analyze bottlenecks, available capacity, and
+        schedule pressure on critical resources.
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Successful response containing resource load buckets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsResourceLoadBucket'
+                required: [data]
+
+  /demands:
+    get:
+      tags: [APS]
+      operationId: getDemands
+      summary: List planning demands
+      description: >
+        Returns demand elements considered by APS during planning, such as independent
+        demand, forecast buckets, or prioritized requirements that drive supply and
+        scheduling decisions.
+      responses:
+        '200':
+          description: Successful response containing planning demands
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsDemand'
+                required: [data]
+
+  /demands/{demandId}:
+    get:
+      tags: [APS]
+      operationId: getDemandById
+      summary: Get a planning demand by ID
+      description: >
+        Returns the details of a single planning demand, including due date, priority,
+        requested quantity, fulfillment status, and the plan linkage used by APS to
+        evaluate service outcomes.
+      parameters:
+        - $ref: '#/components/parameters/DemandId'
+      responses:
+        '200':
+          description: Successful response containing the planning demand
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApsDemandDetail'
+                required: [data]
+
+  /supplies:
+    get:
+      tags: [APS]
+      operationId: getSupplies
+      summary: List planned supplies
+      description: >
+        Returns supply elements generated or considered by APS, such as planned orders,
+        transfer supplies, or other supply proposals used to satisfy demand within the
+        planning horizon.
+      responses:
+        '200':
+          description: Successful response containing planned supplies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsSupply'
+                required: [data]
+
+  /supplies/{supplyId}:
+    get:
+      tags: [APS]
+      operationId: getSupplyById
+      summary: Get a planned supply by ID
+      description: >
+        Returns detailed information about a single APS supply element, including
+        quantity, timing, pegging summary, planning status, and the role it plays in
+        the overall plan.
+      parameters:
+        - $ref: '#/components/parameters/SupplyId'
+      responses:
+        '200':
+          description: Successful response containing the planned supply
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ApsSupplyDetail'
+                required: [data]
+
+  /pegging:
+    get:
+      tags: [APS]
+      operationId: getPegging
+      summary: List pegging relationships
+      description: >
+        Returns pegging relationships between demand and supply as determined by APS.
+        This endpoint helps explain how planned supplies are allocated to satisfy
+        demand across the planning horizon.
+      responses:
+        '200':
+          description: Successful response containing pegging relationships
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsPegging'
+                required: [data]
+
+  /constraints:
+    get:
+      tags: [APS]
+      operationId: getConstraints
+      summary: List planning constraints
+      description: >
+        Returns APS planning constraints that influence optimization and feasibility,
+        such as finite capacity, material, calendar, or sequencing limits. This endpoint
+        is intended to expose the rule set APS uses during plan generation.
+      responses:
+        '200':
+          description: Successful response containing planning constraints
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApsConstraint'
+                required: [data]
+
+components:
+  parameters:
+    PlanId:
+      name: planId
+      in: path
+      required: true
+      description: Unique identifier of the APS plan
+      schema:
+        type: string
+    ScenarioId:
+      name: scenarioId
+      in: path
+      required: true
+      description: Unique identifier of the APS scenario
+      schema:
+        type: string
+    ResourceId:
+      name: resourceId
+      in: path
+      required: true
+      description: Unique identifier of the APS planning resource
+      schema:
+        type: string
+    DemandId:
+      name: demandId
+      in: path
+      required: true
+      description: Unique identifier of the APS demand
+      schema:
+        type: string
+    SupplyId:
+      name: supplyId
+      in: path
+      required: true
+      description: Unique identifier of the APS supply
+      schema:
+        type: string
+
+  schemas:
+    ApsPlan:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        scenarioId:
+          type: string
+        status:
+          type: string
+          enum: [draft, generated, approved, archived]
+        planningStart:
+          type: string
+          format: date-time
+        planningEnd:
+          type: string
+          format: date-time
+        generatedAt:
+          type: string
+          format: date-time
+      required: [id, name, scenarioId, status, planningStart, planningEnd, generatedAt]
+
+    ApsPlanDetail:
+      allOf:
+        - $ref: '#/components/schemas/ApsPlan'
+        - type: object
+          properties:
+            description:
+              type: string
+            objective:
+              type: string
+            version:
+              type: string
+            kpiSummary:
+              type: object
+              additionalProperties:
+                oneOf:
+                  - type: string
+                  - type: number
+                  - type: integer
+                  - type: boolean
+
+    ApsScheduledOperation:
+      type: object
+      properties:
+        id:
+          type: string
+        planId:
+          type: string
+        operationCode:
+          type: string
+        itemId:
+          type: string
+        resourceId:
+          type: string
+        sequence:
+          type: integer
+        plannedStart:
+          type: string
+          format: date-time
+        plannedEnd:
+          type: string
+          format: date-time
+        quantity:
+          type: number
+          format: double
+        status:
+          type: string
+          enum: [scheduled, partially_scheduled, unscheduled]
+      required:
+        [id, planId, operationCode, itemId, resourceId, sequence, plannedStart, plannedEnd, quantity, status]
+
+    ApsCapacityBucket:
+      type: object
+      properties:
+        planId:
+          type: string
+        resourceId:
+          type: string
+        bucketStart:
+          type: string
+          format: date-time
+        bucketEnd:
+          type: string
+          format: date-time
+        availableCapacity:
+          type: number
+          format: double
+        plannedLoad:
+          type: number
+          format: double
+        utilizationPercent:
+          type: number
+          format: double
+        overloaded:
+          type: boolean
+      required:
+        [planId, resourceId, bucketStart, bucketEnd, availableCapacity, plannedLoad, utilizationPercent, overloaded]
+
+    ApsMaterialAvailability:
+      type: object
+      properties:
+        planId:
+          type: string
+        itemId:
+          type: string
+        siteId:
+          type: string
+        bucketStart:
+          type: string
+          format: date-time
+        bucketEnd:
+          type: string
+          format: date-time
+        projectedAvailableQuantity:
+          type: number
+          format: double
+        requiredQuantity:
+          type: number
+          format: double
+        shortageQuantity:
+          type: number
+          format: double
+      required:
+        [planId, itemId, siteId, bucketStart, bucketEnd, projectedAvailableQuantity, requiredQuantity, shortageQuantity]
+
+    ApsException:
+      type: object
+      properties:
+        id:
+          type: string
+        planId:
+          type: string
+        type:
+          type: string
+          enum: [overload, late_demand, unmet_demand, material_shortage, constraint_violation]
+        severity:
+          type: string
+          enum: [info, warning, critical]
+        message:
+          type: string
+        relatedEntityType:
+          type: string
+          enum: [plan, demand, supply, resource, operation, constraint]
+        relatedEntityId:
+          type: string
+      required: [id, planId, type, severity, message, relatedEntityType, relatedEntityId]
+
+    ApsKpi:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          oneOf:
+            - type: number
+            - type: integer
+            - type: string
+            - type: boolean
+        unit:
+          type: string
+      required: [name, value]
+
+    ApsScenario:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [baseline, what_if, simulation]
+        status:
+          type: string
+          enum: [draft, active, archived]
+      required: [id, name, type, status]
+
+    ApsScenarioDetail:
+      allOf:
+        - $ref: '#/components/schemas/ApsScenario'
+        - type: object
+          properties:
+            description:
+              type: string
+            assumptions:
+              type: array
+              items:
+                type: string
+            objective:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+
+    ApsResource:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [machine, line, work_center, labor_group, tool_group]
+        finiteCapacity:
+          type: boolean
+      required: [id, code, name, type, finiteCapacity]
+
+    ApsResourceDetail:
+      allOf:
+        - $ref: '#/components/schemas/ApsResource'
+        - type: object
+          properties:
+            calendarId:
+              type: string
+            schedulingPolicy:
+              type: string
+            maxConcurrentOperations:
+              type: integer
+            constraintGroup:
+              type: string
+
+    ApsResourceLoadBucket:
+      type: object
+      properties:
+        resourceId:
+          type: string
+        bucketStart:
+          type: string
+          format: date-time
+        bucketEnd:
+          type: string
+          format: date-time
+        plannedLoad:
+          type: number
+          format: double
+        availableCapacity:
+          type: number
+          format: double
+        utilizationPercent:
+          type: number
+          format: double
+      required:
+        [resourceId, bucketStart, bucketEnd, plannedLoad, availableCapacity, utilizationPercent]
+
+    ApsDemand:
+      type: object
+      properties:
+        id:
+          type: string
+        itemId:
+          type: string
+        siteId:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+        quantity:
+          type: number
+          format: double
+        priority:
+          type: integer
+        demandType:
+          type: string
+          enum: [forecast, independent, transfer]
+      required: [id, itemId, siteId, dueDate, quantity, priority, demandType]
+
+    ApsDemandDetail:
+      allOf:
+        - $ref: '#/components/schemas/ApsDemand'
+        - type: object
+          properties:
+            fulfilledQuantity:
+              type: number
+              format: double
+            unfulfilledQuantity:
+              type: number
+              format: double
+            fulfillmentStatus:
+              type: string
+              enum: [fulfilled, partially_fulfilled, unfulfilled]
+            planId:
+              type: string
+
+    ApsSupply:
+      type: object
+      properties:
+        id:
+          type: string
+        planId:
+          type: string
+        itemId:
+          type: string
+        siteId:
+          type: string
+        supplyType:
+          type: string
+          enum: [planned_order, planned_transfer, available_inventory]
+        quantity:
+          type: number
+          format: double
+        availableDate:
+          type: string
+          format: date-time
+      required: [id, planId, itemId, siteId, supplyType, quantity, availableDate]
+
+    ApsSupplyDetail:
+      allOf:
+        - $ref: '#/components/schemas/ApsSupply'
+        - type: object
+          properties:
+            status:
+              type: string
+              enum: [proposed, firmed, feasible, infeasible]
+            peggedQuantity:
+              type: number
+              format: double
+            remainingQuantity:
+              type: number
+              format: double
+
+    ApsPegging:
+      type: object
+      properties:
+        id:
+          type: string
+        demandId:
+          type: string
+        supplyId:
+          type: string
+        peggedQuantity:
+          type: number
+          format: double
+        planId:
+          type: string
+      required: [id, demandId, supplyId, peggedQuantity, planId]
+
+    ApsConstraint:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [capacity, material, calendar, sequencing, policy]
+        scope:
+          type: string
+          enum: [global, resource, item, site, plan]
+        active:
+          type: boolean
+        description:
+          type: string
+      required: [id, name, type, scope, active]

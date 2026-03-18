@@ -1,0 +1,10 @@
+{
+  "generatorName": "typescript-axios",
+  "inputSpec": "server/spec/EAM.yaml",
+  "output": "_prebuild/api-libs/eam",
+  "additionalProperties": {
+    "useSingleRequestParameter": true,
+    "supportsES6": true,
+    "typescriptThreePlus": true
+  }
+}

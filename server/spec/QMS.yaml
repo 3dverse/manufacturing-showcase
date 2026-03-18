@@ -1,0 +1,978 @@
+openapi: 3.1.0
+info:
+  title: QMS API
+  version: 0.0.1
+  description: >
+    Quality Management System (QMS) API for retrieving quality records,
+    controlled documents, audits, deviations, complaints, CAPAs, and quality metrics.
+    This specification is intentionally limited to core QMS concerns and excludes
+    capabilities that more naturally belong to ERP, APS, MES, WMS, or EAM.
+servers:
+  - url: /-/api/qms
+tags:
+  - name: QMS
+    description: Quality Management System endpoints
+
+paths:
+  /nonconformances:
+    get:
+      tags: [QMS]
+      operationId: getNonconformances
+      summary: List nonconformances
+      description: >
+        Retrieve nonconformance records raised when products, materials, processes,
+        or documentation fail to meet defined quality requirements. Use this endpoint
+        to review quality incidents, their severity, disposition, status, and related
+        corrective workflows.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: Filter by nonconformance lifecycle status.
+          schema:
+            type: string
+            enum: [open, under_review, dispositioned, closed, canceled]
+        - name: severity
+          in: query
+          description: Filter by severity level.
+          schema:
+            type: string
+            enum: [minor, major, critical]
+        - name: sourceType
+          in: query
+          description: Filter by where the nonconformance originated.
+          schema:
+            type: string
+            enum: [incoming, in_process, final, field, documentation, supplier]
+        - name: itemCode
+          in: query
+          description: Filter by affected item or material code.
+          schema:
+            type: string
+        - name: detectedFrom
+          in: query
+          description: Return records detected on or after this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: detectedTo
+          in: query
+          description: Return records detected on or before this timestamp.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Paginated list of nonconformances.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NonconformanceListResponse'
+
+  /nonconformances/{nonconformanceId}:
+    get:
+      tags: [QMS]
+      operationId: getNonconformanceById
+      summary: Get a nonconformance
+      description: >
+        Retrieve the full details of a single nonconformance, including affected
+        objects, disposition, containment actions, linked CAPAs, and audit fields.
+      parameters:
+        - $ref: '#/components/parameters/NonconformanceId'
+      responses:
+        '200':
+          description: Nonconformance details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Nonconformance'
+
+  /capas:
+    get:
+      tags: [QMS]
+      operationId: getCapas
+      summary: List CAPAs
+      description: >
+        Retrieve corrective and preventive action (CAPA) records used to investigate
+        root causes, define remediation plans, assign ownership, and track verification
+        of effectiveness.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: Filter by CAPA lifecycle status.
+          schema:
+            type: string
+            enum: [draft, open, in_progress, pending_effectiveness_check, closed, canceled]
+        - name: type
+          in: query
+          description: Filter by CAPA type.
+          schema:
+            type: string
+            enum: [corrective, preventive]
+        - name: priority
+          in: query
+          description: Filter by CAPA priority.
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: owner
+          in: query
+          description: Filter by CAPA owner identifier.
+          schema:
+            type: string
+        - name: dueFrom
+          in: query
+          description: Return CAPAs due on or after this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: dueTo
+          in: query
+          description: Return CAPAs due on or before this timestamp.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Paginated list of CAPAs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapaListResponse'
+
+  /capas/{capaId}:
+    get:
+      tags: [QMS]
+      operationId: getCapaById
+      summary: Get a CAPA
+      description: >
+        Retrieve the full details of a single CAPA, including source event,
+        root cause analysis, planned actions, effectiveness criteria, due dates,
+        and closure information.
+      parameters:
+        - $ref: '#/components/parameters/CapaId'
+      responses:
+        '200':
+          description: CAPA details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Capa'
+
+  /deviations:
+    get:
+      tags: [QMS]
+      operationId: getDeviations
+      summary: List deviations
+      description: >
+        Retrieve deviations raised when an approved process, specification, or
+        documented procedure was not followed as intended. This endpoint is useful
+        for reviewing quality-impacting exceptions and their disposition status.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: Filter by deviation lifecycle status.
+          schema:
+            type: string
+            enum: [open, under_review, approved, rejected, closed]
+        - name: category
+          in: query
+          description: Filter by deviation category.
+          schema:
+            type: string
+            enum: [process, documentation, specification, material, environmental, other]
+        - name: impactLevel
+          in: query
+          description: Filter by impact level.
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: raisedFrom
+          in: query
+          description: Return deviations raised on or after this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: raisedTo
+          in: query
+          description: Return deviations raised on or before this timestamp.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Paginated list of deviations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviationListResponse'
+
+  /deviations/{deviationId}:
+    get:
+      tags: [QMS]
+      operationId: getDeviationById
+      summary: Get a deviation
+      description: >
+        Retrieve the full details of a single deviation, including the event
+        description, impact assessment, approvals, linked quality records,
+        and disposition outcome.
+      parameters:
+        - $ref: '#/components/parameters/DeviationId'
+      responses:
+        '200':
+          description: Deviation details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deviation'
+
+  /audits:
+    get:
+      tags: [QMS]
+      operationId: getAudits
+      summary: List audits
+      description: >
+        Retrieve internal, supplier, or certification audit records. Use this
+        endpoint to review planned and completed audits, audit scope, lead auditor,
+        status, and high-level outcomes.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: Filter by audit status.
+          schema:
+            type: string
+            enum: [planned, in_progress, completed, canceled]
+        - name: auditType
+          in: query
+          description: Filter by audit type.
+          schema:
+            type: string
+            enum: [internal, supplier, certification, regulatory]
+        - name: scheduledFrom
+          in: query
+          description: Return audits scheduled on or after this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: scheduledTo
+          in: query
+          description: Return audits scheduled on or before this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: leadAuditor
+          in: query
+          description: Filter by lead auditor identifier.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of audits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditListResponse'
+
+  /audits/{auditId}:
+    get:
+      tags: [QMS]
+      operationId: getAuditById
+      summary: Get an audit
+      description: >
+        Retrieve the full details of a single audit, including auditees, scope,
+        checklist references, findings summary, and overall audit result.
+      parameters:
+        - $ref: '#/components/parameters/AuditId'
+      responses:
+        '200':
+          description: Audit details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Audit'
+
+  /complaints:
+    get:
+      tags: [QMS]
+      operationId: getComplaints
+      summary: List quality complaints
+      description: >
+        Retrieve customer or market quality complaints that were recorded in the QMS.
+        Use this endpoint to review complaint trends, severity, investigation status,
+        and linked quality events such as nonconformances or CAPAs.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: Filter by complaint lifecycle status.
+          schema:
+            type: string
+            enum: [open, under_investigation, resolved, closed, rejected]
+        - name: severity
+          in: query
+          description: Filter by complaint severity.
+          schema:
+            type: string
+            enum: [minor, major, critical]
+        - name: receivedFrom
+          in: query
+          description: Return complaints received on or after this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: receivedTo
+          in: query
+          description: Return complaints received on or before this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: productCode
+          in: query
+          description: Filter by affected product code.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of quality complaints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintListResponse'
+
+  /complaints/{complaintId}:
+    get:
+      tags: [QMS]
+      operationId: getComplaintById
+      summary: Get a quality complaint
+      description: >
+        Retrieve the full details of a single quality complaint, including affected
+        product information, issue summary, investigation status, disposition,
+        and linked quality records.
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+      responses:
+        '200':
+          description: Quality complaint details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Complaint'
+
+  /documents:
+    get:
+      tags: [QMS]
+      operationId: getDocuments
+      summary: List controlled quality documents
+      description: >
+        Retrieve controlled QMS documents such as SOPs, work instructions, forms,
+        policies, and specifications. This endpoint is intended for document-control
+        visibility within the quality domain.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: documentType
+          in: query
+          description: Filter by controlled document type.
+          schema:
+            type: string
+            enum: [policy, sop, work_instruction, form, template, specification, manual]
+        - name: status
+          in: query
+          description: Filter by document status.
+          schema:
+            type: string
+            enum: [draft, effective, obsolete, archived]
+        - name: department
+          in: query
+          description: Filter by owning department or function.
+          schema:
+            type: string
+        - name: effectiveFrom
+          in: query
+          description: Return documents effective on or after this timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: effectiveTo
+          in: query
+          description: Return documents effective on or before this timestamp.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Paginated list of controlled quality documents.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentListResponse'
+
+  /documents/{documentId}:
+    get:
+      tags: [QMS]
+      operationId: getDocumentById
+      summary: Get a controlled quality document
+      description: >
+        Retrieve metadata for a single controlled quality document, including current
+        revision, approval status, ownership, effective date, and revision history.
+      parameters:
+        - $ref: '#/components/parameters/DocumentId'
+      responses:
+        '200':
+          description: Controlled document details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlledDocument'
+
+  /quality-metrics:
+    get:
+      tags: [QMS]
+      operationId: getQualityMetrics
+      summary: Get quality metrics
+      description: >
+        Retrieve aggregated QMS metrics for dashboards and reporting, such as counts
+        of open nonconformances, CAPA closure performance, audit completion rates,
+        and complaint trends over time.
+      parameters:
+        - name: periodStart
+          in: query
+          required: true
+          description: Start of the reporting period.
+          schema:
+            type: string
+            format: date-time
+        - name: periodEnd
+          in: query
+          required: true
+          description: End of the reporting period.
+          schema:
+            type: string
+            format: date-time
+        - name: granularity
+          in: query
+          description: Grouping interval for trend series.
+          schema:
+            type: string
+            enum: [day, week, month, quarter]
+      responses:
+        '200':
+          description: Aggregated quality metrics for the requested period.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualityMetrics'
+
+components:
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: 1-based page number.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      description: Number of records returned per page.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+    NonconformanceId:
+      name: nonconformanceId
+      in: path
+      required: true
+      description: Unique identifier of the nonconformance.
+      schema:
+        type: string
+    CapaId:
+      name: capaId
+      in: path
+      required: true
+      description: Unique identifier of the CAPA.
+      schema:
+        type: string
+    DeviationId:
+      name: deviationId
+      in: path
+      required: true
+      description: Unique identifier of the deviation.
+      schema:
+        type: string
+    AuditId:
+      name: auditId
+      in: path
+      required: true
+      description: Unique identifier of the audit.
+      schema:
+        type: string
+    ComplaintId:
+      name: complaintId
+      in: path
+      required: true
+      description: Unique identifier of the complaint.
+      schema:
+        type: string
+    DocumentId:
+      name: documentId
+      in: path
+      required: true
+      description: Unique identifier of the controlled document.
+      schema:
+        type: string
+
+  schemas:
+    Pagination:
+      type: object
+      required: [page, pageSize, totalItems, totalPages]
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+
+    LinkRef:
+      type: object
+      required: [id, type]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [nonconformance, capa, deviation, audit, complaint, document]
+
+    Nonconformance:
+      type: object
+      required:
+        - id
+        - code
+        - title
+        - status
+        - severity
+        - sourceType
+        - detectedAt
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, under_review, dispositioned, closed, canceled]
+        severity:
+          type: string
+          enum: [minor, major, critical]
+        sourceType:
+          type: string
+          enum: [incoming, in_process, final, field, documentation, supplier]
+        itemCode:
+          type: string
+        batchLot:
+          type: string
+        detectedAt:
+          type: string
+          format: date-time
+        detectedBy:
+          type: string
+        disposition:
+          type: string
+          enum: [use_as_is, rework, scrap, return_to_supplier, segregate, other]
+        containmentActions:
+          type: array
+          items:
+            type: string
+        linkedRecords:
+          type: array
+          items:
+            $ref: '#/components/schemas/LinkRef'
+
+    NonconformanceListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Nonconformance'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Capa:
+      type: object
+      required:
+        - id
+        - code
+        - title
+        - type
+        - status
+        - priority
+        - openedAt
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [corrective, preventive]
+        status:
+          type: string
+          enum: [draft, open, in_progress, pending_effectiveness_check, closed, canceled]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        sourceRecord:
+          $ref: '#/components/schemas/LinkRef'
+        rootCause:
+          type: string
+        owner:
+          type: string
+        openedAt:
+          type: string
+          format: date-time
+        dueAt:
+          type: string
+          format: date-time
+        effectivenessCheckAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+        actions:
+          type: array
+          items:
+            type: string
+
+    CapaListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Capa'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Deviation:
+      type: object
+      required:
+        - id
+        - code
+        - title
+        - status
+        - category
+        - raisedAt
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, under_review, approved, rejected, closed]
+        category:
+          type: string
+          enum: [process, documentation, specification, material, environmental, other]
+        impactLevel:
+          type: string
+          enum: [low, medium, high, critical]
+        raisedAt:
+          type: string
+          format: date-time
+        raisedBy:
+          type: string
+        affectedArea:
+          type: string
+        temporaryControls:
+          type: array
+          items:
+            type: string
+        dispositionSummary:
+          type: string
+        linkedRecords:
+          type: array
+          items:
+            $ref: '#/components/schemas/LinkRef'
+
+    DeviationListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Deviation'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Audit:
+      type: object
+      required:
+        - id
+        - code
+        - title
+        - auditType
+        - status
+        - scheduledStart
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        title:
+          type: string
+        auditType:
+          type: string
+          enum: [internal, supplier, certification, regulatory]
+        status:
+          type: string
+          enum: [planned, in_progress, completed, canceled]
+        scope:
+          type: string
+        leadAuditor:
+          type: string
+        auditees:
+          type: array
+          items:
+            type: string
+        scheduledStart:
+          type: string
+          format: date-time
+        scheduledEnd:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        result:
+          type: string
+          enum: [compliant, minor_findings, major_findings, critical_findings, not_applicable]
+        findingCount:
+          type: integer
+        linkedRecords:
+          type: array
+          items:
+            $ref: '#/components/schemas/LinkRef'
+
+    AuditListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Audit'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Complaint:
+      type: object
+      required:
+        - id
+        - code
+        - status
+        - severity
+        - receivedAt
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        status:
+          type: string
+          enum: [open, under_investigation, resolved, closed, rejected]
+        severity:
+          type: string
+          enum: [minor, major, critical]
+        title:
+          type: string
+        description:
+          type: string
+        customerReference:
+          type: string
+        productCode:
+          type: string
+        batchLot:
+          type: string
+        receivedAt:
+          type: string
+          format: date-time
+        reportedBy:
+          type: string
+        investigationSummary:
+          type: string
+        resolutionSummary:
+          type: string
+        linkedRecords:
+          type: array
+          items:
+            $ref: '#/components/schemas/LinkRef'
+
+    ComplaintListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Complaint'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    DocumentRevision:
+      type: object
+      required: [revision, status]
+      properties:
+        revision:
+          type: string
+        status:
+          type: string
+          enum: [draft, effective, obsolete, archived]
+        approvedBy:
+          type: string
+        approvedAt:
+          type: string
+          format: date-time
+        effectiveAt:
+          type: string
+          format: date-time
+        changeSummary:
+          type: string
+
+    ControlledDocument:
+      type: object
+      required:
+        - id
+        - code
+        - title
+        - documentType
+        - status
+        - currentRevision
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        title:
+          type: string
+        documentType:
+          type: string
+          enum: [policy, sop, work_instruction, form, template, specification, manual]
+        status:
+          type: string
+          enum: [draft, effective, obsolete, archived]
+        department:
+          type: string
+        owner:
+          type: string
+        currentRevision:
+          type: string
+        effectiveAt:
+          type: string
+          format: date-time
+        reviewDueAt:
+          type: string
+          format: date-time
+        revisions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentRevision'
+
+    DocumentListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ControlledDocument'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    MetricPoint:
+      type: object
+      required: [periodStart, periodEnd, value]
+      properties:
+        periodStart:
+          type: string
+          format: date-time
+        periodEnd:
+          type: string
+          format: date-time
+        value:
+          type: number
+
+    QualityMetrics:
+      type: object
+      required:
+        - periodStart
+        - periodEnd
+        - openNonconformances
+        - openCapas
+        - openDeviations
+        - openComplaints
+        - auditCompletionRate
+        - capaOnTimeClosureRate
+      properties:
+        periodStart:
+          type: string
+          format: date-time
+        periodEnd:
+          type: string
+          format: date-time
+        openNonconformances:
+          type: integer
+        openCapas:
+          type: integer
+        openDeviations:
+          type: integer
+        openComplaints:
+          type: integer
+        auditCompletionRate:
+          type: number
+          format: float
+        capaOnTimeClosureRate:
+          type: number
+          format: float
+        complaintTrend:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricPoint'
+        nonconformanceTrend:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricPoint'
+        capaClosureTrend:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricPoint'

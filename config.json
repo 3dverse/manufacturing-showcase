@@ -1,0 +1,10 @@
+{
+  "port": 3000,
+  "opsPort": 3001,
+  "wsPort": 3002,
+  "environment": "local",
+  "allowMock": true,
+  "hostname": "localhost",
+  "apiURL": "https://api.3dverse.com/app/v1",
+  "apiKey": ""
+}

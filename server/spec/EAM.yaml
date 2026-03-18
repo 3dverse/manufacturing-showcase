@@ -1,0 +1,947 @@
+openapi: 3.0.3
+info:
+  title: EAM API
+  version: 0.0.1
+  description: >
+    endpoints for Enterprise Asset Management (EAM). This API exposes
+    core maintenance and asset-management data only, focused on equipment,
+    maintenance activity, inspections, service requests, and maintenance plans.
+
+servers:
+  - url: /-/api/eam
+
+tags:
+  - name: EAM Assets
+    description: Equipment and maintainable asset master data.
+  - name: EAM Locations
+    description: Functional or physical locations used to organize assets.
+  - name: EAM Work Orders
+    description: Maintenance work orders and their execution details.
+  - name: EAM Maintenance Plans
+    description: Preventive or recurring maintenance plans and generated schedules.
+  - name: EAM Service Requests
+    description: Reported maintenance needs awaiting review or execution.
+  - name: EAM Inspections
+    description: Inspection records and results tied to assets or locations.
+
+paths:
+  /assets:
+    get:
+      tags: [EAM Assets]
+      summary: List assets
+      description: >
+        Returns maintainable assets managed in EAM, including equipment identity,
+        status, hierarchy, criticality, and maintenance-relevant context.
+      operationId: getAssets
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: Filter assets by lifecycle or operating status.
+          schema:
+            type: string
+        - name: assetType
+          in: query
+          description: Filter assets by asset type or equipment class.
+          schema:
+            type: string
+        - name: locationId
+          in: query
+          description: Filter assets assigned to a specific functional or physical location.
+          schema:
+            type: string
+        - name: criticality
+          in: query
+          description: Filter assets by criticality level.
+          schema:
+            type: string
+        - name: parentAssetId
+          in: query
+          description: Filter assets by parent asset in the hierarchy.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Asset list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetListResponse'
+
+  /assets/{assetId}:
+    get:
+      tags: [EAM Assets]
+      summary: Get asset by ID
+      description: >
+        Returns the full EAM record for a single asset, including identifying,
+        classification, hierarchy, and maintenance-related attributes.
+      operationId: getAssetById
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+      responses:
+        '200':
+          description: Asset details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+
+  /assets/{assetId}/history:
+    get:
+      tags: [EAM Assets]
+      summary: Get asset maintenance history
+      description: >
+        Returns historical maintenance activity for an asset, including completed
+        work orders, inspections, and notable maintenance events relevant to the
+        equipment lifecycle.
+      operationId: getAssetHistory
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+        - name: fromDate
+          in: query
+          description: Return history on or after this date.
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          description: Return history on or before this date.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Asset maintenance history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetHistoryResponse'
+
+  /locations:
+    get:
+      tags: [EAM Locations]
+      summary: List locations
+      description: >
+        Returns functional or physical locations used in EAM to structure assets,
+        maintenance responsibilities, and inspection coverage.
+      operationId: getLocations
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: parentLocationId
+          in: query
+          description: Filter locations by parent location in the hierarchy.
+          schema:
+            type: string
+        - name: siteCode
+          in: query
+          description: Filter locations by site or plant code.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Location list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationListResponse'
+
+  /locations/{locationId}:
+    get:
+      tags: [EAM Locations]
+      summary: Get location by ID
+      description: >
+        Returns a single EAM location record, including hierarchy and descriptive
+        context used to organize assets and maintenance activity.
+      operationId: getLocationById
+      parameters:
+        - $ref: '#/components/parameters/LocationId'
+      responses:
+        '200':
+          description: Location details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+
+  /work-orders:
+    get:
+      tags: [EAM Work Orders]
+      summary: List work orders
+      description: >
+        Returns maintenance work orders created to inspect, repair, service, or
+        otherwise maintain assets and locations within EAM.
+      operationId: getWorkOrders
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: Filter work orders by execution status.
+          schema:
+            type: string
+        - name: assetId
+          in: query
+          description: Filter work orders related to a specific asset.
+          schema:
+            type: string
+        - name: locationId
+          in: query
+          description: Filter work orders related to a specific location.
+          schema:
+            type: string
+        - name: priority
+          in: query
+          description: Filter work orders by maintenance priority.
+          schema:
+            type: string
+        - name: workType
+          in: query
+          description: Filter work orders by maintenance type such as corrective or preventive.
+          schema:
+            type: string
+        - name: scheduledFrom
+          in: query
+          description: Return work orders scheduled on or after this date.
+          schema:
+            type: string
+            format: date
+        - name: scheduledTo
+          in: query
+          description: Return work orders scheduled on or before this date.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Work order list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkOrderListResponse'
+
+  /work-orders/{workOrderId}:
+    get:
+      tags: [EAM Work Orders]
+      summary: Get work order by ID
+      description: >
+        Returns the full maintenance work order record, including scope, status,
+        scheduling, labor summary, and asset or location references.
+      operationId: getWorkOrderById
+      parameters:
+        - $ref: '#/components/parameters/WorkOrderId'
+      responses:
+        '200':
+          description: Work order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkOrder'
+
+  /work-orders/{workOrderId}/operations:
+    get:
+      tags: [EAM Work Orders]
+      summary: Get work order operations
+      description: >
+        Returns the ordered maintenance operations or task steps defined within a
+        work order, including expected execution sequence and status by step.
+      operationId: getWorkOrderOperations
+      parameters:
+        - $ref: '#/components/parameters/WorkOrderId'
+      responses:
+        '200':
+          description: Work order operations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkOrderOperationListResponse'
+
+  /maintenance-plans:
+    get:
+      tags: [EAM Maintenance Plans]
+      summary: List maintenance plans
+      description: >
+        Returns preventive and recurring maintenance plans used to define service
+        intervals, maintenance strategy, and work generation rules for assets.
+      operationId: getMaintenancePlans
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: Filter maintenance plans by active or inactive status.
+          schema:
+            type: string
+        - name: assetId
+          in: query
+          description: Filter maintenance plans assigned to a specific asset.
+          schema:
+            type: string
+        - name: planType
+          in: query
+          description: Filter plans by plan type such as time-based or meter-based.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Maintenance plan list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenancePlanListResponse'
+
+  /maintenance-plans/{planId}:
+    get:
+      tags: [EAM Maintenance Plans]
+      summary: Get maintenance plan by ID
+      description: >
+        Returns a single maintenance plan, including recurrence logic, target
+        asset, and maintenance template information used for planned service.
+      operationId: getMaintenancePlanById
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Maintenance plan details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenancePlan'
+
+  /maintenance-plans/{planId}/schedules:
+    get:
+      tags: [EAM Maintenance Plans]
+      summary: Get maintenance plan schedules
+      description: >
+        Returns generated or projected maintenance schedule occurrences for a
+        maintenance plan, showing when recurring service is due or expected.
+      operationId: getMaintenancePlanSchedules
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - name: fromDate
+          in: query
+          description: Return schedule occurrences on or after this date.
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          description: Return schedule occurrences on or before this date.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Maintenance schedule occurrences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenanceScheduleListResponse'
+
+  /service-requests:
+    get:
+      tags: [EAM Service Requests]
+      summary: List service requests
+      description: >
+        Returns reported maintenance issues, service needs, or repair requests
+        captured before or independently of formal work order execution.
+      operationId: getServiceRequests
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: Filter service requests by review or fulfillment status.
+          schema:
+            type: string
+        - name: assetId
+          in: query
+          description: Filter requests associated with a specific asset.
+          schema:
+            type: string
+        - name: locationId
+          in: query
+          description: Filter requests associated with a specific location.
+          schema:
+            type: string
+        - name: requestedFrom
+          in: query
+          description: Return requests created on or after this date.
+          schema:
+            type: string
+            format: date
+        - name: requestedTo
+          in: query
+          description: Return requests created on or before this date.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Service request list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceRequestListResponse'
+
+  /service-requests/{requestId}:
+    get:
+      tags: [EAM Service Requests]
+      summary: Get service request by ID
+      description: >
+        Returns a single service request, including reported issue details,
+        affected asset or location, and any linked maintenance work order.
+      operationId: getServiceRequestById
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: Service request details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceRequest'
+
+  /inspections:
+    get:
+      tags: [EAM Inspections]
+      summary: List inspections
+      description: >
+        Returns inspection records performed on assets or locations to capture
+        condition, compliance checks, findings, and required follow-up actions.
+      operationId: getInspections
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: assetId
+          in: query
+          description: Filter inspections for a specific asset.
+          schema:
+            type: string
+        - name: locationId
+          in: query
+          description: Filter inspections for a specific location.
+          schema:
+            type: string
+        - name: result
+          in: query
+          description: Filter inspections by result such as pass, fail, or requires action.
+          schema:
+            type: string
+        - name: inspectionFrom
+          in: query
+          description: Return inspections performed on or after this date.
+          schema:
+            type: string
+            format: date
+        - name: inspectionTo
+          in: query
+          description: Return inspections performed on or before this date.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Inspection list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InspectionListResponse'
+
+  /inspections/{inspectionId}:
+    get:
+      tags: [EAM Inspections]
+      summary: Get inspection by ID
+      description: >
+        Returns a single inspection record, including execution date, target
+        asset or location, result, observations, and linked maintenance follow-up.
+      operationId: getInspectionById
+      parameters:
+        - $ref: '#/components/parameters/InspectionId'
+      responses:
+        '200':
+          description: Inspection details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inspection'
+
+components:
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Page number for paginated results.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    PageSize:
+      name: pageSize
+      in: query
+      description: Number of records to return per page.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
+        default: 50
+
+    AssetId:
+      name: assetId
+      in: path
+      required: true
+      description: Unique identifier of the asset.
+      schema:
+        type: string
+
+    LocationId:
+      name: locationId
+      in: path
+      required: true
+      description: Unique identifier of the location.
+      schema:
+        type: string
+
+    WorkOrderId:
+      name: workOrderId
+      in: path
+      required: true
+      description: Unique identifier of the work order.
+      schema:
+        type: string
+
+    PlanId:
+      name: planId
+      in: path
+      required: true
+      description: Unique identifier of the maintenance plan.
+      schema:
+        type: string
+
+    RequestId:
+      name: requestId
+      in: path
+      required: true
+      description: Unique identifier of the service request.
+      schema:
+        type: string
+
+    InspectionId:
+      name: inspectionId
+      in: path
+      required: true
+      description: Unique identifier of the inspection.
+      schema:
+        type: string
+
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+
+    Asset:
+      type: object
+      properties:
+        id:
+          type: string
+        assetCode:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        assetType:
+          type: string
+        classCode:
+          type: string
+        status:
+          type: string
+        criticality:
+          type: string
+        serialNumber:
+          type: string
+        manufacturer:
+          type: string
+        model:
+          type: string
+        commissioningDate:
+          type: string
+          format: date
+        parentAssetId:
+          type: string
+          nullable: true
+        locationId:
+          type: string
+          nullable: true
+        siteCode:
+          type: string
+        maintenanceStrategy:
+          type: string
+        meterReading:
+          type: number
+          format: double
+        meterUnit:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AssetHistoryEvent:
+      type: object
+      properties:
+        eventId:
+          type: string
+        eventType:
+          type: string
+          description: Type of maintenance event such as workOrder, inspection, or breakdown.
+        eventDate:
+          type: string
+          format: date-time
+        referenceId:
+          type: string
+        summary:
+          type: string
+        status:
+          type: string
+
+    Location:
+      type: object
+      properties:
+        id:
+          type: string
+        locationCode:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        siteCode:
+          type: string
+        parentLocationId:
+          type: string
+          nullable: true
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WorkOrder:
+      type: object
+      properties:
+        id:
+          type: string
+        workOrderNumber:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        workType:
+          type: string
+        priority:
+          type: string
+        assetId:
+          type: string
+          nullable: true
+        locationId:
+          type: string
+          nullable: true
+        maintenancePlanId:
+          type: string
+          nullable: true
+        serviceRequestId:
+          type: string
+          nullable: true
+        requestedStart:
+          type: string
+          format: date-time
+        scheduledStart:
+          type: string
+          format: date-time
+        scheduledEnd:
+          type: string
+          format: date-time
+        actualStart:
+          type: string
+          format: date-time
+        actualEnd:
+          type: string
+          format: date-time
+        plannerGroup:
+          type: string
+        assignedTeam:
+          type: string
+        problemCode:
+          type: string
+        causeCode:
+          type: string
+        remedyCode:
+          type: string
+        summaryNotes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WorkOrderOperation:
+      type: object
+      properties:
+        id:
+          type: string
+        sequence:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        workCenter:
+          type: string
+        plannedDurationHours:
+          type: number
+          format: double
+        actualDurationHours:
+          type: number
+          format: double
+
+    MaintenancePlan:
+      type: object
+      properties:
+        id:
+          type: string
+        planCode:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        planType:
+          type: string
+          description: Time-based, meter-based, or mixed.
+        assetId:
+          type: string
+        frequencyValue:
+          type: number
+          format: double
+        frequencyUnit:
+          type: string
+        nextDueDate:
+          type: string
+          format: date
+        nextDueMeter:
+          type: number
+          format: double
+        workTemplateCode:
+          type: string
+        effectiveFrom:
+          type: string
+          format: date
+        effectiveTo:
+          type: string
+          format: date
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MaintenanceSchedule:
+      type: object
+      properties:
+        id:
+          type: string
+        maintenancePlanId:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        dueMeter:
+          type: number
+          format: double
+        status:
+          type: string
+          description: Scheduled state such as forecasted, due, generated, or completed.
+        generatedWorkOrderId:
+          type: string
+          nullable: true
+
+    ServiceRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        requestNumber:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        assetId:
+          type: string
+          nullable: true
+        locationId:
+          type: string
+          nullable: true
+        requestedBy:
+          type: string
+        requestedAt:
+          type: string
+          format: date-time
+        linkedWorkOrderId:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    Inspection:
+      type: object
+      properties:
+        id:
+          type: string
+        inspectionNumber:
+          type: string
+        title:
+          type: string
+        assetId:
+          type: string
+          nullable: true
+        locationId:
+          type: string
+          nullable: true
+        inspectionDate:
+          type: string
+          format: date-time
+        inspector:
+          type: string
+        result:
+          type: string
+        findings:
+          type: string
+        followUpRequired:
+          type: boolean
+        linkedWorkOrderId:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    AssetListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Asset'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    AssetHistoryResponse:
+      type: object
+      properties:
+        assetId:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetHistoryEvent'
+
+    LocationListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Location'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    WorkOrderListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkOrder'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    WorkOrderOperationListResponse:
+      type: object
+      properties:
+        workOrderId:
+          type: string
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkOrderOperation'
+
+    MaintenancePlanListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaintenancePlan'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    MaintenanceScheduleListResponse:
+      type: object
+      properties:
+        maintenancePlanId:
+          type: string
+        schedules:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaintenanceSchedule'
+
+    ServiceRequestListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceRequest'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    InspectionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Inspection'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
