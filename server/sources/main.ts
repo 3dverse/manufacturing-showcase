@@ -1,5 +1,4 @@
 //-----------------------------------------------------------------------------
-//import "reflect-metadata";
 import { setApiKey, setBaseURL } from "@3dverse/api";
 import config from "./config";
 
