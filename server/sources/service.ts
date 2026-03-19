@@ -44,15 +44,6 @@ export async function startService(): Promise<Service> {
         //, defaultErrorHandler
     );
 
-    // Health check
-    app.get("/health", (req, res) => {
-        res.status(200).json({
-            status: "OK",
-            uptime: process.uptime(),
-            timestamp: Date.now(),
-        });
-    });
-
     //--------------------------------------------------------------------------
     // Expose the documentation
     const urls = apiConfigs.map(({ name }) => ({ name, url: `/-/specs/${name}.yaml` }));
@@ -84,7 +75,7 @@ export async function startService(): Promise<Service> {
             }),
         );
 
-        app.get("*", (req, res, next) => {
+        app.use((req, res, next) => {
             if (req.method !== "GET") return next();
 
             res.setHeader("Cache-Control", "no-cache");
@@ -98,9 +89,6 @@ export async function startService(): Promise<Service> {
 
     setReadyState(true);
 
-    //--------------------------------------------------------------------------
-    // TODO: Needed?
-    //--------------------------------------------------------------------------
     //--------------------------------------------------------------------------
     if (useSecureCookie) {
         app.set("trust proxy", 1);
@@ -122,13 +110,24 @@ export function setHealthyState(state: boolean) {
 //------------------------------------------------------------------------------
 export async function startOpsService(): Promise<Express> {
     const opsService = express();
-    // TODO:express5
-    // opsService.use(
-    //     installHealthProbes(
-    //         () => Promise.resolve(app.isReady),
-    //         () => app.isHealthy,
-    //     ),
-    // );
+    opsService.use(express.json());
+
+    // Health endpoints for Kubernetes probes
+    opsService.get("/health/liveness", (req, res) => {
+        if (app.isHealthy) {
+            res.status(204).end();
+        } else {
+            res.status(503).end();
+        }
+    });
+
+    opsService.get("/health/readiness", (req, res) => {
+        if (app.isReady) {
+            res.status(204).end();
+        } else {
+            res.status(503).end();
+        }
+    });
 
     return opsService;
 }

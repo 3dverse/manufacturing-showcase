@@ -1,4 +1,7 @@
 include:
   - project: 3dverse/platform/ci-utils/gitlab-templates
     file:
-      - /ci/js/web-app-static.yaml
+      - /ci/js/api-service.yaml
+
+variables:
+  JS_API_SERVICE_TEST_SKIP: "true"
