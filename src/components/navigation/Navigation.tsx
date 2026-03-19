@@ -19,6 +19,7 @@ import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import type { AreaNode, CellNode, LineNode } from "@/content/type";
+import { BadgeOEE } from "../common/BadgeOEE";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -178,7 +179,10 @@ const AreaNav = ({ area, isFirst, index }: { area: AreaNode; isFirst: boolean; i
         >
             {/* Show a flow button for the first area. Just to try */}
             {SHOW_FLOW_BUTTON && index === 0 && <FlowNode isSelected={isSelected} />}
-            <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
+            <div className="flex justify-between gap-1">
+                <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
+                <BadgeOEE oee={89} hideLabel />
+            </div>
             <ul className="flex overflow-x-auto">
                 {children.map((child, index) => (
                     <ChildNode

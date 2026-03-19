@@ -21,7 +21,7 @@ export const FloorRegion = ({ node }: { node: NavGraphNode }) => {
     // Memos
     const stateClassName = useMemo(() => {
         const classNames = [isSelected ? "pointer-events-none" : "cursor-pointer"];
-        if (!isSelected && isHovered) classNames.push("bg-slate-0/20");
+        if (!isSelected && isHovered) classNames.push("bg-accent-500/20");
         return cn(...classNames);
     }, [isSelected, isHovered]);
 

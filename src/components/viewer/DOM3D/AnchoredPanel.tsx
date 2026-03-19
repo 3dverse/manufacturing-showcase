@@ -8,6 +8,7 @@ import { ViewerPanel } from "@/components/common/ViewerPanel";
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";
 import type { NavGraphNode } from "@/content/type";
+import { BadgeOEE } from "@/components/common/BadgeOEE";
 
 //------------------------------------------------------------------------------
 export function AnchoredPanel({ node, children }: { node: NavGraphNode; children?: ReactNode }) {
@@ -19,9 +20,12 @@ export function AnchoredPanel({ node, children }: { node: NavGraphNode; children
         >
             <ViewerPanel className="h-fit w-fit bg-slate-0/80 rounded-xl [corner-shape:bevel] [outline:2px_solid_#ffffff90] outline-offset-3 transform-3d appear-in-from-bottom opacity-0 [--animation-delay:1s]">
                 <PanelWrapper className="py-4">
-                    <PanelTitle className={children ? "" : "mb-0"}>
-                        {node.name} {node.type}
-                    </PanelTitle>
+                    <div className="flex items-start justify-between gap-1 mb-0">
+                        <PanelTitle>
+                            {node.name} {node.type}
+                        </PanelTitle>
+                        <BadgeOEE oee={89} className="text-2xl -translate-y-8 px-3 py-2 shadow-xl" />
+                    </div>
                     {children}
                 </PanelWrapper>
             </ViewerPanel>

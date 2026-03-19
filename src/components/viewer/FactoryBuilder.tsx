@@ -165,9 +165,7 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
                     )}
                 </AnchoredPanel>
             )}
-            {selectedNode && isFactory(selectedNode) && (
-                <TopPanel node={area} className="appear-in-from-left opacity-0 [--animation-delay:.75s]" />
-            )}
+            {selectedNode && isFactory(selectedNode) && <TopPanel node={area} />}
         </>
     );
 };
