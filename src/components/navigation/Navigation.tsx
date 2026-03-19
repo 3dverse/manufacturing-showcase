@@ -154,26 +154,30 @@ const AreaNav = ({ area, isFirst, index }: { area: AreaNode; isFirst: boolean; i
         return "bg-muted/5 border-muted/50";
     }, [isSelected, isChildSelected, isHovered]);
 
+    const SHOW_FLOW_BUTTON = false;
+
     //--------------------------------------------------------------------------
     // Render
     return (
         <li
             className={cn("relative flex flex-col gap-1 p-1 border rounded-xl cursor-pointer", stateClassName)}
             style={
-                {
-                    cornerShape: "squircle",
-                    borderEndEndRadius: isFirst ? "1.5rem" : undefined,
-                    cornerEndEndShape: isFirst ? "scoop" : undefined,
-                    borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
-                    cornerEndStartShape: index === 1 ? "scoop" : undefined,
-                } as React.CSSProperties
+                SHOW_FLOW_BUTTON
+                    ? ({
+                          cornerShape: "squircle",
+                          borderEndEndRadius: isFirst ? "1.5rem" : undefined,
+                          cornerEndEndShape: isFirst ? "scoop" : undefined,
+                          borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
+                          cornerEndStartShape: index === 1 ? "scoop" : undefined,
+                      } as React.CSSProperties)
+                    : undefined
             }
             onClick={clickHandler}
             onMouseEnter={mouseEnterHandler}
             onMouseLeave={mouseLeaveHandler}
         >
             {/* Show a flow button for the first area. Just to try */}
-            {index === 0 && <FlowNode isSelected={isSelected} />}
+            {SHOW_FLOW_BUTTON && index === 0 && <FlowNode isSelected={isSelected} />}
             <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
             <ul className="flex overflow-x-auto">
                 {children.map((child, index) => (
