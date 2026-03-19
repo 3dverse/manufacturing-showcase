@@ -21,7 +21,7 @@ export const TopPanel = ({ node, className }: { node: NavGraphNode; className?: 
                 <div className="absolute bottom-32 right-32 pl-4 flex items-baseline justify-center text-[4.5rem] text-accent font-semibold">
                     <div className="absolute bottom-[-75%] left-[-50%] w-[200%] h-[300%] bg-[white] rounded-full blur-3xl -z-10" />
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 radial-dashed-circle" />
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 aspect-square animate-pulse border-10 border-accent border-double rounded-full" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 aspect-square border-10 border-accent border-double rounded-full" />
                     89<span className="ml-1 text-[70%] opacity-80">%</span>
                 </div>
             </div>

@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import { faArrowTurnDownRight, faHome } from "@fortawesome/sharp-light-svg-icons";
 
 //------------------------------------------------------------------------------
@@ -9,9 +9,11 @@ import Button from "@/components/common/Button";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
+import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
 import { isLine, sortNode } from "@/core/NavGraph";
+import type { NavGraphNode } from "@/content/type";
 import { useNavNode } from "./hooks";
 import { cn } from "@/utils/cn";
 
@@ -24,6 +26,47 @@ export const Navigation = () => {
     //--------------------------------------------------------------------------
     // Context
     const { nodeGraph } = useContext(FactoryContext);
+    console.log(nodeGraph);
+    const { selectedNode, setSelectedNode } = useContext(SelectionContext);
+
+    //--------------------------------------------------------------------------
+    // Flat ordered list: factory → for each area: area → sorted children (lines
+    // first if sorted that way, then cells) → for each line its cells
+    const flatNavList = useMemo<NavGraphNode[]>(() => {
+        const result: NavGraphNode[] = [nodeGraph];
+        for (const area of nodeGraph.areas) {
+            result.push(area);
+            const children = [...area.lines, ...area.cells].sort(sortNode);
+            for (const child of children) {
+                result.push(child);
+                if (isLine(child)) {
+                    child.cells.forEach((cell) => result.push(cell));
+                }
+            }
+        }
+        return result;
+    }, [nodeGraph]);
+
+    //--------------------------------------------------------------------------
+    // Arrow-key navigation
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+
+            const currentIndex = selectedNode ? flatNavList.findIndex((n) => n.hash === selectedNode.hash) : -1;
+
+            if (e.key === "ArrowLeft") {
+                const prevIndex = currentIndex <= 0 ? flatNavList.length - 1 : currentIndex - 1;
+                setSelectedNode(flatNavList[prevIndex]);
+            } else {
+                const nextIndex = currentIndex >= flatNavList.length - 1 ? 0 : currentIndex + 1;
+                setSelectedNode(flatNavList[nextIndex]);
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [flatNavList, selectedNode, setSelectedNode]);
 
     //--------------------------------------------------------------------------
     // Render
