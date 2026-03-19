@@ -27,7 +27,7 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
         <BoundingBoxFaceProjection
             entity={machine.entity}
             face="right"
-            className="pointer-events-none flex items-center transform-3d"
+            className="flex items-center transform-3d pointer-events-none"
         >
             <ViewerPanel
                 className="min-w-80 rounded-xl border-2 border-slate-0/50 shadow-lg [outline:2px_solid_#ffffff90] outline-offset-2"

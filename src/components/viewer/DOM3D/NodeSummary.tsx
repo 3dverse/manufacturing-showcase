@@ -37,12 +37,12 @@ export const NodeSummary = ({ node }: { node: NavGraphNode }) => {
         <BoundingBoxFaceProjection
             entity={node.entity}
             face="right"
-            className="flex items-end pb-4"
+            className="flex items-end pb-4 transform-3d"
             style={{ display: isSelected ? "none" : undefined }}
         >
             <div
                 className={cn(
-                    "group w-full h-48 p-2 border-2 rounded-xl border-slate-0 transition-colors duration-200",
+                    "group w-full h-48 p-2 border-2 rounded-xl border-slate-0 transition-colors duration-200 transform-3d",
                     stateClassName,
                 )}
                 onPointerDown={pointerDownHandler}

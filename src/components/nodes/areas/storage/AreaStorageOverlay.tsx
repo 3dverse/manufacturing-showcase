@@ -40,7 +40,7 @@ export function AreaStorageOverlay({ area }: { area: AreaNode }) {
     return (
         <>
             <BoundingBoxFaceProjection entity={area.entity} face="right" className="transform-3d pointer-events-none">
-                <div className="absolute bottom-0 left-1/4 -translate-x-1/2 flex items-end gap-px transform-3d">
+                <div className="absolute bottom-0 left-96 flex items-end gap-px transform-3d">
                     <p className="absolute bottom-1 -left-3 -translate-x-full text-xs text-accent">Quantity</p>
                     {MOCK_STORAGE_DATA.map((item) => (
                         <div
