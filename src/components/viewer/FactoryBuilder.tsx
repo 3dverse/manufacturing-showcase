@@ -23,6 +23,8 @@ import { isFactory, isArea, isLine, isCell } from "@/core/NavGraph";
 import type { AreaNode, CellNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 import { useNavNode } from "../navigation/hooks";
+import { FactoryOrderPanel } from "../dashboard/order/FactoryOrderPanel";
+import { orders } from "@/content/orders";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -156,7 +158,12 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
                 </div>
             )}
             {isSelected && (
-                <AnchoredPanel node={area}>{area.name === "storage" && <AreaStorageQuadPanel />}</AnchoredPanel>
+                <AnchoredPanel node={area}>
+                    {area.name === "storage" && <AreaStorageQuadPanel />}
+                    {!["storage", "reception"].includes(area.name) && (
+                        <FactoryOrderPanel order={orders[2]} className="min-w-80" />
+                    )}
+                </AnchoredPanel>
             )}
             {selectedNode && isFactory(selectedNode) && (
                 <TopPanel node={area} className="appear-in-from-left opacity-0 [--animation-delay:.75s]" />

@@ -9,10 +9,9 @@ import { FactoryTimeline } from "@/components/nodes/factory/FactoryTimeline";
 import { FactoryPanel } from "@/components/nodes/factory/FactoryPanel";
 import { AreaPanel } from "@/components/nodes/areas/AreaPanel";
 import { LinePanel } from "@/components/nodes/lines/LinePanel";
-import { CellPanel } from "@/components/nodes/cells/CellPanel";
 
 //------------------------------------------------------------------------------
-import { isArea, isLine, isCell } from "@/core/NavGraph";
+import { isArea, isLine } from "@/core/NavGraph";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -48,7 +47,7 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                     {!thumbnailMode && <FactoryPanel />}
                     {!thumbnailMode && selectedNode && isArea(selectedNode) && <AreaPanel area={selectedNode} />}
                     {!thumbnailMode && selectedNode && isLine(selectedNode) && <LinePanel line={selectedNode} />}
-                    {!thumbnailMode && selectedNode && isCell(selectedNode) && <CellPanel cell={selectedNode} />}
+                    {/* {!thumbnailMode && selectedNode && isCell(selectedNode) && <CellPanel cell={selectedNode} />} */}
                 </div>
 
                 {!thumbnailMode && (

@@ -8,7 +8,7 @@ import RefreshNotifier from "@/components/common/RefreshNotifier";
 //------------------------------------------------------------------------------
 import { Header } from "./header/Header";
 import OEEPanel from "./OEE/OEEPanel";
-import { OrderPanel } from "./order/OrderPanel";
+import { FactoryOrderPanel } from "./order/FactoryOrderPanel";
 import { PlanningPanel } from "./planning/PlanningPanel";
 import { ProductionPanel } from "./production/ProductionPanel";
 
@@ -102,7 +102,7 @@ export const LiveDashboard: React.FC = () => {
                     paddingLeftClassName={paddingLeftClassName}
                 />
                 <article className={cn("py-4 pr-4", paddingLeftClassName)}>
-                    <OrderPanel order={orders[0]} />
+                    <FactoryOrderPanel order={orders[0]} />
                 </article>
                 <article className={cn("py-4 pr-4", paddingLeftClassName)}>
                     <PlanningPanel />

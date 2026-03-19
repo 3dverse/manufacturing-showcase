@@ -12,13 +12,13 @@ import { cn } from "@/utils/cn";
 import type { Order } from "@/content/type";
 
 //------------------------------------------------------------------------------
-interface OrderPanelProps {
+interface AreaOrderPanelProps {
     order: Order;
     className?: string;
 }
 
 //------------------------------------------------------------------------------
-export const OrderPanel: React.FC<OrderPanelProps> = ({ order, className }) => {
+export const AreaOrderPanel: React.FC<AreaOrderPanelProps> = ({ order, className }) => {
     //--------------------------------------------------------------------------
     const elapsedTime = useMemo(() => {
         const startDate = new Date(order.startDate);
@@ -40,7 +40,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({ order, className }) => {
 
     //--------------------------------------------------------------------------
     return (
-        <div className={cn("@container flex flex-col", className)}>
+        <div className={cn("@container flex flex-col min-w-96", className)}>
             <header className="flex items-start justify-between px-1 pb-3">
                 <div className="pt-px">
                     <PanelLabel className="text-xs">Current Order</PanelLabel>
