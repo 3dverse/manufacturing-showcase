@@ -4,6 +4,14 @@
   "private": true,
   "version": "0.0.0",
   "license": "UNLICENSED",
+  "files": [
+    "server/dist/",
+    "server/spec/",
+    "out",
+    "_prebuild/schemas.ajv.json",
+    "_prebuild/emails/",
+    "config.json"
+  ],
   "scripts": {
     "dev": "nodemon",
     "build": "run-p build:app build:server",
