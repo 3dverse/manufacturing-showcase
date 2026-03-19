@@ -161,16 +161,16 @@ const AreaNav = ({ area, isFirst, index }: { area: AreaNode; isFirst: boolean; i
     // Render
     return (
         <li
-            className={cn("relative flex flex-col gap-1 p-1 border rounded-xl cursor-pointer", stateClassName)}
+            className={cn("relative flex flex-col gap-1 p-1 border rounded-lg cursor-pointer", stateClassName)}
             style={
                 SHOW_FLOW_BUTTON
                     ? ({
-                          cornerShape: "squircle",
-                          borderEndEndRadius: isFirst ? "1.5rem" : undefined,
-                          cornerEndEndShape: isFirst ? "scoop" : undefined,
-                          borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
-                          cornerEndStartShape: index === 1 ? "scoop" : undefined,
-                      } as React.CSSProperties)
+                        cornerShape: "squircle",
+                        borderEndEndRadius: isFirst ? "1.5rem" : undefined,
+                        cornerEndEndShape: isFirst ? "scoop" : undefined,
+                        borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
+                        cornerEndStartShape: index === 1 ? "scoop" : undefined,
+                    } as React.CSSProperties)
                     : undefined
             }
             onClick={clickHandler}
