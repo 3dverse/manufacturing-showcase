@@ -44,38 +44,39 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
                                     Current OEE
                                     <Triangle className="w-3 ml-2" />
                                 </DataLabel>
-                                <DataValue className="text-4xl text-positive-700">{MOCK.oee}%</DataValue>
+                                <DataValue className="text-4xl text-positive-700">
+                                    {MOCK.oee}
+                                    <span className="inline-block ml-1 text-xl -translate-y-3 opacity-80">%</span>
+                                </DataValue>
                             </DataContainer>
                             <DataContainer className="gap-0 justify-between">
                                 <DataLabel className="flex items-center gap-2 text-positive-700 ">
                                     <Icon icon={faCheckToSlot} />
                                     {MOCK.state}
                                 </DataLabel>
-                                <DataValue className="mt-1 text-slate-800 truncate max-w-32">
-                                    {MOCK.workOrderName}
-                                </DataValue>
+                                <DataValue className="mt-1 text-slate-800">{MOCK.workOrderName}</DataValue>
                             </DataContainer>
                         </div>
                         <div className="grid grid-cols-[1fr_2fr] gap-2">
                             <DataContainer>
                                 <DataLabel>Quality</DataLabel>
-                                <DataValue className="text-2xl text-slate-800 truncate max-w-32">
+                                <DataValue className="text-2xl text-slate-800">
                                     {(MOCK.validQuantityProduced /
                                         (MOCK.validQuantityProduced + MOCK.rejectedQuantityProduced)) *
                                         100}
-                                    %
+                                    <span className="inline-block ml-1 text-sm -translate-y-2 opacity-80">%</span>
                                 </DataValue>
                             </DataContainer>
-                            <div className="grid grid-cols-2 gap-px">
+                            <div className="grid grid-cols-2">
                                 <DataContainer className="rounded-e-none">
                                     <DataLabel className="text-positive-800">Valid</DataLabel>
-                                    <DataValue className="text-2xl text-positive-800 truncate max-w-32">
+                                    <DataValue className="text-2xl text-positive-800">
                                         {MOCK.validQuantityProduced}
                                     </DataValue>
                                 </DataContainer>
-                                <DataContainer className="rounded-s-none">
+                                <DataContainer className="rounded-s-none -ml-px">
                                     <DataLabel className="text-negative-800">Rejected</DataLabel>
-                                    <DataValue className="text-2xl text-negative-800 truncate max-w-32">
+                                    <DataValue className="text-2xl text-negative-800">
                                         {MOCK.rejectedQuantityProduced}
                                     </DataValue>
                                 </DataContainer>
