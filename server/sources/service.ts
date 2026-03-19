@@ -44,6 +44,15 @@ export async function startService(): Promise<Service> {
         //, defaultErrorHandler
     );
 
+    // Health check
+    app.get("/health", (req, res) => {
+        res.status(200).json({
+            status: "OK",
+            uptime: process.uptime(),
+            timestamp: Date.now(),
+        });
+    });
+
     //--------------------------------------------------------------------------
     // Expose the documentation
     const urls = apiConfigs.map(({ name }) => ({ name, url: `/-/specs/${name}.yaml` }));
