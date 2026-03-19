@@ -11,6 +11,7 @@ import { NodeSummary } from "./DOM3D/NodeSummary";
 import { FlowSpline } from "./DOM3D/FlowSpline";
 import { MachineInfoPanel } from "./DOM3D/MachineInfoPanel";
 import { TopPanel } from "./DOM3D/TopPanel";
+import { IncidentInfoPanel } from "./DOM3D/IncidentInfoPanel";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
@@ -102,6 +103,9 @@ const FactoryBuilder = () => {
             {selectedNode && isCell(selectedNode) && selectedNode.machines.length > 0 && (
                 <MachineInfoPanel machine={selectedNode.machines[0]} />
             )}
+            {shownCells.map((cell) => (
+                <IncidentInfoPanel key={cell.hash} cell={cell} />
+            ))}
         </>
     );
 };

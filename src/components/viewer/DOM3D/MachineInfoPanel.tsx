@@ -39,7 +39,7 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
                     </p>
                     <div className="flex flex-col gap-2">
                         <div className="grid grid-cols-2 gap-2">
-                            <DataContainer className="gap-0 justify-between">
+                            <DataContainer className="gap-0 justify-between bg-positive-500/10">
                                 <DataLabel>
                                     Current OEE
                                     <Triangle className="w-3 ml-2" />
