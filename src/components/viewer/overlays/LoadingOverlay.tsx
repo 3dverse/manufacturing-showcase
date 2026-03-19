@@ -20,7 +20,7 @@ export const LoadingOverlay = ({ stage }: { stage: LivelinkConnectionStage }) =>
     if (reconnecting) {
         return (
             <OverlayShroud backdropUrl={backdropUrl}>
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-accent-500" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-100/50 border-t-accent-500 outline-8 outline-accent-100/30" />
             </OverlayShroud>
         );
     } else {
