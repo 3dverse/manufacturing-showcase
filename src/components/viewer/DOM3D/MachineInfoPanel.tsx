@@ -1,9 +1,13 @@
 //------------------------------------------------------------------------------
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
+import { faCheckToSlot } from "@fortawesome/sharp-regular-svg-icons";
 
 //------------------------------------------------------------------------------
+import { Icon } from "@/components/common/Icon";
 import { ViewerPanel } from "@/components/common/ViewerPanel";
-import { PanelLabel, PanelWrapper } from "@/components/common/panel";
+import { PanelWrapper } from "@/components/common/panel";
+import { DataContainer, DataLabel, DataValue } from "@/components/common/panel/DataLabel";
+import { Triangle } from "@/components/common/icons/Triangle";
 
 //------------------------------------------------------------------------------
 import type { MachineNode } from "@/content/type";
@@ -12,9 +16,9 @@ import type { MachineNode } from "@/content/type";
 const MOCK = {
     oee: 87,
     state: "In production",
-    workOrderName: "OF-2024-0842",
-    qualityRate: 98.2,
-    quantityProduced: 1247,
+    workOrderName: "OF 123458",
+    validQuantityProduced: 96,
+    rejectedQuantityProduced: 4,
 };
 
 //------------------------------------------------------------------------------
@@ -23,38 +27,59 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
         <BoundingBoxFaceProjection
             entity={machine.entity}
             face="right"
-            className="pointer-events-none flex items-center"
+            className="pointer-events-none flex items-center transform-3d"
         >
             <ViewerPanel
-                className="min-w-64 rounded-xl border-2 border-slate-0/50 shadow-lg [outline:2px_solid_#ffffff90] outline-offset-2"
+                className="min-w-80 rounded-xl border-2 border-slate-0/50 shadow-lg [outline:2px_solid_#ffffff90] outline-offset-2"
                 style={{ cornerShape: "bevel" } as React.CSSProperties}
             >
-                <PanelWrapper className="py-3 px-4 space-y-3">
-                    <p className="text-sm font-semibold text-slate-800 border-b border-slate-200/80 pb-2">
+                <PanelWrapper className="py-3 px-2 space-y-3">
+                    <p className="px-2 capitalize text-sm font-semibold text-slate-800 border-b border-slate-200/80 pb-2">
                         {machine.name}
                     </p>
-                    <div className="grid gap-2 text-sm">
-                        <div className="flex justify-between items-baseline gap-4">
-                            <PanelLabel>Current OEE</PanelLabel>
-                            <span className="font-semibold tabular-nums text-positive-700">{MOCK.oee}%</span>
+                    <div className="flex flex-col gap-2">
+                        <div className="grid grid-cols-2 gap-2">
+                            <DataContainer className="gap-0 justify-between">
+                                <DataLabel>
+                                    Current OEE
+                                    <Triangle className="w-3 ml-2" />
+                                </DataLabel>
+                                <DataValue className="text-4xl text-positive-700">{MOCK.oee}%</DataValue>
+                            </DataContainer>
+                            <DataContainer className="gap-0 justify-between">
+                                <DataLabel className="flex items-center gap-2 text-positive-700 ">
+                                    <Icon icon={faCheckToSlot} />
+                                    {MOCK.state}
+                                </DataLabel>
+                                <DataValue className="mt-1 text-slate-800 truncate max-w-32">
+                                    {MOCK.workOrderName}
+                                </DataValue>
+                            </DataContainer>
                         </div>
-                        <div className="flex justify-between items-baseline gap-4">
-                            <PanelLabel>Current state</PanelLabel>
-                            <span className="font-medium text-slate-800">{MOCK.state}</span>
-                        </div>
-                        <div className="flex justify-between items-baseline gap-4">
-                            <PanelLabel>Current work order</PanelLabel>
-                            <span className="font-medium text-slate-800 truncate max-w-32" title={MOCK.workOrderName}>
-                                {MOCK.workOrderName}
-                            </span>
-                        </div>
-                        <div className="flex justify-between items-baseline gap-4">
-                            <PanelLabel>Current quality rate</PanelLabel>
-                            <span className="font-semibold tabular-nums">{MOCK.qualityRate}%</span>
-                        </div>
-                        <div className="flex justify-between items-baseline gap-4">
-                            <PanelLabel>Quantity produced</PanelLabel>
-                            <span className="font-semibold tabular-nums">{MOCK.quantityProduced}</span>
+                        <div className="grid grid-cols-[1fr_2fr] gap-2">
+                            <DataContainer>
+                                <DataLabel>Quality</DataLabel>
+                                <DataValue className="text-2xl text-slate-800 truncate max-w-32">
+                                    {(MOCK.validQuantityProduced /
+                                        (MOCK.validQuantityProduced + MOCK.rejectedQuantityProduced)) *
+                                        100}
+                                    %
+                                </DataValue>
+                            </DataContainer>
+                            <div className="grid grid-cols-2 gap-px">
+                                <DataContainer className="rounded-e-none">
+                                    <DataLabel className="text-positive-800">Valid</DataLabel>
+                                    <DataValue className="text-2xl text-positive-800 truncate max-w-32">
+                                        {MOCK.validQuantityProduced}
+                                    </DataValue>
+                                </DataContainer>
+                                <DataContainer className="rounded-s-none">
+                                    <DataLabel className="text-negative-800">Rejected</DataLabel>
+                                    <DataValue className="text-2xl text-negative-800 truncate max-w-32">
+                                        {MOCK.rejectedQuantityProduced}
+                                    </DataValue>
+                                </DataContainer>
+                            </div>
                         </div>
                     </div>
                 </PanelWrapper>

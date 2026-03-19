@@ -20,7 +20,7 @@ export function AnchoredPanel({ node, children }: { node: NavGraphNode; children
             face="right"
             className="pointer-events-none z-10"
             center={
-                <div className="relative flex flex-col justify-end items-start w-fit h-full">
+                <div className="relative flex flex-col justify-end items-start w-fit h-full appear-in-from-bottom opacity-0 [--animation-delay:.75s]">
                     <PanelShadow />
                     <ViewerPanel
                         className="flex flex-col gap-4 w-fit mb-1 text-base rounded-xl shadow-none [outline:2px_solid_#ffffff90] outline-offset-3 pointer-events-auto"

@@ -59,7 +59,7 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
 
                 {!thumbnailMode && (
                     <div className="w-full self-end">
-                        <FactoryTimeline className="opacity-0 appear-in-from-bottom [--animation-delay:1s]" />
+                        <FactoryTimeline className="appear-in-from-bottom opacity-0 [--animation-delay:1s]" />
                     </div>
                 )}
             </div>

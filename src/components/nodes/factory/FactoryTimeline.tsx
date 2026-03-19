@@ -228,7 +228,7 @@ export function FactoryTimeline({ stops = MOCK_STOPS, className }: { stops?: Mac
     return (
         <aside
             className={cn(
-                "pointer-events-auto border-t border-slate-200 pt-2 w-full bg-linear-to-b from-white/20 to-white/50 backdrop-blur-3xl",
+                "pointer-events-auto border-t border-slate-200/20 pt-2 w-full bg-linear-to-b from-white/20 to-white/50 backdrop-blur-3xl",
                 className,
             )}
         >
