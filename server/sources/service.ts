@@ -58,7 +58,7 @@ export async function startService(): Promise<Service> {
     //--------------------------------------------------------------------------
     // Expose the front end routes.
     if (isStaticBuild) {
-        const distDir = path.join(process.cwd(), "dist");
+        const distDir = path.join(process.cwd(), "out");
         app.use(
             express.static(distDir, {
                 maxAge: "1y",
@@ -77,7 +77,6 @@ export async function startService(): Promise<Service> {
 
         app.use((req, res, next) => {
             if (req.method !== "GET") return next();
-
             res.setHeader("Cache-Control", "no-cache");
             res.sendFile(path.join(distDir, "index.html"));
         });
