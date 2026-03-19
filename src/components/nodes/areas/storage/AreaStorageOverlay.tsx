@@ -55,7 +55,7 @@ export function AreaStorageOverlay({ area }: { area: AreaNode }) {
                             }
                         >
                             <div
-                                className="absolute bottom-0 left-0 w-full h-full bg-(--color) z-[-1]"
+                                className="absolute bottom-0 left-0 w-full bg-(--color) z-[-1] starting:scale-y-0 scale-y-100 origin-bottom transition-all duration-800 delay-1000"
                                 style={{
                                     height: `${item.quantity / 2}px`,
                                 }}

@@ -30,7 +30,7 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
             className="flex items-center transform-3d pointer-events-none"
         >
             <ViewerPanel
-                className="min-w-80 rounded-xl border-2 border-slate-0/50 shadow-lg [outline:2px_solid_#ffffff90] outline-offset-2"
+                className="min-w-80 rounded-xl border-2 border-slate-0/50 shadow-lg [outline:2px_solid_#ffffff90] outline-offset-2 translate-x-[80%] starting:translate-x-[60%] transition-transform duration-400"
                 style={{ cornerShape: "bevel" } as React.CSSProperties}
             >
                 <PanelWrapper className="py-3 px-2 space-y-3">
