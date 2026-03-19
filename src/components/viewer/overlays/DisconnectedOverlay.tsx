@@ -67,14 +67,12 @@ export const DisconnectedOverlay = ({ error }: { error: string }) => {
     //--------------------------------------------------------------------------
     return (
         <OverlayShroud backdropUrl={backdropUrl} transition={true}>
-            <div className="p-12 bg-white border border-gray-400 rounded text-center">
-                <p>{description}</p>
-                <button
-                    className="px-4 py-2 mt-6 bg-accent-600 text-white rounded-md hover:bg-accent-700 active:bg-accent-800 transition-colors duration-200"
-                    onClick={reconnect}
-                >
+            <div className="relative flex flex-col items-center justify-center text-center max-w-md p-12">
+                <span className="absolute bottom-0 left-0 scale-200 w-full h-full bg-white blur-3xl -z-10" />
+                <p className="text-sm">{description}</p>
+                <Button variant="primary" size="sm" className="mt-6" onClick={reconnect}>
                     Reconnect
-                </button>
+                </Button>
             </div>
         </OverlayShroud>
     );
