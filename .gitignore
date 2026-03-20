@@ -24,3 +24,5 @@ out/
 
 server/dist
 _prebuild
+
+.npmrc

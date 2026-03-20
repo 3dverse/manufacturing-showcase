@@ -6,7 +6,7 @@ import { faClock } from "@fortawesome/sharp-regular-svg-icons";
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
 import { Icon } from "@/components/common/Icon";
-import { Gauge } from "@/components/common/metrics/Gauge";
+import { BadgeOEE } from "@/components/common/BadgeOEE";
 
 //------------------------------------------------------------------------------
 import { SelectionContext } from "@/contexts/SelectionContext";
@@ -110,18 +110,16 @@ export const MainHeader = ({
                     >
                         {factory?.name}
                     </h2>
-                    <div className="flex items-center gap-x-2 text-xs opacity-70">
+                    <div className="flex items-center gap-x-2 gap-y-2 text-xs opacity-70">
                         <p className="text-[95%]">{factory?.location}</p>
-                        <Icon icon={faClock} size="sm" />
-                        <span>11:30</span>
+                        <span>
+                            <Icon icon={faClock} size="sm" /> 11:30
+                        </span>
                     </div>
                 </div>
 
                 <div className={cn("flex bg-slate-0/90 h-full", widgetStateClassName)}>
-                    <div className="px-3">
-                        <Gauge value={95} className="w-20! h-10" />
-                        <p className="text-2xs text-subtle tracking-wide text-center -translate-y-5">OEE</p>
-                    </div>
+                    <BadgeOEE oee={95} className="text-3xl px-4 py-2" />
                 </div>
             </ViewerPanel>
         </header>

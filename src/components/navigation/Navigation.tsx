@@ -1,6 +1,7 @@
 //------------------------------------------------------------------------------
 import React, { useContext, useEffect, useMemo } from "react";
 import { faArrowTurnDownRight, faHome } from "@fortawesome/sharp-light-svg-icons";
+import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
@@ -74,7 +75,7 @@ export const Navigation = () => {
     return (
         <ViewerPanel
             as="nav"
-            className="select-none h-fit flex divide-x divide-muted/50 rounded-md border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] overflow-hidden pointer-events-auto appear-in-from-bottom"
+            className="select-none h-fit flex divide-x divide-muted/50 rounded-md border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto appear-in-from-bottom"
         >
             <div className="flex flex-col divide-y divide-muted/50">
                 <div className="p-1">
@@ -165,12 +166,12 @@ const AreaNav = ({ area, isFirst, index }: { area: AreaNode; isFirst: boolean; i
             style={
                 SHOW_FLOW_BUTTON
                     ? ({
-                        cornerShape: "squircle",
-                        borderEndEndRadius: isFirst ? "1.5rem" : undefined,
-                        cornerEndEndShape: isFirst ? "scoop" : undefined,
-                        borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
-                        cornerEndStartShape: index === 1 ? "scoop" : undefined,
-                    } as React.CSSProperties)
+                          cornerShape: "squircle",
+                          borderEndEndRadius: isFirst ? "1.5rem" : undefined,
+                          cornerEndEndShape: isFirst ? "scoop" : undefined,
+                          borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
+                          cornerEndStartShape: index === 1 ? "scoop" : undefined,
+                      } as React.CSSProperties)
                     : undefined
             }
             onClick={clickHandler}
@@ -183,7 +184,7 @@ const AreaNav = ({ area, isFirst, index }: { area: AreaNode; isFirst: boolean; i
                 <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
                 <BadgeOEE oee={89} hideLabel />
             </div>
-            <ul className="flex overflow-x-auto">
+            <ul className="flex overflow-visible">
                 {children.map((child, index) => (
                     <ChildNode
                         key={child.hash}
@@ -235,7 +236,7 @@ const ChildNode = ({ node, isFirst, isLast }: { node: LineNode | CellNode; isFir
         <li>
             <button
                 className={cn(
-                    "relative px-2 py-1 text-xs capitalize whitespace-nowrap  border  rounded-md cursor-pointer transition-colors duration-200",
+                    "relative px-2 py-1 text-xs capitalize whitespace-nowrap border rounded-md cursor-pointer transition-colors duration-200",
                     stateClassName,
                 )}
                 style={
@@ -262,6 +263,9 @@ const ChildNode = ({ node, isFirst, isLast }: { node: LineNode | CellNode; isFir
                     />
                 )}
                 {node.name} {isLine(node) && "Line"}
+                <span className="absolute -top-2 right-px w-4 aspect-square bg-warning rounded-full">
+                    <Icon icon={faExclamationTriangle} size="xs" className="text-warning-100" />
+                </span>
             </button>
         </li>
     );

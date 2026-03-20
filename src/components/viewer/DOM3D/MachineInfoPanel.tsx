@@ -1,16 +1,18 @@
 //------------------------------------------------------------------------------
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
-import { faCheckToSlot } from "@fortawesome/sharp-regular-svg-icons";
+import { faCheckToSlot, faFilePdf } from "@fortawesome/sharp-regular-svg-icons";
+import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
 import { ViewerPanel } from "@/components/common/ViewerPanel";
-import { PanelWrapper } from "@/components/common/panel";
+import { PanelTitle, PanelWrapper } from "@/components/common/panel";
 import { DataContainer, DataLabel, DataValue } from "@/components/common/panel/DataLabel";
 import { Triangle } from "@/components/common/icons/Triangle";
 
 //------------------------------------------------------------------------------
 import type { MachineNode } from "@/content/type";
+import Button from "@/components/common/Button";
 
 //------------------------------------------------------------------------------
 const MOCK = {
@@ -27,12 +29,9 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
         <BoundingBoxFaceProjection
             entity={machine.entity}
             face="right"
-            className="flex items-center transform-3d pointer-events-none"
+            className="flex flex-col gap-3 transform-3d pointer-events-none"
         >
-            <ViewerPanel
-                className="min-w-80 rounded-xl border-2 border-slate-0/50 shadow-lg [outline:2px_solid_#ffffff90] outline-offset-2 translate-x-[80%] starting:translate-x-[60%] transition-transform duration-400"
-                style={{ cornerShape: "bevel" } as React.CSSProperties}
-            >
+            <ViewerPanel className="min-w-80 rounded-xl border-2 border-slate-0/50 shadow-lg [corner-shape:bevel] [outline:2px_solid_#ffffff90] outline-offset-2 translate-x-[80%] starting:translate-x-[60%] transition-transform duration-400">
                 <PanelWrapper className="py-3 px-2 space-y-3">
                     <p className="px-2 capitalize text-sm font-semibold text-slate-800 border-b border-slate-200/80 pb-2">
                         {machine.name}
@@ -83,6 +82,22 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
                             </div>
                         </div>
                     </div>
+                </PanelWrapper>
+            </ViewerPanel>
+            <ViewerPanel className="min-w-80 bg-warning-500 [corner-shape:bevel] starting:opacity-0 starting:-translate-y-8 opacity-100 translate-y-0 translate-x-[80%] transition-all duration-400 delay-500">
+                <PanelWrapper className="py-2">
+                    <PanelTitle className="text-warning-100">
+                        <Icon icon={faExclamationTriangle} className="mr-2 text-sm text-warning-100" />
+                        Incident report
+                    </PanelTitle>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2 w-full border-warning-400 text-warning-100 hover:bg-warning-400 hover:text-warning-100"
+                    >
+                        <Icon icon={faFilePdf} className="mr-2 text-sm text-warning-100" />
+                        Read the report
+                    </Button>
                 </PanelWrapper>
             </ViewerPanel>
         </BoundingBoxFaceProjection>
