@@ -1,4 +1,5 @@
 import { useContext, useMemo } from "react";
+import { MachineOutline } from "./DOM3D/MachineOutline";
 
 //------------------------------------------------------------------------------
 import { AreaStorageQuadPanel } from "@/components/nodes/areas/storage/AreaStorageQuadPanel";
@@ -101,7 +102,10 @@ const FactoryBuilder = () => {
                 <CellBuilderItem key={cell.hash} cell={cell} />
             ))}
             {selectedNode && isCell(selectedNode) && selectedNode.machines.length > 0 && (
-                <MachineInfoPanel machine={selectedNode.machines[0]} />
+                <>
+                    <MachineInfoPanel machine={selectedNode.machines[0]} />
+                    <MachineOutline machine={selectedNode.machines[0]} />
+                </>
             )}
             {shownCells.map((cell) => (
                 <IncidentInfoPanel key={cell.hash} cell={cell} />
