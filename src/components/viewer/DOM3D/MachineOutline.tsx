@@ -40,19 +40,19 @@ export function MachineOutline({ machine }: { machine: MachineNode }) {
             entity={machine.entity}
             face="bottom"
             invert
-            className="transform-3d pointer-events-none"
+            className="flex justify-center items-center transform-3d pointer-events-none"
         >
             <div
-                className="relative text-8xl w-full aspect-square rounded-full"
+                className="relative text-8xl w-full aspect-square rounded-full min-w-100 min-h-100"
                 style={{
-                    maskImage: "linear-gradient(to top, transparent 8%, black 120%)",
+                    maskImage: "linear-gradient(to top, transparent 30%, black 120%)",
                     rotate: `${cameraRotation.toFixed(2)}deg`,
                 }}
             >
-                <div className="w-full h-full border-4 border-white rounded-full">
+                <div className="w-full h-full border-2 border-white rounded-full">
                     <div
                         className={cn(
-                            "w-full h-full border-t-16 blur-sm rounded-full animate-spin [animation-duration:1250ms] z-10 scale-110",
+                            "w-full h-full border-t-12 blur-sm rounded-full animate-spin [animation-duration:1250ms] z-10 scale-110",
                             hasIncident ? "border-warning" : "border-accent",
                         )}
                     />

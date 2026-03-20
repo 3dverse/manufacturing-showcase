@@ -1,5 +1,4 @@
 import { useContext, useMemo } from "react";
-import { MachineOutline } from "./DOM3D/MachineOutline";
 
 //------------------------------------------------------------------------------
 import { AreaStorageQuadPanel } from "@/components/nodes/areas/storage/AreaStorageQuadPanel";
@@ -11,6 +10,8 @@ import { FloorRegion } from "./DOM3D/FloorRegion";
 import { NodeSummary } from "./DOM3D/NodeSummary";
 import { FlowSpline } from "./DOM3D/FlowSpline";
 import { MachineInfoPanel } from "./DOM3D/MachineInfoPanel";
+import { MachineOutline } from "./DOM3D/MachineOutline";
+import { MachineLabel } from "./DOM3D/MachineLabel";
 import { TopPanel } from "./DOM3D/TopPanel";
 import { IncidentInfoPanel } from "./DOM3D/IncidentInfoPanel";
 
@@ -105,6 +106,7 @@ const FactoryBuilder = () => {
                 <>
                     <MachineInfoPanel machine={selectedNode.machines[0]} />
                     <MachineOutline machine={selectedNode.machines[0]} />
+                    <MachineLabel machine={selectedNode.machines[0]} />
                 </>
             )}
             {shownCells.map((cell) => (
