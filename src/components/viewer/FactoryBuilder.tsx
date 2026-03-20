@@ -88,9 +88,9 @@ const FactoryBuilder = () => {
     // Show children nodes for selected Line
     return (
         <>
-            {nodeGraph?.flows.map((flow) => (
-                <FlowSpline key={flow.hash} flow={flow} />
-            ))}
+            {selectedNode &&
+                isFactory(selectedNode) &&
+                nodeGraph?.flows.map((flow) => <FlowSpline key={flow.hash} flow={flow} />)}
             {nodeGraph?.areas.map((area) => (
                 <AreaBuilderItem key={area.hash} area={area} />
             ))}
