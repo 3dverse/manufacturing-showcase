@@ -10,19 +10,19 @@ servers:
   - url: /-/api/erp
 
 tags:
-  - name: ERP Master Data
+  - name: Master Data
     description: Core ERP reference data such as companies, customers, suppliers, items, and financial structures.
-  - name: ERP Sales
+  - name: Sales
     description: ERP order-to-cash entities such as sales orders and customer invoices.
-  - name: ERP Procurement
+  - name: Procurement
     description: ERP procure-to-pay entities such as purchase orders and supplier invoices.
-  - name: ERP Finance
+  - name: Finance
     description: ERP financial data such as general ledger accounts, journal entries, payments, and fiscal periods.
 
 paths:
   /companies:
     get:
-      tags: [ERP Master Data]
+      tags: [Master Data]
       summary: List companies
       description: >
         Returns the companies or legal entities managed by the ERP. Use this endpoint to
@@ -43,7 +43,7 @@ paths:
 
   /companies/{companyId}:
     get:
-      tags: [ERP Master Data]
+      tags: [Master Data]
       summary: Get company
       description: >
         Returns a single company or legal entity from the ERP, including core identifiers,
@@ -61,7 +61,7 @@ paths:
 
   /currencies:
     get:
-      tags: [ERP Master Data]
+      tags: [Master Data]
       summary: List currencies
       description: >
         Returns the currencies configured in the ERP. This endpoint is useful for validating
@@ -77,7 +77,7 @@ paths:
 
   /fiscal-periods:
     get:
-      tags: [ERP Finance]
+      tags: [Finance]
       summary: List fiscal periods
       description: >
         Returns fiscal periods defined in the ERP for financial reporting and posting control.
@@ -107,7 +107,7 @@ paths:
 
   /gl-accounts:
     get:
-      tags: [ERP Finance]
+      tags: [Finance]
       summary: List general ledger accounts
       description: >
         Returns the chart of accounts used by the ERP. This endpoint provides the account
@@ -133,7 +133,7 @@ paths:
 
   /cost-centers:
     get:
-      tags: [ERP Finance]
+      tags: [Finance]
       summary: List cost centers
       description: >
         Returns cost centers maintained in the ERP for management accounting, budgeting,
@@ -159,7 +159,7 @@ paths:
 
   /customers:
     get:
-      tags: [ERP Master Data]
+      tags: [Master Data]
       summary: List customers
       description: >
         Returns customer master data from the ERP. Use this endpoint for account, billing,
@@ -186,7 +186,7 @@ paths:
 
   /customers/{customerId}:
     get:
-      tags: [ERP Master Data]
+      tags: [Master Data]
       summary: Get customer
       description: >
         Returns a single customer record from the ERP, including billing terms, currency,
@@ -204,7 +204,7 @@ paths:
 
   /suppliers:
     get:
-      tags: [ERP Master Data]
+      tags: [Master Data]
       summary: List suppliers
       description: >
         Returns supplier or vendor master data from the ERP. Use this endpoint for
@@ -231,7 +231,7 @@ paths:
 
   /suppliers/{supplierId}:
     get:
-      tags: [ERP Master Data]
+      tags: [Master Data]
       summary: Get supplier
       description: >
         Returns a single supplier or vendor record from the ERP, including payment terms,
@@ -249,7 +249,7 @@ paths:
 
   /items:
     get:
-      tags: [ERP Master Data]
+      tags: [Master Data]
       summary: List items
       description: >
         Returns ERP item master data used across sales, procurement, valuation, and
@@ -283,7 +283,7 @@ paths:
 
   /items/{itemId}:
     get:
-      tags: [ERP Master Data]
+      tags: [Master Data]
       summary: Get item
       description: >
         Returns a single ERP item with commercial, accounting, and planning-relevant
@@ -301,7 +301,7 @@ paths:
 
   /sales-orders:
     get:
-      tags: [ERP Sales]
+      tags: [Sales]
       summary: List sales orders
       description: >
         Returns sales orders managed by the ERP. This endpoint supports order-to-cash
@@ -325,14 +325,12 @@ paths:
           in: query
           description: Return orders with orderDate on or after this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - name: orderDateTo
           in: query
           description: Return orders with orderDate on or before this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -345,7 +343,7 @@ paths:
 
   /sales-orders/{salesOrderId}:
     get:
-      tags: [ERP Sales]
+      tags: [Sales]
       summary: Get sales order
       description: >
         Returns a single sales order from the ERP, including customer, totals, currency,
@@ -363,7 +361,7 @@ paths:
 
   /purchase-orders:
     get:
-      tags: [ERP Procurement]
+      tags: [Procurement]
       summary: List purchase orders
       description: >
         Returns purchase orders managed by the ERP. This endpoint supports procure-to-pay
@@ -387,14 +385,12 @@ paths:
           in: query
           description: Return purchase orders with orderDate on or after this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - name: orderDateTo
           in: query
           description: Return purchase orders with orderDate on or before this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -407,7 +403,7 @@ paths:
 
   /purchase-orders/{purchaseOrderId}:
     get:
-      tags: [ERP Procurement]
+      tags: [Procurement]
       summary: Get purchase order
       description: >
         Returns a single purchase order from the ERP, including supplier, totals, currency,
@@ -425,7 +421,7 @@ paths:
 
   /invoices:
     get:
-      tags: [ERP Sales, ERP Procurement]
+      tags: [Sales, Procurement]
       summary: List invoices
       description: >
         Returns invoices recorded in the ERP, including both customer and supplier invoices.
@@ -450,14 +446,12 @@ paths:
           in: query
           description: Return invoices with invoiceDate on or after this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - name: invoiceDateTo
           in: query
           description: Return invoices with invoiceDate on or before this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -470,7 +464,7 @@ paths:
 
   /invoices/{invoiceId}:
     get:
-      tags: [ERP Sales, ERP Procurement]
+      tags: [Sales, Procurement]
       summary: Get invoice
       description: >
         Returns a single invoice from the ERP, including document party, dates, totals,
@@ -488,7 +482,7 @@ paths:
 
   /payments:
     get:
-      tags: [ERP Finance]
+      tags: [Finance]
       summary: List payments
       description: >
         Returns payments recorded in the ERP for receivables and payables settlement.
@@ -506,14 +500,12 @@ paths:
           in: query
           description: Return payments with paymentDate on or after this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - name: paymentDateTo
           in: query
           description: Return payments with paymentDate on or before this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -526,7 +518,7 @@ paths:
 
   /journal-entries:
     get:
-      tags: [ERP Finance]
+      tags: [Finance]
       summary: List journal entries
       description: >
         Returns journal entries posted in the ERP general ledger. Use this endpoint for
@@ -538,14 +530,12 @@ paths:
           in: query
           description: Return journal entries with postingDate on or after this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - name: postingDateTo
           in: query
           description: Return journal entries with postingDate on or before this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - name: fiscalPeriodId
           in: query
           description: Filter journal entries by fiscal period.
@@ -563,7 +553,7 @@ paths:
 
   /journal-entries/{journalEntryId}:
     get:
-      tags: [ERP Finance]
+      tags: [Finance]
       summary: Get journal entry
       description: >
         Returns a single journal entry from the ERP, including header information and
@@ -605,8 +595,7 @@ components:
       in: query
       description: Return records updated on or after this timestamp.
       schema:
-        type: string
-        format: date-time
+        type: integer
 
     CompanyId:
       name: companyId
@@ -743,8 +732,7 @@ components:
           type: string
           enum: [active, inactive]
         updatedAt:
-          type: string
-          format: date-time
+          type: integer
 
     Currency:
       type: object
@@ -772,11 +760,9 @@ components:
         periodNumber:
           type: integer
         startDate:
-          type: string
-          format: date
+          type: integer
         endDate:
-          type: string
-          format: date
+          type: integer
         status:
           type: string
           enum: [planned, open, closed]
@@ -851,8 +837,7 @@ components:
           type: string
           enum: [active, inactive, on_hold]
         updatedAt:
-          type: string
-          format: date-time
+          type: integer
 
     Supplier:
       type: object
@@ -885,8 +870,7 @@ components:
           type: string
           enum: [active, inactive, on_hold]
         updatedAt:
-          type: string
-          format: date-time
+          type: integer
 
     Item:
       type: object
@@ -919,8 +903,7 @@ components:
           type: string
           enum: [active, inactive]
         updatedAt:
-          type: string
-          format: date-time
+          type: integer
 
     SalesOrderLine:
       type: object
@@ -944,8 +927,7 @@ components:
         lineAmount:
           $ref: '#/components/schemas/Money'
         requestedDate:
-          type: string
-          format: date
+          type: integer
 
     SalesOrder:
       type: object
@@ -962,11 +944,9 @@ components:
         customerName:
           type: string
         orderDate:
-          type: string
-          format: date
+          type: integer
         requestedDeliveryDate:
-          type: string
-          format: date
+          type: integer
         currency:
           type: string
         subtotal:
@@ -978,6 +958,14 @@ components:
         status:
           type: string
           enum: [draft, confirmed, partially_fulfilled, fulfilled, invoiced, cancelled]
+        confirmedAt:
+          type: integer
+          nullable: true
+          description: Unix timestamp when the order was confirmed.
+        fulfilledAt:
+          type: integer
+          nullable: true
+          description: Unix timestamp when the order was fully fulfilled.
         lines:
           type: array
           items:
@@ -1005,8 +993,7 @@ components:
         lineAmount:
           $ref: '#/components/schemas/Money'
         expectedReceiptDate:
-          type: string
-          format: date
+          type: integer
 
     PurchaseOrder:
       type: object
@@ -1023,8 +1010,7 @@ components:
         supplierName:
           type: string
         orderDate:
-          type: string
-          format: date
+          type: integer
         currency:
           type: string
         subtotal:
@@ -1036,6 +1022,14 @@ components:
         status:
           type: string
           enum: [draft, approved, partially_received, received, invoiced, cancelled]
+        approvedAt:
+          type: integer
+          nullable: true
+          description: Unix timestamp when the purchase order was approved.
+        receivedAt:
+          type: integer
+          nullable: true
+          description: Unix timestamp when the purchase order was fully received.
         lines:
           type: array
           items:
@@ -1081,11 +1075,9 @@ components:
         partyName:
           type: string
         invoiceDate:
-          type: string
-          format: date
+          type: integer
         dueDate:
-          type: string
-          format: date
+          type: integer
         currency:
           type: string
         subtotal:
@@ -1124,8 +1116,7 @@ components:
         invoiceId:
           type: string
         paymentDate:
-          type: string
-          format: date
+          type: integer
         method:
           type: string
           enum: [bank_transfer, card, check, cash, other]
@@ -1173,11 +1164,9 @@ components:
         journalNumber:
           type: string
         postingDate:
-          type: string
-          format: date
+          type: integer
         documentDate:
-          type: string
-          format: date
+          type: integer
         fiscalPeriodId:
           type: string
         sourceDocumentType:

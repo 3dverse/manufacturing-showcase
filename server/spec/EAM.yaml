@@ -11,23 +11,23 @@ servers:
   - url: /-/api/eam
 
 tags:
-  - name: EAM Assets
+  - name: Assets
     description: Equipment and maintainable asset master data.
-  - name: EAM Locations
+  - name: Locations
     description: Functional or physical locations used to organize assets.
-  - name: EAM Work Orders
+  - name: Work Orders
     description: Maintenance work orders and their execution details.
-  - name: EAM Maintenance Plans
+  - name: Maintenance Plans
     description: Preventive or recurring maintenance plans and generated schedules.
-  - name: EAM Service Requests
+  - name: Service Requests
     description: Reported maintenance needs awaiting review or execution.
-  - name: EAM Inspections
+  - name: Inspections
     description: Inspection records and results tied to assets or locations.
 
 paths:
   /assets:
     get:
-      tags: [EAM Assets]
+      tags: [Assets]
       summary: List assets
       description: >
         Returns maintainable assets managed in EAM, including equipment identity,
@@ -71,7 +71,7 @@ paths:
 
   /assets/{assetId}:
     get:
-      tags: [EAM Assets]
+      tags: [Assets]
       summary: Get asset by ID
       description: >
         Returns the full EAM record for a single asset, including identifying,
@@ -89,7 +89,7 @@ paths:
 
   /assets/{assetId}/history:
     get:
-      tags: [EAM Assets]
+      tags: [Assets]
       summary: Get asset maintenance history
       description: >
         Returns historical maintenance activity for an asset, including completed
@@ -102,14 +102,12 @@ paths:
           in: query
           description: Return history on or after this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - name: toDate
           in: query
           description: Return history on or before this date.
           schema:
-            type: string
-            format: date
+            type: integer
       responses:
         '200':
           description: Asset maintenance history
@@ -120,7 +118,7 @@ paths:
 
   /locations:
     get:
-      tags: [EAM Locations]
+      tags: [Locations]
       summary: List locations
       description: >
         Returns functional or physical locations used in EAM to structure assets,
@@ -149,7 +147,7 @@ paths:
 
   /locations/{locationId}:
     get:
-      tags: [EAM Locations]
+      tags: [Locations]
       summary: Get location by ID
       description: >
         Returns a single EAM location record, including hierarchy and descriptive
@@ -167,7 +165,7 @@ paths:
 
   /work-orders:
     get:
-      tags: [EAM Work Orders]
+      tags: [Work Orders]
       summary: List work orders
       description: >
         Returns maintenance work orders created to inspect, repair, service, or
@@ -205,14 +203,12 @@ paths:
           in: query
           description: Return work orders scheduled on or after this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - name: scheduledTo
           in: query
           description: Return work orders scheduled on or before this date.
           schema:
-            type: string
-            format: date
+            type: integer
       responses:
         '200':
           description: Work order list
@@ -223,7 +219,7 @@ paths:
 
   /work-orders/{workOrderId}:
     get:
-      tags: [EAM Work Orders]
+      tags: [Work Orders]
       summary: Get work order by ID
       description: >
         Returns the full maintenance work order record, including scope, status,
@@ -241,7 +237,7 @@ paths:
 
   /work-orders/{workOrderId}/operations:
     get:
-      tags: [EAM Work Orders]
+      tags: [Work Orders]
       summary: Get work order operations
       description: >
         Returns the ordered maintenance operations or task steps defined within a
@@ -259,7 +255,7 @@ paths:
 
   /maintenance-plans:
     get:
-      tags: [EAM Maintenance Plans]
+      tags: [Maintenance Plans]
       summary: List maintenance plans
       description: >
         Returns preventive and recurring maintenance plans used to define service
@@ -293,7 +289,7 @@ paths:
 
   /maintenance-plans/{planId}:
     get:
-      tags: [EAM Maintenance Plans]
+      tags: [Maintenance Plans]
       summary: Get maintenance plan by ID
       description: >
         Returns a single maintenance plan, including recurrence logic, target
@@ -311,7 +307,7 @@ paths:
 
   /maintenance-plans/{planId}/schedules:
     get:
-      tags: [EAM Maintenance Plans]
+      tags: [Maintenance Plans]
       summary: Get maintenance plan schedules
       description: >
         Returns generated or projected maintenance schedule occurrences for a
@@ -323,14 +319,12 @@ paths:
           in: query
           description: Return schedule occurrences on or after this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - name: toDate
           in: query
           description: Return schedule occurrences on or before this date.
           schema:
-            type: string
-            format: date
+            type: integer
       responses:
         '200':
           description: Maintenance schedule occurrences
@@ -341,7 +335,7 @@ paths:
 
   /service-requests:
     get:
-      tags: [EAM Service Requests]
+      tags: [Service Requests]
       summary: List service requests
       description: >
         Returns reported maintenance issues, service needs, or repair requests
@@ -369,14 +363,12 @@ paths:
           in: query
           description: Return requests created on or after this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - name: requestedTo
           in: query
           description: Return requests created on or before this date.
           schema:
-            type: string
-            format: date
+            type: integer
       responses:
         '200':
           description: Service request list
@@ -387,7 +379,7 @@ paths:
 
   /service-requests/{requestId}:
     get:
-      tags: [EAM Service Requests]
+      tags: [Service Requests]
       summary: Get service request by ID
       description: >
         Returns a single service request, including reported issue details,
@@ -405,7 +397,7 @@ paths:
 
   /inspections:
     get:
-      tags: [EAM Inspections]
+      tags: [Inspections]
       summary: List inspections
       description: >
         Returns inspection records performed on assets or locations to capture
@@ -433,14 +425,12 @@ paths:
           in: query
           description: Return inspections performed on or after this date.
           schema:
-            type: string
-            format: date
+            type: integer
         - name: inspectionTo
           in: query
           description: Return inspections performed on or before this date.
           schema:
-            type: string
-            format: date
+            type: integer
       responses:
         '200':
           description: Inspection list
@@ -451,7 +441,7 @@ paths:
 
   /inspections/{inspectionId}:
     get:
-      tags: [EAM Inspections]
+      tags: [Inspections]
       summary: Get inspection by ID
       description: >
         Returns a single inspection record, including execution date, target
@@ -575,8 +565,7 @@ components:
         model:
           type: string
         commissioningDate:
-          type: string
-          format: date
+          type: integer
         parentAssetId:
           type: string
           nullable: true
@@ -593,11 +582,9 @@ components:
         meterUnit:
           type: string
         createdAt:
-          type: string
-          format: date-time
+          type: integer
         updatedAt:
-          type: string
-          format: date-time
+          type: integer
 
     AssetHistoryEvent:
       type: object
@@ -608,8 +595,7 @@ components:
           type: string
           description: Type of maintenance event such as workOrder, inspection, or breakdown.
         eventDate:
-          type: string
-          format: date-time
+          type: integer
         referenceId:
           type: string
         summary:
@@ -636,11 +622,9 @@ components:
         status:
           type: string
         createdAt:
-          type: string
-          format: date-time
+          type: integer
         updatedAt:
-          type: string
-          format: date-time
+          type: integer
 
     WorkOrder:
       type: object
@@ -669,21 +653,24 @@ components:
         serviceRequestId:
           type: string
           nullable: true
+        mesProductionOrderId:
+          type: string
+          nullable: true
+          description: MES production order that was running when this work order was raised.
+        mesDowntimeEventId:
+          type: string
+          nullable: true
+          description: MES downtime event that triggered this work order.
         requestedStart:
-          type: string
-          format: date-time
+          type: integer
         scheduledStart:
-          type: string
-          format: date-time
+          type: integer
         scheduledEnd:
-          type: string
-          format: date-time
+          type: integer
         actualStart:
-          type: string
-          format: date-time
+          type: integer
         actualEnd:
-          type: string
-          format: date-time
+          type: integer
         plannerGroup:
           type: string
         assignedTeam:
@@ -697,11 +684,9 @@ components:
         summaryNotes:
           type: string
         createdAt:
-          type: string
-          format: date-time
+          type: integer
         updatedAt:
-          type: string
-          format: date-time
+          type: integer
 
     WorkOrderOperation:
       type: object
@@ -749,26 +734,21 @@ components:
         frequencyUnit:
           type: string
         nextDueDate:
-          type: string
-          format: date
+          type: integer
         nextDueMeter:
           type: number
           format: double
         workTemplateCode:
           type: string
         effectiveFrom:
-          type: string
-          format: date
+          type: integer
         effectiveTo:
-          type: string
-          format: date
+          type: integer
           nullable: true
         createdAt:
-          type: string
-          format: date-time
+          type: integer
         updatedAt:
-          type: string
-          format: date-time
+          type: integer
 
     MaintenanceSchedule:
       type: object
@@ -778,8 +758,7 @@ components:
         maintenancePlanId:
           type: string
         dueDate:
-          type: string
-          format: date
+          type: integer
         dueMeter:
           type: number
           format: double
@@ -814,14 +793,12 @@ components:
         requestedBy:
           type: string
         requestedAt:
-          type: string
-          format: date-time
+          type: integer
         linkedWorkOrderId:
           type: string
           nullable: true
         updatedAt:
-          type: string
-          format: date-time
+          type: integer
 
     Inspection:
       type: object
@@ -839,8 +816,7 @@ components:
           type: string
           nullable: true
         inspectionDate:
-          type: string
-          format: date-time
+          type: integer
         inspector:
           type: string
         result:
@@ -853,8 +829,7 @@ components:
           type: string
           nullable: true
         updatedAt:
-          type: string
-          format: date-time
+          type: integer
 
     AssetListResponse:
       type: object

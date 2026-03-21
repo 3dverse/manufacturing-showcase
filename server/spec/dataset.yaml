@@ -1,0 +1,24 @@
+openapi: 3.1.0
+info:
+  title: Dataset API
+  version: 0.0.1
+  description: >
+    nope
+servers:
+  - url: /-/api/dataset
+
+tags:
+  - name: DATASET
+    description: Manufacturing execution visibility endpoints
+
+paths:
+  /generate:
+    get:
+      tags: [MES]
+      operationId: generateDataset
+      summary: generate dataset
+      description: >
+        endpoint for generating datasets
+      responses:
+        '200':
+          description: Successful response containing production orders.

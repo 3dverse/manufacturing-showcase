@@ -253,15 +253,6 @@ function hashEntity(entity: Entity): string {
 }
 
 //------------------------------------------------------------------------------
-export const sortAreas = (a: AreaNode, b: AreaNode, order: string[]) => {
-    const indexOf = (category: string) => {
-        const i = order.findIndex((s) => s.toLowerCase() === category.toLowerCase());
-        return i === -1 ? Infinity : i;
-    };
-    return indexOf(a.name) - indexOf(b.name);
-};
-
-//------------------------------------------------------------------------------
 export const sortNode = (a: NavGraphNode, b: NavGraphNode) => {
     if (!a.entity.lineage) return -1;
     if (!b.entity.lineage) return 1;

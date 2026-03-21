@@ -46,14 +46,12 @@ paths:
           in: query
           description: Return orders scheduled on or after this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: scheduledTo
           in: query
           description: Return orders scheduled on or before this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -276,14 +274,12 @@ paths:
           in: query
           description: Return events occurring on or after this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: occurredTo
           in: query
           description: Return events occurring on or before this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -319,14 +315,12 @@ paths:
           in: query
           description: Return downtime events starting on or after this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: startedTo
           in: query
           description: Return downtime events starting on or before this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -363,14 +357,12 @@ paths:
           in: query
           description: Start of the reporting window.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: to
           in: query
           description: End of the reporting window.
           schema:
-            type: string
-            format: date-time
+            type: integer
       responses:
         '200':
           description: Successful response containing MES performance metrics.
@@ -473,6 +465,11 @@ components:
         uom:
           type: string
           example: pcs
+        outputLotNumbers:
+          type: array
+          items:
+            type: string
+          description: Lot numbers produced by this operation or order.
       required:
         - plannedQuantity
         - producedQuantity
@@ -485,17 +482,13 @@ components:
       additionalProperties: false
       properties:
         scheduledStart:
-          type: string
-          format: date-time
+          type: integer
         scheduledEnd:
-          type: string
-          format: date-time
+          type: integer
         actualStart:
-          type: string
-          format: date-time
+          type: integer
         actualEnd:
-          type: string
-          format: date-time
+          type: integer
       required: [scheduledStart, scheduledEnd]
 
     ProductionOrder:
@@ -526,6 +519,14 @@ components:
         workCenterId:
           type: string
           example: WC-ASM-01
+        erpSalesOrderId:
+          type: string
+          nullable: true
+          description: ERP sales order that originated this production order.
+        apsPlanId:
+          type: string
+          nullable: true
+          description: APS plan that scheduled this production order.
         quantities:
           $ref: '#/components/schemas/QuantitySummary'
         timing:
@@ -586,6 +587,10 @@ components:
         workCenterId:
           type: string
           example: WC-ASM-01
+        eamAssetId:
+          type: string
+          nullable: true
+          description: EAM asset (physical machine) executing this operation.
         plannedSetupTimeMinutes:
           type: number
           format: double
@@ -620,17 +625,13 @@ components:
           additionalProperties: false
           properties:
             scheduledStart:
-              type: string
-              format: date-time
+              type: integer
             scheduledEnd:
-              type: string
-              format: date-time
+              type: integer
             actualStart:
-              type: string
-              format: date-time
+              type: integer
             actualEnd:
-              type: string
-              format: date-time
+              type: integer
             progressPercent:
               type: number
               format: double
@@ -732,8 +733,7 @@ components:
           type: integer
           example: 10
         recommendedStart:
-          type: string
-          format: date-time
+          type: integer
         itemCode:
           type: string
           example: FG-100045
@@ -765,8 +765,7 @@ components:
           type: string
           example: PLANT-01
         occurredAt:
-          type: string
-          format: date-time
+          type: integer
         eventType:
           type: string
           enum:
@@ -797,6 +796,20 @@ components:
         reasonCode:
           type: string
           nullable: true
+        lotNumber:
+          type: string
+          nullable: true
+          description: Lot number produced or scrapped (populated on quantity_reported and scrap_reported events).
+        serialNumbers:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Serial numbers produced or scrapped (for serial-tracked items).
+        defectCode:
+          type: string
+          nullable: true
+          description: Defect classification code for scrap_reported events (e.g. DIMENSIONAL_OOT, NO_POWER).
         message:
           type: string
           example: Operator reported 40 good pieces.
@@ -820,11 +833,9 @@ components:
           type: string
           example: WC-ASM-01
         startedAt:
-          type: string
-          format: date-time
+          type: integer
         endedAt:
-          type: string
-          format: date-time
+          type: integer
           nullable: true
         durationMinutes:
           type: number
@@ -864,11 +875,9 @@ components:
           type: string
           nullable: true
         from:
-          type: string
-          format: date-time
+          type: integer
         to:
-          type: string
-          format: date-time
+          type: integer
         producedQuantity:
           type: number
           format: double

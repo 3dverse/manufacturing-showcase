@@ -7,13 +7,14 @@ import { MethodNotAllowed, NotImplemented, ValidationFail } from "./utils/openAP
 import { ApiTag, operations } from "./operations";
 
 //------------------------------------------------------------------------------
-export const apiConfigs: { name: ApiTag; spec: string; prefix: string }[] = [
-    { name: ApiTag.APS, spec: "./server/spec/APS.yaml", prefix: "/aps" },
-    { name: ApiTag.EAM, spec: "./server/spec/EAM.yaml", prefix: "/eam" },
-    { name: ApiTag.ERP, spec: "./server/spec/ERP.yaml", prefix: "/erp" },
-    { name: ApiTag.MES, spec: "./server/spec/MES.yaml", prefix: "/mes" },
-    { name: ApiTag.QMS, spec: "./server/spec/QMS.yaml", prefix: "/qms" },
-    { name: ApiTag.WMS, spec: "./server/spec/WMS.yaml", prefix: "/wms" },
+export const apiConfigs: { name: ApiTag; spec: string; prefix: string; docs?: boolean }[] = [
+    { name: ApiTag.APS, spec: "./server/spec/APS.yaml", prefix: "/aps", docs: true },
+    { name: ApiTag.EAM, spec: "./server/spec/EAM.yaml", prefix: "/eam", docs: true },
+    { name: ApiTag.ERP, spec: "./server/spec/ERP.yaml", prefix: "/erp", docs: true },
+    { name: ApiTag.MES, spec: "./server/spec/MES.yaml", prefix: "/mes", docs: true },
+    { name: ApiTag.QMS, spec: "./server/spec/QMS.yaml", prefix: "/qms", docs: true },
+    { name: ApiTag.WMS, spec: "./server/spec/WMS.yaml", prefix: "/wms", docs: true },
+    { name: ApiTag.DATASET, spec: "./server/spec/dataset.yaml", prefix: "/dataset" },
 ];
 
 //------------------------------------------------------------------------------
@@ -26,7 +27,7 @@ const customizeAjv: AjvCustomizer = (ajv) => {
     return ajv;
 };
 //------------------------------------------------------------------------------
-export const apis = apiConfigs.map(({ name, spec, prefix }) => {
+export const apis = apiConfigs.map(({ name, spec, prefix, docs }) => {
     const api = new OpenAPIBackend({
         definition: spec,
         apiRoot: prefix,
@@ -37,7 +38,7 @@ export const apis = apiConfigs.map(({ name, spec, prefix }) => {
     api.register("methodNotAllowed", MethodNotAllowed);
     api.register(operations[name]);
     api.init();
-    return { name, prefix, api };
+    return { name, prefix, api, docs };
 });
 
 //------------------------------------------------------------------------------

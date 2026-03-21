@@ -494,14 +494,11 @@ components:
           type: string
           enum: [draft, generated, approved, archived]
         planningStart:
-          type: string
-          format: date-time
+          type: integer
         planningEnd:
-          type: string
-          format: date-time
+          type: integer
         generatedAt:
-          type: string
-          format: date-time
+          type: integer
       required: [id, name, scenarioId, status, planningStart, planningEnd, generatedAt]
 
     ApsPlanDetail:
@@ -540,17 +537,19 @@ components:
         sequence:
           type: integer
         plannedStart:
-          type: string
-          format: date-time
+          type: integer
         plannedEnd:
-          type: string
-          format: date-time
+          type: integer
         quantity:
           type: number
           format: double
         status:
           type: string
           enum: [scheduled, partially_scheduled, unscheduled]
+        mesProductionOrderId:
+          type: string
+          nullable: true
+          description: MES production order that executed this scheduled operation (populated post-execution).
       required:
         [id, planId, operationCode, itemId, resourceId, sequence, plannedStart, plannedEnd, quantity, status]
 
@@ -562,11 +561,9 @@ components:
         resourceId:
           type: string
         bucketStart:
-          type: string
-          format: date-time
+          type: integer
         bucketEnd:
-          type: string
-          format: date-time
+          type: integer
         availableCapacity:
           type: number
           format: double
@@ -591,11 +588,9 @@ components:
         siteId:
           type: string
         bucketStart:
-          type: string
-          format: date-time
+          type: integer
         bucketEnd:
-          type: string
-          format: date-time
+          type: integer
         projectedAvailableQuantity:
           type: number
           format: double
@@ -674,8 +669,7 @@ components:
             objective:
               type: string
             createdAt:
-              type: string
-              format: date-time
+              type: integer
 
     ApsResource:
       type: object
@@ -713,11 +707,9 @@ components:
         resourceId:
           type: string
         bucketStart:
-          type: string
-          format: date-time
+          type: integer
         bucketEnd:
-          type: string
-          format: date-time
+          type: integer
         plannedLoad:
           type: number
           format: double
@@ -740,8 +732,7 @@ components:
         siteId:
           type: string
         dueDate:
-          type: string
-          format: date-time
+          type: integer
         quantity:
           type: number
           format: double
@@ -787,8 +778,7 @@ components:
           type: number
           format: double
         availableDate:
-          type: string
-          format: date-time
+          type: integer
       required: [id, planId, itemId, siteId, supplyType, quantity, availableDate]
 
     ApsSupplyDetail:

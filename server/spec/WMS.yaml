@@ -406,6 +406,54 @@ paths:
                       $ref: '#/components/schemas/CycleCount'
                 required: [data]
 
+  /inventory-movements:
+    get:
+      tags: [WMS Inventory]
+      operationId: getInventoryMovements
+      summary: List inventory movements
+      description: |
+        Returns a chronological log of inventory movements recorded by the WMS. Each record
+        represents a discrete stock transaction such as a receipt, putaway, pick, shipment,
+        transfer, or count adjustment. Use this endpoint for lot and serial traceability,
+        timeline reconstruction, and inventory audit purposes.
+      parameters:
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/ItemIdQuery'
+        - $ref: '#/components/parameters/LotNumberQuery'
+        - $ref: '#/components/parameters/SerialNumberQuery'
+        - name: movementType
+          in: query
+          required: false
+          description: Filter by movement type.
+          schema:
+            type: string
+            enum: [receipt, putaway, pick, shipment, transfer, count_adjustment, return]
+        - name: fromDate
+          in: query
+          required: false
+          description: Return movements occurring on or after this Unix timestamp.
+          schema:
+            type: integer
+        - name: toDate
+          in: query
+          required: false
+          description: Return movements occurring on or before this Unix timestamp.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Inventory movement list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryMovement'
+                required: [data]
+
 components:
   parameters:
     WarehouseIdPath:
@@ -510,8 +558,7 @@ components:
       required: false
       description: Filter results on or after this date.
       schema:
-        type: string
-        format: date
+        type: integer
 
     ToDateQuery:
       name: toDate
@@ -519,8 +566,7 @@ components:
       required: false
       description: Filter results on or before this date.
       schema:
-        type: string
-        format: date
+        type: integer
 
   schemas:
     Warehouse:
@@ -636,8 +682,7 @@ components:
           type: string
           description: Warehouse inventory state.
         lastMovementAt:
-          type: string
-          format: date-time
+          type: integer
           description: Timestamp of the most recent warehouse movement affecting the position.
       required:
         - warehouseId
@@ -728,8 +773,7 @@ components:
           type: string
           description: Warehouse where the lot is present.
         expirationDate:
-          type: string
-          format: date
+          type: integer
           nullable: true
           description: Lot expiration date when maintained.
         quantityOnHand:
@@ -779,13 +823,16 @@ components:
           type: string
           description: Current receipt status.
         receivedAt:
-          type: string
-          format: date-time
+          type: integer
           description: Timestamp when receipt was recorded in the warehouse.
         dockLocationId:
           type: string
           nullable: true
           description: Receiving dock or staging location associated with the receipt.
+        erpPurchaseOrderId:
+          type: string
+          nullable: true
+          description: ERP purchase order fulfilled by this receipt.
         lineCount:
           type: integer
           description: Number of item lines in the receipt.
@@ -822,8 +869,7 @@ components:
           nullable: true
           description: Intended storage destination.
         createdAt:
-          type: string
-          format: date-time
+          type: integer
           description: Task creation timestamp.
       required:
         - id
@@ -870,8 +916,7 @@ components:
           nullable: true
           description: Associated outbound shipment when applicable.
         createdAt:
-          type: string
-          format: date-time
+          type: integer
           description: Task creation timestamp.
       required:
         - id
@@ -900,14 +945,17 @@ components:
           type: string
           description: Current shipment status within warehouse execution.
         shipDate:
-          type: string
-          format: date
+          type: integer
           nullable: true
           description: Planned or actual shipment date.
         stagingLocationId:
           type: string
           nullable: true
           description: Staging or loading location associated with the shipment.
+        erpSalesOrderId:
+          type: string
+          nullable: true
+          description: ERP sales order fulfilled by this shipment.
         lineCount:
           type: integer
           description: Number of shipment lines.
@@ -930,13 +978,11 @@ components:
           type: string
           description: Count classification such as CYCLE, LOCATION, or ITEM.
         scheduledDate:
-          type: string
-          format: date
+          type: integer
           nullable: true
           description: Scheduled date for the count.
         completedAt:
-          type: string
-          format: date-time
+          type: integer
           nullable: true
           description: Completion timestamp when the count is finished.
         varianceLineCount:
@@ -962,3 +1008,72 @@ components:
         country:
           type: string
       required: [line1, city, state, postalCode, country]
+
+    InventoryMovement:
+      type: object
+      description: A discrete inventory transaction recorded by the WMS.
+      properties:
+        id:
+          type: string
+          description: Unique movement identifier.
+        warehouseId:
+          type: string
+          description: Warehouse where the movement occurred.
+        occurredAt:
+          type: integer
+          description: Unix timestamp when the movement was recorded.
+        movementType:
+          type: string
+          description: Classification of the inventory movement.
+          enum: [receipt, putaway, pick, shipment, transfer, count_adjustment, return]
+        itemId:
+          type: string
+          description: Inventory item affected.
+        lotNumber:
+          type: string
+          nullable: true
+          description: Lot number when the item is lot-controlled.
+        serialNumber:
+          type: string
+          nullable: true
+          description: Serial number when the item is serial-controlled.
+        quantity:
+          type: number
+          format: double
+          description: Quantity moved. Negative for outbound or consumption movements.
+        uom:
+          type: string
+          description: Quantity unit of measure.
+        fromLocationId:
+          type: string
+          nullable: true
+          description: Source location, if applicable.
+        toLocationId:
+          type: string
+          nullable: true
+          description: Destination location, if applicable.
+        sourceDocumentType:
+          type: string
+          nullable: true
+          description: Type of the document that triggered this movement.
+          enum: [receipt, putaway_task, pick_task, shipment, cycle_count, transfer_order]
+        sourceDocumentId:
+          type: string
+          nullable: true
+          description: ID of the source document that triggered this movement.
+        erpPurchaseOrderId:
+          type: string
+          nullable: true
+          description: ERP purchase order associated with this movement, if applicable.
+        erpSalesOrderId:
+          type: string
+          nullable: true
+          description: ERP sales order associated with this movement, if applicable.
+      required:
+        - id
+        - warehouseId
+        - occurredAt
+        - movementType
+        - itemId
+        - quantity
+        - uom

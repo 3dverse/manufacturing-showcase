@@ -54,14 +54,12 @@ paths:
           in: query
           description: Return records detected on or after this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: detectedTo
           in: query
           description: Return records detected on or before this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
       responses:
         '200':
           description: Paginated list of nonconformances.
@@ -127,14 +125,12 @@ paths:
           in: query
           description: Return CAPAs due on or after this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: dueTo
           in: query
           description: Return CAPAs due on or before this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
       responses:
         '200':
           description: Paginated list of CAPAs.
@@ -196,14 +192,12 @@ paths:
           in: query
           description: Return deviations raised on or after this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: raisedTo
           in: query
           description: Return deviations raised on or before this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
       responses:
         '200':
           description: Paginated list of deviations.
@@ -259,14 +253,12 @@ paths:
           in: query
           description: Return audits scheduled on or after this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: scheduledTo
           in: query
           description: Return audits scheduled on or before this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: leadAuditor
           in: query
           description: Filter by lead auditor identifier.
@@ -326,14 +318,12 @@ paths:
           in: query
           description: Return complaints received on or after this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: receivedTo
           in: query
           description: Return complaints received on or before this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: productCode
           in: query
           description: Filter by affected product code.
@@ -399,14 +389,12 @@ paths:
           in: query
           description: Return documents effective on or after this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: effectiveTo
           in: query
           description: Return documents effective on or before this timestamp.
           schema:
-            type: string
-            format: date-time
+            type: integer
       responses:
         '200':
           description: Paginated list of controlled quality documents.
@@ -448,15 +436,13 @@ paths:
           required: true
           description: Start of the reporting period.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: periodEnd
           in: query
           required: true
           description: End of the reporting period.
           schema:
-            type: string
-            format: date-time
+            type: integer
         - name: granularity
           in: query
           description: Grouping interval for trend series.
@@ -547,15 +533,18 @@ components:
         totalPages:
           type: integer
 
-    LinkRef:
+    EntityRef:
       type: object
-      required: [id, type]
+      required: [system, type, id]
       properties:
-        id:
+        system:
           type: string
+          enum: [erp, mes, wms, eam, aps, qms]
         type:
           type: string
-          enum: [nonconformance, capa, deviation, audit, complaint, document]
+          description: Entity type within the referenced system (e.g. productionOrder, operation, asset, salesOrder, nonconformance).
+        id:
+          type: string
 
     Nonconformance:
       type: object
@@ -590,13 +579,33 @@ components:
         batchLot:
           type: string
         detectedAt:
-          type: string
-          format: date-time
+          type: integer
         detectedBy:
           type: string
         disposition:
           type: string
           enum: [use_as_is, rework, scrap, return_to_supplier, segregate, other]
+        mesProductionOrderId:
+          type: string
+          nullable: true
+          description: MES production order during which this nonconformance was detected.
+        mesOperationId:
+          type: string
+          nullable: true
+          description: MES operation step implicated in this nonconformance.
+        eamAssetId:
+          type: string
+          nullable: true
+          description: EAM asset (machine) associated with this nonconformance.
+        defectCode:
+          type: string
+          nullable: true
+          description: Specific defect classification code (e.g. DIMENSIONAL_OOT, NO_POWER).
+        affectedQuantity:
+          type: number
+          format: double
+          nullable: true
+          description: Number of units affected by this specific defect.
         containmentActions:
           type: array
           items:
@@ -604,7 +613,7 @@ components:
         linkedRecords:
           type: array
           items:
-            $ref: '#/components/schemas/LinkRef'
+            $ref: '#/components/schemas/EntityRef'
 
     NonconformanceListResponse:
       type: object
@@ -646,23 +655,19 @@ components:
           type: string
           enum: [low, medium, high, critical]
         sourceRecord:
-          $ref: '#/components/schemas/LinkRef'
+          $ref: '#/components/schemas/EntityRef'
         rootCause:
           type: string
         owner:
           type: string
         openedAt:
-          type: string
-          format: date-time
+          type: integer
         dueAt:
-          type: string
-          format: date-time
+          type: integer
         effectivenessCheckAt:
-          type: string
-          format: date-time
+          type: integer
         closedAt:
-          type: string
-          format: date-time
+          type: integer
         actions:
           type: array
           items:
@@ -707,8 +712,7 @@ components:
           type: string
           enum: [low, medium, high, critical]
         raisedAt:
-          type: string
-          format: date-time
+          type: integer
         raisedBy:
           type: string
         affectedArea:
@@ -722,7 +726,7 @@ components:
         linkedRecords:
           type: array
           items:
-            $ref: '#/components/schemas/LinkRef'
+            $ref: '#/components/schemas/EntityRef'
 
     DeviationListResponse:
       type: object
@@ -766,14 +770,11 @@ components:
           items:
             type: string
         scheduledStart:
-          type: string
-          format: date-time
+          type: integer
         scheduledEnd:
-          type: string
-          format: date-time
+          type: integer
         completedAt:
-          type: string
-          format: date-time
+          type: integer
         result:
           type: string
           enum: [compliant, minor_findings, major_findings, critical_findings, not_applicable]
@@ -782,7 +783,7 @@ components:
         linkedRecords:
           type: array
           items:
-            $ref: '#/components/schemas/LinkRef'
+            $ref: '#/components/schemas/EntityRef'
 
     AuditListResponse:
       type: object
@@ -825,18 +826,25 @@ components:
         batchLot:
           type: string
         receivedAt:
-          type: string
-          format: date-time
+          type: integer
         reportedBy:
           type: string
         investigationSummary:
           type: string
         resolutionSummary:
           type: string
+        mesProductionOrderId:
+          type: string
+          nullable: true
+          description: MES production order that produced the affected material.
+        eamAssetId:
+          type: string
+          nullable: true
+          description: EAM asset (machine) associated with this complaint.
         linkedRecords:
           type: array
           items:
-            $ref: '#/components/schemas/LinkRef'
+            $ref: '#/components/schemas/EntityRef'
 
     ComplaintListResponse:
       type: object
@@ -861,11 +869,9 @@ components:
         approvedBy:
           type: string
         approvedAt:
-          type: string
-          format: date-time
+          type: integer
         effectiveAt:
-          type: string
-          format: date-time
+          type: integer
         changeSummary:
           type: string
 
@@ -898,11 +904,9 @@ components:
         currentRevision:
           type: string
         effectiveAt:
-          type: string
-          format: date-time
+          type: integer
         reviewDueAt:
-          type: string
-          format: date-time
+          type: integer
         revisions:
           type: array
           items:
@@ -924,11 +928,9 @@ components:
       required: [periodStart, periodEnd, value]
       properties:
         periodStart:
-          type: string
-          format: date-time
+          type: integer
         periodEnd:
-          type: string
-          format: date-time
+          type: integer
         value:
           type: number
 
@@ -945,11 +947,9 @@ components:
         - capaOnTimeClosureRate
       properties:
         periodStart:
-          type: string
-          format: date-time
+          type: integer
         periodEnd:
-          type: string
-          format: date-time
+          type: integer
         openNonconformances:
           type: integer
         openCapas:

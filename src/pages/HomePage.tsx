@@ -6,6 +6,7 @@ import { FactoriesContext } from "@/contexts/FactoriesContext";
 //------------------------------------------------------------------------------
 import { FactoryItem } from "@/components/nodes/factory/FactoryItem";
 import { MES } from "@/core/APIs";
+import { DATASET } from "@/core/APIs";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -19,6 +20,9 @@ export default function HomePage() {
         // TODO: remove just and example
         MES.getOperation({ operationId: "asd" }).then((resp) => {
             console.log(resp);
+        });
+        DATASET.generateDataset().then(() => {
+            console.log("generated");
         });
     }, []);
 

@@ -40,6 +40,12 @@ import type {
     OperationHandlerResponse as WMSOperationHandlerResponse,
     Operations as WMSOperations,
 } from "../../../_prebuild/api-types/wms";
+import type {
+    HandlerResponse as DatasetHandlerResponse,
+    OperationContext as DatasetOperationContext,
+    OperationHandlerResponse as DatasetOperationHandlerResponse,
+    Operations as DatasetOperations,
+} from "../../../_prebuild/api-types/dataset";
 
 //------------------------------------------------------------------------------
 export type APSOperationHandler<operationId extends keyof APSOperations> = (
@@ -128,6 +134,25 @@ export const WMSreplyJSON = <T>(json: T, res: ExpressResponse, statusCode: numbe
     // If HandlerResponse<T> === ExpressResponse, this is perfect.
     // If not, you can `return res.status(statusCode).json(json) as unknown as HandlerResponse<T>;`
     return res.status(statusCode).json(json) as unknown as WMSHandlerResponse<T>;
+};
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+export type DatasetOperationHandler<operationId extends keyof DatasetOperations> = (
+    c: DatasetOperationContext<keyof DatasetOperations>,
+    req: ExpressRequest,
+    res: ExpressResponse,
+) => Promise<DatasetOperationHandlerResponse<operationId>>;
+
+//------------------------------------------------------------------------------
+export const DatasetreplyJSON = <T>(
+    json: T,
+    res: ExpressResponse,
+    statusCode: number = 200,
+): DatasetHandlerResponse<T> => {
+    // If HandlerResponse<T> === ExpressResponse, this is perfect.
+    // If not, you can `return res.status(statusCode).json(json) as unknown as HandlerResponse<T>;`
+    return res.status(statusCode).json(json) as unknown as DatasetHandlerResponse<T>;
 };
 
 //------------------------------------------------------------------------------

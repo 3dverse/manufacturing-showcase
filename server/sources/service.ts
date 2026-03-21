@@ -46,7 +46,11 @@ export async function startService(): Promise<Service> {
 
     //--------------------------------------------------------------------------
     // Expose the documentation
-    const urls = apiConfigs.map(({ name }) => ({ name, url: `/-/specs/${name}.yaml` }));
+    const urls = apiConfigs.reduce((acc: { name: string; url: string }[], conf) => {
+        conf.docs && acc.push({ name: conf.name, url: `/-/specs/${conf.name}.yaml` });
+        return acc;
+    }, []);
+
     const options = {
         explorer: true,
         swaggerOptions: { urls, "urls.primaryName": "ERP", queryConfigEnabled: false },
