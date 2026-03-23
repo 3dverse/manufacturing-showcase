@@ -28,6 +28,7 @@ import { NodeTypes } from "@/content/enums";
 import { useNavNode } from "../navigation/hooks";
 import { FactoryOrderPanel } from "../orders/FactoryOrderPanel";
 import { orders } from "@/content/orders";
+import { UnitOutPanel } from "./DOM3D/UnitOutPanel";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -78,6 +79,8 @@ const FactoryBuilder = () => {
                 return selectedNode.cells;
             case NodeTypes.line:
                 return selectedNode.cells;
+            case NodeTypes.cell:
+                return [selectedNode];
             default:
                 return [];
         }
@@ -134,16 +137,21 @@ const LineBuilderItem = ({ line }: { line: LineNode }) => {
 const CellBuilderItem = ({ cell }: { cell: CellNode }) => {
     //--------------------------------------------------------------------------
     // Render
-    if (isArea(cell.parent)) {
-        return (
-            <>
-                <FloorRegion node={cell} />
-                <NodeSummary node={cell} />
-            </>
-        );
-    } else {
-        return <FloatingLabel node={cell} />;
-    }
+    return (
+        <>
+            {cell.out.map((out) => (
+                <UnitOutPanel key={out.euid.value} outEntity={out} unitCompleted={96} unitTotal={152} />
+            ))}
+            {isArea(cell.parent) ? (
+                <>
+                    <FloorRegion node={cell} />
+                    <NodeSummary node={cell} />
+                </>
+            ) : (
+                <FloatingLabel node={cell} />
+            )}
+        </>
+    );
 };
 
 //------------------------------------------------------------------------------

@@ -19,6 +19,7 @@ export const buildNavGraph = async (params: {
     const cells: Entity[] = [];
     const machines: Entity[] = [];
     const flows: Entity[] = [];
+    const out: Entity[] = [];
 
     for (const e of entities) {
         const name = e.name.toLowerCase();
@@ -45,6 +46,9 @@ export const buildNavGraph = async (params: {
                 break;
             case "flow":
                 flows.push(e);
+                break;
+            case "out":
+                out.push(e);
                 break;
         }
     }
@@ -151,11 +155,13 @@ export const buildNavGraph = async (params: {
             name: parseName(cellEntity),
             parent,
             machines: [],
+            out: [],
         };
         cell.machines = machines
             .filter((m) => inLineage(m, cellEntity.euid.value))
             .map((e) => mapMachineEntity(e, cell))
             .sort(sortNode);
+        cell.out = out.filter((o) => inLineage(o, cellEntity.euid.value));
         list.push(cell);
         return cell;
     };

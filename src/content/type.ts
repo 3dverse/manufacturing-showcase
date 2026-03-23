@@ -159,6 +159,7 @@ export type CellNode = _NavGraphNode & {
     type: NodeTypes.cell;
     parent: AreaNode | LineNode;
     machines: MachineNode[];
+    out: Entity[];
 };
 export type MachineNode = _NavGraphNode & { type: NodeTypes.machine; parent: CellNode };
 

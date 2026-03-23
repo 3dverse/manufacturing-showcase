@@ -44,18 +44,14 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                 <div className={thumbnailMode ? "" : "flex flex-col items-start w-96 2xl:w-120 p-2"}>
                     <MainHeader thumbnailMode={thumbnailMode} onBack={onBack} />
                     <KeyStatusIndicators keyStatus={data.keyStatus} />
-                    {/* {!thumbnailMode && <FactoryPanel />} */}
-                    {/* {!thumbnailMode && selectedNode && isArea(selectedNode) && <AreaPanel area={selectedNode} />} */}
-                    {/* {!thumbnailMode && selectedNode && isLine(selectedNode) && <LinePanel line={selectedNode} />} */}
-                    {/* {!thumbnailMode && selectedNode && isCell(selectedNode) && <CellPanel cell={selectedNode} />} */}
                 </div>
 
                 {!thumbnailMode && (
-                    <div className="flex flex-col justify-end items-center grow px-8 pb-2 md:pb-8">
+                    <div className="flex flex-col justify-end items-center grow p-2 md:p-8">
                         <div className="grid grid-cols-[min-content_1fr] gap-1">
                             <Navigation />
-                            <span />
-                            <NavigationOrderPanel order={orders[2]} />
+                            <span className="hidden md:block" />
+                            <NavigationOrderPanel order={orders[2]} className="col-span-2 md:col-span-1" />
                         </div>
                     </div>
                 )}
