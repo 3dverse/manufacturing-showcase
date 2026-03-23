@@ -84,6 +84,7 @@ paths:
         Use this endpoint to determine open, closed, or planned accounting periods by company.
       operationId: getFiscalPeriods
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/CompanyIdQuery'
         - name: year
           in: query
@@ -114,6 +115,7 @@ paths:
         structure needed to interpret journal entries, balances, and financial postings.
       operationId: getGlAccounts
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/CompanyIdQuery'
         - name: accountType
           in: query
@@ -140,6 +142,7 @@ paths:
         and financial analysis.
       operationId: getCostCenters
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/CompanyIdQuery'
         - name: status
           in: query
@@ -166,6 +169,7 @@ paths:
         and commercial reference information used by sales orders, invoices, and receivables.
       operationId: getCustomers
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/CompanyIdQuery'
         - name: status
           in: query
@@ -211,6 +215,7 @@ paths:
         procurement, payables, and supplier reference information.
       operationId: getSuppliers
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/CompanyIdQuery'
         - name: status
           in: query
@@ -257,6 +262,7 @@ paths:
         not include warehouse- or shop-floor-specific execution details.
       operationId: getItems
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/CompanyIdQuery'
         - name: itemType
           in: query
@@ -310,6 +316,11 @@ paths:
       operationId: getSalesOrders
       parameters:
         - $ref: '#/components/parameters/CompanyIdQuery'
+        - name: siteId
+          in: query
+          description: Filter sales orders by fulfilling site.
+          schema:
+            type: string
         - name: customerId
           in: query
           description: Filter sales orders by customer.
@@ -369,6 +380,7 @@ paths:
         or inventory execution behavior.
       operationId: getPurchaseOrders
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/CompanyIdQuery'
         - name: supplierId
           in: query
@@ -429,6 +441,7 @@ paths:
         reporting.
       operationId: getInvoices
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/CompanyIdQuery'
         - name: invoiceType
           in: query
@@ -489,6 +502,7 @@ paths:
         Use this endpoint to retrieve posted payment events and their invoice references.
       operationId: getPayments
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/CompanyIdQuery'
         - name: paymentType
           in: query
@@ -525,6 +539,7 @@ paths:
         accounting audit, reconciliation, and financial integration use cases.
       operationId: getJournalEntries
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/CompanyIdQuery'
         - name: postingDateFrom
           in: query
@@ -571,6 +586,13 @@ paths:
 
 components:
   parameters:
+    SiteId:
+      name: siteId
+      in: query
+      description: Filter results to a specific manufacturing site.
+      schema:
+        type: string
+
     Page:
       name: page
       in: query
@@ -587,7 +609,7 @@ components:
       schema:
         type: integer
         minimum: 1
-        maximum: 500
+        maximum: 1000
         default: 50
 
     UpdatedSince:
@@ -931,12 +953,15 @@ components:
 
     SalesOrder:
       type: object
-      required: [id, companyId, orderNumber, customerId, orderDate, currency, status, lines]
+      required: [id, companyId, siteId, orderNumber, customerId, orderDate, currency, status, lines]
       properties:
         id:
           type: string
         companyId:
           type: string
+        siteId:
+          type: string
+          description: Manufacturing site responsible for fulfilling this sales order.
         orderNumber:
           type: string
         customerId:

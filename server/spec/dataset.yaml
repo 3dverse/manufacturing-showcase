@@ -1,24 +1,155 @@
 openapi: 3.1.0
 info:
   title: Dataset API
-  version: 0.0.1
+  version: 0.1.0
   description: >
-    nope
+    Manages in-memory manufacturing datasets. One dataset is generated per
+    3dverse scene at startup. Datasets can be inspected and regenerated at
+    runtime without restarting the server.
 servers:
   - url: /-/api/dataset
 
 tags:
   - name: DATASET
-    description: Manufacturing execution visibility endpoints
+    description: Dataset lifecycle and metadata
 
 paths:
-  /generate:
+
+  /:
     get:
-      tags: [MES]
-      operationId: generateDataset
-      summary: generate dataset
+      tags: [DATASET]
+      operationId: listDatasets
+      summary: List all loaded datasets
       description: >
-        endpoint for generating datasets
+        Returns metadata for every dataset currently held in memory,
+        one entry per 3dverse scene.
       responses:
         '200':
-          description: Successful response containing production orders.
+          description: List of loaded datasets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DatasetMeta'
+                required: [sites]
+
+  /meta:
+    get:
+      tags: [DATASET]
+      operationId: getDatasetMeta
+      summary: Get metadata for a dataset
+      description: >
+        When called with ?siteId returns metadata for that specific site.
+        When called without a parameter returns metadata for all sites.
+      parameters:
+        - name: siteId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Scene/site ID. Omit to get all sites.
+      responses:
+        '200':
+          description: Dataset metadata.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/DatasetMeta'
+                  - type: object
+                    properties:
+                      sites:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DatasetMeta'
+                    required: [sites]
+
+  /regenerate:
+    post:
+      tags: [DATASET]
+      operationId: regenerateDatasets
+      summary: Regenerate one or all datasets
+      description: >
+        Triggers dataset regeneration at runtime. If siteId is provided,
+        only that scene's dataset is regenerated from its 3dverse scene graph.
+        Otherwise all scenes are reloaded from the folder and regenerated.
+      parameters:
+        - name: siteId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: >
+            Scene ID to regenerate. Omit to regenerate all scenes from the folder.
+      responses:
+        '200':
+          description: Regeneration result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  regenerated:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DatasetMeta'
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        sceneId:
+                          type: string
+                        message:
+                          type: string
+                required: [regenerated, errors]
+
+  /graph:
+    get:
+      tags: [DATASET]
+      operationId: getFactoryGraph
+      summary: Load raw factory graph from a scene
+      description: >
+        Fetches the 3dverse scene and returns the parsed factory graph
+        (hierarchy of areas, lines, cells, machines). Useful for debugging
+        the scene structure without triggering a full regeneration.
+      parameters:
+        - name: sceneId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The 3dverse scene asset ID.
+      responses:
+        '200':
+          description: Factory graph.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  graph:
+                    type: object
+                    description: Hierarchical factory node tree.
+        '400':
+          description: Missing sceneId parameter.
+
+components:
+  schemas:
+    DatasetMeta:
+      type: object
+      properties:
+        sceneId:
+          type: string
+          description: The 3dverse scene asset ID used as the dataset key.
+        siteId:
+          type: string
+          description: The site identifier stored inside the dataset (equals sceneId).
+        now:
+          type: integer
+          description: Unix timestamp (seconds) of the dataset's reference "now".
+      required: [sceneId, siteId, now]

@@ -37,6 +37,7 @@ paths:
         operational status, and default timezone. Use this endpoint to discover the
         warehouse scope available for downstream WMS queries.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseCodeFilter'
         - $ref: '#/components/parameters/StatusFilter'
       responses:
@@ -86,6 +87,7 @@ paths:
         lanes, reserve storage, forward pick locations, and quarantine areas. Use this
         endpoint to browse the warehouse location hierarchy and current location state.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/ZoneQuery'
         - $ref: '#/components/parameters/LocationTypeQuery'
@@ -138,6 +140,7 @@ paths:
         serial number, and handling unit. Use this endpoint for stock inquiry and bin-level
         inventory visibility.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/LocationIdQuery'
         - $ref: '#/components/parameters/ItemIdQuery'
@@ -168,6 +171,7 @@ paths:
         inventory endpoint. Use this endpoint for quick stock balances by warehouse and item
         without retrieving every location-level stock position.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/ItemIdQuery'
       responses:
@@ -194,6 +198,7 @@ paths:
         or other license-plated units. Use this endpoint to inspect the current location,
         contents summary, and status of warehouse-contained units.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/HandlingUnitIdQuery'
         - $ref: '#/components/parameters/LocationIdQuery'
@@ -222,6 +227,7 @@ paths:
         associated item, warehouse presence, expiration date, and current quantity. Use
         this endpoint when lot traceability is needed for warehouse stock inquiry.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/ItemIdQuery'
         - $ref: '#/components/parameters/LotNumberQuery'
@@ -249,6 +255,7 @@ paths:
         current warehouse and location, and stock state. Use this endpoint when serial-level
         warehouse traceability is required.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/ItemIdQuery'
         - $ref: '#/components/parameters/SerialNumberQuery'
@@ -276,6 +283,7 @@ paths:
         warehouse control. Use this endpoint for receipt visibility, dock activity review,
         and inbound status tracking inside the WMS domain.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/StatusFilter'
         - $ref: '#/components/parameters/FromDateQuery'
@@ -304,6 +312,7 @@ paths:
         receiving or staging locations into final storage locations. Use this endpoint to
         inspect inbound placement work managed by the WMS.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/StatusFilter'
         - $ref: '#/components/parameters/FromDateQuery'
@@ -332,6 +341,7 @@ paths:
         outbound fulfillment. Use this endpoint to review picking activity, source and
         destination locations, and execution status inside the WMS.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/StatusFilter'
         - $ref: '#/components/parameters/FromDateQuery'
@@ -360,6 +370,7 @@ paths:
         staging or loading status, ship date, and warehouse context. Use this endpoint for
         shipment visibility limited to warehouse execution and dispatch activity.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/StatusFilter'
         - $ref: '#/components/parameters/FromDateQuery'
@@ -388,6 +399,7 @@ paths:
         endpoint to review counting scope, execution status, and variance results associated
         with inventory accuracy processes inside the WMS.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/StatusFilter'
         - $ref: '#/components/parameters/FromDateQuery'
@@ -417,6 +429,7 @@ paths:
         transfer, or count adjustment. Use this endpoint for lot and serial traceability,
         timeline reconstruction, and inventory audit purposes.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/ItemIdQuery'
         - $ref: '#/components/parameters/LotNumberQuery'
@@ -456,6 +469,13 @@ paths:
 
 components:
   parameters:
+    SiteId:
+      name: siteId
+      in: query
+      description: Filter results to a specific manufacturing site.
+      schema:
+        type: string
+
     WarehouseIdPath:
       name: warehouseId
       in: path

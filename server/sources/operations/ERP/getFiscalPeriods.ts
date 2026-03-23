@@ -1,8 +1,8 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { ERPreplyJSON, type ERPOperationHandler } from "../../utils/openAPI";
 
 export const getFiscalPeriods: ERPOperationHandler<"getFiscalPeriods"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { companyId, year, status } = req.query as any;
 
     let periods = [...ds.erp.fiscalPeriods];

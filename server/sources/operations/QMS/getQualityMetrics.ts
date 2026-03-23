@@ -1,8 +1,8 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { QMSreplyJSON, type QMSOperationHandler } from "../../utils/openAPI";
 
 export const getQualityMetrics: QMSOperationHandler<"getQualityMetrics"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { periodStart, periodEnd, granularity = "month" } = req.query as any;
 
     const start = periodStart ? new Date(periodStart) : new Date(ds.now.getTime() - 90 * 24 * 3600000);

@@ -1,9 +1,9 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { EAMreplyJSON, type EAMOperationHandler } from "../../utils/openAPI";
 import { notFound } from "../utils";
 
 export const getAssetHistory: EAMOperationHandler<"getAssetHistory"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const id = req.params.assetId as string;
     if (!ds.eam.assets.has(id)) return notFound(id, res) as any;
     const { fromDate, toDate } = req.query as any;

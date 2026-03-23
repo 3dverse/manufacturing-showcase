@@ -1,9 +1,9 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { QMSreplyJSON, type QMSOperationHandler } from "../../utils/openAPI";
 import { notFound } from "../utils";
 
 export const getAuditById: QMSOperationHandler<"getAuditById"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const id = req.params.auditId as string;
     const audit = ds.qms.audits.get(id);
     if (!audit) return notFound(id, res) as any;

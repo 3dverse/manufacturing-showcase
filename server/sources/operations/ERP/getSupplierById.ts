@@ -1,9 +1,9 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { ERPreplyJSON, type ERPOperationHandler } from "../../utils/openAPI";
 import { notFound } from "../utils";
 
 export const getSupplierById: ERPOperationHandler<"getSupplierById"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const id = req.params.supplierId as string;
     const supp = ds.erp.suppliers.get(id);
     if (!supp) return notFound(id, res) as any;

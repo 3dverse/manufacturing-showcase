@@ -1,5 +1,5 @@
-import type { FactoryNode } from "../../operations/dataset/generateDataset";
-import { flattenAreas, flattenCells, flattenMachines, getAreaForCell } from "../graph";
+import type { SiteNode } from "../../operations/dataset/generateDataset";
+import { flattenLocations, flattenWorkCenters, flattenMachines, getLocationForWorkCenter } from "../graph";
 import type { RNG } from "../rng";
 
 function prettify(name: string): string {
@@ -12,7 +12,7 @@ function prettify(name: string): string {
 }
 
 export function generateStructural(
-    factory: FactoryNode,
+    site: SiteNode,
     siteId: string,
     _rng: RNG,
 ): {
@@ -24,7 +24,7 @@ export function generateStructural(
     apsResourceList: string[];
     erpCostCenters: Map<string, any>;
     erpCostCenterList: string[];
-    assetsByCell: Map<string, string[]>;
+    assetsByWorkCenter: Map<string, string[]>;
 } {
     const workCenters = new Map<string, any>();
     const workCenterList: string[] = [];
@@ -34,78 +34,62 @@ export function generateStructural(
     const apsResourceList: string[] = [];
     const erpCostCenters = new Map<string, any>();
     const erpCostCenterList: string[] = [];
-    const assetsByCell = new Map<string, string[]>();
+    const assetsByWorkCenter = new Map<string, string[]>();
 
     const now = new Date().toISOString();
 
-    // Factory-level EAM location
-    const factoryLocId = factory.name;
-    eamLocations.set(factoryLocId, {
-        id: factoryLocId,
-        locationCode: factory.name,
-        name: prettify(factory.name),
-        description: `Manufacturing plant ${factory.name}`,
+    // Site-level EAM location
+    const siteLocId = site.hash;
+    eamLocations.set(siteLocId, {
+        id: siteLocId,
+        locationCode: site.name,
+        name: prettify(site.name),
+        description: `Manufacturing plant ${site.name}`,
         siteCode: siteId,
         parentLocationId: null,
         status: "active",
         createdAt: now,
         updatedAt: now,
     });
-    eamLocationList.push(factoryLocId);
+    eamLocationList.push(siteLocId);
 
-    // Areas
-    for (const area of flattenAreas(factory)) {
-        const areaLocId = area.name;
+    // Locations
+    for (const location of flattenLocations(site)) {
+        const locationLocId = location.hash;
 
-        // EAM location for area
-        eamLocations.set(areaLocId, {
-            id: areaLocId,
-            locationCode: area.name,
-            name: prettify(area.name),
-            description: `${prettify(area.name)} area`,
+        // EAM location for location
+        eamLocations.set(locationLocId, {
+            id: locationLocId,
+            locationCode: location.name,
+            name: prettify(location.name),
+            description: `${prettify(location.name)} location`,
             siteCode: siteId,
-            parentLocationId: factoryLocId,
+            parentLocationId: siteLocId,
             status: "active",
             createdAt: now,
             updatedAt: now,
         });
-        eamLocationList.push(areaLocId);
+        eamLocationList.push(locationLocId);
 
-        // ERP cost center for area
-        const ccId = `CC-${area.name}`;
+        // ERP cost center for location
+        const ccId = `CC-${location.hash}`;
         erpCostCenters.set(ccId, {
             id: ccId,
             companyId: "COMP-001",
-            code: area.name,
-            name: prettify(area.name),
+            code: location.name,
+            name: prettify(location.name),
             manager: "Plant Manager",
             status: "active",
         });
         erpCostCenterList.push(ccId);
 
-        // Lines under area
-        for (const line of area.lines) {
-            const lineLocId = line.name;
-            eamLocations.set(lineLocId, {
-                id: lineLocId,
-                locationCode: line.name,
-                name: prettify(line.name),
-                description: `Production line ${line.name}`,
-                siteCode: siteId,
-                parentLocationId: areaLocId,
-                status: "active",
-                createdAt: now,
-                updatedAt: now,
-            });
-            eamLocationList.push(lineLocId);
-        }
     }
 
-    // Cells → WorkCenters + APS Resources + EAM locations
-    for (const cell of flattenCells(factory)) {
-        const area = getAreaForCell(factory, cell.name);
-        const areaCode = area?.name ?? "UNKNOWN";
-        const operationType = cell.tags["operationType"] ?? "GENERAL";
+    // WorkCenters → WorkCenters + APS Resources + EAM locations
+    for (const workCenter of flattenWorkCenters(site)) {
+        const location = getLocationForWorkCenter(site, workCenter.name);
+        const locationCode = location?.name ?? "UNKNOWN";
+        const operationType = workCenter.tags["operationType"] ?? "GENERAL";
 
         // Determine criticality based on operation type
         const criticality =
@@ -115,28 +99,28 @@ export function generateStructural(
                   ? "medium"
                   : "low";
 
-        // EAM location for cell
-        const cellLocParent = area?.lines.find((l) => l.cells.some((c) => c.name === cell.name))?.name ?? areaCode;
-        eamLocations.set(cell.name, {
-            id: cell.name,
-            locationCode: cell.name,
-            name: prettify(cell.name),
-            description: `Work center ${cell.name} (${operationType})`,
+        // EAM location for workCenter
+        const workCenterLocParent = location?.hash ?? locationCode;
+        eamLocations.set(workCenter.hash, {
+            id: workCenter.hash,
+            locationCode: workCenter.name,
+            name: prettify(workCenter.name),
+            description: `Work center ${workCenter.name} (${operationType})`,
             siteCode: siteId,
-            parentLocationId: cellLocParent,
+            parentLocationId: workCenterLocParent,
             status: "active",
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         });
-        eamLocationList.push(cell.name);
+        eamLocationList.push(workCenter.hash);
 
         // MES WorkCenter
         const wc = {
-            id: cell.name,
+            id: workCenter.hash,
             siteId,
-            code: cell.name,
-            name: prettify(cell.name),
-            areaCode,
+            code: workCenter.name,
+            name: prettify(workCenter.name),
+            locationCode,
             status: "idle",
             activeProductionOrderId: null,
             activeOperationId: null,
@@ -149,42 +133,42 @@ export function generateStructural(
             operationType,
             criticality,
         };
-        workCenters.set(cell.name, wc);
-        workCenterList.push(cell.name);
+        workCenters.set(workCenter.hash, wc);
+        workCenterList.push(workCenter.hash);
 
         // APS Resource
-        apsResources.set(cell.name, {
-            id: cell.name,
-            code: cell.name,
-            name: prettify(cell.name),
+        apsResources.set(workCenter.hash, {
+            id: workCenter.hash,
+            code: workCenter.name,
+            name: prettify(workCenter.name),
             type: "work_center",
             finiteCapacity: true,
             calendarId: "CAL-STANDARD",
             schedulingPolicy: "forward",
             maxConcurrentOperations: 1,
-            constraintGroup: areaCode,
+            constraintGroup: locationCode,
         });
-        apsResourceList.push(cell.name);
+        apsResourceList.push(workCenter.hash);
 
         // Machines → EAM Assets + Locations
         const machineIds: string[] = [];
-        for (const machine of cell.machines) {
+        for (const machine of workCenter.machines) {
             // EAM location for machine
-            eamLocations.set(machine.name, {
-                id: machine.name,
+            eamLocations.set(machine.hash, {
+                id: machine.hash,
                 locationCode: machine.name,
                 name: prettify(machine.name),
                 description: `Machine ${machine.name}`,
                 siteCode: siteId,
-                parentLocationId: cell.name,
+                parentLocationId: workCenter.hash,
                 status: "active",
                 createdAt: now,
                 updatedAt: now,
             });
-            eamLocationList.push(machine.name);
-            machineIds.push(machine.name);
+            eamLocationList.push(machine.hash);
+            machineIds.push(machine.hash);
         }
-        assetsByCell.set(cell.name, machineIds);
+        assetsByWorkCenter.set(workCenter.hash, machineIds);
     }
 
     return {
@@ -196,6 +180,6 @@ export function generateStructural(
         apsResourceList,
         erpCostCenters,
         erpCostCenterList,
-        assetsByCell,
+        assetsByWorkCenter,
     };
 }

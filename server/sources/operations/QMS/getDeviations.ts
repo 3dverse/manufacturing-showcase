@@ -1,9 +1,9 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { QMSreplyJSON, type QMSOperationHandler } from "../../utils/openAPI";
 import { paginate } from "../utils";
 
 export const getDeviations: QMSOperationHandler<"getDeviations"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { status, category, impactLevel, raisedFrom, raisedTo, page = "1", pageSize = "50" } = req.query as any;
 
     let devs = ds.qms.deviationList.map((id) => ds.qms.deviations.get(id)!);

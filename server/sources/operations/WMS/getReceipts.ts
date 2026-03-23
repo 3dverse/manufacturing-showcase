@@ -1,9 +1,9 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { WMSreplyJSON, type WMSOperationHandler } from "../../utils/openAPI";
 import { filterByDate } from "../utils";
 
 export const getReceipts: WMSOperationHandler<"getReceipts"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { warehouseId, status, fromDate, toDate } = req.query as any;
 
     let receipts = ds.wms.receipts;

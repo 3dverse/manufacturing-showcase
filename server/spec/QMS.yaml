@@ -25,6 +25,7 @@ paths:
         to review quality incidents, their severity, disposition, status, and related
         corrective workflows.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: status
@@ -96,6 +97,7 @@ paths:
         root causes, define remediation plans, assign ownership, and track verification
         of effectiveness.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: status
@@ -168,6 +170,7 @@ paths:
         documented procedure was not followed as intended. This endpoint is useful
         for reviewing quality-impacting exceptions and their disposition status.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: status
@@ -235,6 +238,7 @@ paths:
         endpoint to review planned and completed audits, audit scope, lead auditor,
         status, and high-level outcomes.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: status
@@ -300,6 +304,7 @@ paths:
         Use this endpoint to review complaint trends, severity, investigation status,
         and linked quality events such as nonconformances or CAPAs.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: status
@@ -366,6 +371,7 @@ paths:
         policies, and specifications. This endpoint is intended for document-control
         visibility within the quality domain.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: documentType
@@ -431,6 +437,7 @@ paths:
         of open nonconformances, CAPA closure performance, audit completion rates,
         and complaint trends over time.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - name: periodStart
           in: query
           required: true
@@ -459,6 +466,13 @@ paths:
 
 components:
   parameters:
+    SiteId:
+      name: siteId
+      in: query
+      description: Filter results to a specific manufacturing site.
+      schema:
+        type: string
+
     Page:
       name: page
       in: query
@@ -474,7 +488,7 @@ components:
       schema:
         type: integer
         minimum: 1
-        maximum: 200
+        maximum: 1000
         default: 50
     NonconformanceId:
       name: nonconformanceId

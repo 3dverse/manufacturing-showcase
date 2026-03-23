@@ -36,7 +36,19 @@ export const apis = apiConfigs.map(({ name, spec, prefix, docs }) => {
     api.register("notImplemented", NotImplemented);
     api.register("validationFail", ValidationFail);
     api.register("methodNotAllowed", MethodNotAllowed);
-    api.register(operations[name]);
+
+    // Inject openapi-backend path params into req.params so handlers can read them normally
+    const ops = operations[name];
+    const wrapped = Object.fromEntries(
+        Object.entries(ops).map(([opId, handler]) => [
+            opId,
+            (context: any, req: any, res: any) => {
+                if (context.request?.params) Object.assign(req.params, context.request.params);
+                return (handler as any)(context, req, res);
+            },
+        ]),
+    );
+    api.register(wrapped);
     api.init();
     return { name, prefix, api, docs };
 });

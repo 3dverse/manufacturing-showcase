@@ -1,9 +1,9 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { EAMreplyJSON, type EAMOperationHandler } from "../../utils/openAPI";
 import { paginate } from "../utils";
 
 export const getServiceRequests: EAMOperationHandler<"getServiceRequests"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { status, assetId, locationId, requestedFrom, requestedTo, page = "1", pageSize = "50" } = req.query as any;
 
     let srs = ds.eam.serviceRequestList.map((id) => ds.eam.serviceRequests.get(id)!);

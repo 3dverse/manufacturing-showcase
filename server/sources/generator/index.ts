@@ -7,12 +7,10 @@ import { generateMES } from "./steps/mes";
 import { generateEAM } from "./steps/eam";
 import { generateQMS } from "./steps/qms";
 import { generateWMS } from "./steps/wms";
+import { getLocationForMachine } from "./graph";
 
-function applyScenarios(scenarios: GeneratorConfig["scenarios"], mes: any, eam: any, now: Date): void {
+function applyScenarios(scenarios: GeneratorConfig["scenarios"], mes: any): void {
     for (const scenario of scenarios) {
-        const targetTime = new Date(now.getTime() + scenario.deltaMinutesFromNow * 60000);
-        const endTime = new Date(targetTime.getTime() + scenario.durationMinutes * 60000);
-
         if (scenario.type === "machine_breakdown") {
             // Mark target work center as down
             const wc = mes.workCenters.get(scenario.targetId);
@@ -37,11 +35,12 @@ export function generateDataset(config: GeneratorConfig): Dataset {
     const startTime = Date.now();
 
     const rng = createRng(config.seed);
-    const siteId = config.factory.name;
+    if (!config.siteId) throw new Error("[Generator] config.siteId is required");
+    const siteId = config.siteId;
 
     // Step 1: Structural
     console.log("[Generator] Step 1: Structural...");
-    const structural = generateStructural(config.factory, siteId, rng);
+    const structural = generateStructural(config.site, siteId, rng);
 
     // Step 2: ERP
     console.log("[Generator] Step 2: ERP...");
@@ -58,7 +57,7 @@ export function generateDataset(config: GeneratorConfig): Dataset {
         {
             eamLocations: structural.eamLocations,
             eamLocationList: structural.eamLocationList,
-            assetsByCell: structural.assetsByCell,
+            assetsByWorkCenter: structural.assetsByWorkCenter,
         },
         rng,
     );
@@ -88,10 +87,32 @@ export function generateDataset(config: GeneratorConfig): Dataset {
         }
     }
 
+    // Step 9: Link EAM corrective WOs to the MES PO they fall within
+    console.log("[Generator] Post-processing EAM ↔ MES links...");
+    for (const woId of eam.workOrderList) {
+        const wo = eam.workOrders.get(woId);
+        if (!wo || wo.workType !== "corrective") continue;
+        const woStart: number = wo.actualStart ?? wo.scheduledStart;
+
+        // Find the MES production location for this machine
+        const machineLocation = getLocationForMachine(config.site, wo.assetId);
+        if (!machineLocation) continue;
+
+        const poIds: string[] = mes.productionOrdersByLocation.get(machineLocation.hash) ?? [];
+        for (const poId of poIds) {
+            const po = mes.productionOrders.get(poId);
+            if (!po) continue;
+            if (woStart >= po.timing.scheduledStart && woStart <= po.timing.scheduledEnd) {
+                wo.mesProductionOrderId = poId;
+                break;
+            }
+        }
+    }
+
     // Step 10: Apply scenario overlays
     if (config.scenarios.length > 0) {
         console.log("[Generator] Applying scenario overlays...");
-        applyScenarios(config.scenarios, mes, eam, config.now);
+        applyScenarios(config.scenarios, mes);
     }
 
     const elapsed = Date.now() - startTime;
@@ -166,13 +187,13 @@ export function generateDataset(config: GeneratorConfig): Dataset {
             oeeTimeseries: mes.oeeTimeseries,
             operationsByProductionOrder: mes.operationsByProductionOrder,
             operationsByWorkCenter: mes.operationsByWorkCenter,
-            productionOrdersByWorkCenter: mes.productionOrdersByWorkCenter,
+            productionOrdersByLocation: mes.productionOrdersByLocation,
             productionEventsByOperation: mes.productionEventsByOperation,
             productionEventsByProductionOrder: mes.productionEventsByProductionOrder,
             productionEventsByWorkCenter: mes.productionEventsByWorkCenter,
             downtimeByWorkCenter: mes.downtimeByWorkCenter,
             oeeByWorkCenter: mes.oeeByWorkCenter,
-            cellTimelines: mes.cellTimelines,
+            workCenterTimelines: mes.workCenterTimelines,
         },
         eam: {
             assets: eam.assets,

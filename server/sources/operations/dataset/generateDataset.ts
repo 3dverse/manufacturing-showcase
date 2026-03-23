@@ -1,29 +1,37 @@
 import { getAssetDescription } from "@3dverse/api";
-import { DatasetOperationHandler, DatasetreplyJSON } from "../../utils/openAPI";
+import { DatasetreplyJSON } from "../../utils/openAPI";
 import { NotFound } from "express-openapi-validator/dist/openapi.validator";
 
 //------------------------------------------------------------------------------
 type _NavGraphNode = {
     name: string;
+    hash: string;
     lineage: string[];
     ordinal: number;
     tags: { [key: string]: string };
 };
-export type FactoryNode = _NavGraphNode & { type: NodeTypes.factory; areas: AreaNode[] };
 
 //------------------------------------------------------------------------------
-export type AreaNode = _NavGraphNode & {
-    type: NodeTypes.area;
-    lines: LineNode[];
-    cells: CellNode[];
+export function hashNode(euid: string, lineage: string[]): string {
+    const str = [euid, ...lineage].join("|");
+    let hash = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+        hash ^= str.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).padStart(8, "0").slice(0, 8);
+}
+export type SiteNode = _NavGraphNode & { type: NodeTypes.site; locations: LocationNode[] };
+
+//------------------------------------------------------------------------------
+export type LocationNode = _NavGraphNode & {
+    type: NodeTypes.location;
+    workCenters: WorkCenterNode[];
 };
 
 //------------------------------------------------------------------------------
-export type LineNode = _NavGraphNode & { type: NodeTypes.line; cells: CellNode[] };
-
-//------------------------------------------------------------------------------
-export type CellNode = _NavGraphNode & {
-    type: NodeTypes.cell;
+export type WorkCenterNode = _NavGraphNode & {
+    type: NodeTypes.workCenter;
     machines: MachineNode[];
 };
 
@@ -31,184 +39,165 @@ export type CellNode = _NavGraphNode & {
 export type MachineNode = _NavGraphNode & { type: NodeTypes.machine };
 
 //------------------------------------------------------------------------------
-export type GraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode;
+export type GraphNode = SiteNode | LocationNode | WorkCenterNode | MachineNode;
 
 //------------------------------------------------------------------------------
-export const generateDataset: DatasetOperationHandler<"generateDataset"> = async (c, req, res) => {
-    // TODO: implement
-
-    const asset_description = (
-        await getAssetDescription({ asset_container: "scenes", asset_id: "3e23233c-0c97-43d7-ab5e-9eb8caa2f42b" })
-    ).data;
-    if (!asset_description.entities) throw NotFound;
-    const factoryEntity: any = asset_description.entities.find((ent: any) => {
+export async function loadSiteFromScene(sceneId: string): Promise<SiteNode | undefined> {
+    const asset_description = (await getAssetDescription({ asset_container: "scenes", asset_id: sceneId })).data;
+    if (!asset_description.entities) return undefined;
+    // Scene entities use "factory:" as the debug_name prefix for the site root
+    const siteEntity: any = asset_description.entities.find((ent: any) => {
         if (!ent.scene_ref || !ent.debug_name.value.includes(":")) return false;
-        const { type, name, id } = parseDebugName(ent.debug_name.value);
+        const { type } = parseDebugName(ent.debug_name.value);
         return type === "factory";
     });
+    return siteEntity ? loadSite(siteEntity, siteEntity.scene_ref?.value) : undefined;
+}
 
-    const graph = factoryEntity ? await loadFactory(factoryEntity, factoryEntity.scene_ref?.value) : undefined;
-
+//------------------------------------------------------------------------------
+export const getSiteGraph = async (_c: any, req: any, res: any) => {
+    const { sceneId } = req.query as any;
+    if (!sceneId) return DatasetreplyJSON({ error: "sceneId query param required" }, res, 400) as any;
+    const graph = await loadSiteFromScene(sceneId);
     return DatasetreplyJSON({ graph }, res);
 };
 
 //------------------------------------------------------------------------------
 export enum NodeTypes {
-    factory = "FACTORY",
-    area = "AREA",
-    line = "LINE",
-    cell = "CELL",
+    site = "SITE",
+    location = "LOCATION",
+    workCenter = "WORK_CENTER",
     machine = "MACHINE",
 }
 
 //------------------------------------------------------------------------------
-const loadFactory = async (factoryEntity: any, scene_id: string) => {
-    const { name } = parseDebugName(factoryEntity.debug_name.value);
-    const factory: FactoryNode = {
-        type: NodeTypes.factory,
-        lineage: [],
-        ordinal: factoryEntity.lineage.ordinal,
+const loadSite = async (siteEntity: any, scene_id: string) => {
+    const { name } = parseDebugName(siteEntity.debug_name.value);
+    const lineage: string[] = [];
+    const site: SiteNode = {
+        type: NodeTypes.site,
+        lineage,
+        ordinal: siteEntity.lineage.ordinal,
         name: name,
-        areas: [],
+        hash: hashNode(siteEntity.euid.value, lineage),
+        locations: [],
         tags: {},
     };
     //--------------------------------------------------------------------------
-    // Get areas
+    // Get locations — scene entities use "area:" as the debug_name prefix
     const asset_description = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
-    console.log("load fac", scene_id);
     if (!asset_description.entities) throw NotFound;
-    const areaEntities: any[] = asset_description.entities.filter((entity: any) => {
+    const locationEntities: any[] = asset_description.entities.filter((entity: any) => {
         if (!entity.scene_ref || !entity.debug_name.value.includes(":")) return false;
-        const { type, name, id } = parseDebugName(entity.debug_name.value);
+        const { type } = parseDebugName(entity.debug_name.value);
         return type === "area";
     });
 
-    factory.areas = (
+    site.locations = (
         await Promise.all(
-            areaEntities.map((ent) => {
-                return loadArea(ent, ent.scene_ref?.value, [factoryEntity.euid.value]);
+            locationEntities.map((ent) => {
+                return loadLocation(ent, ent.scene_ref?.value, [siteEntity.euid.value]);
             }),
         )
     ).sort(sortNode);
-
-    return factory;
+    return site;
 };
 
 //------------------------------------------------------------------------------
-const loadArea = async (areaEntity: any, scene_id: string, lineage: string[]) => {
-    const { name } = parseDebugName(areaEntity.debug_name.value);
-    const area: AreaNode = {
-        type: NodeTypes.area,
+const loadLocation = async (locationEntity: any, scene_id: string, lineage: string[]) => {
+    const { name } = parseDebugName(locationEntity.debug_name.value);
+    const location: LocationNode = {
+        type: NodeTypes.location,
         lineage,
-        ordinal: areaEntity.ordinal,
+        ordinal: locationEntity.ordinal,
         name: name,
-        lines: [],
-        cells: [],
-        tags: {},
-    };
-    //--------------------------------------------------------------------------
-    // Get lines
-    const line_asset_description = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
-    if (!line_asset_description.entities) throw NotFound;
-    const lineEntities: any[] = line_asset_description.entities.filter((entity: any) => {
-        if (!entity.scene_ref || !entity.debug_name.value.includes(":")) return false;
-        const { type, name, id } = parseDebugName(entity.debug_name.value);
-        return type === "line";
-    });
-
-    area.lines = (
-        await Promise.all(
-            lineEntities.map((ent) => {
-                return loadLine(ent, ent.scene_ref.value, [...lineage, areaEntity.euid.value]);
-            }),
-        )
-    ).sort(sortNode);
-
-    //--------------------------------------------------------------------------
-    // Get cells
-    const cell_asset_description = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
-    if (!cell_asset_description.entities) throw NotFound;
-    const cellEntities: any[] = cell_asset_description.entities.filter((entity: any) => {
-        if (!entity.scene_ref || !entity.debug_name.value.includes(":")) return false;
-        const { type, name, id } = parseDebugName(entity.debug_name.value);
-        return type === "cell";
-    });
-
-    area.cells = (
-        await Promise.all(
-            cellEntities.map((ent) => {
-                return loadCell(ent, ent.scene_ref.value, [...lineage, areaEntity.euid.value]);
-            }),
-        )
-    ).sort(sortNode);
-
-    return area;
-};
-
-//------------------------------------------------------------------------------
-const loadLine = async (lineEntity: any, scene_id: string, lineage: string[]) => {
-    const { name } = parseDebugName(lineEntity.debug_name.value);
-    const line: LineNode = {
-        type: NodeTypes.line,
-        lineage,
-        ordinal: lineEntity.lineage.ordinal,
-        name: name,
-        cells: [],
+        hash: hashNode(locationEntity.euid.value, lineage),
+        workCenters: [],
         tags: {},
     };
 
-    //--------------------------------------------------------------------------
-    // Get cells
-    const cell_asset_description = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
-    if (!cell_asset_description.entities) throw NotFound;
-    const cellEntities: any[] = cell_asset_description.entities.filter((entity: any) => {
-        if (!entity.scene_ref || !entity.debug_name.value.includes(":")) return false;
-        const { type, name, id } = parseDebugName(entity.debug_name.value);
-        return type === "cell";
-    });
+    const locationLineage: string[] = [...lineage, locationEntity.euid.value];
+    const asset_description = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
+    if (!asset_description.entities) throw NotFound;
 
-    line.cells = (
+    // Collect direct work center and line entities
+    // Scene entities use "cell:" and "line:" as debug_name prefixes
+    const locationChildrenEntities = asset_description.entities
+        .filter((entity: any) => {
+            if (!entity.scene_ref || !entity.debug_name.value.includes(":")) return false;
+            const { type } = parseDebugName(entity.debug_name.value);
+            return type === "cell" || type === "line";
+        })
+        .sort(sortEntity);
+
+    const workCenters = (
         await Promise.all(
-            cellEntities.map((ent) => {
-                return loadCell(ent, ent.scene_ref.value, [...lineage, lineEntity.euid.value]);
+            locationChildrenEntities.map((ent) => {
+                const _ent: any = ent;
+                const { type } = parseDebugName(_ent.debug_name.value);
+                switch (type) {
+                    case "cell":
+                        return loadWorkCenter(_ent, _ent.scene_ref.value, locationLineage);
+                    case "line":
+                        return loadLineWorkCenters(_ent, _ent.scene_ref.value as string, locationLineage);
+                }
             }),
         )
-    ).sort(sortNode);
+    ).flat();
 
-    return line;
+    location.workCenters = workCenters as WorkCenterNode[];
+
+    return location;
 };
 
 //------------------------------------------------------------------------------
-const loadCell = async (cellEntity: any, scene_id: string, lineage: string[]) => {
-    const { name } = parseDebugName(cellEntity.debug_name.value);
-    const cell: CellNode = {
-        type: NodeTypes.cell,
+const loadWorkCenter = async (workCenterEntity: any, scene_id: string, lineage: string[]) => {
+    const { name } = parseDebugName(workCenterEntity.debug_name.value);
+    const workCenter: WorkCenterNode = {
+        type: NodeTypes.workCenter,
         lineage,
-        ordinal: cellEntity.lineage.ordinal,
+        ordinal: workCenterEntity.lineage.ordinal,
         name: name,
+        hash: hashNode(workCenterEntity.euid.value, lineage),
         machines: [],
         tags: {},
     };
 
     //--------------------------------------------------------------------------
-    // Get machines
-    const cell_asset_description = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
-    if (!cell_asset_description.entities) throw NotFound;
-    const cellEntities: any[] = cell_asset_description.entities.filter((entity: any) => {
+    // Get machines — scene entities use "machine:" as the debug_name prefix
+    const workCenterScene = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
+    if (!workCenterScene.entities) throw NotFound;
+    const machineEntities: any[] = workCenterScene.entities.filter((entity: any) => {
         if (!entity.scene_ref || !entity.debug_name.value.includes(":")) return false;
-        const { type, name, id } = parseDebugName(entity.debug_name.value);
+        const { type } = parseDebugName(entity.debug_name.value);
         return type === "machine";
     });
 
-    cell.machines = (
+    workCenter.machines = (
         await Promise.all(
-            cellEntities.map((ent) => {
-                return loadMachine(ent, ent.scene_ref.value, [...lineage, cellEntity.euid.value]);
+            machineEntities.map((ent) => {
+                return loadMachine(ent, ent.scene_ref.value, [...lineage, workCenterEntity.euid.value]);
             }),
         )
     ).sort(sortNode);
 
-    return cell;
+    return workCenter;
+};
+
+//------------------------------------------------------------------------------
+const loadLineWorkCenters = async (lineEntity: any, scene_id: string, lineage: string[]): Promise<WorkCenterNode[]> => {
+    const lineScene = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
+    if (!lineScene.entities) return [];
+
+    const lineLineage = [...lineage, lineEntity.euid.value];
+    // Scene entities within a line use "cell:" as the debug_name prefix for work centers
+    const workCenterEnts = lineScene.entities.filter((e: any) => {
+        if (!e.scene_ref || !e.debug_name.value.includes(":")) return false;
+        return parseDebugName(e.debug_name.value).type === "cell";
+    });
+    return (await Promise.all(workCenterEnts.map((ent: any) => loadWorkCenter(ent, ent.scene_ref.value, lineLineage)))).sort(
+        sortNode,
+    );
 };
 
 //------------------------------------------------------------------------------
@@ -219,6 +208,7 @@ const loadMachine = async (machineEntity: any, scene_id: string, lineage: string
         lineage,
         ordinal: machineEntity.lineage.ordinal,
         name: name,
+        hash: hashNode(machineEntity.euid.value, lineage),
         tags: {},
     };
 
@@ -230,6 +220,13 @@ export const sortNode = (a: GraphNode, b: GraphNode) => {
     if (!a.lineage) return -1;
     if (!b.lineage) return 1;
     return a.ordinal - b.ordinal;
+};
+
+//------------------------------------------------------------------------------
+export const sortEntity = (a: any, b: any) => {
+    if (!a.lineage.value) return -1;
+    if (!b.lineage.value) return -1;
+    return a.lineage.ordinal - b.lineage.ordinal;
 };
 
 //------------------------------------------------------------------------------

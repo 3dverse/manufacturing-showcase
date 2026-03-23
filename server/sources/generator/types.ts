@@ -15,7 +15,7 @@ export type ShiftConfig = {
 export type RoutingStep = {
     operationCode: string;
     operationDescription: string;
-    cellOperationType: string; // matches cell tag: operationType
+    workCenterOperationType: string; // matches workCenter tag: operationType
     setupTimeMinutes: number;
     runTimeMinutes: number; // per batch
     defects: string[]; // defect codes that can occur at this step
@@ -50,10 +50,11 @@ export type ScenarioOverlay = {
 
 export type GeneratorConfig = {
     seed: number;
+    siteId?: string;
     now: Date;
     monthsBack: number;
     monthsForward: number;
-    factory: import("../operations/dataset/generateDataset").FactoryNode;
+    site: import("../operations/dataset/generateDataset").SiteNode;
     items: ItemDefinition[];
     shifts: ShiftConfig;
     scenarios: ScenarioOverlay[];
@@ -64,25 +65,25 @@ export type ShiftSlot = {
     shiftStart: Date;
     shiftEnd: Date;
     shiftName: string;
-    cellId: string;
+    workCenterId: string;
 };
 
-export type CellTimelineEntry = {
+export type WorkCenterTimelineEntry = {
     type: "operation" | "downtime" | "idle";
     start: Date;
     end: Date;
     entityId: string; // operationId or downtimeId
 };
 
-export type CellTimeline = {
-    cellId: string;
-    entries: CellTimelineEntry[]; // sorted by start
+export type WorkCenterTimeline = {
+    workCenterId: string;
+    entries: WorkCenterTimelineEntry[]; // sorted by start
 };
 
 export type OEEBucket = {
     workCenterId: string;
-    shiftStart: Date;
-    shiftEnd: Date;
+    shiftStart: number;
+    shiftEnd: number;
     shiftName: string;
     plannedMinutes: number;
     runtimeMinutes: number;
@@ -165,13 +166,13 @@ export type Dataset = {
         oeeTimeseries: OEEBucket[];
         operationsByProductionOrder: Map<string, string[]>;
         operationsByWorkCenter: Map<string, string[]>;
-        productionOrdersByWorkCenter: Map<string, string[]>;
+        productionOrdersByLocation: Map<string, string[]>;
         productionEventsByOperation: Map<string, any[]>;
         productionEventsByProductionOrder: Map<string, any[]>;
         productionEventsByWorkCenter: Map<string, any[]>;
         downtimeByWorkCenter: Map<string, any[]>;
         oeeByWorkCenter: Map<string, OEEBucket[]>;
-        cellTimelines: Map<string, CellTimeline>;
+        workCenterTimelines: Map<string, WorkCenterTimeline>;
     };
 
     eam: {

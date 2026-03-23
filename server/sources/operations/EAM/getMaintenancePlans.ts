@@ -1,9 +1,9 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { EAMreplyJSON, type EAMOperationHandler } from "../../utils/openAPI";
 import { paginate } from "../utils";
 
 export const getMaintenancePlans: EAMOperationHandler<"getMaintenancePlans"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { status, assetId, planType, page = "1", pageSize = "50" } = req.query as any;
 
     let plans = ds.eam.maintenancePlanList.map((id) => ds.eam.maintenancePlans.get(id)!);

@@ -1,9 +1,9 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { QMSreplyJSON, type QMSOperationHandler } from "../../utils/openAPI";
 import { paginate } from "../utils";
 
 export const getComplaints: QMSOperationHandler<"getComplaints"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { status, severity, receivedFrom, receivedTo, productCode, page = "1", pageSize = "50" } = req.query as any;
 
     let comps = ds.qms.complaintList.map((id) => ds.qms.complaints.get(id)!);

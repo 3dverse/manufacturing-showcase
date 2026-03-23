@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { Viewer } from "@/components/viewer/Viewer";
 import { MainHeader } from "@/components/layout/MainHeader";
 import { Navigation } from "@/components/navigation/Navigation";
-import { FactoryTimeline } from "@/components/nodes/factory/FactoryTimeline";
+import { Timeline } from "@/components/timeline/Timeline";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -62,7 +62,7 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
 
                 {!thumbnailMode && (
                     <div className="w-full self-end">
-                        <FactoryTimeline className="appear-in-from-bottom opacity-0 [--animation-delay:1s]" />
+                        <Timeline className="appear-in-from-bottom opacity-0 [--animation-delay:1s]" />
                     </div>
                 )}
             </div>

@@ -25,6 +25,8 @@ paths:
         Returns APS plans generated for a planning horizon. Use this endpoint to browse
         available plans, compare plan status, and identify which planning run should be
         used for downstream schedule and capacity analysis.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing APS plans
@@ -50,6 +52,7 @@ paths:
         indicators.
       parameters:
         - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing the APS plan
@@ -73,6 +76,7 @@ paths:
         is used to inspect the executable production schedule produced by APS.
       parameters:
         - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing scheduled operations
@@ -98,6 +102,7 @@ paths:
         overloads, underutilization, and planning feasibility.
       parameters:
         - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing capacity buckets
@@ -123,6 +128,7 @@ paths:
         feasible scheduling decisions.
       parameters:
         - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing material availability records
@@ -148,6 +154,7 @@ paths:
         planners focus on issues requiring review or replanning.
       parameters:
         - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing APS exceptions
@@ -173,6 +180,7 @@ paths:
         counts. Use this endpoint to compare plan quality at a glance.
       parameters:
         - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing KPI values
@@ -196,6 +204,8 @@ paths:
         Returns planning scenarios used to evaluate alternative planning assumptions,
         constraints, or optimization strategies. This endpoint is useful for comparing
         what-if cases before selecting a preferred plan.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing APS scenarios
@@ -221,6 +231,7 @@ paths:
         specific what-if or baseline scenario.
       parameters:
         - $ref: '#/components/parameters/ScenarioId'
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing the APS scenario
@@ -242,6 +253,8 @@ paths:
         Returns APS planning resources and work centers that participate in scheduling.
         This endpoint focuses on planning-related resource definitions such as finite
         capacity, calendars, and scheduling attributes.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing planning resources
@@ -267,6 +280,7 @@ paths:
         engine.
       parameters:
         - $ref: '#/components/parameters/ResourceId'
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing the planning resource
@@ -290,6 +304,7 @@ paths:
         schedule pressure on critical resources.
       parameters:
         - $ref: '#/components/parameters/ResourceId'
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing resource load buckets
@@ -313,6 +328,8 @@ paths:
         Returns demand elements considered by APS during planning, such as independent
         demand, forecast buckets, or prioritized requirements that drive supply and
         scheduling decisions.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing planning demands
@@ -338,6 +355,7 @@ paths:
         evaluate service outcomes.
       parameters:
         - $ref: '#/components/parameters/DemandId'
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing the planning demand
@@ -359,6 +377,8 @@ paths:
         Returns supply elements generated or considered by APS, such as planned orders,
         transfer supplies, or other supply proposals used to satisfy demand within the
         planning horizon.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing planned supplies
@@ -384,6 +404,7 @@ paths:
         the overall plan.
       parameters:
         - $ref: '#/components/parameters/SupplyId'
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing the planned supply
@@ -405,6 +426,8 @@ paths:
         Returns pegging relationships between demand and supply as determined by APS.
         This endpoint helps explain how planned supplies are allocated to satisfy
         demand across the planning horizon.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing pegging relationships
@@ -428,6 +451,8 @@ paths:
         Returns APS planning constraints that influence optimization and feasibility,
         such as finite capacity, material, calendar, or sequencing limits. This endpoint
         is intended to expose the rule set APS uses during plan generation.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
       responses:
         '200':
           description: Successful response containing planning constraints
@@ -444,6 +469,12 @@ paths:
 
 components:
   parameters:
+    SiteId:
+      name: siteId
+      in: query
+      description: Filter results to a specific manufacturing site.
+      schema:
+        type: string
     PlanId:
       name: planId
       in: path

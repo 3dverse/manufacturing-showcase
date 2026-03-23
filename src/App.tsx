@@ -24,6 +24,7 @@ import { formatSlug } from "@/core/Slug";
 //------------------------------------------------------------------------------
 import HomePage from "@/pages/HomePage";
 import FactoryPage from "@/pages/FactoryPage";
+import DatasetPage from "@/pages/DatasetPage";
 
 //------------------------------------------------------------------------------
 import type { Factory } from "@/content/type";
@@ -56,7 +57,6 @@ function AppLayout() {
     );
     const { setCurrentFactory, clearCurrentFactory } = useFactoryStore();
     const setNavigate = useNavigationStore((state) => state.setNavigate);
-
     //--------------------------------------------------------------------------
     // Navigation function that updates both state and URL
     const navigate = (route: string) => {
@@ -106,8 +106,8 @@ function AppLayout() {
     // Update factory store when route changes
     useEffect(() => {
         const parts = currentRoute.split("/");
-        if (parts.length >= 2) {
-            const factorySlug = parts[0];
+        if (parts.length >= 2 && parts[1] !== "") {
+            const factorySlug = parts[1];
             const factory = factories.find((f) => f.slug === factorySlug);
             if (factory) {
                 setCurrentFactory(factory);
@@ -123,6 +123,9 @@ function AppLayout() {
     const renderContent = () => {
         if (currentRoute === "/theme") {
             return <Theme onBack={() => navigate("/")} />;
+        }
+        if (currentRoute === "/dataset") {
+            return <DatasetPage />;
         }
         const parts = currentRoute.split("/");
         if (parts.length >= 2 && parts[1] !== "") {
@@ -140,10 +143,8 @@ function AppLayout() {
     //--------------------------------------------------------------------------
     return (
         <FactoriesContext.Provider value={{ factories }}>
-            <div className="flex flex-col h-dvh">
-                {renderContent()}
-                <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
-            </div>
+            {renderContent()}
+            <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
         </FactoriesContext.Provider>
     );
 }

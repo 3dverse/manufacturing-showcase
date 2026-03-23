@@ -1,9 +1,9 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { ERPreplyJSON, type ERPOperationHandler } from "../../utils/openAPI";
 import { paginate } from "../utils";
 
 export const getSuppliers: ERPOperationHandler<"getSuppliers"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { companyId, status, updatedSince, page = "1", pageSize = "50" } = req.query as any;
 
     let supps = ds.erp.supplierList;

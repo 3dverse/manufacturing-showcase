@@ -1,9 +1,9 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { QMSreplyJSON, type QMSOperationHandler } from "../../utils/openAPI";
 import { paginate } from "../utils";
 
 export const getDocuments: QMSOperationHandler<"getDocuments"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { documentType, status, department, effectiveFrom, effectiveTo, page = "1", pageSize = "50" } = req.query as any;
 
     let docs = ds.qms.documentList.map((id) => ds.qms.documents.get(id)!);

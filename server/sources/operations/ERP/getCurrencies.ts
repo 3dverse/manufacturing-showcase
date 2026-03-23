@@ -1,7 +1,7 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { ERPreplyJSON, type ERPOperationHandler } from "../../utils/openAPI";
 
 export const getCurrencies: ERPOperationHandler<"getCurrencies"> = async (_c, _req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(_req);
     return ERPreplyJSON({ data: ds.erp.currencies }, res);
 };

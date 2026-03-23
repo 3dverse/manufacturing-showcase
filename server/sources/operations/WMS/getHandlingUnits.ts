@@ -1,8 +1,8 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { WMSreplyJSON, type WMSOperationHandler } from "../../utils/openAPI";
 
 export const getHandlingUnits: WMSOperationHandler<"getHandlingUnits"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { warehouseId, handlingUnitId, locationId, status } = req.query as any;
 
     let hus = ds.wms.handlingUnits;

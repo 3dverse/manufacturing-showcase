@@ -1,4 +1,7 @@
-import { generateDataset } from "./dataset/generateDataset";
+import { getSiteGraph } from "./dataset/generateDataset";
+import { getDatasetMeta } from "./dataset/getDatasetMeta";
+import { listDatasets } from "./dataset/listDatasets";
+import { regenerateDatasets } from "./dataset/regenerateDatasets";
 import { mesOperations } from "./MES";
 import { eamOperations } from "./EAM";
 import { erpOperations } from "./ERP";
@@ -24,5 +27,5 @@ export const operations: Record<ApiTag, OperationHandlerMap> = {
     MES: mesOperations,
     QMS: qmsOperations,
     WMS: wmsOperations,
-    dataset: { generateDataset },
+    dataset: { getSiteGraph, getDatasetMeta, listDatasets, regenerateDatasets },
 };

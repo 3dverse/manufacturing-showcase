@@ -1,9 +1,9 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { MESreplyJSON, type MESOperationHandler } from "../../utils/openAPI";
 import { paginate } from "../utils";
 
 export const listDispatchItems: MESOperationHandler<"listDispatchItems"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { siteId, workCenterId, productionOrderId, status, page = "1", pageSize = "50" } = req.query as any;
 
     let items = [...ds.mes.dispatchItems];

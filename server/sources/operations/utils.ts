@@ -1,3 +1,10 @@
+import type { Request } from "express";
+import { getDataset } from "../generator/store";
+
+export function getDatasetForRequest(req: Request) {
+    return getDataset((req.query as any).siteId as string | undefined);
+}
+
 export function paginate<T>(items: T[], page = 1, pageSize = 50) {
     const totalItems = items.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));

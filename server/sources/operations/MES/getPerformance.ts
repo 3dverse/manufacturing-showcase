@@ -1,12 +1,13 @@
-import { getDataset } from "../../generator/store";
+import { getDatasetForRequest } from "../utils";
 import { MESreplyJSON, type MESOperationHandler } from "../../utils/openAPI";
 
 export const getPerformance: MESOperationHandler<"getPerformance"> = async (_c, req, res) => {
-    const ds = getDataset();
+    const ds = getDatasetForRequest(req);
     const { siteId: reqSiteId, workCenterId, productionOrderId, from: fromStr, to: toStr } = req.query as any;
 
-    const from = fromStr ? new Date(fromStr) : new Date(ds.now.getTime() - 7 * 24 * 3600000);
-    const to = toStr ? new Date(toStr) : ds.now;
+    const nowTs = Math.floor(ds.now.getTime() / 1000);
+    const from = fromStr ? Number(fromStr) : nowTs - 7 * 24 * 3600;
+    const to = toStr ? Number(toStr) : nowTs;
 
     let buckets = ds.mes.oeeTimeseries.filter((b) => b.shiftStart >= from && b.shiftEnd <= to);
 
@@ -31,8 +32,8 @@ export const getPerformance: MESOperationHandler<"getPerformance"> = async (_c, 
         siteId: reqSiteId ?? ds.siteId,
         workCenterId: workCenterId ?? null,
         productionOrderId: productionOrderId ?? null,
-        from: from.toISOString(),
-        to: to.toISOString(),
+        from,
+        to,
         producedQuantity,
         goodQuantity,
         scrapQuantity,

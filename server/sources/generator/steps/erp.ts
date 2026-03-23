@@ -64,7 +64,7 @@ export function generateERP(
     structural: { erpCostCenters: Map<string, any>; erpCostCenterList: string[] },
     rng: RNG,
 ): any {
-    const { now, monthsBack, monthsForward, items } = config;
+    const { now, monthsBack, monthsForward, items, siteId } = config;
     const windowStart = addMonths(now, -monthsBack);
     const windowEnd = addMonths(now, monthsForward);
 
@@ -213,7 +213,7 @@ export function generateERP(
     let soNum = 1;
     let soDate = new Date(windowStart);
     while (soDate <= windowEnd) {
-        const numSOs = rng.nextInt(0, 2);
+        const numSOs = rng.nextInt(3, 7);
         for (let s = 0; s < numSOs; s++) {
             const soId = `SO-${String(soNum).padStart(6, "0")}`;
             const orderDate = addDays(soDate, rng.nextInt(0, 6));
@@ -269,6 +269,7 @@ export function generateERP(
             const so = {
                 id: soId,
                 companyId: "COMP-001",
+                siteId,
                 orderNumber: soId,
                 customerId: customer.id,
                 customerName: customer.name,

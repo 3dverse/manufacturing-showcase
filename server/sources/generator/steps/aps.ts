@@ -1,6 +1,6 @@
 import type { GeneratorConfig, ItemDefinition } from "../types";
 import type { RNG } from "../rng";
-import { getCellsByOperationType } from "../graph";
+import { getWorkCentersByOperationType } from "../graph";
 
 const toUnix = (d: Date): number => Math.floor(d.getTime() / 1000);
 
@@ -16,7 +16,7 @@ export function generateAPS(
     erp: any,
     rng: RNG,
 ): any {
-    const { now, monthsBack, monthsForward, items, factory } = config;
+    const { now, monthsBack, monthsForward, items, site } = config;
     const windowStart = addDays(now, -monthsBack * 30);
     const windowEnd = addDays(now, monthsForward * 30);
 
@@ -103,7 +103,7 @@ export function generateAPS(
             const dem = {
                 id: demId,
                 itemId: line.itemId,
-                siteId: config.factory.name,
+                siteId: config.siteId!,
                 dueDate,
                 quantity: line.orderedQuantity,
                 priority: rng.nextInt(1, 5),
@@ -157,11 +157,11 @@ export function generateAPS(
 
         for (let ri = 0; ri < routingOps.length; ri++) {
             const step = routingOps[ri];
-            const cells = getCellsByOperationType(factory, step.cellOperationType);
-            if (cells.length === 0) continue;
+            const workCenters = getWorkCentersByOperationType(site, step.workCenterOperationType);
+            if (workCenters.length === 0) continue;
 
-            const cell = rng.pick(cells);
-            const resourceId = cell.name;
+            const workCenter = rng.pick(workCenters);
+            const resourceId = workCenter.hash;
 
             const totalMins = step.setupTimeMinutes + step.runTimeMinutes;
             const plannedEnd = new Date(endCursor);
@@ -202,7 +202,7 @@ export function generateAPS(
             id: supplyId,
             planId: "PLN-BASELINE",
             itemId: dem.itemId,
-            siteId: config.factory.name,
+            siteId: config.siteId!,
             supplyType: "planned_order",
             quantity: dem.quantity,
             availableDate: dem.dueDate,
@@ -292,7 +292,7 @@ export function generateAPS(
             const ma = {
                 planId: "PLN-BASELINE",
                 itemId: item.id,
-                siteId: config.factory.name,
+                siteId: config.siteId!,
                 bucketStart: toUnix(bucketStart),
                 bucketEnd: toUnix(bucketEnd),
                 projectedAvailableQuantity: Math.max(0, projected),

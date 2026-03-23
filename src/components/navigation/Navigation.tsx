@@ -27,7 +27,6 @@ export const Navigation = () => {
     //--------------------------------------------------------------------------
     // Context
     const { nodeGraph } = useContext(FactoryContext);
-    console.log(nodeGraph);
     const { selectedNode, setSelectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------

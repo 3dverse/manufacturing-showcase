@@ -89,7 +89,7 @@ export function generateShiftRoster(config: ShiftConfig, from: Date, to: Date): 
                         shiftStart,
                         shiftEnd,
                         shiftName: shift.name,
-                        cellId: "", // filled by caller per cell
+                        workCenterId: "", // filled by caller per workCenter
                     });
                 }
             }

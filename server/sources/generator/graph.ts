@@ -1,62 +1,58 @@
 import type {
-    AreaNode,
-    CellNode,
-    FactoryNode,
-    LineNode,
+    LocationNode,
+    WorkCenterNode,
+    SiteNode,
     MachineNode,
 } from "../operations/dataset/generateDataset";
 
-export function flattenCells(factory: FactoryNode): CellNode[] {
-    const cells: CellNode[] = [];
-    for (const area of factory.areas) {
-        for (const cell of area.cells) cells.push(cell);
-        for (const line of area.lines) {
-            for (const cell of line.cells) cells.push(cell);
-        }
-    }
-    return cells;
+export function flattenWorkCenters(site: SiteNode): WorkCenterNode[] {
+    return site.locations.flatMap((a) => a.workCenters);
 }
 
-export function flattenMachines(factory: FactoryNode): MachineNode[] {
-    return flattenCells(factory).flatMap((c) => c.machines);
+export function flattenMachines(site: SiteNode): MachineNode[] {
+    return flattenWorkCenters(site).flatMap((c) => c.machines);
 }
 
-export function flattenAreas(factory: FactoryNode): AreaNode[] {
-    return factory.areas;
+export function flattenLocations(site: SiteNode): LocationNode[] {
+    return site.locations;
 }
 
-export function getCellsByOperationType(factory: FactoryNode, operationType: string): CellNode[] {
-    return flattenCells(factory).filter((c) => c.tags["operationType"] === operationType);
+/** Locations whose name contains "production" (case-insensitive). */
+export function getProductionLocations(site: SiteNode): LocationNode[] {
+    return site.locations.filter((a) => a.name.toUpperCase().includes("PRODUCTION"));
 }
 
-export function getAreaForCell(factory: FactoryNode, cellName: string): AreaNode | undefined {
-    for (const area of factory.areas) {
-        for (const cell of area.cells) {
-            if (cell.name === cellName) return area;
-        }
-        for (const line of area.lines) {
-            for (const cell of line.cells) {
-                if (cell.name === cellName) return area;
-            }
-        }
+/** All workCenters belonging to an location. */
+export function getWorkCentersForLocation(location: LocationNode): WorkCenterNode[] {
+    return location.workCenters;
+}
+
+export function getWorkCentersByOperationType(site: SiteNode, operationType: string): WorkCenterNode[] {
+    const all = flattenWorkCenters(site);
+    const tagged = all.filter((c) => c.tags["operationType"] === operationType);
+    return tagged.length > 0 ? tagged : all;
+}
+
+export function getLocationForWorkCenter(site: SiteNode, workCenterName: string): LocationNode | undefined {
+    for (const location of site.locations) {
+        if (location.workCenters.some((c) => c.name === workCenterName)) return location;
     }
     return undefined;
 }
 
-export function getLineForCell(factory: FactoryNode, cellName: string): LineNode | undefined {
-    for (const area of factory.areas) {
-        for (const line of area.lines) {
-            for (const cell of line.cells) {
-                if (cell.name === cellName) return line;
-            }
-        }
-    }
-    return undefined;
-}
-
-export function getMachinesForCell(factory: FactoryNode, cellName: string): MachineNode[] {
-    for (const cell of flattenCells(factory)) {
-        if (cell.name === cellName) return cell.machines;
+export function getMachinesForWorkCenter(site: SiteNode, workCenterName: string): MachineNode[] {
+    for (const workCenter of flattenWorkCenters(site)) {
+        if (workCenter.name === workCenterName) return workCenter.machines;
     }
     return [];
+}
+
+/** Returns the production location (MES location) that a machine belongs to, or undefined. */
+export function getLocationForMachine(site: SiteNode, machineHash: string): LocationNode | undefined {
+    for (const location of site.locations) {
+        for (const workCenter of getWorkCentersForLocation(location)) {
+            if (workCenter.machines.some((m) => m.hash === machineHash)) return location;
+        }
+    }
+    return undefined;
 }

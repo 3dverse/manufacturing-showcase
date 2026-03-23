@@ -34,6 +34,7 @@ paths:
         status, hierarchy, criticality, and maintenance-relevant context.
       operationId: getAssets
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: status
@@ -125,6 +126,7 @@ paths:
         maintenance responsibilities, and inspection coverage.
       operationId: getLocations
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: parentLocationId
@@ -172,6 +174,7 @@ paths:
         otherwise maintain assets and locations within EAM.
       operationId: getWorkOrders
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: status
@@ -262,6 +265,7 @@ paths:
         intervals, maintenance strategy, and work generation rules for assets.
       operationId: getMaintenancePlans
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: status
@@ -342,6 +346,7 @@ paths:
         captured before or independently of formal work order execution.
       operationId: getServiceRequests
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: status
@@ -404,6 +409,7 @@ paths:
         condition, compliance checks, findings, and required follow-up actions.
       operationId: getInspections
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
         - name: assetId
@@ -459,6 +465,13 @@ paths:
 
 components:
   parameters:
+    SiteId:
+      name: siteId
+      in: query
+      description: Filter results to a specific manufacturing site.
+      schema:
+        type: string
+
     Page:
       name: page
       in: query
@@ -475,7 +488,7 @@ components:
       schema:
         type: integer
         minimum: 1
-        maximum: 500
+        maximum: 1000
         default: 50
 
     AssetId:
@@ -643,10 +656,16 @@ components:
           type: string
         assetId:
           type: string
-          nullable: true
+          description: >
+            Primary association. The physical asset (machine, equipment) this work order
+            is raised against.
         locationId:
           type: string
           nullable: true
+          description: >
+            EAM physical location of the asset in the facility hierarchy (building, floor,
+            bay). This is an EAM location concept — distinct from the MES production
+            location (area/zone) that production orders are associated with.
         maintenancePlanId:
           type: string
           nullable: true
@@ -687,6 +706,7 @@ components:
           type: integer
         updatedAt:
           type: integer
+      required: [id, workOrderNumber, status, workType, priority, assetId]
 
     WorkOrderOperation:
       type: object
@@ -701,8 +721,9 @@ components:
           type: string
         status:
           type: string
-        workCenter:
+        workCenterId:
           type: string
+          description: MES work center executing this maintenance operation step.
         plannedDurationHours:
           type: number
           format: double

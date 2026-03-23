@@ -1,7 +1,7 @@
 import { binarySearchTimeline } from "../../generator/timeline";
-import type { CellTimeline } from "../../generator/types";
+import type { WorkCenterTimeline } from "../../generator/types";
 
-export function seekWorkCenterStatus(cellTimeline: CellTimeline | undefined, now: Date): string {
+export function seekWorkCenterStatus(cellTimeline: WorkCenterTimeline | undefined, now: Date): string {
     if (!cellTimeline || cellTimeline.entries.length === 0) return "offline";
     const idx = binarySearchTimeline(cellTimeline.entries, now);
     if (idx >= 0) {
