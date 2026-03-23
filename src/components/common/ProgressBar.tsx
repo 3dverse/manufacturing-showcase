@@ -15,7 +15,8 @@ export const ProgressBar = ({
             <div
                 className="w-full h-5 bg-accent-100/40"
                 style={{
-                    background: `repeating-linear-gradient(-55deg, transparent 4px, var(--color-accent-50) 5px, var(--color-accent-50) 6px, transparent 7px)`,
+                    background:
+                        "repeating-linear-gradient(-55deg, transparent 4px, var(--color-accent-50) 5px, var(--color-accent-50) 6px, transparent 7px)",
                 }}
             >
                 <div

@@ -47,9 +47,9 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                             </div>
                         </div>
                     </div>
-                    {factoryItem.description && (
+                    {/* {factoryItem.description && (
                         <p className="text-sm text-subtle/80 mb-4">{factoryItem.description}</p>
-                    )}
+                    )} */}
                 </div>
                 <div className="flex flex-col text-left px-6 py-3 border-l border-slate-100">
                     <p className="text-3xl font-semibold text-positive-800">

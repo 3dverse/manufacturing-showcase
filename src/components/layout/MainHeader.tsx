@@ -78,7 +78,7 @@ export const MainHeader = ({
             {!thumbnailMode && (
                 <ViewerPanel
                     className={cn(
-                        "flex items-start p-2 shadow-none rounded-none rounded-s-md border-0 border-r-1 border-slate-100 z-10 transition-all duration-200",
+                        "flex items-start p-2 shadow-none rounded-none rounded-s-md border-0 border-r border-slate-100 z-10 transition-all duration-200",
                         panelStateClassName,
                     )}
                 >
@@ -94,7 +94,7 @@ export const MainHeader = ({
 
             <ViewerPanel
                 className={cn(
-                    "basis-full flex justify-between items-start gap-x-4 rounded-none rounded-e-md transition-all duration-200 border-0",
+                    "basis-full flex justify-between items-start gap-x-4 rounded-none rounded-e-md shadow-[0_0_30px_-10px_var(--color-accent-800)] transition-all duration-200 border-0",
                     panelStateClassName,
                 )}
             >

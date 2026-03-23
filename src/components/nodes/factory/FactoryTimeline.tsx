@@ -22,14 +22,14 @@ export type MachineStop = {
     reason?: string;
 };
 
-/** OF number from start/end date: OF-YYYY-NNN (NNN = day of year from start) */
+/** PO number from start/end date: PO-YYYY-NNN (NNN = day of year from start) */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- end kept for API clarity
 function ofNumberFromDates(start: Date, _end: Date): string {
     const y = start.getFullYear();
     const startOfYear = new Date(y, 0, 0);
     const dayOfYear = Math.floor((start.getTime() - startOfYear.getTime()) / DAY_MS);
     const nnn = String(dayOfYear).padStart(3, "0");
-    return `OF-${y}-${nnn}`;
+    return `PO-${y}-${nnn}`;
 }
 
 function formatDate(d: Date): string {

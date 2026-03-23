@@ -68,7 +68,7 @@ export const FactoryOrderPanel: React.FC<FactoryOrderPanelProps> = ({ order, cla
             <footer className="mt-4 flex justify-between">
                 <p className="ml-px flex items-center gap-1 w-fit text-2xs text-muted rounded-sm bg-slate-50 hover:text-subtle hover:bg-slate-100 transition-colors duration-200 pl-px pr-2 py-px cursor-pointer">
                     <img src="/logo/sap.svg" alt="SAP" className="h-3" />
-                    Updated 1m ago
+                    Updated 10s ago
                 </p>
                 <div className="flex items-center gap-2">
                     <p className="text-2xs text-muted/80">No delay</p>

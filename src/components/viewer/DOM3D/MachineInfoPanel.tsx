@@ -1,10 +1,12 @@
 //------------------------------------------------------------------------------
+import { useState } from "react";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
-import { faCheckToSlot, faFilePdf } from "@fortawesome/sharp-regular-svg-icons";
+import { faChartLine, faCheckToSlot, faFilePdf } from "@fortawesome/sharp-regular-svg-icons";
 import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
+import Button from "@/components/common/Button";
 import { ViewerPanel } from "@/components/common/ViewerPanel";
 import { PanelTitle, PanelWrapper } from "@/components/common/panel";
 import { DataContainer, DataLabel, DataValue } from "@/components/common/panel/DataLabel";
@@ -12,20 +14,25 @@ import { Triangle } from "@/components/common/icons/Triangle";
 
 //------------------------------------------------------------------------------
 import type { MachineNode } from "@/content/type";
-import Button from "@/components/common/Button";
+import { getMachineDocumentation } from "@/content/machine";
 
 //------------------------------------------------------------------------------
 const MOCK = {
     oee: 87,
     state: "In production",
-    workOrderName: "OF 123458",
+    workOrderName: "PO 123458",
     validQuantityProduced: 96,
     rejectedQuantityProduced: 4,
 };
+const URL = "https://explorer-test.productys.com/?zoom_level=20&dashboard_id=168";
 
 //------------------------------------------------------------------------------
 export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
     const hasIncident = true;
+
+    const machineDetails = getMachineDocumentation(machine.entity.name);
+
+    const [isMESDashboardVisible, setIsMESDashboardVisible] = useState(false);
 
     return (
         <BoundingBoxFaceProjection
@@ -34,28 +41,33 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
             className="flex flex-col justify-end gap-3 transform-3d pointer-events-none"
         >
             {hasIncident && (
-                <ViewerPanel className="min-w-80 bg-warning-500 shadow-[0_-4px_56px_-1px_var(--color-warning-500)] [corner-shape:bevel] starting:opacity-0 starting:translate-y-8 opacity-100 translate-y-0 translate-x-[80%] transition-all duration-400 delay-500">
-                    <PanelWrapper className="py-2">
-                        <PanelTitle className="capitalize text-warning-100 text-sm">
-                            <Icon icon={faExclamationTriangle} className="mr-2 text-sm text-warning-100" />
-                            Incident reported
-                        </PanelTitle>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            className="mt-2 w-full border-warning-400 text-warning-100 hover:bg-warning-400 hover:text-warning-100"
-                        >
-                            <Icon icon={faFilePdf} className="mr-2 text-sm text-warning-100" />
-                            Read the report
-                        </Button>
-                    </PanelWrapper>
-                </ViewerPanel>
+                <>
+                    <div className="absolute top-0 left-0 w-80 h-24 translate-x-[80%] bg-warning-500/50 [transform:translateZ(.5px)] blur-sm" />
+                    <ViewerPanel className="[transform:translateZ(-.1px)] relative min-w-80 bg-warning-500 shadow-[0_-4px_56px_-1px_var(--color-warning-500)] [corner-shape:bevel] starting:opacity-0 starting:translate-y-8 opacity-100 translate-y-0 translate-x-[80%] transition-all duration-400 delay-500">
+                        <PanelWrapper className="py-2">
+                            <PanelTitle className="capitalize text-warning-100 text-sm">
+                                <Icon icon={faExclamationTriangle} className="mr-2 text-sm text-warning-100" />
+                                Incident reported
+                            </PanelTitle>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="mt-2 w-full border-warning-400 text-warning-100 hover:bg-warning-400 hover:text-warning-100"
+                            >
+                                <Icon icon={faFilePdf} className="mr-2 text-sm text-warning-100" />
+                                Read the report
+                            </Button>
+                        </PanelWrapper>
+                    </ViewerPanel>
+                </>
             )}
             <ViewerPanel className="min-w-80 rounded-xl border-2 border-slate-0/50 shadow-lg [corner-shape:bevel] [outline:2px_solid_#ffffff90] outline-offset-2 translate-x-[80%] starting:translate-x-[60%] transition-transform duration-400">
                 <PanelWrapper className="py-3 px-2 space-y-3">
                     <p className="px-2 capitalize text-sm font-semibold text-slate-800 border-b border-slate-200/80 pb-2">
-                        {machine.name}
+                        {machineDetails.name}
                     </p>
+
+                    {/* <iframe src={URL} className="w-120 h-120 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" /> */}
                     <div className="flex flex-col gap-2">
                         <div className="grid grid-cols-2 gap-2">
                             <DataContainer className="gap-0 justify-between bg-positive-500/10">
@@ -101,9 +113,23 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
                                 </DataContainer>
                             </div>
                         </div>
+                        <Button
+                            size="xs"
+                            variant="ghost"
+                            className="flex w-fit justify-start"
+                            onClick={() => setIsMESDashboardVisible(!isMESDashboardVisible)}
+                        >
+                            <Icon icon={faChartLine} />
+                            MES Dashboard
+                        </Button>
                     </div>
                 </PanelWrapper>
             </ViewerPanel>
+            {isMESDashboardVisible && (
+                <div className="absolute top-1/2 left-1/2 z-10 w-90 h-full starting:opacity-0 starting:-translate-x-[80%] opacity-100 -translate-y-1/2 -translate-x-full transition-all duration-300 hover:scale-105 hover:-translate-z-[.25px]">
+                    <iframe src={URL} className="w-full h-full" />
+                </div>
+            )}
         </BoundingBoxFaceProjection>
     );
 }
