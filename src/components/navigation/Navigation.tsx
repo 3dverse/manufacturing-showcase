@@ -79,18 +79,18 @@ export const Navigation = () => {
     //--------------------------------------------------------------------------
     // Render
     return (
-        <nav className="flex gap-2 pointer-events-auto">
-            <ViewerPanel className="flex h-auto border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] appear-in-from-bottom">
+        <>
+            <ViewerPanel className="flex h-auto border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] appear-in-from-bottom pointer-events-auto">
                 <FactoryNav />
             </ViewerPanel>
-            <ViewerPanel className="max-w-[90vw] overflow-x-auto p-1 border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] appear-in-from-bottom">
+            <ViewerPanel as="nav" className="max-w-[90vw] overflow-x-auto p-1 border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] appear-in-from-bottom pointer-events-auto">
                 <ul className="list-none flex gap-1">
                     {nodeGraph.areas.map((area, index) => (
                         <AreaNav key={area.hash} area={area} isFirst={index === 0} index={index} />
                     ))}
                 </ul>
             </ViewerPanel>
-        </nav>
+        </>
     );
 };
 
@@ -167,12 +167,12 @@ const AreaNav = ({ area, isFirst, index }: { area: AreaNode; isFirst: boolean; i
             style={
                 SHOW_FLOW_BUTTON
                     ? ({
-                          cornerShape: "squircle",
-                          borderEndEndRadius: isFirst ? "1.5rem" : undefined,
-                          cornerEndEndShape: isFirst ? "scoop" : undefined,
-                          borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
-                          cornerEndStartShape: index === 1 ? "scoop" : undefined,
-                      } as React.CSSProperties)
+                        cornerShape: "squircle",
+                        borderEndEndRadius: isFirst ? "1.5rem" : undefined,
+                        cornerEndEndShape: isFirst ? "scoop" : undefined,
+                        borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
+                        cornerEndStartShape: index === 1 ? "scoop" : undefined,
+                    } as React.CSSProperties)
                     : undefined
             }
             onClick={clickHandler}

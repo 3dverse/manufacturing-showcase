@@ -51,9 +51,12 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                 </div>
 
                 {!thumbnailMode && (
-                    <div className="flex flex-col justify-end items-center gap-2 grow px-8 pb-2 md:pb-8">
-                        <Navigation />
-                        <NavigationOrderPanel order={orders[2]} />
+                    <div className="flex flex-col justify-end items-center grow px-8 pb-2 md:pb-8">
+                        <div className="grid grid-cols-[min-content_1fr] gap-1">
+                            <Navigation />
+                            <span />
+                            <NavigationOrderPanel order={orders[2]} />
+                        </div>
                     </div>
                 )}
 
