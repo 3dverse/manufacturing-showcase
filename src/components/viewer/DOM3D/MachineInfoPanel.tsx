@@ -28,12 +28,12 @@ const URL = "https://explorer-test.productys.com/?zoom_level=20&dashboard_id=168
 
 //------------------------------------------------------------------------------
 export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
+    //--------------------------------------------------------------------------
     const hasIncident = true;
-
-    const machineDetails = getMachineDocumentation(machine.entity.name);
-
+    const machineDetails = getMachineDocumentation(machine.name);
     const [isMESDashboardVisible, setIsMESDashboardVisible] = useState(false);
 
+    //--------------------------------------------------------------------------
     return (
         <BoundingBoxFaceProjection
             entity={machine.entity}
@@ -42,8 +42,8 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
         >
             {hasIncident && (
                 <>
-                    <div className="absolute top-0 left-0 w-80 h-24 translate-x-[80%] bg-warning-500/50 [transform:translateZ(.5px)] blur-sm" />
-                    <ViewerPanel className="[transform:translateZ(-.1px)] relative min-w-80 bg-warning-500 shadow-[0_-4px_56px_-1px_var(--color-warning-500)] [corner-shape:bevel] starting:opacity-0 starting:translate-y-8 opacity-100 translate-y-0 translate-x-[80%] transition-all duration-400 delay-500">
+                    {/* <div className="absolute top-0 left-0 w-80 h-24 translate-x-[80%] bg-warning-500/50 [transform:translateZ(.5px)] blur-sm" /> */}
+                    <ViewerPanel className="transform-[translateZ(-.1px)] relative min-w-80 bg-warning-500 shadow-[0_-4px_56px_-1px_var(--color-warning-500)] [corner-shape:bevel] starting:opacity-0 starting:translate-y-8 opacity-100 translate-y-0 translate-x-[80%] transition-all duration-400 delay-500">
                         <PanelWrapper className="py-2">
                             <PanelTitle className="capitalize text-warning-100 text-sm">
                                 <Icon icon={faExclamationTriangle} className="mr-2 text-sm text-warning-100" />
@@ -67,7 +67,6 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
                         {machineDetails.name}
                     </p>
 
-                    {/* <iframe src={URL} className="w-120 h-120 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" /> */}
                     <div className="flex flex-col gap-2">
                         <div className="grid grid-cols-2 gap-2">
                             <DataContainer className="gap-0 justify-between bg-positive-500/10">
@@ -114,9 +113,9 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
                             </div>
                         </div>
                         <Button
-                            size="xs"
+                            size="2xs"
                             variant="ghost"
-                            className="flex w-fit justify-start"
+                            className="flex w-fit justify-start gap-2"
                             onClick={() => setIsMESDashboardVisible(!isMESDashboardVisible)}
                         >
                             <Icon icon={faChartLine} />

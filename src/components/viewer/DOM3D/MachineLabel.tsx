@@ -14,7 +14,7 @@ export function MachineLabel({ machine }: { machine: MachineNode }) {
     }, [machine.entity.global_transform.position]);
 
     //--------------------------------------------------------------------------
-    const machineDetails = getMachineDocumentation(machine.entity.name);
+    const machineDetails = getMachineDocumentation(machine.name);
 
     //--------------------------------------------------------------------------
     return (

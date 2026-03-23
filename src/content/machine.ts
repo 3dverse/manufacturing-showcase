@@ -28,7 +28,7 @@ export const machinesDocumentation: Machine[] = [
     },
     {
         id: "yantra-design-drilling",
-        name: "Yantra Design CNC Drilling Machine",
+        name: "Yantra Design CNC Drilling",
         description: "AManufacturer & Exporter of CNC Drilling Machine",
         image: "",
         technical_documentations: ["https://yantradesign.co.in/cnc-drilling-machine.php"],
@@ -37,7 +37,6 @@ export const machinesDocumentation: Machine[] = [
 
 //------------------------------------------------------------------------------
 export function getMachineDocumentation(machineName: string): Machine {
-    const doc = machinesDocumentation.find((m) => m.name.toLowerCase() === machineName.toLowerCase());
-    if (!doc) return machinesDocumentation[0];
-    return doc;
+    const doc = machinesDocumentation.find((m) => m.id.toLowerCase() === machineName.toLowerCase());
+    return doc || machinesDocumentation[0];
 }
