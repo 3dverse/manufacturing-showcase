@@ -70,13 +70,7 @@ export const Header: React.FC<HeaderProps> = ({ keyStatus }) => {
                     </div>
                 </div>
 
-                <KeyStatusIndicators
-                    efficiency={keyStatus.efficiency}
-                    quality={keyStatus.quality}
-                    tracking={keyStatus.tracking}
-                    maintenance={keyStatus.maintenance}
-                    className="shrink"
-                />
+                <KeyStatusIndicators keyStatus={keyStatus} className="shrink" />
             </div>
         </PanelWrapper>
     );

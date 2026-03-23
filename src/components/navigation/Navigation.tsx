@@ -7,20 +7,19 @@ import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
 import { ViewerPanel } from "@/components/common/ViewerPanel";
 import { Icon } from "@/components/common/Icon";
 import Button from "@/components/common/Button";
+import { BadgeOEE } from "@/components/common/BadgeOEE";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-import { isLine, sortNode } from "@/core/NavGraph";
-import type { NavGraphNode } from "@/content/type";
+import { isFactory, isLine, sortNode } from "@/core/NavGraph";
 import { useNavNode } from "./hooks";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import type { AreaNode, CellNode, LineNode } from "@/content/type";
-import { BadgeOEE } from "../common/BadgeOEE";
+import type { NavGraphNode, AreaNode, CellNode, LineNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -53,7 +52,14 @@ export const Navigation = () => {
     // Arrow-key navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+            if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "Escape") return;
+
+            if (e.key === "Escape") {
+                if (selectedNode && !isFactory(selectedNode)) {
+                    setSelectedNode(selectedNode.parent);
+                }
+                return;
+            }
 
             const currentIndex = selectedNode ? flatNavList.findIndex((n) => n.hash === selectedNode.hash) : -1;
 
@@ -73,27 +79,24 @@ export const Navigation = () => {
     //--------------------------------------------------------------------------
     // Render
     return (
-        <ViewerPanel
-            as="nav"
-            className="select-none h-fit flex divide-x divide-muted/50 rounded-md border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto appear-in-from-bottom"
-        >
-            <div className="flex flex-col divide-y divide-muted/50">
-                <div className="p-1">
-                    <ul className="flex gap-1">
-                        <FactoryNav />
-                        {nodeGraph.areas.map((area, index) => (
-                            <AreaNav key={area.hash} area={area} isFirst={index === 0} index={index} />
-                        ))}
-                    </ul>
-                </div>
-            </div>
-        </ViewerPanel>
+        <nav className="flex gap-2 pointer-events-auto">
+            <ViewerPanel className="flex h-auto border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] appear-in-from-bottom">
+                <FactoryNav />
+            </ViewerPanel>
+            <ViewerPanel className="max-w-[90vw] overflow-x-auto p-1 border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] appear-in-from-bottom">
+                <ul className="list-none flex gap-1">
+                    {nodeGraph.areas.map((area, index) => (
+                        <AreaNav key={area.hash} area={area} isFirst={index === 0} index={index} />
+                    ))}
+                </ul>
+            </ViewerPanel>
+        </nav>
     );
 };
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const FactoryNav = () => {
+const FactoryNav = ({ className }: { className?: string }) => {
     //--------------------------------------------------------------------------
     // Contexts
     const { nodeGraph } = useContext(FactoryContext);
@@ -116,18 +119,16 @@ const FactoryNav = () => {
     //--------------------------------------------------------------------------
     // Render
     return (
-        <li>
-            <Button
-                variant="ghost"
-                size="xs"
-                className={cn("h-full", stateClassName)}
-                onClick={clickHandler}
-                onMouseEnter={mouseEnterHandler}
-                onMouseLeave={mouseLeaveHandler}
-            >
-                <Icon icon={faHome} size="lg" />
-            </Button>
-        </li>
+        <Button
+            variant="ghost"
+            size="xs"
+            className={cn("h-auto", stateClassName, className)}
+            onClick={clickHandler}
+            onMouseEnter={mouseEnterHandler}
+            onMouseLeave={mouseLeaveHandler}
+        >
+            <Icon icon={faHome} size="lg" />
+        </Button>
     );
 };
 

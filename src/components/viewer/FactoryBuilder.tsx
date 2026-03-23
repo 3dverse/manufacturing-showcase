@@ -26,7 +26,7 @@ import { isFactory, isArea, isLine, isCell } from "@/core/NavGraph";
 import type { AreaNode, CellNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 import { useNavNode } from "../navigation/hooks";
-import { FactoryOrderPanel } from "../dashboard/order/FactoryOrderPanel";
+import { FactoryOrderPanel } from "../orders/FactoryOrderPanel";
 import { orders } from "@/content/orders";
 
 //------------------------------------------------------------------------------

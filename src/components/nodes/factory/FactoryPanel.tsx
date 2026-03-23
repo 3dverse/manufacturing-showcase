@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
-import { FactoryOrderPanel } from "@/components/dashboard/order/FactoryOrderPanel";
-import { PlanningPanel } from "@/components/dashboard/planning/PlanningPanel";
+import { FactoryOrderPanel } from "@/components/orders/FactoryOrderPanel";
+import { PlanningPanel } from "@/components/orders/PlanningPanel";
 
 //------------------------------------------------------------------------------
 import { orders } from "@/content/orders";

@@ -19,7 +19,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
     return (
         <button
             onClick={() => navigate(`/${factoryItem.slug}`)}
-            className="relative w-full h-full text-left bg-slate-50 rounded-3xl shadow-2xl hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group"
+            className="relative w-full h-full text-left bg-slate-50 rounded-md md:rounded-3xl shadow-2xl hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group"
         >
             <div className="flex">
                 <div className="grow pl-7 pr-5 pt-5 pb-4">

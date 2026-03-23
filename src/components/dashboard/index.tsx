@@ -8,8 +8,8 @@ import RefreshNotifier from "@/components/common/RefreshNotifier";
 //------------------------------------------------------------------------------
 import { Header } from "./header/Header";
 import OEEPanel from "./OEE/OEEPanel";
-import { FactoryOrderPanel } from "./order/FactoryOrderPanel";
-import { PlanningPanel } from "./planning/PlanningPanel";
+import { FactoryOrderPanel } from "../orders/FactoryOrderPanel";
+import { PlanningPanel } from "../orders/PlanningPanel";
 import { ProductionPanel } from "./production/ProductionPanel";
 
 //------------------------------------------------------------------------------

@@ -1,29 +1,28 @@
 //------------------------------------------------------------------------------
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 
 //------------------------------------------------------------------------------
 import { Viewer } from "@/components/viewer/Viewer";
 import { MainHeader } from "@/components/layout/MainHeader";
 import { Navigation } from "@/components/navigation/Navigation";
 import { FactoryTimeline } from "@/components/nodes/factory/FactoryTimeline";
-import { FactoryPanel } from "@/components/nodes/factory/FactoryPanel";
-import { AreaPanel } from "@/components/nodes/areas/AreaPanel";
-import { LinePanel } from "@/components/nodes/lines/LinePanel";
 
 //------------------------------------------------------------------------------
-import { isArea, isLine } from "@/core/NavGraph";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import { SelectionContext } from "@/contexts/SelectionContext";
 import { Router } from "@/core/Router";
+import { KeyStatusIndicators } from "../dashboard/header/StatusIndicators";
+import { dashboardApi } from "@/services/dashboardApi";
+import { orders } from "@/content/orders";
+import { NavigationOrderPanel } from "../orders/NavigationOrderPanel";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onBack?: () => void }) => {
     //--------------------------------------------------------------------------
     // Context
-    const { selectedNode } = useContext(SelectionContext);
+    const data = dashboardApi.getDashboardData();
 
     //--------------------------------------------------------------------------
     // Effects
@@ -42,17 +41,19 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                     thumbnailMode ? "p-0" : "p-0",
                 )}
             >
-                <div className={thumbnailMode ? "" : "flex flex-col items-start gap-1 w-96 2xl:w-120 p-2"}>
+                <div className={thumbnailMode ? "" : "flex flex-col items-start w-96 2xl:w-120 p-2"}>
                     <MainHeader thumbnailMode={thumbnailMode} onBack={onBack} />
-                    {!thumbnailMode && <FactoryPanel />}
-                    {!thumbnailMode && selectedNode && isArea(selectedNode) && <AreaPanel area={selectedNode} />}
-                    {!thumbnailMode && selectedNode && isLine(selectedNode) && <LinePanel line={selectedNode} />}
+                    <KeyStatusIndicators keyStatus={data.keyStatus} />
+                    {/* {!thumbnailMode && <FactoryPanel />} */}
+                    {/* {!thumbnailMode && selectedNode && isArea(selectedNode) && <AreaPanel area={selectedNode} />} */}
+                    {/* {!thumbnailMode && selectedNode && isLine(selectedNode) && <LinePanel line={selectedNode} />} */}
                     {/* {!thumbnailMode && selectedNode && isCell(selectedNode) && <CellPanel cell={selectedNode} />} */}
                 </div>
 
                 {!thumbnailMode && (
-                    <div className="flex items-end justify-center grow pb-8">
+                    <div className="flex flex-col justify-end items-center gap-2 grow px-8 pb-2 md:pb-8">
                         <Navigation />
+                        <NavigationOrderPanel order={orders[2]} />
                     </div>
                 )}
 

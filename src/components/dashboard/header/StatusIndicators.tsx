@@ -15,7 +15,7 @@ import {
 import { Icon } from "@/components/common/Icon";
 
 //------------------------------------------------------------------------------
-import type { StatusScore } from "@/services/dashboardApi";
+import type { KeyStatus, StatusScore } from "@/services/dashboardApi";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ index, label, 
             style={
                 {
                     "--color": `var(--color-${color}-700)`,
-                    "--animation-delay": `${index * 100}ms`,
+                    "--animation-delay": `${index * 800}ms`,
                 } as React.CSSProperties
             }
         >
@@ -69,45 +69,41 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ index, label, 
 
 //------------------------------------------------------------------------------
 interface KeyStatusIndicatorsProps {
-    efficiency: StatusScore;
-    quality: StatusScore;
-    tracking: StatusScore;
-    maintenance: StatusScore;
+    keyStatus: KeyStatus;
     className?: string;
 }
 
 //------------------------------------------------------------------------------
-export const KeyStatusIndicators: React.FC<KeyStatusIndicatorsProps> = ({
-    efficiency,
-    quality,
-    tracking,
-    maintenance,
-    className,
-}) => {
+export const KeyStatusIndicators: React.FC<KeyStatusIndicatorsProps> = ({ keyStatus, className }) => {
     return (
         <div
             className={cn(
-                "flex w-full justify-around @lg:w-fit py-px px-2 border border-muted rounded overflow-hidden",
+                "flex w-full justify-around pt-2 pb-1 px-2 bg-slate-0/90 backdrop-blur-sm border border-muted rounded overflow-hidden -z-10 starting:-translate-y-3 -translate-y-1 starting:opacity-0 opacity-100 transition-all duration-200 delay-1000",
                 className,
             )}
         >
             <StatusIndicator
                 index={1}
                 label="Efficiency"
-                score={efficiency}
+                score={keyStatus.efficiency}
                 icon={<FontAwesomeIcon icon={faIndustry} />}
             />
-            <StatusIndicator index={2} label="Quality" score={quality} icon={<FontAwesomeIcon icon={faStar} />} />
+            <StatusIndicator
+                index={2}
+                label="Quality"
+                score={keyStatus.quality}
+                icon={<FontAwesomeIcon icon={faStar} />}
+            />
             <StatusIndicator
                 index={3}
                 label="Tracking"
-                score={tracking}
+                score={keyStatus.tracking}
                 icon={<FontAwesomeIcon icon={faBoxesStacked} />}
             />
             <StatusIndicator
                 index={4}
                 label="Maintenance"
-                score={maintenance}
+                score={keyStatus.maintenance}
                 icon={<FontAwesomeIcon icon={faHardHat} />}
             />
         </div>

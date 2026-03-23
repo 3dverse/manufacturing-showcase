@@ -26,7 +26,7 @@ export default function HomePage() {
     // Render
     return (
         <div className="h-dvh bg-linear-to-br from-slate-50 to-slate-100 overflow-x-hidden">
-            <div className="container flex flex-col h-full mx-auto pb-16">
+            <div className="container px-4 flex flex-col h-full mx-auto pb-16">
                 <header className="flex items-start gap-4 max-w-6xl py-10">
                     <span
                         role="img"

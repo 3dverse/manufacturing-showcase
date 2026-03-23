@@ -276,18 +276,7 @@ type TooltipContentProps = Omit<TooltipProps, "children" | "content"> & {
 
 const TooltipContent = React.forwardRef<HTMLDivElement, TooltipContentProps>(
     (
-        {
-            content,
-            className,
-            isVisible,
-            hoverable,
-            tooltipStyle,
-            position,
-            offset,
-            showArrow,
-            noPadding,
-            ...divProps
-        },
+        { content, className, isVisible, hoverable, tooltipStyle, position, offset, showArrow, noPadding, ...divProps },
         ref,
     ) => (
         <div
