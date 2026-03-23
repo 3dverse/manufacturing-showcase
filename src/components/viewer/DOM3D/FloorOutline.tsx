@@ -2,11 +2,13 @@ import { useMemo } from "react";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
+import { useNavNode } from "@/components/navigation/hooks";
+
+//------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import type { NavGraphNode } from "@/content/type";
-import { useNavNode } from "@/components/navigation/hooks";
 
 //------------------------------------------------------------------------------
 export const FloorOutline = ({ node }: { node: NavGraphNode }) => {

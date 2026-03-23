@@ -3,6 +3,7 @@ import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type { StationId } from "./stations/enum";
 import type { NodeTypes } from "./enums";
 
+//------------------------------------------------------------------------------
 export type Factory = {
     name: string;
     slug: string;

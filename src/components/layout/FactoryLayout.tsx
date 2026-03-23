@@ -6,16 +6,16 @@ import { Viewer } from "@/components/viewer/Viewer";
 import { MainHeader } from "@/components/layout/MainHeader";
 import { Navigation } from "@/components/navigation/Navigation";
 import { Timeline } from "@/components/timeline/Timeline";
+import { NavigationOrderPanel } from "../orders/NavigationOrderPanel";
+import { KeyStatusIndicators } from "../dashboard/header/StatusIndicators";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
+import { Router } from "@/core/Router";
+import { dashboardApi } from "@/services/dashboardApi";
 
 //------------------------------------------------------------------------------
-import { Router } from "@/core/Router";
-import { KeyStatusIndicators } from "../dashboard/header/StatusIndicators";
-import { dashboardApi } from "@/services/dashboardApi";
 import { orders } from "@/content/orders";
-import { NavigationOrderPanel } from "../orders/NavigationOrderPanel";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------

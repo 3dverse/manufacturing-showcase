@@ -3,6 +3,7 @@ import { useContext, useMemo } from "react";
 //------------------------------------------------------------------------------
 import { AreaStorageQuadPanel } from "@/components/nodes/areas/storage/AreaStorageQuadPanel";
 import { AreaStorageOverlay } from "@/components/nodes/areas/storage/AreaStorageOverlay";
+import { FactoryOrderPanel } from "../orders/FactoryOrderPanel";
 import { FloatingLabel } from "./DOM3D/FloatingLabel";
 import { AnchoredPanel } from "./DOM3D/AnchoredPanel";
 import { FloorOutline } from "./DOM3D/FloorOutline";
@@ -14,6 +15,7 @@ import { MachineOutline } from "./DOM3D/MachineOutline";
 import { MachineLabel } from "./DOM3D/MachineLabel";
 import { TopPanel } from "./DOM3D/TopPanel";
 import { IncidentInfoPanel } from "./DOM3D/IncidentInfoPanel";
+import { UnitOutPanel } from "./DOM3D/UnitOutPanel";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
@@ -23,12 +25,10 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 import { isFactory, isArea, isLine, isCell } from "@/core/NavGraph";
 
 //------------------------------------------------------------------------------
+import { orders } from "@/content/orders";
 import type { AreaNode, CellNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 import { useNavNode } from "../navigation/hooks";
-import { FactoryOrderPanel } from "../orders/FactoryOrderPanel";
-import { orders } from "@/content/orders";
-import { UnitOutPanel } from "./DOM3D/UnitOutPanel";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
