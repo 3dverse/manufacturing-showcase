@@ -60,6 +60,7 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     const { instance } = useContext(LivelinkContext);
     useEffect(() => {
         if (instance) {
+            instance.startSimulation();
             //instance.activity_watcher.setTimeouts({
             //    warn_after_seconds: 10,
             //    timeout_after_seconds: 15,
