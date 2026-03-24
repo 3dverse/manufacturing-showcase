@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "@/utils/cn";
+import { PERFORMANCE_MODE } from "@/content/3dverse";
 
 //------------------------------------------------------------------------------
 export const ViewerPanelResizable = ({
@@ -77,7 +78,11 @@ export const ViewerPanelResizable = ({
     return (
         <Element
             ref={panelRef as React.RefObject<HTMLDivElement>}
-            className={cn("shadow-[0_-4px_48px_-1px_rgba(0,0,0,0.1)] backdrop-blur-xl relative", className)}
+            className={cn(
+                "shadow-[0_-4px_48px_-1px_rgba(0,0,0,0.1)] relative",
+                PERFORMANCE_MODE ? "bg-slate-100/97" : "bg-slate-100/80 backdrop-blur-xl",
+                className,
+            )}
             style={{ width: `${width}px`, ...(props.style as React.CSSProperties) }}
             {...props}
         >

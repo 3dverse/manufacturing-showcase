@@ -17,6 +17,7 @@ import type {
     ProjectedWorkOrder,
 } from "@/core/Projection";
 import { fmtDuration, fmtTs, fromPct, toPct } from "./timeUtils";
+import { PERFORMANCE_MODE } from "@/content/3dverse";
 
 //------------------------------------------------------------------------------
 // Zoom levels
@@ -495,7 +496,8 @@ export function Timeline({ className }: { className?: string }) {
     return (
         <aside
             className={cn(
-                "pointer-events-auto border-t border-slate-200/15 bg-linear-to-b from-white/70 to-white/95 backdrop-blur-3xl select-none",
+                "pointer-events-auto border-t border-slate-200/15 select-none",
+                PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
                 className,
             )}
         >

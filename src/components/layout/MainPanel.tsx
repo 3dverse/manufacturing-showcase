@@ -10,7 +10,7 @@ const MainPanel = () => {
             defaultWidth={400}
             minWidth={400}
             maxWidth={800}
-            className="h-full bg-slate-100/80 pointer-events-auto"
+            className="h-full pointer-events-auto"
         >
             <LiveDashboard />
         </ViewerPanelResizable>
