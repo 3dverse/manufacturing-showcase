@@ -32,6 +32,8 @@ import type { AreaNode, CellNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 import { useNavNode } from "../navigation/hooks";
 
+const SHOW_FLOW_LINES = false;
+
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 const FactoryBuilder = () => {
@@ -108,7 +110,8 @@ const FactoryBuilder = () => {
     // Show children nodes for selected Line
     return (
         <>
-            {selectedNode &&
+            {SHOW_FLOW_LINES &&
+                selectedNode &&
                 isFactory(selectedNode) &&
                 nodeGraph?.flows.map((flow) => <FlowSpline key={flow.hash} flow={flow} />)}
             {nodeGraph?.areas.map((area) => <AreaBuilderItem key={area.hash} area={area} />)}
