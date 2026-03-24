@@ -26,18 +26,20 @@ const PHASE_LABEL: Record<Phase, string> = {
 
 //------------------------------------------------------------------------------
 export const NavigationOrderPanel = ({ className }: { className?: string }) => {
+    //--------------------------------------------------------------------------
     const { selectedNode } = useContext(SelectionContext);
     const { scope } = useScope(selectedNode ?? null);
     const { snapshot } = useSnapshot(scope);
     const projection = useProjection(snapshot);
 
+    //--------------------------------------------------------------------------
     const asOf = useTimelineStore((s) => s.asOf);
     const order = projection?.productionOrders[0] ?? null;
     const operation =
         projection?.operations.find((o) => o.id === snapshot?.productionOrders[0]?.currentOperationId) ?? null;
 
+    //--------------------------------------------------------------------------
     if (!order) return null;
-
     return (
         <ViewerPanel
             as="article"

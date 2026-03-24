@@ -30,6 +30,8 @@ export type ProductionOrderEntry = {
     quantities: {
         plannedQuantity: number;
         uom: string;
+        goodQuantity?: number;
+        scrapQuantity?: number;
     };
     erpSalesOrderId?: string | null;
 };
@@ -161,16 +163,16 @@ export type AsOfSnapshot = TimelineScope;
 /** Production order enriched with detail data from getProductionOrder. */
 export type ProductionOrderDetailEntry = Omit<ProductionOrderEntry, "quantities"> & {
     quantities: {
-        plannedQuantity:  number;
+        plannedQuantity: number;
         producedQuantity: number;
-        goodQuantity:     number;
-        scrapQuantity:    number;
-        uom:              string;
+        goodQuantity: number;
+        scrapQuantity: number;
+        uom: string;
     };
-    progressPercent:    number;
-    operationIds:       string[];
+    progressPercent: number;
+    operationIds: string[];
     currentOperationId: string | null;
-    notes?:             string;
+    notes?: string;
 };
 
 /**
@@ -179,7 +181,7 @@ export type ProductionOrderDetailEntry = Omit<ProductionOrderEntry, "quantities"
  */
 export type RichSnapshot = Omit<AsOfSnapshot, "productionOrders" | "operations"> & {
     productionOrders: ProductionOrderDetailEntry[];
-    operations:       OperationEntry[];
+    operations: OperationEntry[];
 };
 
 // ---------------------------------------------------------------------------
@@ -188,9 +190,9 @@ export type RichSnapshot = Omit<AsOfSnapshot, "productionOrders" | "operations">
 
 export function scopeFromNode(node: NavGraphNode, span: TimelineSpan): TimelineScope {
     if (isFactory(node)) return scopeFactory(node, span);
-    if (isArea(node))    return scopeArea(node, span);
-    if (isLine(node))    return scopeLine(node, span);
-    if (isCell(node))    return scopeCell(node, span);
+    if (isArea(node)) return scopeArea(node, span);
+    if (isLine(node)) return scopeLine(node, span);
+    if (isCell(node)) return scopeCell(node, span);
     if (isMachine(node)) return scopeMachine(node, span);
     return emptyScope("factory");
 }
@@ -305,20 +307,17 @@ export function workCenterIdsFromNode(node: NavGraphNode): string[] {
             ...a.cells.map((c) => c.hash),
         ]);
     if (isArea(node))
-        return [
-            ...node.lines.flatMap((l) => l.cells.map((c) => c.hash)),
-            ...node.cells.map((c) => c.hash),
-        ];
-    if (isLine(node))  return node.cells.map((c) => c.hash);
-    if (isCell(node))  return [node.hash];
+        return [...node.lines.flatMap((l) => l.cells.map((c) => c.hash)), ...node.cells.map((c) => c.hash)];
+    if (isLine(node)) return node.cells.map((c) => c.hash);
+    if (isCell(node)) return [node.hash];
     if (isMachine(node)) return [node.parent.hash];
     return [];
 }
 
 export function locationIdsFromNode(node: NavGraphNode): string[] {
     if (isFactory(node)) return node.areas.map((a) => a.hash);
-    if (isArea(node))    return [node.hash];
-    if (isLine(node))    return [node.parent.hash];
+    if (isArea(node)) return [node.hash];
+    if (isLine(node)) return [node.parent.hash];
     if (isCell(node)) {
         const p = node.parent;
         return [isLine(p) ? p.parent.hash : p.hash];
@@ -341,8 +340,8 @@ export function machineHashesFromNode(node: NavGraphNode): string[] {
             ...node.lines.flatMap((l) => l.cells.flatMap((c) => c.machines.map((m) => m.hash))),
             ...node.cells.flatMap((c) => c.machines.map((m) => m.hash)),
         ];
-    if (isLine(node))    return node.cells.flatMap((c) => c.machines.map((m) => m.hash));
-    if (isCell(node))    return node.machines.map((m) => m.hash);
+    if (isLine(node)) return node.cells.flatMap((c) => c.machines.map((m) => m.hash));
+    if (isCell(node)) return node.machines.map((m) => m.hash);
     if (isMachine(node)) return [node.hash];
     return [];
 }
@@ -354,9 +353,9 @@ export function scopeKey(workCenterIds: string[]): string {
 
 export function levelFromNode(node: NavGraphNode): TimelineLevel {
     if (isFactory(node)) return "factory";
-    if (isArea(node))    return "area";
-    if (isLine(node))    return "line";
-    if (isCell(node))    return "cell";
+    if (isArea(node)) return "area";
+    if (isLine(node)) return "line";
+    if (isCell(node)) return "cell";
     return "machine";
 }
 

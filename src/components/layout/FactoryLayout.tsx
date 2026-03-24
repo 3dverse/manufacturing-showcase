@@ -48,16 +48,17 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                 {!thumbnailMode && (
                     <div className="flex flex-col justify-end items-center grow p-2 md:p-8">
                         <div className="grid grid-cols-[min-content_1fr] gap-1">
-                            <Navigation />
+                            <NavigationOrderPanel className="col-span-2" />
+
+                            <Navigation className="col-span-2 md:col-span-1" />
                             <span className="hidden md:block" />
-                            <NavigationOrderPanel className="col-span-2 md:col-span-1" />
                         </div>
                     </div>
                 )}
 
                 {!thumbnailMode && (
                     <div className="w-full self-end">
-                        <Timeline className="appear-in-from-bottom opacity-0 [--animation-delay:1s]" />
+                        <Timeline className="h-full min-h-40 appear-in-from-bottom opacity-0 [--animation-delay:1s]" />
                     </div>
                 )}
             </div>

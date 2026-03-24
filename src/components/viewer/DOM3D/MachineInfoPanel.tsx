@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 import { faChartLine, faCheckToSlot, faFilePdf } from "@fortawesome/sharp-regular-svg-icons";
 import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
@@ -17,23 +17,38 @@ import type { MachineNode } from "@/content/type";
 import { getMachineDocumentation } from "@/content/machine";
 
 //------------------------------------------------------------------------------
+import { useProjection } from "@/hooks/useProjection";
+import { useScope } from "@/hooks/useScope";
+import { useSnapshot } from "@/hooks/useSnapshot";
+import { SelectionContext } from "@/contexts/SelectionContext";
+
+//------------------------------------------------------------------------------
 const MOCK = {
     oee: 87,
-    state: "In production",
-    workOrderName: "PO 123458",
-    validQuantityProduced: 96,
-    rejectedQuantityProduced: 4,
 };
 const URL = "https://explorer-test.productys.com/?zoom_level=20&dashboard_id=168";
 
 //------------------------------------------------------------------------------
 export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
     //--------------------------------------------------------------------------
-    const hasIncident = true;
-    const machineDetails = getMachineDocumentation(machine.name);
     const [isMESDashboardVisible, setIsMESDashboardVisible] = useState(false);
 
     //--------------------------------------------------------------------------
+    const { selectedNode } = useContext(SelectionContext);
+    const { scope } = useScope(selectedNode ?? null);
+    const { snapshot } = useSnapshot(scope);
+    const projection = useProjection(snapshot);
+    const order = projection?.productionOrders[0] ?? null;
+    console.log(order);
+
+    //--------------------------------------------------------------------------
+    const { orderNumber, itemCode } = order ?? { orderNumber: "", itemCode: "" };
+    const { goodQuantity = 0, scrapQuantity = 0 } = order?.quantities ?? {};
+    const hasIncident = true;
+    const machineDetails = getMachineDocumentation(machine.name);
+
+    //--------------------------------------------------------------------------
+    if (!order) return null;
     return (
         <BoundingBoxFaceProjection
             entity={machine.entity}
@@ -82,33 +97,28 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
                             <DataContainer className="gap-0 justify-between">
                                 <DataLabel className="flex items-center gap-2 text-positive-700 ">
                                     <Icon icon={faCheckToSlot} />
-                                    {MOCK.state}
+                                    In production
                                 </DataLabel>
-                                <DataValue className="mt-1 text-slate-800">{MOCK.workOrderName}</DataValue>
+                                <DataValue className="mt-1 text-slate-800">{orderNumber}</DataValue>
+                                <p className="text-xs text-accent-500">{itemCode}</p>
                             </DataContainer>
                         </div>
                         <div className="grid grid-cols-[1fr_2fr] gap-2">
                             <DataContainer>
                                 <DataLabel>Quality</DataLabel>
                                 <DataValue className="text-2xl text-slate-800">
-                                    {(MOCK.validQuantityProduced /
-                                        (MOCK.validQuantityProduced + MOCK.rejectedQuantityProduced)) *
-                                        100}
+                                    {Number((goodQuantity / (goodQuantity + scrapQuantity)) * 100).toFixed(0)}
                                     <span className="inline-block ml-1 text-sm -translate-y-2 opacity-80">%</span>
                                 </DataValue>
                             </DataContainer>
                             <div className="grid grid-cols-2">
                                 <DataContainer className="rounded-e-none">
                                     <DataLabel className="text-positive-800">Valid</DataLabel>
-                                    <DataValue className="text-2xl text-positive-800">
-                                        {MOCK.validQuantityProduced}
-                                    </DataValue>
+                                    <DataValue className="text-2xl text-positive-800">{goodQuantity}</DataValue>
                                 </DataContainer>
                                 <DataContainer className="rounded-s-none -ml-px">
                                     <DataLabel className="text-negative-800">Rejected</DataLabel>
-                                    <DataValue className="text-2xl text-negative-800">
-                                        {MOCK.rejectedQuantityProduced}
-                                    </DataValue>
+                                    <DataValue className="text-2xl text-negative-800">{scrapQuantity}</DataValue>
                                 </DataContainer>
                             </div>
                         </div>

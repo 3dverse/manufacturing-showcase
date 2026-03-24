@@ -24,7 +24,7 @@ import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
 import type { NavGraphNode, AreaNode, CellNode, LineNode } from "@/content/type";
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const Navigation = () => {
+export const Navigation = ({ className }: { className?: string }) => {
     //--------------------------------------------------------------------------
     // Context
     const { nodeGraph } = useContext(FactoryContext);
@@ -37,9 +37,7 @@ export const Navigation = () => {
     const downtimeCellIds = useMemo(() => {
         if (!span) return new Set<string>();
         return new Set(
-            [...span.downtimeEvents.values()]
-                .filter((e) => downtimeAtAsOf(e, asOf))
-                .map((e) => e.workCenterId),
+            [...span.downtimeEvents.values()].filter((e) => downtimeAtAsOf(e, asOf)).map((e) => e.workCenterId),
         );
     }, [span, asOf]);
 
@@ -93,7 +91,12 @@ export const Navigation = () => {
     // Render
     return (
         <>
-            <ViewerPanel className="flex h-auto border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] appear-in-from-bottom pointer-events-auto select-none">
+            <ViewerPanel
+                className={cn(
+                    "flex h-auto border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] appear-in-from-bottom pointer-events-auto select-none",
+                    className,
+                )}
+            >
                 <FactoryNav />
             </ViewerPanel>
             <ViewerPanel
@@ -102,7 +105,13 @@ export const Navigation = () => {
             >
                 <ul className="list-none flex gap-1">
                     {nodeGraph.areas.map((area, index) => (
-                        <AreaNav key={area.hash} area={area} isFirst={index === 0} index={index} downtimeCellIds={downtimeCellIds} />
+                        <AreaNav
+                            key={area.hash}
+                            area={area}
+                            isFirst={index === 0}
+                            index={index}
+                            downtimeCellIds={downtimeCellIds}
+                        />
                     ))}
                 </ul>
             </ViewerPanel>
@@ -150,7 +159,17 @@ const FactoryNav = ({ className }: { className?: string }) => {
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const AreaNav = ({ area, isFirst, index, downtimeCellIds }: { area: AreaNode; isFirst: boolean; index: number; downtimeCellIds: Set<string> }) => {
+const AreaNav = ({
+    area,
+    isFirst,
+    index,
+    downtimeCellIds,
+}: {
+    area: AreaNode;
+    isFirst: boolean;
+    index: number;
+    downtimeCellIds: Set<string>;
+}) => {
     //--------------------------------------------------------------------------
     // Hooks
     const { mouseLeaveHandler, mouseEnterHandler, isHovered, clickHandler, isSelected, isChildSelected } = useNavNode(
@@ -218,7 +237,17 @@ const AreaNav = ({ area, isFirst, index, downtimeCellIds }: { area: AreaNode; is
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const ChildNode = ({ node, isFirst, isLast, downtimeCellIds }: { node: LineNode | CellNode; isFirst: boolean; isLast: boolean; downtimeCellIds: Set<string> }) => {
+const ChildNode = ({
+    node,
+    isFirst,
+    isLast,
+    downtimeCellIds,
+}: {
+    node: LineNode | CellNode;
+    isFirst: boolean;
+    isLast: boolean;
+    downtimeCellIds: Set<string>;
+}) => {
     //--------------------------------------------------------------------------
     // Hooks
     const { isActive, isParentActive, isHovered, clickHandler, mouseEnterHandler, mouseLeaveHandler } = useNavNode(
@@ -227,9 +256,7 @@ const ChildNode = ({ node, isFirst, isLast, downtimeCellIds }: { node: LineNode 
     );
 
     const hasDowntime = useMemo(
-        () => isLine(node)
-            ? node.cells.some((c) => downtimeCellIds.has(c.hash))
-            : downtimeCellIds.has(node.hash),
+        () => (isLine(node) ? node.cells.some((c) => downtimeCellIds.has(c.hash)) : downtimeCellIds.has(node.hash)),
         [node, downtimeCellIds],
     );
 

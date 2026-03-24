@@ -495,7 +495,7 @@ export function Timeline({ className }: { className?: string }) {
     return (
         <aside
             className={cn(
-                "pointer-events-auto border-t border-slate-200/15 bg-linear-to-b from-white/10 to-white/35 backdrop-blur-3xl select-none",
+                "pointer-events-auto border-t border-slate-200/15 bg-linear-to-b from-white/70 to-white/95 backdrop-blur-3xl select-none",
                 className,
             )}
         >
@@ -530,7 +530,7 @@ export function Timeline({ className }: { className?: string }) {
             </div>
 
             {/* Body */}
-            <div className="flex" style={{ height: totalH }}>
+            <div className="flex h-full">
                 {/* Label column */}
                 <div
                     className="shrink-0 w-24 border-r border-slate-200/10 flex flex-col"
