@@ -303,6 +303,18 @@ export const getDefaultOrientationForNodeType = (nodeType: string): Quat =>
     ORIENTATION_BY_NODE_TYPE[nodeType] ?? DEFAULT_ORIENTATION;
 
 //------------------------------------------------------------------------------
+const findFirstParentLinker = async (entity: Entity): Promise<Entity | null> => {
+    let parent = entity.parent;
+    while (parent) {
+        if (parent.scene_ref) {
+            return parent;
+        }
+        parent = parent.parent;
+    }
+    return null;
+};
+
+//------------------------------------------------------------------------------
 export const moveCamera = async (
     entity: Entity,
     cameraController: DefaultCameraController,
@@ -326,6 +338,13 @@ export const moveCamera = async (
             target = povEntity.global_transform.position;
         } else {
             destination = povEntity.global_transform.position;
+        }
+
+        // If the entity has a "camera:pov" child, we assume it's defined in local space of some parent linker,
+        // so we need to add that linker's world position to get the correct global destination.
+        const parentLinker = await findFirstParentLinker(entity);
+        if (parentLinker) {
+            destination = add(destination, parentLinker.global_transform.position);
         }
     } else {
         // Otherwise, frame the whole entity in view using its AABB and the provided/default orientation.
