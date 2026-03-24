@@ -303,7 +303,7 @@ export const getDefaultOrientationForNodeType = (nodeType: string): Quat =>
     ORIENTATION_BY_NODE_TYPE[nodeType] ?? DEFAULT_ORIENTATION;
 
 //------------------------------------------------------------------------------
-export const moveCamera = (
+export const moveCamera = async (
     entity: Entity,
     cameraController: DefaultCameraController,
     viewport: Viewport,
@@ -311,13 +311,33 @@ export const moveCamera = (
     orientation: Quat = DEFAULT_ORIENTATION,
 ) => {
     const aspect = viewport.width / viewport.height;
-    const viewpoint = AABBViewpoint({
-        aabb: entity.global_aabb,
-        aabbOffset: [0, -1, 0],
-        cameraFov: cameraEntity.perspective_lens?.fovy || 90,
-        orientation,
-        aspect,
-    });
+    let destination: Vec3 = [0, 0, 0];
+    let target: Vec3 = [...entity.global_aabb.center];
 
-    cameraController.setLookAt(...viewpoint.position, ...entity.global_aabb.center, true);
+    const children = await entity.getChildren();
+    const povIdx = children.findIndex((c) => c.name === "camera:pov");
+    if (povIdx !== -1) {
+        // If you have a child named "camera:pov", use its position as the camera
+        // target (ignoring orientation as it's defined by the look at target ).
+        const povEntity = children[povIdx];
+        if (povEntity.label) {
+            const pov = povEntity.label.camera;
+            destination = [pov[0], pov[1], pov[2]];
+            target = povEntity.global_transform.position;
+        } else {
+            destination = povEntity.global_transform.position;
+        }
+    } else {
+        // Otherwise, frame the whole entity in view using its AABB and the provided/default orientation.
+        const viewpoint = AABBViewpoint({
+            aabb: entity.global_aabb,
+            aabbOffset: [0, -1, 0],
+            cameraFov: cameraEntity.perspective_lens?.fovy || 90,
+            orientation,
+            aspect,
+        });
+        destination = viewpoint.position;
+    }
+
+    cameraController.setLookAt(...destination, ...target, true);
 };
