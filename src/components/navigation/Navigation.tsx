@@ -218,7 +218,7 @@ const AreaNav = ({
             {SHOW_FLOW_BUTTON && index === 0 && <FlowNode isSelected={isSelected} />}
             <div className="flex justify-between gap-1">
                 <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
-                <BadgeOEE oee={89} hideLabel />
+                {area.name === "production" && <BadgeOEE oee={89} hideLabel />}
             </div>
             <ul className="flex overflow-visible">
                 {children.map((child, index) => (
