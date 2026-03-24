@@ -15,7 +15,6 @@ import { Router } from "@/core/Router";
 import { dashboardApi } from "@/services/dashboardApi";
 
 //------------------------------------------------------------------------------
-import { orders } from "@/content/orders";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -51,7 +50,7 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                         <div className="grid grid-cols-[min-content_1fr] gap-1">
                             <Navigation />
                             <span className="hidden md:block" />
-                            <NavigationOrderPanel order={orders[2]} className="col-span-2 md:col-span-1" />
+                            <NavigationOrderPanel className="col-span-2 md:col-span-1" />
                         </div>
                     </div>
                 )}

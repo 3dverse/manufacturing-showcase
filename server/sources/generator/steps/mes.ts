@@ -27,11 +27,7 @@ function minutesBetween(a: Date, b: Date): number {
 }
 
 // Consume `minutes` of shift time from `from`, skipping gaps between shifts.
-function advanceShiftMins(
-    from: Date,
-    minutes: number,
-    shiftRoster: { shiftStart: Date; shiftEnd: Date }[],
-): Date {
+function advanceShiftMins(from: Date, minutes: number, shiftRoster: { shiftStart: Date; shiftEnd: Date }[]): Date {
     let remaining = minutes;
     let pos = new Date(from);
     for (const slot of shiftRoster) {
@@ -47,10 +43,7 @@ function advanceShiftMins(
 }
 
 // First shift start at or after `after`.
-function nextShiftStart(
-    after: Date,
-    shiftRoster: { shiftStart: Date; shiftEnd: Date }[],
-): Date | null {
+function nextShiftStart(after: Date, shiftRoster: { shiftStart: Date; shiftEnd: Date }[]): Date | null {
     for (const slot of shiftRoster) {
         if (slot.shiftEnd <= after) continue;
         return slot.shiftStart >= after ? slot.shiftStart : after;
@@ -89,32 +82,32 @@ export function generateMES(
 ): any {
     const { now, monthsBack, monthsForward, items, site } = config;
     const windowStart = addDays(now, -monthsBack * 30);
-    const windowEnd   = addDays(now,  monthsForward * 30);
+    const windowEnd = addDays(now, monthsForward * 30);
     const siteId = config.siteId!;
 
-    const productionOrders   = new Map<string, any>();
+    const productionOrders = new Map<string, any>();
     const productionOrderList: string[] = [];
-    const operations         = new Map<string, any>();
+    const operations = new Map<string, any>();
     const operationList: string[] = [];
     const dispatchItems: any[] = [];
     const productionEvents: any[] = [];
     const downtimeEvents: any[] = [];
     const oeeTimeseries: OEEBucket[] = [];
-    const workCenterTimelines      = new Map<string, WorkCenterTimeline>();
+    const workCenterTimelines = new Map<string, WorkCenterTimeline>();
 
-    const operationsByProductionOrder       = new Map<string, string[]>();
-    const operationsByWorkCenter            = new Map<string, string[]>();
-    const productionOrdersByLocation        = new Map<string, string[]>();
-    const productionEventsByOperation       = new Map<string, any[]>();
+    const operationsByProductionOrder = new Map<string, string[]>();
+    const operationsByWorkCenter = new Map<string, string[]>();
+    const productionOrdersByLocation = new Map<string, string[]>();
+    const productionEventsByOperation = new Map<string, any[]>();
     const productionEventsByProductionOrder = new Map<string, any[]>();
-    const productionEventsByWorkCenter      = new Map<string, any[]>();
-    const downtimeByWorkCenter              = new Map<string, any[]>();
-    const oeeByWorkCenter                   = new Map<string, OEEBucket[]>();
+    const productionEventsByWorkCenter = new Map<string, any[]>();
+    const downtimeByWorkCenter = new Map<string, any[]>();
+    const oeeByWorkCenter = new Map<string, OEEBucket[]>();
 
     let evtNum = 1;
-    let dtNum  = 1;
-    let poNum  = 1;
-    let opNum  = 1;
+    let dtNum = 1;
+    let poNum = 1;
+    let opNum = 1;
     let dspNum = 1;
     let lotNum = 1;
 
@@ -150,13 +143,14 @@ export function generateMES(
     const productionLocations = getProductionLocations(site);
 
     for (const location of productionLocations) {
-        const locationWorkCenters   = getWorkCentersForLocation(location).sort((a, b) => a.ordinal - b.ordinal);
-        const locationId  = location.hash;
+        const locationWorkCenters = getWorkCentersForLocation(location).sort((a, b) => a.ordinal - b.ordinal);
+        const locationId = location.hash;
 
         // Build the operation type sequence for this location:
         // unique op types in work-center ordinal order, each with its candidate workCenters.
         // Untagged workCenters are assigned a random op type from the hardcoded list.
-        const opTypeSequence: Array<{ opType: string; template: OperationTemplate; workCenters: WorkCenterNode[] }> = [];
+        const opTypeSequence: Array<{ opType: string; template: OperationTemplate; workCenters: WorkCenterNode[] }> =
+            [];
         const seenOpTypes = new Map<string, number>(); // opType → index in opTypeSequence
         for (const workCenter of locationWorkCenters) {
             const opType = (workCenter.tags["operationType"] as string | undefined) ?? rng.pick([...ALL_OP_TYPES]);
@@ -186,24 +180,24 @@ export function generateMES(
             // Planned maintenance window (between every pair of POs)
             // ------------------------------------------------------------------
             if (!isFirst) {
-                const maintMins  = rng.nextFloat(MAINT_MIN_MINS, MAINT_MAX_MINS);
+                const maintMins = rng.nextFloat(MAINT_MIN_MINS, MAINT_MAX_MINS);
                 const maintStart = new Date(cursor);
-                const maintEnd   = addMinutes(maintStart, maintMins);
+                const maintEnd = addMinutes(maintStart, maintMins);
 
                 if (maintStart < now) {
                     for (const workCenter of locationWorkCenters) {
                         const dtId = `DT-${String(dtNum++).padStart(6, "0")}`;
                         const dtEvent = {
-                            id:                dtId,
+                            id: dtId,
                             siteId,
-                            workCenterId:      workCenter.hash,
-                            startedAt:         toUnix(maintStart),
-                            endedAt:           toUnix(maintEnd < now ? maintEnd : now),
-                            durationMinutes:   Math.round(maintMins),
-                            reasonCode:        "PLANNED_MAINTENANCE",
+                            workCenterId: workCenter.hash,
+                            startedAt: toUnix(maintStart),
+                            endedAt: toUnix(maintEnd < now ? maintEnd : now),
+                            durationMinutes: Math.round(maintMins),
+                            reasonCode: "PLANNED_MAINTENANCE",
                             reasonDescription: "Scheduled preventive maintenance window",
                             productionOrderId: null,
-                            operationId:       null,
+                            operationId: null,
                         };
                         downtimeEvents.push(dtEvent);
                         downtimeByWorkCenter.get(workCenter.hash)!.push(dtEvent);
@@ -221,7 +215,7 @@ export function generateMES(
             // Production Order: pipeline-schedule one operation per op type
             // ------------------------------------------------------------------
             const item = rng.pick(eligible);
-            const qty  = rng.nextInt(20, 120);
+            const qty = rng.nextInt(20, 120);
 
             const poId = `MO-${String(poNum++).padStart(6, "0")}`;
             operationsByProductionOrder.set(poId, []);
@@ -241,14 +235,17 @@ export function generateMES(
 
                 // Pick the least-loaded workCenter among those with this op type
                 const workCenter = workCenters.reduce((best, c) =>
-                    (workCenterCursors.get(c.hash)?.getTime() ?? 0) <
-                    (workCenterCursors.get(best.hash)?.getTime() ?? 0) ? c : best,
+                    (workCenterCursors.get(c.hash)?.getTime() ?? 0) < (workCenterCursors.get(best.hash)?.getTime() ?? 0)
+                        ? c
+                        : best,
                 );
 
-                const earliest = new Date(Math.max(
-                    opStartCursor.getTime(),
-                    (workCenterCursors.get(workCenter.hash) ?? opStartCursor).getTime(),
-                ));
+                const earliest = new Date(
+                    Math.max(
+                        opStartCursor.getTime(),
+                        (workCenterCursors.get(workCenter.hash) ?? opStartCursor).getTime(),
+                    ),
+                );
                 const opStart = nextShiftStart(earliest, shiftRoster) ?? earliest;
                 const opDurationMins = template.setupMinutes + qty * template.cycleMinutesPerItem;
                 // Throughput end: how long this station takes at its own rate
@@ -261,12 +258,22 @@ export function generateMES(
                 const opEnd: Date = pipelineEnd > throughputEnd ? pipelineEnd : throughputEnd;
 
                 const opId = createOperation({
-                    opNum: opNum++, poId, siteId,
-                    template, sequence: i + 1,
-                    opStart, opEnd, qty,
-                    workCenter, lotNum: lotNum++, now, rng,
-                    operations, operationList,
-                    operationsByProductionOrder, operationsByWorkCenter,
+                    opNum: opNum++,
+                    poId,
+                    siteId,
+                    template,
+                    sequence: i + 1,
+                    opStart,
+                    opEnd,
+                    qty,
+                    workCenter,
+                    lotNum: lotNum++,
+                    now,
+                    rng,
+                    operations,
+                    operationList,
+                    operationsByProductionOrder,
+                    operationsByWorkCenter,
                 });
                 allOpIds.push(opId);
 
@@ -287,53 +294,63 @@ export function generateMES(
             }
 
             // Assemble PO from its operations
-            const allOps    = allOpIds.map((id) => operations.get(id)!);
+            const allOps = allOpIds.map((id) => operations.get(id)!);
             const poStartTs = Math.min(...allOps.map((o) => o.scheduledStart));
-            const poEndTs   = Math.max(...allOps.map((o) => o.scheduledEnd));
+            const poEndTs = Math.max(...allOps.map((o) => o.scheduledEnd));
             const poStartDate = new Date(poStartTs * 1000);
-            const poEndDate   = new Date(poEndTs   * 1000);
+            const poEndDate = new Date(poEndTs * 1000);
 
             let poStatus: string;
-            if (poEndDate < now)        poStatus = "completed";
+            if (poEndDate < now) poStatus = "completed";
             else if (poStartDate > now) poStatus = "released";
-            else                        poStatus = "in_progress";
+            else poStatus = "in_progress";
 
-            const totalProduced = allOps.reduce((s, o) => s + o.quantities.producedQuantity, 0);
-            const totalGood     = allOps.reduce((s, o) => s + o.quantities.goodQuantity,     0);
-            const totalScrap    = allOps.reduce((s, o) => s + o.quantities.scrapQuantity,    0);
-            const outputLots    = allOps.flatMap((o) => o.quantities.outputLotNumbers as string[]);
+            // Pipeline: each item flows through all ops sequentially.
+            // The PO's final output = the last started op's output.
+            // Scrap is cumulative across all ops (each step loses some items).
+            const startedOps = allOps.filter((o) => o.status !== "ready");
+            const lastStartedOp = startedOps[startedOps.length - 1];
+            const totalGood    = lastStartedOp?.quantities.goodQuantity    ?? 0;
+            const totalProduced = lastStartedOp?.quantities.producedQuantity ?? 0;
+            const totalScrap   = allOps.reduce((s, o) => s + o.quantities.scrapQuantity, 0);
+            const outputLots   = allOps.flatMap((o) => o.quantities.outputLotNumbers as string[]);
 
             const po: any = {
-                id:              poId,
-                orderNumber:     poId,
+                id: poId,
+                orderNumber: poId,
                 siteId,
                 locationId,
-                itemCode:        item.id,
+                itemCode: item.id,
                 itemDescription: item.name,
-                status:          poStatus,
-                priority:        rng.nextInt(1, 5),
+                status: poStatus,
+                priority: rng.nextInt(1, 5),
                 quantities: {
-                    plannedQuantity:  qty,
+                    plannedQuantity: qty,
                     producedQuantity: totalProduced,
-                    goodQuantity:     totalGood,
-                    scrapQuantity:    totalScrap,
-                    uom:              item.uom,
+                    goodQuantity: totalGood,
+                    scrapQuantity: totalScrap,
+                    uom: item.uom,
                     outputLotNumbers: outputLots,
                 },
                 timing: {
                     scheduledStart: poStartTs,
-                    scheduledEnd:   poEndTs,
+                    scheduledEnd: poEndTs,
                     actualStart: poStatus !== "released" ? poStartTs : null,
-                    actualEnd:   poStatus === "completed" ? poEndTs  : null,
+                    actualEnd: poStatus === "completed" ? poEndTs : null,
                 },
-                operationIds:       allOpIds,
+                operationIds: allOpIds,
                 currentOperationId: allOps.find((o) => o.status === "in_progress")?.id ?? null,
-                progressPercent: poStatus === "completed"   ? 100
-                               : poStatus === "in_progress" ? rng.nextFloat(10, 90)
-                               : 0,
-                notes:           "",
+                progressPercent: (() => {
+                    if (poStatus === "completed") return 100;
+                    if (poStatus === "released")  return 0;
+                    const completedCount  = allOps.filter((o) => o.status === "completed").length;
+                    const inProgressOp    = allOps.find((o) => o.status === "in_progress");
+                    const inProgressFrac  = inProgressOp ? inProgressOp.progressPercent / 100 : 0;
+                    return Math.round(((completedCount + inProgressFrac) / allOps.length) * 100);
+                })(),
+                notes: "",
                 erpSalesOrderId: null,
-                apsPlanId:       null,
+                apsPlanId: null,
             };
 
             productionOrders.set(poId, po);
@@ -344,28 +361,28 @@ export function generateMES(
             // Unplanned downtime: 25% chance of equipment failure on one workCenter
             // ------------------------------------------------------------------
             if (poStartDate < now && rng.bool(0.25)) {
-                const failWorkCenter  = rng.pick(locationWorkCenters);
-                const wallSpan  = poEndDate.getTime() - poStartDate.getTime();
-                const dtOffset  = rng.nextFloat(0.15, 0.75);
-                const dtStart   = new Date(poStartDate.getTime() + wallSpan * dtOffset);
+                const failWorkCenter = rng.pick(locationWorkCenters);
+                const wallSpan = poEndDate.getTime() - poStartDate.getTime();
+                const dtOffset = rng.nextFloat(0.15, 0.75);
+                const dtStart = new Date(poStartDate.getTime() + wallSpan * dtOffset);
                 if (dtStart < now) {
                     const dtDurMins = rng.nextFloat(30, 180);
-                    const dtEnd     = addMinutes(dtStart, dtDurMins);
-                    const dtId      = `DT-${String(dtNum++).padStart(6, "0")}`;
-                    const opDuring  = allOpIds
+                    const dtEnd = addMinutes(dtStart, dtDurMins);
+                    const dtId = `DT-${String(dtNum++).padStart(6, "0")}`;
+                    const opDuring = allOpIds
                         .map((id) => operations.get(id)!)
                         .find((o) => o.workCenterId === failWorkCenter.hash);
                     const dtEvent = {
-                        id:                dtId,
+                        id: dtId,
                         siteId,
-                        workCenterId:      failWorkCenter.hash,
-                        startedAt:         toUnix(dtStart),
-                        endedAt:           dtEnd < now ? toUnix(dtEnd) : null,
-                        durationMinutes:   Math.round(dtDurMins),
-                        reasonCode:        "EQUIPMENT_FAILURE",
+                        workCenterId: failWorkCenter.hash,
+                        startedAt: toUnix(dtStart),
+                        endedAt: dtEnd < now ? toUnix(dtEnd) : null,
+                        durationMinutes: Math.round(dtDurMins),
+                        reasonCode: "EQUIPMENT_FAILURE",
                         reasonDescription: "Unplanned equipment breakdown",
                         productionOrderId: poId,
-                        operationId:       opDuring?.id ?? null,
+                        operationId: opDuring?.id ?? null,
                     };
                     downtimeEvents.push(dtEvent);
                     downtimeByWorkCenter.get(failWorkCenter.hash)?.push(dtEvent);
@@ -388,31 +405,29 @@ export function generateMES(
 
     for (const location of site.locations) {
         for (const workCenter of getWorkCentersForLocation(location)) {
-            const wcId      = workCenter.hash;
+            const wcId = workCenter.hash;
             const workCenterOpIds = operationsByWorkCenter.get(wcId) ?? [];
             const timeline: WorkCenterTimeline = { workCenterId: wcId, entries: [] };
 
             for (const slot of shiftRoster) {
                 const shiftDurationMins = minutesBetween(slot.shiftStart, slot.shiftEnd);
-                let shiftRuntimeMins  = 0;
+                let shiftRuntimeMins = 0;
                 let shiftDowntimeMins = 0;
-                let shiftProduced     = 0;
-                let shiftGood         = 0;
-                let shiftScrap        = 0;
-                let shiftUom          = "pcs";
+                let shiftProduced = 0;
+                let shiftGood = 0;
+                let shiftScrap = 0;
+                let shiftUom = "pcs";
 
                 const seenDt = new Set<string>();
                 for (const dt of downtimeByWorkCenter.get(wcId) ?? []) {
                     if (seenDt.has(dt.id)) continue;
                     const dtStart = new Date(dt.startedAt * 1000);
-                    const dtEnd   = dt.endedAt
-                        ? new Date(dt.endedAt * 1000)
-                        : addMinutes(dtStart, dt.durationMinutes);
+                    const dtEnd = dt.endedAt ? new Date(dt.endedAt * 1000) : addMinutes(dtStart, dt.durationMinutes);
                     if (dtEnd <= slot.shiftStart || dtStart >= slot.shiftEnd) continue;
                     seenDt.add(dt.id);
                     const overlap = minutesBetween(
                         dtStart < slot.shiftStart ? slot.shiftStart : dtStart,
-                        dtEnd   > slot.shiftEnd   ? slot.shiftEnd   : dtEnd,
+                        dtEnd > slot.shiftEnd ? slot.shiftEnd : dtEnd,
                     );
                     shiftDowntimeMins += overlap;
                     timeline.entries.push({ type: "downtime", start: dtStart, end: dtEnd, entityId: dt.id });
@@ -422,20 +437,20 @@ export function generateMES(
                     const op = operations.get(opId);
                     if (!op) continue;
                     const opStart = new Date(op.scheduledStart * 1000);
-                    const opEnd   = new Date(op.scheduledEnd   * 1000);
+                    const opEnd = new Date(op.scheduledEnd * 1000);
                     if (opEnd <= slot.shiftStart || opStart >= slot.shiftEnd) continue;
 
                     const clipStart = opStart < slot.shiftStart ? slot.shiftStart : opStart;
-                    const clipEnd   = opEnd   > slot.shiftEnd   ? slot.shiftEnd   : opEnd;
-                    const runMins   = minutesBetween(clipStart, clipEnd);
+                    const clipEnd = opEnd > slot.shiftEnd ? slot.shiftEnd : opEnd;
+                    const runMins = minutesBetween(clipStart, clipEnd);
                     if (runMins <= 0) continue;
 
                     timeline.entries.push({ type: "operation", start: clipStart, end: clipEnd, entityId: opId });
                     shiftRuntimeMins += runMins;
-                    shiftProduced    += op.quantities.producedQuantity;
-                    shiftGood        += op.quantities.goodQuantity;
-                    shiftScrap       += op.quantities.scrapQuantity;
-                    shiftUom          = op.quantities.uom;
+                    shiftProduced += op.quantities.producedQuantity;
+                    shiftGood += op.quantities.goodQuantity;
+                    shiftScrap += op.quantities.scrapQuantity;
+                    shiftUom = op.quantities.uom;
 
                     if (clipStart >= now) continue;
 
@@ -445,7 +460,20 @@ export function generateMES(
                     const evts = productionEventsByOperation.get(opId)!;
 
                     if (evts.length === 0) {
-                        const e = mkEvt(evtNum++, siteId, toUnix(clipStart), "operation_started", op.productionOrderId, opId, wcId, null, null, null, null, `Operation ${op.operationCode} started`);
+                        const e = mkEvt(
+                            evtNum++,
+                            siteId,
+                            toUnix(clipStart),
+                            "operation_started",
+                            op.productionOrderId,
+                            opId,
+                            wcId,
+                            null,
+                            null,
+                            null,
+                            null,
+                            `Operation ${op.operationCode} started`,
+                        );
                         evts.push(e);
                         productionEvents.push(e);
                         productionEventsByWorkCenter.get(wcId)!.push(e);
@@ -453,10 +481,23 @@ export function generateMES(
                     }
 
                     let qCursor = addMinutes(clipStart, 30);
-                    const qEnd  = clipEnd < now ? clipEnd : now;
+                    const qEnd = clipEnd < now ? clipEnd : now;
                     while (qCursor < qEnd) {
                         const q = Math.round((op.quantities.goodQuantity / Math.max(1, runMins)) * 30);
-                        const e = mkEvt(evtNum++, siteId, toUnix(qCursor), "quantity_reported", op.productionOrderId, opId, wcId, q, shiftUom, null, op._lotNumber, `${q} ${shiftUom} reported`);
+                        const e = mkEvt(
+                            evtNum++,
+                            siteId,
+                            toUnix(qCursor),
+                            "quantity_reported",
+                            op.productionOrderId,
+                            opId,
+                            wcId,
+                            q,
+                            shiftUom,
+                            null,
+                            op._lotNumber,
+                            `${q} ${shiftUom} reported`,
+                        );
                         evts.push(e);
                         productionEvents.push(e);
                         productionEventsByWorkCenter.get(wcId)!.push(e);
@@ -467,7 +508,20 @@ export function generateMES(
                     if (op._defectBreakdown?.length > 0 && clipEnd < now) {
                         for (let di = 0; di < op._defectBreakdown.length; di++) {
                             const { defectCode, quantity } = op._defectBreakdown[di];
-                            const e = mkEvt(evtNum++, siteId, toUnix(addMinutes(clipEnd, -(5 + di))), "scrap_reported", op.productionOrderId, opId, wcId, quantity, shiftUom, "DEFECT", op._lotNumber, `${quantity} ${shiftUom} scrapped (${defectCode})`);
+                            const e = mkEvt(
+                                evtNum++,
+                                siteId,
+                                toUnix(addMinutes(clipEnd, -(5 + di))),
+                                "scrap_reported",
+                                op.productionOrderId,
+                                opId,
+                                wcId,
+                                quantity,
+                                shiftUom,
+                                "DEFECT",
+                                op._lotNumber,
+                                `${quantity} ${shiftUom} scrapped (${defectCode})`,
+                            );
                             evts.push(e);
                             productionEvents.push(e);
                             productionEventsByWorkCenter.get(wcId)!.push(e);
@@ -476,7 +530,20 @@ export function generateMES(
                     }
 
                     if (op.status === "completed" && clipEnd < now) {
-                        const e = mkEvt(evtNum++, siteId, toUnix(clipEnd), "operation_completed", op.productionOrderId, opId, wcId, op.quantities.goodQuantity, shiftUom, null, op._lotNumber, `Operation ${op.operationCode} completed`);
+                        const e = mkEvt(
+                            evtNum++,
+                            siteId,
+                            toUnix(clipEnd),
+                            "operation_completed",
+                            op.productionOrderId,
+                            opId,
+                            wcId,
+                            op.quantities.goodQuantity,
+                            shiftUom,
+                            null,
+                            op._lotNumber,
+                            `Operation ${op.operationCode} completed`,
+                        );
                         evts.push(e);
                         productionEvents.push(e);
                         productionEventsByWorkCenter.get(wcId)!.push(e);
@@ -484,29 +551,34 @@ export function generateMES(
                 }
 
                 if (slot.shiftEnd <= now) {
-                    const availPct = shiftDurationMins > 0
-                        ? Math.min(100, (shiftRuntimeMins / Math.max(1, shiftDurationMins - shiftDowntimeMins)) * 100)
-                        : 0;
-                    const perfPct  = shiftProduced > 0 ? Math.min(100, rng.nextFloat(80, 98)) : 0;
-                    const qualPct  = shiftProduced > 0 ? Math.max(0, ((shiftProduced - shiftScrap) / shiftProduced) * 100) : 100;
-                    const oeePct   = (availPct / 100) * (perfPct / 100) * (qualPct / 100) * 100;
+                    const availPct =
+                        shiftDurationMins > 0
+                            ? Math.min(
+                                  100,
+                                  (shiftRuntimeMins / Math.max(1, shiftDurationMins - shiftDowntimeMins)) * 100,
+                              )
+                            : 0;
+                    const perfPct = shiftProduced > 0 ? Math.min(100, rng.nextFloat(80, 98)) : 0;
+                    const qualPct =
+                        shiftProduced > 0 ? Math.max(0, ((shiftProduced - shiftScrap) / shiftProduced) * 100) : 100;
+                    const oeePct = (availPct / 100) * (perfPct / 100) * (qualPct / 100) * 100;
 
                     const bucket: OEEBucket = {
-                        workCenterId:        wcId,
-                        shiftStart:          toUnix(slot.shiftStart),
-                        shiftEnd:            toUnix(slot.shiftEnd),
-                        shiftName:           slot.shiftName,
-                        plannedMinutes:      shiftDurationMins,
-                        runtimeMinutes:      shiftRuntimeMins,
-                        downtimeMinutes:     shiftDowntimeMins,
-                        producedQuantity:    shiftProduced,
-                        goodQuantity:        shiftGood,
-                        scrapQuantity:       shiftScrap,
-                        uom:                 shiftUom,
+                        workCenterId: wcId,
+                        shiftStart: toUnix(slot.shiftStart),
+                        shiftEnd: toUnix(slot.shiftEnd),
+                        shiftName: slot.shiftName,
+                        plannedMinutes: shiftDurationMins,
+                        runtimeMinutes: shiftRuntimeMins,
+                        downtimeMinutes: shiftDowntimeMins,
+                        producedQuantity: shiftProduced,
+                        goodQuantity: shiftGood,
+                        scrapQuantity: shiftScrap,
+                        uom: shiftUom,
                         availabilityPercent: Math.round(availPct * 10) / 10,
-                        performancePercent:  Math.round(perfPct  * 10) / 10,
-                        qualityPercent:      Math.round(qualPct  * 10) / 10,
-                        oeePercent:          Math.round(oeePct   * 10) / 10,
+                        performancePercent: Math.round(perfPct * 10) / 10,
+                        qualityPercent: Math.round(qualPct * 10) / 10,
+                        oeePercent: Math.round(oeePct * 10) / 10,
                     };
                     oeeTimeseries.push(bucket);
                     oeeByWorkCenter.get(wcId)!.push(bucket);
@@ -523,10 +595,10 @@ export function generateMES(
             timeline.entries.sort((a, b) => a.start.getTime() - b.start.getTime());
             workCenterTimelines.set(wcId, timeline);
 
-            const wc   = structural.workCenters.get(wcId)!;
+            const wc = structural.workCenters.get(wcId)!;
             if (!wc) continue;
             const nowT = now.getTime();
-            const cur  = timeline.entries.find((e) => e.start.getTime() <= nowT && e.end.getTime() > nowT);
+            const cur = timeline.entries.find((e) => e.start.getTime() <= nowT && e.end.getTime() > nowT);
             if (cur) {
                 if (cur.type === "downtime") {
                     wc.status = "down";
@@ -534,24 +606,23 @@ export function generateMES(
                     const op = operations.get(cur.entityId);
                     wc.status = "running";
                     wc.activeProductionOrderId = op?.productionOrderId ?? null;
-                    wc.activeOperationId       = op?.id ?? null;
+                    wc.activeOperationId = op?.id ?? null;
                 }
             } else {
                 wc.status = timeline.entries.some((e) => e.start.getTime() > nowT) ? "idle" : "starved";
             }
 
             const wcOee = oeeByWorkCenter.get(wcId) ?? [];
-            wc.runtimeMinutes  = wcOee.reduce((s, b) => s + b.runtimeMinutes,  0);
+            wc.runtimeMinutes = wcOee.reduce((s, b) => s + b.runtimeMinutes, 0);
             wc.downtimeMinutes = wcOee.reduce((s, b) => s + b.downtimeMinutes, 0);
-            wc.goodQuantity    = wcOee.reduce((s, b) => s + b.goodQuantity,    0);
-            wc.scrapQuantity   = wcOee.reduce((s, b) => s + b.scrapQuantity,   0);
-            wc.queueLength     = (operationsByWorkCenter.get(wcId) ?? []).filter((id: string) => {
+            wc.goodQuantity = wcOee.reduce((s, b) => s + b.goodQuantity, 0);
+            wc.scrapQuantity = wcOee.reduce((s, b) => s + b.scrapQuantity, 0);
+            wc.queueLength = (operationsByWorkCenter.get(wcId) ?? []).filter((id: string) => {
                 return operations.get(id)?.status === "ready";
             }).length;
             const totalPlanned = wcOee.reduce((s, b) => s + b.plannedMinutes, 0);
-            wc.utilizationPercent = totalPlanned > 0
-                ? Math.round((wc.runtimeMinutes / totalPlanned) * 100 * 10) / 10
-                : 0;
+            wc.utilizationPercent =
+                totalPlanned > 0 ? Math.round((wc.runtimeMinutes / totalPlanned) * 100 * 10) / 10 : 0;
         }
     }
 
@@ -561,26 +632,33 @@ export function generateMES(
     for (const wcId of structural.workCenterList) {
         const wcOpIds = operationsByWorkCenter.get(wcId) ?? [];
 
-        const runningOps = wcOpIds.map((id) => operations.get(id)!).filter((op) => op?.status === "in_progress").slice(0, 1);
-        const queuedOps  = wcOpIds.map((id) => operations.get(id)!).filter((op) => op?.status === "ready").sort((a, b) => a.scheduledStart - b.scheduledStart).slice(0, 2);
+        const runningOps = wcOpIds
+            .map((id) => operations.get(id)!)
+            .filter((op) => op?.status === "in_progress")
+            .slice(0, 1);
+        const queuedOps = wcOpIds
+            .map((id) => operations.get(id)!)
+            .filter((op) => op?.status === "ready")
+            .sort((a, b) => a.scheduledStart - b.scheduledStart)
+            .slice(0, 2);
 
         let dspSeq = 1;
         for (const op of [...runningOps, ...queuedOps]) {
             if (!op) continue;
             const po = productionOrders.get(op.productionOrderId);
             dispatchItems.push({
-                id:                `DSP-${String(dspNum++).padStart(6, "0")}`,
+                id: `DSP-${String(dspNum++).padStart(6, "0")}`,
                 siteId,
-                workCenterId:      wcId,
+                workCenterId: wcId,
                 productionOrderId: op.productionOrderId,
-                operationId:       op.id,
-                sequence:          dspSeq++,
-                status:            op.status === "in_progress" ? "running" : "ready",
-                dispatchPriority:  po?.priority ?? 3,
-                recommendedStart:  op.scheduledStart,
-                itemCode:          po?.itemCode,
+                operationId: op.id,
+                sequence: dspSeq++,
+                status: op.status === "in_progress" ? "running" : "ready",
+                dispatchPriority: po?.priority ?? 3,
+                recommendedStart: op.scheduledStart,
+                itemCode: po?.itemCode,
                 remainingQuantity: op.quantities.plannedQuantity - op.quantities.producedQuantity,
-                uom:               op.quantities.uom,
+                uom: op.quantities.uom,
             });
         }
     }
@@ -617,45 +695,48 @@ export function generateMES(
 // ---------------------------------------------------------------------------
 
 interface CreateOpParams {
-    opNum:    number;
-    poId:     string;
-    siteId:   string;
+    opNum: number;
+    poId: string;
+    siteId: string;
     template: OperationTemplate;
     sequence: number;
-    opStart:  Date;
-    opEnd:    Date;
-    qty:      number;
-    workCenter:     WorkCenterNode;
-    lotNum:   number;
-    now:      Date;
-    rng:      RNG;
-    operations:                  Map<string, any>;
-    operationList:               string[];
+    opStart: Date;
+    opEnd: Date;
+    qty: number;
+    workCenter: WorkCenterNode;
+    lotNum: number;
+    now: Date;
+    rng: RNG;
+    operations: Map<string, any>;
+    operationList: string[];
     operationsByProductionOrder: Map<string, string[]>;
-    operationsByWorkCenter:      Map<string, string[]>;
+    operationsByWorkCenter: Map<string, string[]>;
 }
 
 function createOperation(p: CreateOpParams): string {
-    const opId      = `OPR-${String(p.opNum).padStart(6, "0")}`;
+    const opId = `OPR-${String(p.opNum).padStart(6, "0")}`;
     const opStartTs = toUnix(p.opStart);
-    const opEndTs   = toUnix(p.opEnd);
+    const opEndTs = toUnix(p.opEnd);
 
     let opStatus: string;
-    if (p.opEnd < p.now)        opStatus = "completed";
+    if (p.opEnd < p.now) opStatus = "completed";
     else if (p.opStart > p.now) opStatus = "ready";
-    else                        opStatus = "in_progress";
+    else opStatus = "in_progress";
 
-    const scrapRate   = Math.max(0, p.rng.gaussian(0.02, 0.01));
-    const producedQty = opStatus === "completed"   ? p.qty
-                      : opStatus === "in_progress" ? Math.round(p.qty * p.rng.nextFloat(0.2, 0.6))
-                      : 0;
-    const scrapQty  = Math.round(producedQty * scrapRate);
-    const goodQty   = producedQty - scrapQty;
+    const scrapRate = Math.max(0, p.rng.gaussian(0.02, 0.01));
+    const progressFraction =
+        opStatus === "completed" ? 1
+        : opStatus === "in_progress"
+          ? Math.min(1, (p.now.getTime() - p.opStart.getTime()) / Math.max(1, p.opEnd.getTime() - p.opStart.getTime()))
+          : 0;
+    const producedQty = Math.round(p.qty * progressFraction);
+    const scrapQty = Math.round(producedQty * scrapRate);
+    const goodQty = producedQty - scrapQty;
     const lotNumber = `LOT-${String(p.lotNum).padStart(6, "0")}`;
 
     let defectBreakdown: { defectCode: string; quantity: number }[] = [];
     if (scrapQty > 0 && p.template.defects.length > 0) {
-        const n       = p.rng.nextInt(1, Math.min(3, p.template.defects.length));
+        const n = p.rng.nextInt(1, Math.min(3, p.template.defects.length));
         const defects = p.rng.shuffle([...p.template.defects]).slice(0, n);
         let rem = scrapQty;
         for (let di = 0; di < defects.length; di++) {
@@ -668,36 +749,38 @@ function createOperation(p: CreateOpParams): string {
     }
 
     const op: any = {
-        id:                      opId,
-        productionOrderId:       p.poId,
-        operationCode:           p.template.operationCode,
-        operationDescription:    p.template.operationDescription,
-        sequence:                p.sequence,
-        status:                  opStatus,
-        workCenterId:            p.workCenter.hash,
-        eamAssetId:              p.workCenter.machines.length > 0 ? p.rng.pick(p.workCenter.machines).hash : null,
+        id: opId,
+        productionOrderId: p.poId,
+        operationCode: p.template.operationCode,
+        operationDescription: p.template.operationDescription,
+        sequence: p.sequence,
+        status: opStatus,
+        workCenterId: p.workCenter.hash,
+        eamAssetId: p.workCenter.machines.length > 0 ? p.rng.pick(p.workCenter.machines).hash : null,
         plannedSetupTimeMinutes: p.template.setupMinutes,
-        plannedRunTimeMinutes:   Math.round(p.qty * p.template.cycleMinutesPerItem),
-        actualSetupTimeMinutes:  opStatus !== "ready" ? Math.round(p.template.setupMinutes * p.rng.nextFloat(0.8, 1.3)) : null,
-        actualRunTimeMinutes:    opStatus === "completed" ? Math.round(p.qty * p.template.cycleMinutesPerItem * p.rng.nextFloat(0.9, 1.1)) : null,
+        plannedRunTimeMinutes: Math.round(p.qty * p.template.cycleMinutesPerItem),
+        actualSetupTimeMinutes:
+            opStatus !== "ready" ? Math.round(p.template.setupMinutes * p.rng.nextFloat(0.8, 1.3)) : null,
+        actualRunTimeMinutes:
+            opStatus === "completed"
+                ? Math.round(p.qty * p.template.cycleMinutesPerItem * p.rng.nextFloat(0.9, 1.1))
+                : null,
         quantities: {
-            plannedQuantity:  p.qty,
+            plannedQuantity: p.qty,
             producedQuantity: producedQty,
-            goodQuantity:     goodQty,
-            scrapQuantity:    scrapQty,
-            uom:              "pcs",
+            goodQuantity: goodQty,
+            scrapQuantity: scrapQty,
+            uom: "pcs",
             outputLotNumbers: producedQty > 0 ? [lotNumber] : [],
         },
         scheduledStart: opStartTs,
-        scheduledEnd:   opEndTs,
+        scheduledEnd: opEndTs,
         actualStart: opStatus !== "ready" ? opStartTs : null,
-        actualEnd:   opStatus === "completed" ? opEndTs : null,
-        progressPercent: opStatus === "completed"   ? 100
-                       : opStatus === "in_progress" ? p.rng.nextFloat(10, 90)
-                       : 0,
-        _scrapRate:       scrapRate,
-        _scrapQty:        scrapQty,
-        _lotNumber:       lotNumber,
+        actualEnd: opStatus === "completed" ? opEndTs : null,
+        progressPercent: Math.round(progressFraction * 100),
+        _scrapRate: scrapRate,
+        _scrapQty: scrapQty,
+        _lotNumber: lotNumber,
         _defectBreakdown: defectBreakdown,
     };
 
@@ -710,14 +793,32 @@ function createOperation(p: CreateOpParams): string {
 }
 
 function mkEvt(
-    num: number, siteId: string, occurredAt: number,
-    eventType: string, productionOrderId: string | null, operationId: string | null,
-    workCenterId: string, quantity: number | null, uom: string | null,
-    reasonCode: string | null, lotNumber: string | null, message: string,
+    num: number,
+    siteId: string,
+    occurredAt: number,
+    eventType: string,
+    productionOrderId: string | null,
+    operationId: string | null,
+    workCenterId: string,
+    quantity: number | null,
+    uom: string | null,
+    reasonCode: string | null,
+    lotNumber: string | null,
+    message: string,
 ): any {
     return {
         id: `EVT-${String(num).padStart(8, "0")}`,
-        siteId, occurredAt, eventType, productionOrderId, operationId,
-        workCenterId, quantity, uom, reasonCode, defectCode: null, lotNumber, message,
+        siteId,
+        occurredAt,
+        eventType,
+        productionOrderId,
+        operationId,
+        workCenterId,
+        quantity,
+        uom,
+        reasonCode,
+        defectCode: null,
+        lotNumber,
+        message,
     };
 }

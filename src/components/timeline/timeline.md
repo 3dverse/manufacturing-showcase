@@ -3,8 +3,12 @@
 ## Purpose
 
 The timeline is a scrubable, zoomable Gantt-style strip rendered at the bottom of
-the factory view. It shows what is (or was, or will be) happening on the shop floor
-at the time position chosen by the user (`asOf`).
+the factory view. It renders all events within the visible timespan as bars
+(the **scope**) — past, present, and future simultaneously. The playhead (`asOf`)
+marks a position on that view but does not filter what is rendered.
+
+Filtering to only events active *at* `asOf` is the **snapshot** layer — consumed
+by panel KPIs and 3D highlights, not by the timeline itself.
 
 ---
 

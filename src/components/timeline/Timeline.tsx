@@ -4,20 +4,18 @@ import { createPortal } from "react-dom";
 //------------------------------------------------------------------------------
 import { SelectionContext } from "@/contexts/SelectionContext";
 import { useTimelineStore } from "@/store/useTimelineStore";
-import { useScopeData } from "@/hooks/useScopeData";
+import { useScope } from "@/hooks/useScope";
+import { useProjection } from "@/hooks/useProjection";
 import { cn } from "@/utils/cn";
+import type { TimelineLevel } from "@/core/Scope";
 import type {
-    ScopedTimelineState,
-    TimelineLevel,
-    SalesOrderEntry,
-    ProductionOrderEntry,
-    OperationEntry,
-    DowntimeEntry,
-    WorkOrderEntry,
-} from "@/core/ScopedState";
-import { classifyPhase } from "@/core/ScopedState";
-import { isFactory, isArea, isLine, isCell, isMachine } from "@/core/NavGraph";
-import type { NavGraphNode } from "@/content/type";
+    AsOfProjection,
+    ProjectedSalesOrder,
+    ProjectedProductionOrder,
+    ProjectedOperation,
+    ProjectedDowntime,
+    ProjectedWorkOrder,
+} from "@/core/Projection";
 import { fmtDuration, fmtTs, fromPct, toPct } from "./timeUtils";
 
 //------------------------------------------------------------------------------
@@ -40,9 +38,9 @@ const ZOOMS: { key: ZoomKey; label: string; days: number }[] = [
 //------------------------------------------------------------------------------
 
 const AXIS_H = 22;
-const ROW_H  = 22;
+const ROW_H = 22;
 const ROW_GAP = 4;
-const BAR_H  = 12;
+const BAR_H = 12;
 
 //------------------------------------------------------------------------------
 // Axis tick generation
@@ -142,21 +140,25 @@ function assignSwimlanes(bars: BarItem[]): BarItem[][] {
 }
 
 //------------------------------------------------------------------------------
-// Story builders — each takes typed entries, no raw API shapes
+// Story builders — receive projected entries, read fields directly
 //------------------------------------------------------------------------------
 
-function buildSalesOrdersStory(orders: SalesOrderEntry[]): Story {
+function buildSalesOrdersStory(orders: ProjectedSalesOrder[]): Story {
     const bars: BarItem[] = orders.map((so) => ({
         id: so.id,
         start: so.orderDate,
         end: so.requestedDeliveryDate,
-        className: "bg-violet-400/30 border border-violet-400/60 border-dashed",
+        className: cn(
+            "border border-dashed",
+            so.isOverdue ? "bg-red-400/30 border-red-400/60" : "bg-violet-400/30 border-violet-400/60",
+        ),
         tooltip: (
             <div className="space-y-1.5">
                 <div className="font-semibold text-white">{so.orderNumber}</div>
                 <div>
                     <span className="text-slate-500">Status </span>
                     <span className="capitalize">{so.status.replace("_", " ")}</span>
+                    {so.isOverdue && <span className="ml-1.5 text-red-400">overdue</span>}
                 </div>
                 <div>
                     <span className="text-slate-500">Order date </span>
@@ -172,22 +174,22 @@ function buildSalesOrdersStory(orders: SalesOrderEntry[]): Story {
     return { id: "sales", label: "Sales Orders", lanes: assignSwimlanes(bars) };
 }
 
-function buildProductionOrdersStory(orders: ProductionOrderEntry[], refNow: number): Story {
+function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
     const bars: BarItem[] = orders.map((po) => {
-        const { scheduledStart, scheduledEnd, actualStart, actualEnd } = po.timing;
-        const start  = actualStart ?? scheduledStart;
-        const end    = actualEnd   ?? scheduledEnd;
-        const phase  = classifyPhase(po.timing, refNow);
-        const slip   = actualEnd && actualEnd > scheduledEnd ? actualEnd - scheduledEnd : 0;
-
+        const slip =
+            po.timing.actualEnd && po.timing.actualEnd > po.timing.scheduledEnd
+                ? po.timing.actualEnd - po.timing.scheduledEnd
+                : 0;
         return {
             id: po.id,
-            start,
-            end,
+            start: po.effectiveStart,
+            end: po.effectiveEnd,
             className:
-                phase === "completed" ? "bg-slate-400/50 border border-slate-300/40" :
-                phase === "future"    ? "bg-blue-400/25 border border-blue-400/60 border-dashed" :
-                                       "bg-emerald-500/60 border border-emerald-400/70",
+                po.phase === "completed"
+                    ? "bg-slate-400/50 border border-slate-300/40"
+                    : po.phase === "future"
+                      ? "bg-blue-400/25 border border-blue-400/60 border-dashed"
+                      : "bg-emerald-500/60 border border-emerald-400/70",
             tooltip: (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{po.orderNumber}</div>
@@ -198,14 +200,22 @@ function buildProductionOrdersStory(orders: ProductionOrderEntry[], refNow: numb
                     </div>
                     <div>
                         <span className="text-slate-500">Planned </span>
-                        {fmtTs(scheduledStart)} → {fmtTs(scheduledEnd)}
+                        {fmtTs(po.timing.scheduledStart)} → {fmtTs(po.timing.scheduledEnd)}
                     </div>
-                    {actualStart && (
+                    {po.timing.actualStart && (
                         <div>
                             <span className="text-slate-500">Actual </span>
-                            {fmtTs(actualStart)}{actualEnd ? ` → ${fmtTs(actualEnd)}` : " (ongoing)"}
+                            {fmtTs(po.timing.actualStart)}
+                            {po.timing.actualEnd ? ` → ${fmtTs(po.timing.actualEnd)}` : " (ongoing)"}
                         </div>
                     )}
+                    <div>
+                        <span className="text-slate-500">Qty </span>
+                        {po.quantities.producedQuantity} / {po.quantities.plannedQuantity} {po.quantities.uom}
+                        {po.phase === "active" && (
+                            <span className="ml-1 text-slate-400">({Math.round(po.estimatedProgress * 100)}%)</span>
+                        )}
+                    </div>
                     {slip > 0 && <div className="text-amber-400">Slip +{fmtDuration(slip)}</div>}
                 </div>
             ),
@@ -214,21 +224,19 @@ function buildProductionOrdersStory(orders: ProductionOrderEntry[], refNow: numb
     return { id: "production", label: "Orders", lanes: assignSwimlanes(bars) };
 }
 
-function buildOperationsStory(ops: OperationEntry[], refNow: number): Story {
+function buildOperationsStory(ops: ProjectedOperation[]): Story {
     const bars: BarItem[] = ops.map((op) => {
-        const start = op.actualStart ?? op.scheduledStart;
-        const end   = op.actualEnd   ?? op.scheduledEnd;
-        const phase = classifyPhase({ scheduledStart: op.scheduledStart, scheduledEnd: op.scheduledEnd, actualStart: op.actualStart, actualEnd: op.actualEnd }, refNow);
-        const slip  = op.actualEnd && op.actualEnd > op.scheduledEnd ? op.actualEnd - op.scheduledEnd : 0;
-
+        const slip = op.actualEnd && op.actualEnd > op.scheduledEnd ? op.actualEnd - op.scheduledEnd : 0;
         return {
             id: op.id,
-            start,
-            end,
+            start: op.effectiveStart,
+            end: op.effectiveEnd,
             className:
-                phase === "completed" ? "bg-slate-400/50 border border-slate-300/40" :
-                phase === "future"    ? "bg-blue-400/25 border border-blue-400/60 border-dashed" :
-                                       "bg-emerald-500/60 border border-emerald-400/70",
+                op.phase === "completed"
+                    ? "bg-slate-400/50 border border-slate-300/40"
+                    : op.phase === "future"
+                      ? "bg-blue-400/25 border border-blue-400/60 border-dashed"
+                      : "bg-emerald-500/60 border border-emerald-400/70",
             tooltip: (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{op.operationCode}</div>
@@ -243,7 +251,14 @@ function buildOperationsStory(ops: OperationEntry[], refNow: number): Story {
                     {op.actualStart && (
                         <div>
                             <span className="text-slate-500">Actual </span>
-                            {fmtTs(op.actualStart)}{op.actualEnd ? ` → ${fmtTs(op.actualEnd)}` : " (ongoing)"}
+                            {fmtTs(op.actualStart)}
+                            {op.actualEnd ? ` → ${fmtTs(op.actualEnd)}` : " (ongoing)"}
+                        </div>
+                    )}
+                    {op.phase === "active" && (
+                        <div>
+                            <span className="text-slate-500">Progress </span>
+                            {Math.round(op.estimatedProgress * 100)}%
                         </div>
                     )}
                     {slip > 0 && <div className="text-amber-400">Slip +{fmtDuration(slip)}</div>}
@@ -254,108 +269,98 @@ function buildOperationsStory(ops: OperationEntry[], refNow: number): Story {
     return { id: "operations", label: "Operations", lanes: [bars] };
 }
 
-function buildDowntimeStory(events: DowntimeEntry[]): Story {
-    const bars: BarItem[] = events.map((dt) => {
-        const end = dt.endedAt ?? dt.startedAt + 3600;
-        return {
-            id: dt.id,
-            start: dt.startedAt,
-            end,
-            className: "bg-red-500/55 border border-red-400/40",
-            tooltip: (
-                <div className="space-y-1.5">
-                    <div className="font-semibold text-red-300">{dt.reasonCode}</div>
-                    {dt.reasonDescription && (
-                        <div className="text-slate-400 text-[11px]">{dt.reasonDescription}</div>
-                    )}
-                    <div>
-                        <span className="text-slate-500">Start </span>
-                        {fmtTs(dt.startedAt)}
-                    </div>
-                    <div>
-                        <span className="text-slate-500">Duration </span>
-                        {fmtDuration(end - dt.startedAt)}
-                    </div>
+function buildDowntimeStory(events: ProjectedDowntime[]): Story {
+    const bars: BarItem[] = events.map((dt) => ({
+        id: dt.id,
+        start: dt.startedAt,
+        end: dt.startedAt + dt.durationAtAsOf,
+        className: cn("border border-red-400/40", dt.isOngoing ? "bg-red-500/70" : "bg-red-500/55"),
+        tooltip: (
+            <div className="space-y-1.5">
+                <div className="font-semibold text-red-300">
+                    {dt.reasonCode}
+                    {dt.isOngoing && <span className="ml-1.5 text-[10px] text-red-400/80">ongoing</span>}
                 </div>
-            ),
-        };
-    });
+                {dt.reasonDescription && <div className="text-slate-400 text-[11px]">{dt.reasonDescription}</div>}
+                <div>
+                    <span className="text-slate-500">Start </span>
+                    {fmtTs(dt.startedAt)}
+                </div>
+                <div>
+                    <span className="text-slate-500">Duration </span>
+                    {fmtDuration(dt.durationAtAsOf)}
+                </div>
+            </div>
+        ),
+    }));
     return { id: "downtime", label: "Downtime", lanes: [bars] };
 }
 
-function buildWorkOrdersStory(workOrders: WorkOrderEntry[], refNow: number): Story {
-    const bars: BarItem[] = workOrders.map((wo) => {
-        const start       = wo.actualStart ?? wo.scheduledStart;
-        const end         = wo.actualEnd   ?? wo.scheduledEnd;
-        const isCompleted = !!(wo.actualEnd && wo.actualEnd <= refNow);
-        const isCorrective = wo.workType === "corrective";
-
-        return {
-            id: wo.id,
-            start,
-            end,
-            className: isCompleted
+function buildWorkOrdersStory(workOrders: ProjectedWorkOrder[]): Story {
+    const bars: BarItem[] = workOrders.map((wo) => ({
+        id: wo.id,
+        start: wo.effectiveStart,
+        end: wo.effectiveEnd,
+        className:
+            wo.phase === "completed"
                 ? "bg-slate-400/50 border border-slate-300/40"
-                : isCorrective
-                  ? "bg-red-500/60 border border-red-400/60"
-                  : "bg-orange-500/60 border border-orange-400/60",
-            tooltip: (
-                <div className="space-y-1.5">
-                    <div className="font-semibold text-white">{wo.workOrderNumber}</div>
-                    <div className="text-slate-400 text-[11px] capitalize">{wo.workType}</div>
-                    <div>
-                        <span className="text-slate-500">Status </span>
-                        <span className="capitalize">{wo.status.replace("_", " ")}</span>
-                    </div>
-                    <div>
-                        <span className="text-slate-500">Planned </span>
-                        {fmtTs(wo.scheduledStart)} → {fmtTs(wo.scheduledEnd)}
-                    </div>
-                    {wo.actualStart && (
-                        <div>
-                            <span className="text-slate-500">Actual </span>
-                            {fmtTs(wo.actualStart)}{wo.actualEnd ? ` → ${fmtTs(wo.actualEnd)}` : " (ongoing)"}
-                        </div>
-                    )}
+                : wo.isOverdue
+                  ? "bg-red-600/60 border border-red-500/60"
+                  : wo.workType === "corrective"
+                    ? "bg-red-500/60 border border-red-400/60"
+                    : "bg-orange-500/60 border border-orange-400/60",
+        tooltip: (
+            <div className="space-y-1.5">
+                <div className="font-semibold text-white">{wo.workOrderNumber}</div>
+                <div className="text-slate-400 text-[11px] capitalize">{wo.workType}</div>
+                <div>
+                    <span className="text-slate-500">Status </span>
+                    <span className="capitalize">{wo.status.replace("_", " ")}</span>
+                    {wo.isOverdue && <span className="ml-1.5 text-red-400">overdue</span>}
                 </div>
-            ),
-        };
-    });
+                <div>
+                    <span className="text-slate-500">Planned </span>
+                    {fmtTs(wo.scheduledStart)} → {fmtTs(wo.scheduledEnd)}
+                </div>
+                {wo.actualStart && (
+                    <div>
+                        <span className="text-slate-500">Actual </span>
+                        {fmtTs(wo.actualStart)}
+                        {wo.actualEnd ? ` → ${fmtTs(wo.actualEnd)}` : " (ongoing)"}
+                    </div>
+                )}
+            </div>
+        ),
+    }));
     return { id: "workorders", label: "Work Orders", lanes: assignSwimlanes(bars) };
 }
 
 //------------------------------------------------------------------------------
-// Level helper
+// Story selection
 //------------------------------------------------------------------------------
 
-function levelFromNode(node: NavGraphNode | null): TimelineLevel | null {
-    if (!node) return null;
-    if (isFactory(node)) return "factory";
-    if (isArea(node))    return "area";
-    if (isLine(node))    return "line";
-    if (isCell(node))    return "cell";
-    if (isMachine(node)) return "machine";
-    return null;
-}
-
-//------------------------------------------------------------------------------
-// Story selection — always emits the full track set for the level so the
-// layout is stable during loading (no height collapse / flicker)
-//------------------------------------------------------------------------------
-
-function buildStories(level: TimelineLevel, state: ScopedTimelineState | null, refNow: number): Story[] {
-    const so  = state?.salesOrders      ?? [];
-    const po  = state?.productionOrders ?? [];
-    const ops = state?.operations       ?? [];
-    const dt  = state?.downtimeEvents   ?? [];
-    const wo  = state?.eamWorkOrders    ?? [];
+function buildStories(level: TimelineLevel, projection: AsOfProjection | null): Story[] {
+    const so = projection?.salesOrders ?? [];
+    const po = projection?.productionOrders ?? [];
+    const ops = projection?.operations ?? [];
+    const dt = projection?.downtimeEvents ?? [];
+    const wo = projection?.eamWorkOrders ?? [];
 
     switch (level) {
-        case "factory": return [buildSalesOrdersStory(so)];
-        case "area":    return [buildProductionOrdersStory(po, refNow)];
+        case "factory":
+            return [buildSalesOrdersStory(so)];
+        case "area":
+            return [buildProductionOrdersStory(po)];
         case "line":
-        case "cell":    return [buildProductionOrdersStory(po, refNow), buildOperationsStory(ops, refNow), buildDowntimeStory(dt)];
-        case "machine": return [buildProductionOrdersStory(po, refNow), buildOperationsStory(ops, refNow), buildDowntimeStory(dt), buildWorkOrdersStory(wo, refNow)];
+        case "cell":
+            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildDowntimeStory(dt)];
+        case "machine":
+            return [
+                buildProductionOrdersStory(po),
+                buildOperationsStory(ops),
+                buildDowntimeStory(dt),
+                buildWorkOrdersStory(wo),
+            ];
     }
 }
 
@@ -378,13 +383,13 @@ function Bar({
     onEnter: (content: React.ReactNode, e: React.MouseEvent) => void;
     onLeave: () => void;
 }) {
-    const left  = toPct(bar.start, winStart, winEnd);
-    const right = toPct(bar.end,   winStart, winEnd);
+    const left = toPct(bar.start, winStart, winEnd);
+    const right = toPct(bar.end, winStart, winEnd);
     if (right < 0 || left > 100) return null;
 
-    const clampedLeft  = Math.max(0, left);
+    const clampedLeft = Math.max(0, left);
     const clampedRight = Math.min(100, right);
-    const widthPct     = Math.max(0.25, clampedRight - clampedLeft);
+    const widthPct = Math.max(0.25, clampedRight - clampedLeft);
 
     return (
         <div
@@ -393,14 +398,20 @@ function Bar({
                 bar.className,
             )}
             style={{
-                left:   `${clampedLeft}%`,
-                width:  `${widthPct}%`,
-                top:    laneIndex * ROW_H + (ROW_H - BAR_H) / 2,
+                left: `${clampedLeft}%`,
+                width: `${widthPct}%`,
+                top: laneIndex * ROW_H + (ROW_H - BAR_H) / 2,
                 height: BAR_H,
             }}
-            onMouseEnter={(e) => { e.stopPropagation(); onEnter(bar.tooltip, e); }}
-            onMouseLeave={(e) => { e.stopPropagation(); onLeave(); }}
-            onMouseDown={(e)  => e.stopPropagation()}
+            onMouseEnter={(e) => {
+                e.stopPropagation();
+                onEnter(bar.tooltip, e);
+            }}
+            onMouseLeave={(e) => {
+                e.stopPropagation();
+                onLeave();
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
         />
     );
 }
@@ -412,32 +423,28 @@ function Bar({
 export function Timeline({ className }: { className?: string }) {
     const { selectedNode } = useContext(SelectionContext);
     const { asOf, setAsOf } = useTimelineStore();
-    const { state, isLoading } = useScopeData(selectedNode ?? null);
+    const { scope, level, isLoading } = useScope(selectedNode ?? null);
+    const projection = useProjection(scope);
 
     const [zoom, setZoom] = useState<ZoomKey>("3M");
     const [tooltip, setTooltip] = useState<{ content: React.ReactNode; x: number; y: number } | null>(null);
 
-    const trackRef   = useRef<HTMLDivElement>(null);
+    const trackRef = useRef<HTMLDivElement>(null);
     const isDragging = useRef(false);
 
     //--------------------------------------------------------------------------
-    const refNow  = Math.floor(Date.now() / 1000);
+    const refNow = Math.floor(Date.now() / 1000);
     const zoomDef = ZOOMS.find((z) => z.key === zoom)!;
     const halfSecs = (zoomDef.days * 86400) / 2;
     const winStart = refNow - halfSecs;
-    const winEnd   = refNow + halfSecs;
+    const winEnd = refNow + halfSecs;
 
     //--------------------------------------------------------------------------
-    const level = levelFromNode(selectedNode ?? null) ?? state?.level ?? null;
-    const stories = useMemo(
-        () => (level ? buildStories(level, state, refNow) : []),
-        [level, state, refNow],
-    );
-
-    const ticks    = useMemo(() => buildTicks(winStart, winEnd, zoomDef.days), [winStart, winEnd, zoomDef.days]);
-    const nowPct   = toPct(refNow, winStart, winEnd);
+    const stories = useMemo(() => (level ? buildStories(level, projection) : []), [level, projection]);
+    const ticks = useMemo(() => buildTicks(winStart, winEnd, zoomDef.days), [winStart, winEnd, zoomDef.days]);
+    const nowPct = toPct(refNow, winStart, winEnd);
     const playheadPct = Math.max(0, Math.min(100, toPct(asOf, winStart, winEnd)));
-    const totalH   = AXIS_H + ROW_GAP + stories.reduce((sum, s) => sum + s.lanes.length * ROW_H + ROW_GAP, 0);
+    const totalH = AXIS_H + ROW_GAP + stories.reduce((sum, s) => sum + s.lanes.length * ROW_H + ROW_GAP, 0);
 
     //--------------------------------------------------------------------------
     // Seek interaction
@@ -448,11 +455,13 @@ export function Timeline({ className }: { className?: string }) {
         return Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
     }, []);
 
+    //--------------------------------------------------------------------------
     const seek = useCallback(
         (clientX: number) => setAsOf(Math.round(fromPct(getPctFromClientX(clientX), winStart, winEnd))),
         [getPctFromClientX, winStart, winEnd, setAsOf],
     );
 
+    //--------------------------------------------------------------------------
     const handleTrackMouseDown = useCallback(
         (e: React.MouseEvent) => {
             if (e.button !== 0) return;
@@ -474,10 +483,10 @@ export function Timeline({ className }: { className?: string }) {
 
     //--------------------------------------------------------------------------
     // Tooltip
-    const showTooltip  = useCallback((content: React.ReactNode, e: React.MouseEvent) => {
+    const showTooltip = useCallback((content: React.ReactNode, e: React.MouseEvent) => {
         if (!isDragging.current) setTooltip({ content, x: e.clientX, y: e.clientY });
     }, []);
-    const hideTooltip  = useCallback(() => setTooltip(null), []);
+    const hideTooltip = useCallback(() => setTooltip(null), []);
     const trackMouseMove = useCallback((e: React.MouseEvent) => {
         if (!isDragging.current) setTooltip((t) => (t ? { ...t, x: e.clientX, y: e.clientY } : null));
     }, []);
@@ -554,15 +563,24 @@ export function Timeline({ className }: { className?: string }) {
                             const pct = toPct(tick.ts, winStart, winEnd);
                             if (pct < 0 || pct > 100) return null;
                             return (
-                                <div key={tick.ts} className="absolute top-0" style={{ left: `${pct}%`, height: totalH }}>
+                                <div
+                                    key={tick.ts}
+                                    className="absolute top-0"
+                                    style={{ left: `${pct}%`, height: totalH }}
+                                >
                                     <div
-                                        className={cn("absolute top-0 w-px", tick.major ? "bg-slate-300/20" : "bg-slate-300/10")}
+                                        className={cn(
+                                            "absolute top-0 w-px",
+                                            tick.major ? "bg-slate-300/20" : "bg-slate-300/10",
+                                        )}
                                         style={{ height: totalH }}
                                     />
                                     <span
                                         className={cn(
                                             "absolute top-1 left-1 whitespace-nowrap",
-                                            tick.major ? "text-[10px] font-medium text-slate-300" : "text-[9px] text-slate-500",
+                                            tick.major
+                                                ? "text-[10px] font-medium text-slate-300"
+                                                : "text-[9px] text-slate-500",
                                         )}
                                     >
                                         {tick.label}

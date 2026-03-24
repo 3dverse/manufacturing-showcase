@@ -589,7 +589,7 @@ export const STATIC_SITE_ID = "PLANT-01";
 export const defaultGeneratorConfig: GeneratorConfig = {
     seed: 42,
     siteId: STATIC_SITE_ID,
-    now: new Date("2026-03-20T10:00:00Z"),
+    now: new Date(),
     monthsBack: 2,
     monthsForward: 1,
     site: defaultSite,

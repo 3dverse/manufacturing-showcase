@@ -27,6 +27,10 @@ export type ProductionOrderEntry = {
         actualStart?: number;
         actualEnd?: number;
     };
+    quantities: {
+        plannedQuantity: number;
+        uom: string;
+    };
     erpSalesOrderId?: string | null;
 };
 
@@ -35,12 +39,23 @@ export type OperationEntry = {
     productionOrderId: string;
     workCenterId: string;
     operationCode: string;
+    operationDescription?: string;
     sequence: number;
     status: string;
     scheduledStart: number;
     scheduledEnd: number;
     actualStart?: number;
     actualEnd?: number;
+    progressPercent: number;
+    quantities: {
+        plannedQuantity: number;
+        producedQuantity: number;
+        goodQuantity: number;
+        scrapQuantity: number;
+        uom: string;
+    };
+    plannedRunTimeMinutes?: number;
+    actualRunTimeMinutes?: number;
 };
 
 export type DowntimeEntry = {
@@ -67,10 +82,10 @@ export type WorkOrderEntry = {
 };
 
 // ---------------------------------------------------------------------------
-// Cache
+// Span — timespan-scoped cache
 // ---------------------------------------------------------------------------
 
-export type TimelineCache = {
+export type TimelineSpan = {
     // Layer 1 — site-wide bulk (invalidated on timespan change)
     salesOrders: Map<string, SalesOrderEntry>;
     productionOrders: Map<string, ProductionOrderEntry>;
@@ -85,7 +100,7 @@ export type TimelineCache = {
     eamWorkOrdersByAsset: Map<string, WorkOrderEntry[]>;
 };
 
-export function emptyCache(): TimelineCache {
+export function emptySpan(): TimelineSpan {
     return {
         salesOrders: new Map(),
         productionOrders: new Map(),
@@ -104,34 +119,34 @@ export function emptyCache(): TimelineCache {
  * Call this once after populating salesOrders / productionOrders / operations /
  * downtimeEvents from API responses.
  */
-export function buildCacheIndexes(cache: TimelineCache): void {
-    cache.productionOrdersByLocation.clear();
-    cache.productionOrdersByWorkCenter.clear();
-    cache.operationsByWorkCenter.clear();
-    cache.downtimeByWorkCenter.clear();
+export function buildSpanIndexes(span: TimelineSpan): void {
+    span.productionOrdersByLocation.clear();
+    span.productionOrdersByWorkCenter.clear();
+    span.operationsByWorkCenter.clear();
+    span.downtimeByWorkCenter.clear();
 
-    for (const po of cache.productionOrders.values()) {
-        appendIndex(cache.productionOrdersByLocation, po.locationId, po.id);
+    for (const po of span.productionOrders.values()) {
+        appendIndex(span.productionOrdersByLocation, po.locationId, po.id);
     }
 
-    for (const op of cache.operations.values()) {
-        appendIndex(cache.operationsByWorkCenter, op.workCenterId, op.id);
+    for (const op of span.operations.values()) {
+        appendIndex(span.operationsByWorkCenter, op.workCenterId, op.id);
         // A PO is "active on a work center" if any of its operations run there
-        appendIndex(cache.productionOrdersByWorkCenter, op.workCenterId, op.productionOrderId);
+        appendIndex(span.productionOrdersByWorkCenter, op.workCenterId, op.productionOrderId);
     }
 
-    for (const dt of cache.downtimeEvents.values()) {
-        appendIndex(cache.downtimeByWorkCenter, dt.workCenterId, dt.id);
+    for (const dt of span.downtimeEvents.values()) {
+        appendIndex(span.downtimeByWorkCenter, dt.workCenterId, dt.id);
     }
 }
 
 // ---------------------------------------------------------------------------
-// Scoped state
+// Scope — node-scoped view derived from the span
 // ---------------------------------------------------------------------------
 
 export type TimelineLevel = "factory" | "area" | "line" | "cell" | "machine";
 
-export type ScopedTimelineState = {
+export type TimelineScope = {
     level: TimelineLevel;
     salesOrders: SalesOrderEntry[];
     productionOrders: ProductionOrderEntry[];
@@ -140,23 +155,50 @@ export type ScopedTimelineState = {
     eamWorkOrders: WorkOrderEntry[];
 };
 
+/** Point-in-time view of a TimelineScope — same shape, filtered to asOf. */
+export type AsOfSnapshot = TimelineScope;
+
+/** Production order enriched with detail data from getProductionOrder. */
+export type ProductionOrderDetailEntry = Omit<ProductionOrderEntry, "quantities"> & {
+    quantities: {
+        plannedQuantity:  number;
+        producedQuantity: number;
+        goodQuantity:     number;
+        scrapQuantity:    number;
+        uom:              string;
+    };
+    progressPercent:    number;
+    operationIds:       string[];
+    currentOperationId: string | null;
+    notes?:             string;
+};
+
+/**
+ * Enriched snapshot — same as AsOfSnapshot but with full detail data fetched
+ * for each production order and operation.
+ */
+export type RichSnapshot = Omit<AsOfSnapshot, "productionOrders" | "operations"> & {
+    productionOrders: ProductionOrderDetailEntry[];
+    operations:       OperationEntry[];
+};
+
 // ---------------------------------------------------------------------------
-// Scoping — pure function of (node, cache), no async, no side effects
+// Scoping — pure function of (node, span), no async, no side effects
 // ---------------------------------------------------------------------------
 
-export function scopeFromNode(node: NavGraphNode, cache: TimelineCache): ScopedTimelineState {
-    if (isFactory(node)) return scopeFactory(node, cache);
-    if (isArea(node))    return scopeArea(node, cache);
-    if (isLine(node))    return scopeLine(node, cache);
-    if (isCell(node))    return scopeCell(node, cache);
-    if (isMachine(node)) return scopeMachine(node, cache);
-    return emptyState("factory");
+export function scopeFromNode(node: NavGraphNode, span: TimelineSpan): TimelineScope {
+    if (isFactory(node)) return scopeFactory(node, span);
+    if (isArea(node))    return scopeArea(node, span);
+    if (isLine(node))    return scopeLine(node, span);
+    if (isCell(node))    return scopeCell(node, span);
+    if (isMachine(node)) return scopeMachine(node, span);
+    return emptyScope("factory");
 }
 
-function scopeFactory(_node: FactoryNode, cache: TimelineCache): ScopedTimelineState {
+function scopeFactory(_node: FactoryNode, span: TimelineSpan): TimelineScope {
     return {
         level: "factory",
-        salesOrders: Array.from(cache.salesOrders.values()),
+        salesOrders: Array.from(span.salesOrders.values()),
         productionOrders: [],
         operations: [],
         downtimeEvents: [],
@@ -164,90 +206,77 @@ function scopeFactory(_node: FactoryNode, cache: TimelineCache): ScopedTimelineS
     };
 }
 
-function scopeArea(node: AreaNode, cache: TimelineCache): ScopedTimelineState {
+function scopeArea(node: AreaNode, span: TimelineSpan): TimelineScope {
     return {
         level: "area",
         salesOrders: [],
-        productionOrders: resolvePos(cache.productionOrdersByLocation.get(node.hash), cache),
+        productionOrders: resolvePos(span.productionOrdersByLocation.get(node.hash), span),
         operations: [],
         downtimeEvents: [],
         eamWorkOrders: [],
     };
 }
 
-function scopeLine(node: LineNode, cache: TimelineCache): ScopedTimelineState {
+function scopeLine(node: LineNode, span: TimelineSpan): TimelineScope {
     const cellHashes = node.cells.map((c) => c.hash);
-    const poIds = cellHashes.flatMap((h) => cache.productionOrdersByWorkCenter.get(h) ?? []);
-    const opIds = cellHashes.flatMap((h) => cache.operationsByWorkCenter.get(h) ?? []);
-    const dtIds = cellHashes.flatMap((h) => cache.downtimeByWorkCenter.get(h) ?? []);
+    const poIds = cellHashes.flatMap((h) => span.productionOrdersByWorkCenter.get(h) ?? []);
+    const opIds = cellHashes.flatMap((h) => span.operationsByWorkCenter.get(h) ?? []);
+    const dtIds = cellHashes.flatMap((h) => span.downtimeByWorkCenter.get(h) ?? []);
     return {
         level: "line",
         salesOrders: [],
-        productionOrders: resolveUnique(poIds, cache.productionOrders),
-        operations: resolveUnique(opIds, cache.operations),
-        downtimeEvents: resolveUnique(dtIds, cache.downtimeEvents),
+        productionOrders: resolveUnique(poIds, span.productionOrders),
+        operations: resolveUnique(opIds, span.operations),
+        downtimeEvents: resolveUnique(dtIds, span.downtimeEvents),
         eamWorkOrders: [],
     };
 }
 
-function scopeCell(node: CellNode, cache: TimelineCache): ScopedTimelineState {
+function scopeCell(node: CellNode, span: TimelineSpan): TimelineScope {
     return {
         level: "cell",
         salesOrders: [],
-        productionOrders: resolvePos(cache.productionOrdersByWorkCenter.get(node.hash), cache),
-        operations: resolveOps(cache.operationsByWorkCenter.get(node.hash), cache),
-        downtimeEvents: resolveDowntimes(cache.downtimeByWorkCenter.get(node.hash), cache),
+        productionOrders: resolvePos(span.productionOrdersByWorkCenter.get(node.hash), span),
+        operations: resolveOps(span.operationsByWorkCenter.get(node.hash), span),
+        downtimeEvents: resolveDowntimes(span.downtimeByWorkCenter.get(node.hash), span),
         eamWorkOrders: [],
     };
 }
 
-function scopeMachine(node: MachineNode, cache: TimelineCache): ScopedTimelineState {
+function scopeMachine(node: MachineNode, span: TimelineSpan): TimelineScope {
     // Operations and production orders are work-center-scoped, not machine-scoped
     const wcId = node.parent.hash;
     return {
         level: "machine",
         salesOrders: [],
-        productionOrders: resolvePos(cache.productionOrdersByWorkCenter.get(wcId), cache),
-        operations: resolveOps(cache.operationsByWorkCenter.get(wcId), cache),
-        downtimeEvents: resolveDowntimes(cache.downtimeByWorkCenter.get(wcId), cache),
-        eamWorkOrders: cache.eamWorkOrdersByAsset.get(node.hash) ?? [],
+        productionOrders: resolvePos(span.productionOrdersByWorkCenter.get(wcId), span),
+        operations: resolveOps(span.operationsByWorkCenter.get(wcId), span),
+        downtimeEvents: resolveDowntimes(span.downtimeByWorkCenter.get(wcId), span),
+        eamWorkOrders: span.eamWorkOrdersByAsset.get(node.hash) ?? [],
     };
 }
 
 // ---------------------------------------------------------------------------
-// Phase classification — asOf-dependent, kept separate from scoping so it
-// can be called at render time without re-scoping
-// ---------------------------------------------------------------------------
-
-export type Phase = "completed" | "active" | "future";
-
-export function classifyPhase(timing: ProductionOrderEntry["timing"], asOf: number): Phase {
-    const { actualEnd, actualStart, scheduledStart } = timing;
-    if (actualEnd !== undefined && actualEnd <= asOf) return "completed";
-    if ((actualStart !== undefined && actualStart <= asOf) || scheduledStart <= asOf) return "active";
-    return "future";
-}
-
 // ---------------------------------------------------------------------------
 // Resolve helpers
 // ---------------------------------------------------------------------------
 
-function resolvePos(ids: string[] | undefined, cache: TimelineCache): ProductionOrderEntry[] {
-    return resolveUnique(ids ?? [], cache.productionOrders);
+function resolvePos(ids: string[] | undefined, span: TimelineSpan): ProductionOrderEntry[] {
+    return resolveUnique(ids ?? [], span.productionOrders);
 }
 
-function resolveOps(ids: string[] | undefined, cache: TimelineCache): OperationEntry[] {
+function resolveOps(ids: string[] | undefined, span: TimelineSpan): OperationEntry[] {
     if (!ids) return [];
     return ids.flatMap((id) => {
-        const op = cache.operations.get(id);
+        const op = span.operations.get(id);
         return op ? [op] : [];
     });
 }
 
-function resolveDowntimes(ids: string[] | undefined, cache: TimelineCache): DowntimeEntry[] {
+function resolveDowntimes(ids: string[] | undefined, span: TimelineSpan): DowntimeEntry[] {
     if (!ids) return [];
     return ids.flatMap((id) => {
-        const dt = cache.downtimeEvents.get(id);
+        const dt = span.downtimeEvents.get(id);
         return dt ? [dt] : [];
     });
 }
@@ -323,6 +352,14 @@ export function scopeKey(workCenterIds: string[]): string {
     return [...workCenterIds].sort().join(",");
 }
 
+export function levelFromNode(node: NavGraphNode): TimelineLevel {
+    if (isFactory(node)) return "factory";
+    if (isArea(node))    return "area";
+    if (isLine(node))    return "line";
+    if (isCell(node))    return "cell";
+    return "machine";
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
@@ -333,6 +370,6 @@ function appendIndex<K, V>(map: Map<K, V[]>, key: K, value: V): void {
     else map.set(key, [value]);
 }
 
-function emptyState(level: TimelineLevel): ScopedTimelineState {
+function emptyScope(level: TimelineLevel): TimelineScope {
     return { level, salesOrders: [], productionOrders: [], operations: [], downtimeEvents: [], eamWorkOrders: [] };
 }

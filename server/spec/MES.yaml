@@ -73,6 +73,7 @@ paths:
         Returns detailed MES execution data for a single production order,
         including quantities, timing, current state, and execution context.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/ProductionOrderId'
       responses:
         '200':
@@ -144,6 +145,7 @@ paths:
         including its relation to the production order, quantities, timing,
         assigned work center, and execution status.
       parameters:
+        - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/OperationId'
       responses:
         '200':

@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useCallback, useMemo } from "react";
+import { useCallback, useContext } from "react";
 import { faAngleLeft, faAngleRight } from "@fortawesome/pro-light-svg-icons";
 
 //------------------------------------------------------------------------------
@@ -10,12 +10,34 @@ import { PanelLabel } from "@/components/common/panel/PanelLabel";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
+import { SelectionContext } from "@/contexts/SelectionContext";
+import { useScope } from "@/hooks/useScope";
+import { useSnapshot } from "@/hooks/useSnapshot";
+import { useProjection } from "@/hooks/useProjection";
+import { useTimelineStore } from "@/store/useTimelineStore";
+import type { ProjectedProductionOrder, ProjectedOperation, Phase } from "@/core/Projection";
 
 //------------------------------------------------------------------------------
-import type { Order } from "@/content/type";
+const PHASE_LABEL: Record<Phase, string> = {
+    completed: "Completed",
+    active: "In progress",
+    future: "Scheduled",
+};
 
 //------------------------------------------------------------------------------
-export const NavigationOrderPanel = ({ order, className }: { order: Order; className?: string }) => {
+export const NavigationOrderPanel = ({ className }: { className?: string }) => {
+    const { selectedNode } = useContext(SelectionContext);
+    const { scope } = useScope(selectedNode ?? null);
+    const { snapshot } = useSnapshot(scope);
+    const projection = useProjection(snapshot);
+
+    const asOf = useTimelineStore((s) => s.asOf);
+    const order = projection?.productionOrders[0] ?? null;
+    const operation =
+        projection?.operations.find((o) => o.id === snapshot?.productionOrders[0]?.currentOperationId) ?? null;
+
+    if (!order) return null;
+
     return (
         <ViewerPanel
             as="article"
@@ -36,9 +58,9 @@ export const NavigationOrderPanel = ({ order, className }: { order: Order; class
                     <div className="pt-px">
                         <PanelLabel className="text-xs">Current Order</PanelLabel>
                         <p className="mt-px -ml-px text-lg leading-tight font-semibold tabular-nums tracking-tight">
-                            {order.ref}
+                            {order.orderNumber}
                         </p>
-                        <p className="text-2xs text-accent">Client {order.client}</p>
+                        <p className="text-2xs text-accent">{order.itemCode}</p>
                     </div>
                     <div className="flex justify-between">
                         <p className="ml-px flex items-center gap-1 w-fit text-2xs text-muted rounded-sm bg-slate-50 hover:text-subtle hover:bg-slate-100 transition-colors duration-200 pl-px pr-2 py-px cursor-pointer">
@@ -48,17 +70,23 @@ export const NavigationOrderPanel = ({ order, className }: { order: Order; class
                     </div>
                 </header>
 
-                <NavigationOrderPanelHeader order={order} className="hidden md:flex" />
+                <NavigationOrderPanelHeader
+                    order={order}
+                    operation={operation}
+                    className="hidden md:flex"
+                    asOf={asOf}
+                />
 
                 <div className="flex flex-col items-end pt-2 pr-1">
-                    <div className="pt-1 text-2xl tabular-nums tracking-tighter leading-5 ">
-                        <span className="text-accent font-normal">{order.unitsCompleted}</span> /{" "}
-                        <span className="font-semibold">{order.unitsPlanned}</span>
+                    <div className="pt-1 text-2xl tabular-nums tracking-tighter leading-5">
+                        <span className="text-accent font-normal">{order.quantities.producedQuantity}</span>
+                        {" / "}
+                        <span className="font-semibold">{order.quantities.plannedQuantity}</span>
                     </div>
-                    <p className="text-2xs">Units</p>
+                    <p className="text-2xs">{order.quantities.uom}</p>
                 </div>
             </div>
-            <NavigationOrderPanelHeader order={order} className="flex md:hidden" />
+            <NavigationOrderPanelHeader order={order} operation={operation} className="flex md:hidden" asOf={asOf} />
         </ViewerPanel>
     );
 };
@@ -88,25 +116,33 @@ const PrevNextOrderButton = ({
 };
 
 //------------------------------------------------------------------------------
-const NavigationOrderPanelHeader = ({ order, className }: { order: Order; className?: string }) => {
-    //--------------------------------------------------------------------------
-    const elapsedTime = useMemo(() => {
-        const startDate = new Date(order.startDate);
-        const endDate = new Date(order.endDate);
-        const diffTime = endDate.getTime() - startDate.getTime();
-        const diffHours = diffTime / (1000 * 60 * 60);
-        const diffMinutes = (diffTime % (1000 * 60 * 60)) / (1000 * 60);
-        return `${Math.floor(diffHours)}:${Math.floor(diffMinutes)}`;
-    }, [order.startDate, order.endDate]);
+const NavigationOrderPanelHeader = ({
+    order,
+    operation,
+    className,
+    asOf,
+}: {
+    order: ProjectedProductionOrder;
+    operation: ProjectedOperation | null;
+    className?: string;
+    asOf: number;
+}) => {
+    const startSecs = order.timing.actualStart ?? order.timing.scheduledStart;
+    const endSecs = order.timing.actualEnd ?? order.timing.scheduledEnd;
 
-    //--------------------------------------------------------------------------
-    const formatDate = useCallback((date: Date) => {
-        const now = new Date();
-        const diffTime = now.getTime() - date.getTime();
-        const diffHours = diffTime / (1000 * 60 * 60);
-        const diffMinutes = (diffTime % (1000 * 60 * 60)) / (1000 * 60);
-        return `${Math.floor(diffHours)}h${Math.floor(diffMinutes)}`;
-    }, []);
+    const formatSecs = useCallback(
+        (secs: number) => {
+            const diffSecs = Math.abs(asOf - secs);
+            const h = Math.floor(diffSecs / 3600);
+            const m = Math.floor((diffSecs % 3600) / 60);
+            return `${h}h${String(m).padStart(2, "0")}`;
+        },
+        [asOf],
+    );
+
+    const opLabel = operation
+        ? `${operation.operationDescription ?? operation.operationCode} — step ${operation.sequence}`
+        : null;
 
     return (
         <div
@@ -116,14 +152,23 @@ const NavigationOrderPanelHeader = ({ order, className }: { order: Order; classN
             )}
         >
             <div className="flex items-center gap-2">
-                <p className="text-2xs text-muted/80">No delay</p>
-                <p className="text-2xs text-muted/80">No incidents reported</p>
+                <span
+                    className={cn(
+                        "text-2xs px-1.5 py-px rounded-full",
+                        order.phase === "active" && "bg-accent-100 text-accent",
+                        order.phase === "completed" && "bg-slate-100 text-muted",
+                        order.phase === "future" && "bg-slate-50 text-subtle",
+                    )}
+                >
+                    {PHASE_LABEL[order.phase]}
+                </span>
+                {opLabel && <p className="text-2xs text-muted/80">{opLabel}</p>}
             </div>
             <ProgressBar
-                progress={order.unitsCompleted / order.unitsPlanned}
-                leftMarker={`Started today at ${formatDate(order.startDate)} `}
-                rightMarker={`End today at ${formatDate(order.endDate)}`}
-                elapsedTime={elapsedTime}
+                progress={order.estimatedProgress / 100}
+                leftMarker={`Started ${formatSecs(startSecs)} ago`}
+                rightMarker={`Ends in ${formatSecs(endSecs)}`}
+                elapsedTime={`${order.progressPercent}%`}
                 className="w-full"
             />
         </div>

@@ -23,6 +23,8 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
 import { isFactory, isArea, isLine, isCell } from "@/core/NavGraph";
+import { useTimelineStore } from "@/store/useTimelineStore";
+import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
 import { orders } from "@/content/orders";
@@ -35,8 +37,12 @@ import { useNavNode } from "../navigation/hooks";
 const FactoryBuilder = () => {
     //--------------------------------------------------------------------------
     // Context
-    const { nodeGraph } = useContext(FactoryContext);
+    const { nodeGraph, nodeList } = useContext(FactoryContext);
     const { selectedNode } = useContext(SelectionContext);
+
+    //--------------------------------------------------------------------------
+    const span = useTimelineStore((s) => s.span);
+    const asOf = useTimelineStore((s) => s.asOf);
 
     //--------------------------------------------------------------------------
     const shownLines = useMemo(() => {
@@ -87,6 +93,16 @@ const FactoryBuilder = () => {
     }, [selectedNode]);
 
     //--------------------------------------------------------------------------
+    const downtimeCells: CellNode[] = useMemo(() => {
+        if (!span) return [];
+        const currentlyDownCellIds = [...span.downtimeEvents.values()]
+
+            .filter((e) => downtimeAtAsOf(e, asOf))
+            .map((e) => e.workCenterId);
+        return nodeList.filter(isCell).filter((n) => currentlyDownCellIds.includes(n.hash));
+    }, [span, asOf, nodeList]);
+
+    //--------------------------------------------------------------------------
     // Render
     // Note: Always render Area and its children (Line/Cell) + flows
     // Show children nodes for selected Line
@@ -95,9 +111,7 @@ const FactoryBuilder = () => {
             {selectedNode &&
                 isFactory(selectedNode) &&
                 nodeGraph?.flows.map((flow) => <FlowSpline key={flow.hash} flow={flow} />)}
-            {nodeGraph?.areas.map((area) => (
-                <AreaBuilderItem key={area.hash} area={area} />
-            ))}
+            {nodeGraph?.areas.map((area) => <AreaBuilderItem key={area.hash} area={area} />)}
             {shownLines.map((line) => (
                 <LineBuilderItem key={line.hash} line={line} />
             ))}
@@ -112,7 +126,7 @@ const FactoryBuilder = () => {
                     <MachineLabel machine={selectedNode.machines[0]} />
                 </>
             )}
-            {shownCells.map((cell) => (
+            {downtimeCells.map((cell) => (
                 <IncidentInfoPanel key={cell.hash} cell={cell} />
             ))}
         </>
