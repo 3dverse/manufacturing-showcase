@@ -4,11 +4,11 @@ import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 //------------------------------------------------------------------------------
 import { PanelTitle, PanelWrapper, PanelShadow, PanelAnchorLine } from "@/components/common/panel";
 import { ViewerPanel } from "@/components/common/ViewerPanel";
+import { BadgeOEE } from "@/components/common/BadgeOEE";
 
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";
 import type { NavGraphNode } from "@/content/type";
-import { BadgeOEE } from "@/components/common/BadgeOEE";
 
 //------------------------------------------------------------------------------
 export function AnchoredPanel({ node, children }: { node: NavGraphNode; children?: ReactNode }) {
@@ -25,7 +25,10 @@ export function AnchoredPanel({ node, children }: { node: NavGraphNode; children
                             {node.name} {node.type}
                         </PanelTitle>
                         <div className="starting:opacity-0 starting:translate-y-4 opacity-100 translate-y-0 transition-all duration-300 delay-1700 transform-3d">
-                            <BadgeOEE oee={89} className="text-2xl -translate-y-8 px-3 py-2 shadow-xl transform-3d" />
+                            <BadgeOEE
+                                oee={89}
+                                className="text-2xl -translate-y-8 px-3 py-2 shadow-xl transform-3d backdrop-blur-3xl"
+                            />
                         </div>
                     </div>
                     {children}

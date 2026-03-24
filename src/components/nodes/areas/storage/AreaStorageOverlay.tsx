@@ -1,6 +1,5 @@
 //------------------------------------------------------------------------------
 import { Fragment, useEffect, useState } from "react";
-import type { Entity } from "@3dverse/livelink";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
@@ -8,6 +7,7 @@ import { MOCK_STORAGE_DATA } from "@/components/nodes/areas/storage/content";
 
 //------------------------------------------------------------------------------
 import type { AreaNode } from "@/content/type";
+import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -34,7 +34,8 @@ export function AreaStorageOverlay({ area }: { area: AreaNode }) {
         );
     }, [area.entity]);
 
-    const showOverlay = true;
+    const showChartOverlay = area.id !== "final";
+    const showQuantityOverlay = area.id === "final";
 
     //--------------------------------------------------------------------------
     return (
@@ -68,66 +69,131 @@ export function AreaStorageOverlay({ area }: { area: AreaNode }) {
                     ))}
                 </div>
             </BoundingBoxFaceProjection>
-            {showOverlay &&
-                childrenEntities.screen.map((entity) => (
-                    <Fragment key={entity.euid.value}>
-                        <BoundingBoxFaceProjection
-                            entity={entity}
-                            face="front"
-                            className="w-full h-full bg-screen/85"
-                        ></BoundingBoxFaceProjection>
-                        <BoundingBoxFaceProjection
-                            entity={entity}
-                            face="top"
-                            className="w-full h-full bg-screen/85"
-                        ></BoundingBoxFaceProjection>
-                        <BoundingBoxFaceProjection
-                            entity={entity}
-                            face="right"
-                            className="w-full h-full bg-screen"
-                        ></BoundingBoxFaceProjection>
-                    </Fragment>
-                ))}
-            {showOverlay &&
-                childrenEntities.case.map((entity) => (
-                    <Fragment key={entity.euid.value}>
-                        <BoundingBoxFaceProjection
-                            entity={entity}
-                            face="front"
-                            className="w-full h-full bg-case/85"
-                        ></BoundingBoxFaceProjection>
-                        <BoundingBoxFaceProjection
-                            entity={entity}
-                            face="top"
-                            className="w-full h-full bg-case/85"
-                        ></BoundingBoxFaceProjection>
-                        <BoundingBoxFaceProjection
-                            entity={entity}
-                            face="right"
-                            className="w-full h-full bg-case"
-                        ></BoundingBoxFaceProjection>
-                    </Fragment>
-                ))}
-            {showOverlay &&
-                childrenEntities.electronics.map((entity) => (
-                    <Fragment key={entity.euid.value}>
-                        <BoundingBoxFaceProjection
-                            entity={entity}
-                            face="front"
-                            className="w-full h-full bg-electronics/85"
-                        ></BoundingBoxFaceProjection>
-                        <BoundingBoxFaceProjection
-                            entity={entity}
-                            face="top"
-                            className="w-full h-full bg-electronics/85"
-                        ></BoundingBoxFaceProjection>
-                        <BoundingBoxFaceProjection
-                            entity={entity}
-                            face="right"
-                            className="w-full h-full bg-electronics"
-                        ></BoundingBoxFaceProjection>
-                    </Fragment>
-                ))}
+            {showQuantityOverlay && (
+                <div
+                    style={
+                        {
+                            "--color-screen": `var(--color-screen)`,
+                            "--color-case": `var(--color-case)`,
+                            "--color-electronics": `var(--color-electronics)`,
+                        } as React.CSSProperties
+                    }
+                >
+                    {childrenEntities.screen.map((entity) => (
+                        <Fragment key={entity.euid.value}>
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="back"
+                                className="w-full h-full bg-screen/85"
+                            />
+                            {/* <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="top"
+                                className="w-full h-full bg-screen/85"
+                            />
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="right"
+                                className="w-full h-full bg-screen"
+                            />
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="back"
+                                className="w-full h-full bg-screen"
+                            /> */}
+                        </Fragment>
+                    ))}
+                    {childrenEntities.case.map((entity) => (
+                        <Fragment key={entity.euid.value}>
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="front"
+                                className="w-full h-full bg-case/85"
+                            />
+                            {/* <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="top"
+                                className="w-full h-full bg-case/85"
+                            />
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="right"
+                                className="w-full h-full bg-case"
+                            />
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="back"
+                                className="w-full h-full bg-case"
+                            /> */}
+                        </Fragment>
+                    ))}
+                </div>
+            )}
+            {showChartOverlay && (
+                <div
+                    style={
+                        {
+                            "--color-screen": `var(--color-screen)`,
+                            "--color-case": `var(--color-case)`,
+                            "--color-electronics": `var(--color-electronics)`,
+                        } as React.CSSProperties
+                    }
+                >
+                    {childrenEntities.screen.map((entity) => (
+                        <Fragment key={entity.euid.value}>
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="front"
+                                className="w-full h-full bg-screen/85"
+                            />
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="top"
+                                className="w-full h-full bg-screen/85"
+                            />
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="right"
+                                className="w-full h-full bg-screen"
+                            />
+                        </Fragment>
+                    ))}
+                    {childrenEntities.case.map((entity) => (
+                        <Fragment key={entity.euid.value}>
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="front"
+                                className="w-full h-full bg-case/85"
+                            />
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="top"
+                                className="w-full h-full bg-case/85"
+                            />
+                            <BoundingBoxFaceProjection entity={entity} face="right" className="w-full h-full bg-case" />
+                        </Fragment>
+                    ))}
+                    {childrenEntities.electronics.map((entity) => (
+                        <Fragment key={entity.euid.value}>
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="front"
+                                className="w-full h-full bg-electronics/85"
+                            />
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="top"
+                                className="w-full h-full bg-electronics/85"
+                            />
+                            <BoundingBoxFaceProjection
+                                entity={entity}
+                                face="right"
+                                className="w-full h-full bg-electronics"
+                            />
+                        </Fragment>
+                    ))}
+                </div>
+            )}
         </>
     );
 }

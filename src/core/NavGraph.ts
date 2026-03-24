@@ -87,6 +87,7 @@ export const buildNavGraph = async (params: {
             entity: factoryEntity,
             type: NodeTypes.factory,
             name: parseName(factoryEntity),
+            id: parseId(factoryEntity),
             areas: [],
             flows: [],
         };
@@ -104,6 +105,7 @@ export const buildNavGraph = async (params: {
             entity: areaEntity,
             type: NodeTypes.area,
             name: parseName(areaEntity),
+            id: parseId(areaEntity),
             parent,
             lines: [],
             cells: [],
@@ -133,6 +135,7 @@ export const buildNavGraph = async (params: {
             entity: lineEntity,
             type: NodeTypes.line,
             name: parseName(lineEntity),
+            id: parseId(lineEntity),
             parent,
             cells: [],
         };
@@ -153,6 +156,7 @@ export const buildNavGraph = async (params: {
             entity: cellEntity,
             type: NodeTypes.cell,
             name: parseName(cellEntity),
+            id: parseId(cellEntity),
             parent,
             machines: [],
             out: [],
@@ -173,6 +177,7 @@ export const buildNavGraph = async (params: {
             entity: machineEntity,
             type: NodeTypes.machine,
             name: parseName(machineEntity),
+            id: parseId(machineEntity),
             parent,
         };
         list.push(machine);
@@ -209,6 +214,7 @@ export const buildNavGraph = async (params: {
             entity: flowEntity,
             type: NodeTypes.flow,
             name: parseName(flowEntity),
+            id: parseId(flowEntity),
             entityInEUID: entityInEUID ?? "",
             entityOutEUID: entityOutEUID ?? "",
             paths: paths,
@@ -237,6 +243,11 @@ function parseName(entity: Entity): string {
     return parts.length >= 2 ? parts[1] : entity.name;
 }
 
+//------------------------------------------------------------------------------
+function parseId(entity: Entity): string | undefined {
+    const parts = entity.name.split(":");
+    return parts.length >= 3 ? parts[2] : undefined;
+}
 //------------------------------------------------------------------------------
 function inLineage(child: Entity, ancestorEuid: string): boolean {
     const lin = child.lineage?.value ?? "";

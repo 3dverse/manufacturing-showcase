@@ -142,6 +142,7 @@ type _NavGraphNode = {
     entity: Entity;
     hash: string;
     name: string;
+    id: string | undefined;
 };
 export type FactoryNode = _NavGraphNode & { type: NodeTypes.factory; areas: AreaNode[]; flows: FlowNode[] };
 /** One 3D point [x, y, z] on a flow spline. */

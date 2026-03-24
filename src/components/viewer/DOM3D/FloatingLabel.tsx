@@ -19,7 +19,7 @@ export const FloatingLabel = ({ node }: { node: NavGraphNode }) => {
     //--------------------------------------------------------------------------
     // Memos
     const stateClassName = useMemo(() => {
-        return isSelected ? "opacity-0 pointer-events-none" : "cursor-pointer";
+        return isSelected ? "opacity-0 pointer-events-none!" : "pointer-events-auto cursor-pointer";
     }, [isSelected]);
 
     //--------------------------------------------------------------------------
@@ -30,9 +30,9 @@ export const FloatingLabel = ({ node }: { node: NavGraphNode }) => {
     //--------------------------------------------------------------------------
     // Render
     return (
-        <BoundingBoxFaceProjection entity={node.entity} face="right">
+        <BoundingBoxFaceProjection entity={node.entity} face="right" className="transform-3d pointer-events-none!">
             <div
-                className={cn("transition-colors duration-200", stateClassName)}
+                className={cn("transform-3d transition-colors duration-200", stateClassName)}
                 onPointerDown={pointerDownHandler}
                 onClick={clickHandler}
                 onMouseEnter={mouseEnterHandler}

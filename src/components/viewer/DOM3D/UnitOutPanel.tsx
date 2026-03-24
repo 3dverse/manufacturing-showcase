@@ -28,6 +28,7 @@ export function UnitOutPanel({
     // Increment every 1s
     useEffect(() => {
         const interval = setInterval(() => {
+            if (_unitCompleted >= unitTotal) return clearInterval(interval);
             setUnitCompleted((prev) => prev + 1);
         }, 1000);
         return () => clearInterval(interval);
@@ -36,7 +37,11 @@ export function UnitOutPanel({
     //--------------------------------------------------------------------------
     return (
         <>
-            <BoundingBoxFaceProjection entity={outEntity} face="right" className="transform-3d flex items-end">
+            <BoundingBoxFaceProjection
+                entity={outEntity}
+                face="right"
+                className="transform-3d flex items-end pointer-events-none!"
+            >
                 <p className="relative flex gap-1 h-fit w-full min-w-28 pl-2 pt-1 pb-7 pr-4 text-xs text-slate-0 rounded-sm border border-slate-0">
                     <span role="decoration" className="absolute top-0 left-0 bg-slate-1000 w-20 h-8 blur-2xl " />
                     <Counter number={_unitCompleted} className="translate-y-px" /> /{" "}
@@ -47,7 +52,7 @@ export function UnitOutPanel({
             <BoundingBoxFaceProjection
                 entity={outEntity}
                 face="bottom"
-                className="transform-3d flex items-center justify-center text-8xl z-10"
+                className="transform-3d flex items-center justify-center text-8xl z-10 pointer-events-none!"
             >
                 <span className="absolute rotate-180 -translate-x-[25%] transform-[translateZ(0px)] text-slate-1000 blur-sm">
                     ⇢
