@@ -6,30 +6,26 @@ import { scopeFromNode, levelFromNode, type TimelineScope, type TimelineLevel } 
 import type { NavGraphNode } from "@/content/type";
 
 export function useScope(node: NavGraphNode | null): {
-    scope:     TimelineScope | null;
-    level:     TimelineLevel | null;
+    scope: TimelineScope | null;
+    level: TimelineLevel | null;
     isLoading: boolean;
 } {
-    const siteId    = useFactoryStore((s) => s.currentFactory?.scene_id ?? "");
-    const span      = useTimelineStore((s) => s.span);
+    const siteId = useFactoryStore((s) => s.currentFactory?.scene_id ?? "");
+    const span = useTimelineStore((s) => s.span);
     const isLoading = useTimelineStore((s) => s.isLoading);
-    const loadSpan  = useTimelineStore((s) => s.loadSpan);
+    const loadSpan = useTimelineStore((s) => s.loadSpan);
 
     useEffect(() => {
         if (node && siteId) loadSpan(node, siteId);
     }, [node, siteId, loadSpan]);
 
-    const scope = useMemo(
-        () => (node && span ? scopeFromNode(node, span) : null),
-        [node, span],
-    );
+    const scope = useMemo(() => (node && span ? scopeFromNode(node, span) : null), [node, span]);
 
     // Derive level independently so it's available during loading (before scope
     // arrives) — keeps the Timeline layout stable with no height flicker.
-    const level = useMemo(
-        () => scope?.level ?? (node ? levelFromNode(node) : null),
-        [scope, node],
-    );
+    const level = useMemo(() => scope?.level ?? (node ? levelFromNode(node) : null), [scope, node]);
+
+    console.log("scope", scope);
 
     return { scope, level, isLoading };
 }

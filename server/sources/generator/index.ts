@@ -118,8 +118,8 @@ export function generateDataset(config: GeneratorConfig): Dataset {
     const elapsed = Date.now() - startTime;
     console.log(
         `[Generator] Done in ${elapsed}ms. ` +
-        `POs=${mes.productionOrderList.length}, Ops=${mes.operationList.length}, ` +
-        `Events=${mes.productionEvents.length}, OEEBuckets=${mes.oeeTimeseries.length}`,
+            `POs=${mes.productionOrderList.length}, Ops=${mes.operationList.length}, ` +
+            `Events=${mes.productionEvents.length}, OEEBuckets=${mes.oeeTimeseries.length}`,
     );
 
     return {

@@ -1,4 +1,4 @@
-import { EAM, MES } from "@/core/APIs";
+import { EAM, ERP, MES } from "@/core/APIs";
 import {
     emptySpan,
     buildSpanIndexes,
@@ -9,11 +9,12 @@ import {
     type OperationEntry,
     type DowntimeEntry,
     type WorkOrderEntry,
+    type SalesOrderEntry,
 } from "@/core/Scope";
-import { isMachine } from "@/core/NavGraph";
 import type { NavGraphNode } from "@/content/type";
 import type { WorkOrder } from "_prebuild/api-libs/eam";
 import type { DowntimeEvent, OperationDetail, ProductionOrder } from "_prebuild/api-libs/mes";
+import type { SalesOrder } from "_prebuild/api-libs/erp";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -96,6 +97,18 @@ function mapDowntime(dt: DowntimeEvent): DowntimeEntry {
     };
 }
 
+function mapSalesOrder(so: SalesOrder): SalesOrderEntry {
+    return {
+        id: so.id,
+        orderNumber: so.orderNumber,
+        customerId: so.customerId,
+        status: so.status,
+        orderDate: so.orderDate,
+        requestedDeliveryDate: so.requestedDeliveryDate ?? 0,
+        siteId: so.siteId,
+    };
+}
+
 function mapWorkOrder(wo: WorkOrder): WorkOrderEntry {
     return {
         id: wo.id,
@@ -103,6 +116,7 @@ function mapWorkOrder(wo: WorkOrder): WorkOrderEntry {
         workType: wo.workType,
         status: wo.status,
         assetId: wo.assetId,
+        locationId: wo.locationId ?? null,
         scheduledStart: Number(wo.scheduledStart ?? 0),
         scheduledEnd: Number(wo.scheduledEnd ?? 0),
         actualStart: wo.actualStart ? Number(wo.actualStart) : undefined,
@@ -163,11 +177,18 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
     );
     for (const dt of dtPages.flat()) span.downtimeEvents.set(dt.id, mapDowntime(dt));
 
-    // EAM work orders — machine level only, keyed by assetId
-    if (isMachine(node)) {
-        const woResp = await EAM.getWorkOrders({ assetId: node.hash, pageSize: PAGE_SIZE });
-        span.eamWorkOrdersByAsset.set(node.hash, (woResp.data.data ?? []).map(mapWorkOrder));
-    }
+    // Sales orders — site-wide, no time filter
+    const soResp = await ERP.getSalesOrders({ siteId, pageSize: PAGE_SIZE });
+    for (const so of soResp.data.data) span.salesOrders.set(so.id, mapSalesOrder(so));
+
+    // EAM work orders — one request per location, indexed by location and asset
+    const woPages = await Promise.all(
+        locationIds.map((locId) =>
+            EAM.getWorkOrders({ siteId, locationId: locId, scheduledFrom: from, scheduledTo: to, pageSize: PAGE_SIZE })
+                .then((r) => r.data.data ?? []),
+        ),
+    );
+    for (const wo of woPages.flat()) span.eamWorkOrders.set(wo.id, mapWorkOrder(wo));
 
     buildSpanIndexes(span);
     return span;

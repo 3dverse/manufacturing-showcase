@@ -76,6 +76,7 @@ export type WorkOrderEntry = {
     workType: "preventive" | "corrective" | string;
     status: string;
     assetId: string;
+    locationId?: string | null;
     scheduledStart: number;
     scheduledEnd: number;
     actualStart?: number;
@@ -93,13 +94,14 @@ export type TimelineSpan = {
     productionOrders: Map<string, ProductionOrderEntry>;
     operations: Map<string, OperationEntry>;
     downtimeEvents: Map<string, DowntimeEntry>;
+    eamWorkOrders: Map<string, WorkOrderEntry>;
     // Indexes built from the above
     productionOrdersByLocation: Map<string, string[]>;
     productionOrdersByWorkCenter: Map<string, string[]>;
     operationsByWorkCenter: Map<string, string[]>;
     downtimeByWorkCenter: Map<string, string[]>;
-    // Layer 2 — per machine, fetched on first visit
-    eamWorkOrdersByAsset: Map<string, WorkOrderEntry[]>;
+    workOrdersByLocation: Map<string, string[]>;
+    workOrdersByAsset: Map<string, string[]>;
 };
 
 export function emptySpan(): TimelineSpan {
@@ -108,11 +110,13 @@ export function emptySpan(): TimelineSpan {
         productionOrders: new Map(),
         operations: new Map(),
         downtimeEvents: new Map(),
+        eamWorkOrders: new Map(),
         productionOrdersByLocation: new Map(),
         productionOrdersByWorkCenter: new Map(),
         operationsByWorkCenter: new Map(),
         downtimeByWorkCenter: new Map(),
-        eamWorkOrdersByAsset: new Map(),
+        workOrdersByLocation: new Map(),
+        workOrdersByAsset: new Map(),
     };
 }
 
@@ -126,6 +130,8 @@ export function buildSpanIndexes(span: TimelineSpan): void {
     span.productionOrdersByWorkCenter.clear();
     span.operationsByWorkCenter.clear();
     span.downtimeByWorkCenter.clear();
+    span.workOrdersByLocation.clear();
+    span.workOrdersByAsset.clear();
 
     for (const po of span.productionOrders.values()) {
         appendIndex(span.productionOrdersByLocation, po.locationId, po.id);
@@ -139,6 +145,11 @@ export function buildSpanIndexes(span: TimelineSpan): void {
 
     for (const dt of span.downtimeEvents.values()) {
         appendIndex(span.downtimeByWorkCenter, dt.workCenterId, dt.id);
+    }
+
+    for (const wo of span.eamWorkOrders.values()) {
+        if (wo.locationId) appendIndex(span.workOrdersByLocation, wo.locationId, wo.id);
+        appendIndex(span.workOrdersByAsset, wo.assetId, wo.id);
     }
 }
 
@@ -209,13 +220,18 @@ function scopeFactory(_node: FactoryNode, span: TimelineSpan): TimelineScope {
 }
 
 function scopeArea(node: AreaNode, span: TimelineSpan): TimelineScope {
+    const wcHashes = [
+        ...node.lines.flatMap((l) => l.cells.map((c) => c.hash)),
+        ...node.cells.map((c) => c.hash),
+    ];
+    const dtIds = wcHashes.flatMap((h) => span.downtimeByWorkCenter.get(h) ?? []);
     return {
         level: "area",
         salesOrders: [],
         productionOrders: resolvePos(span.productionOrdersByLocation.get(node.hash), span),
         operations: [],
-        downtimeEvents: [],
-        eamWorkOrders: [],
+        downtimeEvents: resolveUnique(dtIds, span.downtimeEvents),
+        eamWorkOrders: resolveWorkOrders(span.workOrdersByLocation.get(node.hash), span),
     };
 }
 
@@ -230,7 +246,7 @@ function scopeLine(node: LineNode, span: TimelineSpan): TimelineScope {
         productionOrders: resolveUnique(poIds, span.productionOrders),
         operations: resolveUnique(opIds, span.operations),
         downtimeEvents: resolveUnique(dtIds, span.downtimeEvents),
-        eamWorkOrders: [],
+        eamWorkOrders: resolveWorkOrders(span.workOrdersByLocation.get(node.parent.hash), span),
     };
 }
 
@@ -254,7 +270,7 @@ function scopeMachine(node: MachineNode, span: TimelineSpan): TimelineScope {
         productionOrders: resolvePos(span.productionOrdersByWorkCenter.get(wcId), span),
         operations: resolveOps(span.operationsByWorkCenter.get(wcId), span),
         downtimeEvents: resolveDowntimes(span.downtimeByWorkCenter.get(wcId), span),
-        eamWorkOrders: span.eamWorkOrdersByAsset.get(node.hash) ?? [],
+        eamWorkOrders: resolveWorkOrders(span.workOrdersByAsset.get(node.hash), span),
     };
 }
 
@@ -280,6 +296,14 @@ function resolveDowntimes(ids: string[] | undefined, span: TimelineSpan): Downti
     return ids.flatMap((id) => {
         const dt = span.downtimeEvents.get(id);
         return dt ? [dt] : [];
+    });
+}
+
+function resolveWorkOrders(ids: string[] | undefined, span: TimelineSpan): WorkOrderEntry[] {
+    if (!ids) return [];
+    return ids.flatMap((id) => {
+        const wo = span.eamWorkOrders.get(id);
+        return wo ? [wo] : [];
     });
 }
 

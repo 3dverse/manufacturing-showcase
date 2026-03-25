@@ -4,7 +4,17 @@ import { paginate } from "../utils";
 
 export const getWorkOrders: EAMOperationHandler<"getWorkOrders"> = async (_c, req, res) => {
     const ds = getDatasetForRequest(req);
-    const { status, assetId, locationId, priority, workType, scheduledFrom, scheduledTo, page = "1", pageSize = "50" } = req.query as any;
+    const {
+        status,
+        assetId,
+        locationId,
+        priority,
+        workType,
+        scheduledFrom,
+        scheduledTo,
+        page = "1",
+        pageSize = "50",
+    } = req.query as any;
 
     let wos = ds.eam.workOrderList.map((id) => ds.eam.workOrders.get(id)!);
 
@@ -19,8 +29,8 @@ export const getWorkOrders: EAMOperationHandler<"getWorkOrders"> = async (_c, re
     }
     if (priority) wos = wos.filter((wo) => wo.priority === priority);
     if (workType) wos = wos.filter((wo) => wo.workType === workType);
-    if (scheduledFrom) wos = wos.filter((wo) => wo.scheduledStart >= scheduledFrom);
-    if (scheduledTo) wos = wos.filter((wo) => wo.scheduledStart <= scheduledTo);
+    if (scheduledFrom) wos = wos.filter((wo) => wo.scheduledStart >= Number(scheduledFrom));
+    if (scheduledTo) wos = wos.filter((wo) => wo.scheduledStart <= Number(scheduledTo));
 
     return EAMreplyJSON(paginate(wos, +page, +pageSize), res);
 };

@@ -72,11 +72,15 @@ when each planning horizon was active.
 
 ### 2. Area  *(production location)*
 
-Bars: **Production Orders** (MES)
+Bars across two tracks:
 
-Each bar spans `scheduledStart → scheduledEnd` for a PO assigned to this area.
-Color encodes status (released, in progress, completed). The area timeline gives a
-throughput view: how densely the location is loaded and where gaps or delays fall.
+- **Production Orders** (MES) — each bar spans `scheduledStart → scheduledEnd` for a
+  PO assigned to this area. Color encodes status (released, in progress, completed).
+  Gives a throughput view: how densely the location is loaded and where gaps fall.
+- **Stoppages** — downtime events from all work centers within this area, plus EAM
+  maintenance work orders whose `locationId` matches this area. Both are rendered
+  together on a single track so production gaps and maintenance windows are visible
+  against the production schedule.
 
 ---
 
@@ -86,7 +90,8 @@ Bars across multiple tracks:
 
 - **Production Orders** — POs whose operations run on any of this line's cells.
 - **Operations** — all operations assigned to any work center (cell) in this line.
-- **Downtime events** — stoppages on any work center in this line.
+- **Stoppages** — downtime events from any work center in this line, plus EAM
+  maintenance work orders whose `locationId` matches the parent area.
 
 Each is rendered on its own track row. Useful when an area contains multiple
 parallel lines running different product families.

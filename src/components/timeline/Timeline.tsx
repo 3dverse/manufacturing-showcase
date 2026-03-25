@@ -270,8 +270,8 @@ function buildOperationsStory(ops: ProjectedOperation[]): Story {
     return { id: "operations", label: "Operations", lanes: [bars] };
 }
 
-function buildDowntimeStory(events: ProjectedDowntime[]): Story {
-    const bars: BarItem[] = events.map((dt) => ({
+function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedWorkOrder[]): Story {
+    const dtBars: BarItem[] = events.map((dt) => ({
         id: dt.id,
         start: dt.startedAt,
         end: dt.startedAt + dt.durationAtAsOf,
@@ -294,11 +294,8 @@ function buildDowntimeStory(events: ProjectedDowntime[]): Story {
             </div>
         ),
     }));
-    return { id: "downtime", label: "Downtime", lanes: [bars] };
-}
 
-function buildWorkOrdersStory(workOrders: ProjectedWorkOrder[]): Story {
-    const bars: BarItem[] = workOrders.map((wo) => ({
+    const woBars: BarItem[] = workOrders.map((wo) => ({
         id: wo.id,
         start: wo.effectiveStart,
         end: wo.effectiveEnd,
@@ -306,10 +303,8 @@ function buildWorkOrdersStory(workOrders: ProjectedWorkOrder[]): Story {
             wo.phase === "completed"
                 ? "bg-slate-400/50 border border-slate-300/40"
                 : wo.isOverdue
-                  ? "bg-red-600/60 border border-red-500/60"
-                  : wo.workType === "corrective"
-                    ? "bg-red-500/60 border border-red-400/60"
-                    : "bg-orange-500/60 border border-orange-400/60",
+                  ? "bg-amber-500/70 border border-amber-400/80"
+                  : "bg-amber-500/50 border border-amber-400/60",
         tooltip: (
             <div className="space-y-1.5">
                 <div className="font-semibold text-white">{wo.workOrderNumber}</div>
@@ -333,7 +328,8 @@ function buildWorkOrdersStory(workOrders: ProjectedWorkOrder[]): Story {
             </div>
         ),
     }));
-    return { id: "workorders", label: "Work Orders", lanes: assignSwimlanes(bars) };
+
+    return { id: "stoppages", label: "Stoppages", lanes: assignSwimlanes([...dtBars, ...woBars]) };
 }
 
 //------------------------------------------------------------------------------
@@ -351,17 +347,12 @@ function buildStories(level: TimelineLevel, projection: AsOfProjection | null): 
         case "factory":
             return [buildSalesOrdersStory(so)];
         case "area":
-            return [buildProductionOrdersStory(po)];
+            return [buildProductionOrdersStory(po), buildStoppagesStory(dt, wo)];
         case "line":
         case "cell":
-            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildDowntimeStory(dt)];
+            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo)];
         case "machine":
-            return [
-                buildProductionOrdersStory(po),
-                buildOperationsStory(ops),
-                buildDowntimeStory(dt),
-                buildWorkOrdersStory(wo),
-            ];
+            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo)];
     }
 }
 

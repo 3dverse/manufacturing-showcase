@@ -1,8 +1,8 @@
 import { getFolderAssets } from "@3dverse/api";
 
-import { generateDataset } from "./index";
+import { generate } from "../generator2/index";
 import { setDataset } from "./store";
-import { defaultGeneratorConfig, STATIC_SITE_ID } from "./input";
+import { STATIC_SITE_ID, defaultSite } from "./input";
 import { loadSiteFromScene } from "../operations/dataset/generateDataset";
 
 //------------------------------------------------------------------------------
@@ -22,12 +22,7 @@ export async function generateDatasetForScene(
     const site = await loadSiteFromScene(sceneId);
     if (!site) throw new Error(`No site entity found in scene ${sceneId}`);
 
-    const dataset = generateDataset({
-        ...defaultGeneratorConfig,
-        siteId: sceneId,
-        site,
-        seed: defaultGeneratorConfig.seed + seedOffset,
-    });
+    const dataset = generate({ siteId: sceneId, site, seed: 42 + seedOffset });
 
     setDataset(sceneId, dataset);
     return { sceneId, siteId: dataset.siteId, now: Math.floor(dataset.now.getTime() / 1000) };
@@ -73,6 +68,6 @@ export async function bootstrapDatasets(): Promise<void> {
     }
 
     console.warn("[bootstrap] Falling back to static default site.");
-    const dataset = generateDataset(defaultGeneratorConfig);
+    const dataset = generate({ siteId: STATIC_SITE_ID, site: defaultSite });
     setDataset(STATIC_SITE_ID, dataset);
 }

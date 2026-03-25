@@ -9,20 +9,9 @@ info:
 servers:
   - url: /-/api/erp
 
-tags:
-  - name: Master Data
-    description: Core ERP reference data such as companies, customers, suppliers, items, and financial structures.
-  - name: Sales
-    description: ERP order-to-cash entities such as sales orders and customer invoices.
-  - name: Procurement
-    description: ERP procure-to-pay entities such as purchase orders and supplier invoices.
-  - name: Finance
-    description: ERP financial data such as general ledger accounts, journal entries, payments, and fiscal periods.
-
 paths:
   /companies:
     get:
-      tags: [Master Data]
       summary: List companies
       description: >
         Returns the companies or legal entities managed by the ERP. Use this endpoint to
@@ -43,7 +32,6 @@ paths:
 
   /companies/{companyId}:
     get:
-      tags: [Master Data]
       summary: Get company
       description: >
         Returns a single company or legal entity from the ERP, including core identifiers,
@@ -61,7 +49,6 @@ paths:
 
   /currencies:
     get:
-      tags: [Master Data]
       summary: List currencies
       description: >
         Returns the currencies configured in the ERP. This endpoint is useful for validating
@@ -77,7 +64,6 @@ paths:
 
   /fiscal-periods:
     get:
-      tags: [Finance]
       summary: List fiscal periods
       description: >
         Returns fiscal periods defined in the ERP for financial reporting and posting control.
@@ -108,7 +94,6 @@ paths:
 
   /gl-accounts:
     get:
-      tags: [Finance]
       summary: List general ledger accounts
       description: >
         Returns the chart of accounts used by the ERP. This endpoint provides the account
@@ -135,7 +120,6 @@ paths:
 
   /cost-centers:
     get:
-      tags: [Finance]
       summary: List cost centers
       description: >
         Returns cost centers maintained in the ERP for management accounting, budgeting,
@@ -162,7 +146,6 @@ paths:
 
   /customers:
     get:
-      tags: [Master Data]
       summary: List customers
       description: >
         Returns customer master data from the ERP. Use this endpoint for account, billing,
@@ -190,7 +173,6 @@ paths:
 
   /customers/{customerId}:
     get:
-      tags: [Master Data]
       summary: Get customer
       description: >
         Returns a single customer record from the ERP, including billing terms, currency,
@@ -208,7 +190,6 @@ paths:
 
   /suppliers:
     get:
-      tags: [Master Data]
       summary: List suppliers
       description: >
         Returns supplier or vendor master data from the ERP. Use this endpoint for
@@ -236,7 +217,6 @@ paths:
 
   /suppliers/{supplierId}:
     get:
-      tags: [Master Data]
       summary: Get supplier
       description: >
         Returns a single supplier or vendor record from the ERP, including payment terms,
@@ -254,7 +234,6 @@ paths:
 
   /items:
     get:
-      tags: [Master Data]
       summary: List items
       description: >
         Returns ERP item master data used across sales, procurement, valuation, and
@@ -289,7 +268,6 @@ paths:
 
   /items/{itemId}:
     get:
-      tags: [Master Data]
       summary: Get item
       description: >
         Returns a single ERP item with commercial, accounting, and planning-relevant
@@ -307,7 +285,6 @@ paths:
 
   /sales-orders:
     get:
-      tags: [Sales]
       summary: List sales orders
       description: >
         Returns sales orders managed by the ERP. This endpoint supports order-to-cash
@@ -354,7 +331,6 @@ paths:
 
   /sales-orders/{salesOrderId}:
     get:
-      tags: [Sales]
       summary: Get sales order
       description: >
         Returns a single sales order from the ERP, including customer, totals, currency,
@@ -372,7 +348,6 @@ paths:
 
   /purchase-orders:
     get:
-      tags: [Procurement]
       summary: List purchase orders
       description: >
         Returns purchase orders managed by the ERP. This endpoint supports procure-to-pay
@@ -415,7 +390,6 @@ paths:
 
   /purchase-orders/{purchaseOrderId}:
     get:
-      tags: [Procurement]
       summary: Get purchase order
       description: >
         Returns a single purchase order from the ERP, including supplier, totals, currency,
@@ -433,7 +407,6 @@ paths:
 
   /invoices:
     get:
-      tags: [Sales, Procurement]
       summary: List invoices
       description: >
         Returns invoices recorded in the ERP, including both customer and supplier invoices.
@@ -477,7 +450,6 @@ paths:
 
   /invoices/{invoiceId}:
     get:
-      tags: [Sales, Procurement]
       summary: Get invoice
       description: >
         Returns a single invoice from the ERP, including document party, dates, totals,
@@ -495,7 +467,6 @@ paths:
 
   /payments:
     get:
-      tags: [Finance]
       summary: List payments
       description: >
         Returns payments recorded in the ERP for receivables and payables settlement.
@@ -532,7 +503,6 @@ paths:
 
   /journal-entries:
     get:
-      tags: [Finance]
       summary: List journal entries
       description: >
         Returns journal entries posted in the ERP general ledger. Use this endpoint for
@@ -568,7 +538,6 @@ paths:
 
   /journal-entries/{journalEntryId}:
     get:
-      tags: [Finance]
       summary: Get journal entry
       description: >
         Returns a single journal entry from the ERP, including header information and

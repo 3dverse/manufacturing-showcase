@@ -46,29 +46,30 @@ the span is cleared and re-fetched.
 
 | Key | Source endpoint | Filter params used |
 |---|---|---|
-| `productionOrders` | `GET /mes/production-orders` | `siteId`, `scheduledFrom`, `scheduledTo` |
-| `operations` | `GET /mes/operations` | `siteId`, `scheduledFrom`, `scheduledTo` |
-| `downtimeEvents` | `GET /mes/downtime-events` | `siteId`, `startedFrom`, `startedTo` |
-| `salesOrders` | `GET /erp/sales-orders` | `siteId`, `orderDateFrom`, `orderDateTo` |
-| `workCenters` | `GET /mes/work-centers` | `siteId` *(no timespan — static)* |
+| `productionOrders` | `GET /mes/production-orders` | `siteId`, `locationId`, `scheduledFrom`, `scheduledTo` |
+| `operations` | `GET /mes/operations` | `siteId`, `workCenterId`, `scheduledFrom`, `scheduledTo` |
+| `downtimeEvents` | `GET /mes/downtime-events` | `siteId`, `workCenterId`, `startedFrom`, `startedTo` |
+| `salesOrders` | `GET /erp/sales-orders` | `siteId` |
+| `eamWorkOrders` | `GET /eam/work-orders` | `siteId`, `locationId`, `scheduledFrom`, `scheduledTo` |
 
-All stored as `Map<id, T>` with secondary indexes built at fetch time:
+One request per location (for POs and EAM WOs) or per work center (for operations,
+downtime). All stored as `Map<id, T>` with secondary indexes built at fetch time:
 
 ```
 productionOrdersByLocation  : Map<locationId,  PO[]>
 productionOrdersByWorkCenter: Map<workCenterId, PO[]>   // derived from operations
 operationsByWorkCenter      : Map<workCenterId, Op[]>
 downtimeByWorkCenter        : Map<workCenterId, DowntimeEvent[]>
+workOrdersByLocation        : Map<locationId,  WorkOrder[]>
+workOrdersByAsset           : Map<assetId,     WorkOrder[]>  // derived from WOs' assetId
 ```
 
-## Layer 2 — On-demand data  *(fetched on first visit to a machine node)*
+## Layer 2 — On-demand data  *(removed — EAM work orders promoted to Layer 1)*
 
-| Key | Source endpoint | Filter params used |
-|---|---|---|
-| `eamWorkOrdersByAsset[assetId]` | `GET /eam/work-orders` | `siteId`, `assetId`, `scheduledFrom`, `scheduledTo` |
-
-Stored as `Map<assetId, WorkOrder[]>`. Cleared with the rest of the span when
-the time window changes.
+EAM work orders were previously fetched on first visit to a machine node. They are
+now fetched in bulk by `locationId` so area-level scope can include them without a
+separate per-machine request. The `workOrdersByAsset` index is derived at build time
+from the same bulk data, so the machine-level scope remains unaffected.
 
 ---
 
@@ -78,8 +79,7 @@ the time window changes.
 |---|---|
 | App load | Fetch all Layer 1 data |
 | Span change (zoom) | Clear span, re-fetch all Layer 1 data |
-| Navigate to machine node (first visit) | Fetch `eamWorkOrdersByAsset[assetId]` if not in span |
-| Navigate to any other node | Re-derive scope from existing span only |
+| Navigate to any node | Re-derive scope from existing span only |
 | `asOf` change (playhead scrub) | No fetch — pure in-memory filter |
 
 ---
