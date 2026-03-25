@@ -187,7 +187,7 @@ function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
             end: po.effectiveEnd,
             className:
                 po.phase === "completed"
-                    ? "bg-slate-400/50 border border-slate-300/40"
+                    ? "bg-emerald-500/40 border border-emerald-400/40"
                     : po.phase === "future"
                       ? "bg-blue-400/25 border border-blue-400/60 border-dashed"
                       : "bg-emerald-500/60 border border-emerald-400/70",
@@ -301,10 +301,10 @@ function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedW
         end: wo.effectiveEnd,
         className:
             wo.phase === "completed"
-                ? "bg-slate-400/50 border border-slate-300/40"
+                ? "bg-amber-500/50 border border-amber-400/50"
                 : wo.isOverdue
                   ? "bg-amber-500/70 border border-amber-400/80"
-                  : "bg-amber-500/50 border border-amber-400/60",
+                  : "bg-amber-500/50 border border-amber-400/50",
         tooltip: (
             <div className="space-y-1.5">
                 <div className="font-semibold text-white">{wo.workOrderNumber}</div>
@@ -418,7 +418,7 @@ export function Timeline({ className }: { className?: string }) {
     const { scope, level, isLoading } = useScope(selectedNode ?? null);
     const projection = useProjection(scope);
 
-    const [zoom, setZoom] = useState<ZoomKey>("3M");
+    const [zoom, setZoom] = useState<ZoomKey>("2W");
     const [tooltip, setTooltip] = useState<{ content: React.ReactNode; x: number; y: number } | null>(null);
 
     const trackRef = useRef<HTMLDivElement>(null);
