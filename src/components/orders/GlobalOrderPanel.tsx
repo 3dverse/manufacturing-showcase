@@ -64,7 +64,7 @@ export const GlobalOrderPanel = ({ className }: { className?: string }) => {
             <div className="flex justify-between items-start gap-16">
                 <header className="flex flex-col items-start justify-between gap-2">
                     <div className="pt-px">
-                        <PanelLabel className="text-xs">Current Order ?</PanelLabel>
+                        <PanelLabel className="text-xs">Current Order</PanelLabel>
                         <p className="mt-px -ml-px text-lg leading-tight font-semibold tabular-nums tracking-tight">
                             {order.orderNumber}
                         </p>
@@ -141,8 +141,6 @@ const GlobalOrderPanelHeader = ({
 }) => {
     const startSecs = order.timing.actualStart ?? order.timing.scheduledStart;
     const endSecs = order.timing.actualEnd ?? order.timing.scheduledEnd;
-
-    console.log(order);
 
     const formatSecs = useCallback(
         (secs: number) => {
