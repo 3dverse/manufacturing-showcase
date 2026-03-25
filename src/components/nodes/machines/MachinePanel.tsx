@@ -1,11 +1,13 @@
 //------------------------------------------------------------------------------
+import { faClock } from "@fortawesome/pro-light-svg-icons";
+
+//------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
 import { ViewerPanel } from "@/components/common/ViewerPanel";
 import { PanelTitle, PanelWrapper } from "@/components/common/panel";
 
 //------------------------------------------------------------------------------
 import type { MachineNode } from "@/content/type";
-import { faClock } from "@fortawesome/pro-light-svg-icons";
 
 //------------------------------------------------------------------------------
 export function MachinePanel({

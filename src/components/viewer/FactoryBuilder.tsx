@@ -119,8 +119,8 @@ const FactoryBuilder = () => {
                 <LineBuilderItem key={line.hash} line={line} />
             ))}
             {/* TODO: When factory is selected, show only the cells floors, not the NodeSummary */}
-            {shownCells.map((cell) => (
-                <CellBuilderItem key={cell.hash} cell={cell} />
+            {shownCells.map((cell, index) => (
+                <CellBuilderItem key={cell.hash} cell={cell} index={index} />
             ))}
             {selectedNode && isCell(selectedNode) && selectedNode.machines.length > 0 && (
                 <>
@@ -151,13 +151,13 @@ const LineBuilderItem = ({ line }: { line: LineNode }) => {
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const CellBuilderItem = ({ cell }: { cell: CellNode }) => {
+const CellBuilderItem = ({ cell, index }: { cell: CellNode, index: number }) => {
     //--------------------------------------------------------------------------
     // Render
     return (
         <>
             {cell.out.map((out) => (
-                <UnitOutPanel key={out.euid.value} outEntity={out} unitCompleted={96} unitTotal={152} />
+                <UnitOutPanel key={out.euid.value} outEntity={out} unitCompleted={96} unitTotal={252} delay={index} />
             ))}
             {isArea(cell.parent) ? (
                 <>

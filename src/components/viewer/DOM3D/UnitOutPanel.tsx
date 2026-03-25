@@ -12,11 +12,13 @@ import type { Entity } from "@3dverse/livelink";
 //------------------------------------------------------------------------------
 export function UnitOutPanel({
     outEntity,
+    delay,
     unitCompleted,
     unitTotal,
     children,
 }: {
     outEntity: Entity;
+    delay: number;
     unitCompleted: number;
     unitTotal: number;
     children?: ReactNode;
@@ -27,12 +29,14 @@ export function UnitOutPanel({
 
     // Increment every 1s
     useEffect(() => {
-        const interval = setInterval(() => {
-            if (_unitCompleted >= unitTotal) return clearInterval(interval);
-            setUnitCompleted((prev) => prev + 1);
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
+        setTimeout(() => {
+            const interval = setInterval(() => {
+                if (_unitCompleted >= unitTotal) return clearInterval(interval);
+                setUnitCompleted((prev) => prev + 1);
+            }, 1000);
+            return () => clearInterval(interval);
+        }, delay * 2000);
+    }, [delay]);
 
     //--------------------------------------------------------------------------
     return (
@@ -43,8 +47,8 @@ export function UnitOutPanel({
                 className="transform-3d flex items-end pointer-events-none!"
             >
                 <p className="relative flex gap-1 h-fit w-full min-w-28 pl-2 pt-1 pb-7 pr-4 text-xs text-slate-0 rounded-sm border border-slate-0">
-                    <span role="decoration" className="absolute top-0 left-0 bg-slate-1000 w-20 h-8 blur-2xl " />
-                    <Counter number={_unitCompleted} className="translate-y-px" /> /{" "}
+                    <span role="decoration" className="absolute top-0 left-0 bg-slate-1000 w-20 h-8 blur-2xl -z-1" />
+                    <Counter number={_unitCompleted} className="translate-y-px font-bold" /> /{" "}
                     <span className="font-normal">{unitTotal}</span> units
                     {children}
                 </p>
