@@ -49,6 +49,7 @@ function PageContent({ factory }: { factory: Factory }) {
             isTransient={reconnector}
             LoadingPanel={LoadingOverlay}
             ConnectionErrorPanel={DisconnectedOverlay}
+            autoJoinExisting={false}
         >
             <FactoryProviders factory={factory}>
                 <FactoryLayout />
