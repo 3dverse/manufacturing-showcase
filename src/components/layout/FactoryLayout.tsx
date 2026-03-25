@@ -6,7 +6,7 @@ import { Viewer } from "@/components/viewer/Viewer";
 import { MainHeader } from "@/components/layout/MainHeader";
 import { Navigation } from "@/components/navigation/Navigation";
 import { Timeline } from "@/components/timeline/Timeline";
-import { NavigationOrderPanel } from "../orders/NavigationOrderPanel";
+import { GlobalOrderPanel } from "../orders/GlobalOrderPanel";
 import { KeyStatusIndicators } from "../dashboard/header/StatusIndicators";
 
 //------------------------------------------------------------------------------
@@ -40,19 +40,18 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                     thumbnailMode ? "p-0" : "p-0",
                 )}
             >
-                <div className={thumbnailMode ? "" : "flex flex-col items-start w-96 2xl:w-120 p-2"}>
-                    <MainHeader thumbnailMode={thumbnailMode} onBack={onBack} />
-                    <KeyStatusIndicators keyStatus={data.keyStatus} />
+                <div className="flex flex-col md:flex-row justify-between gap-2 p-2">
+                    <div className={thumbnailMode ? "" : "flex flex-col items-start w-full max-w-96 2xl:max-w-120"}>
+                        <MainHeader thumbnailMode={thumbnailMode} onBack={onBack} />
+                        <KeyStatusIndicators keyStatus={data.keyStatus} />
+                    </div>
+
+                    {!thumbnailMode && <GlobalOrderPanel className="max-w-96 2xl:max-w-none" />}
                 </div>
 
                 {!thumbnailMode && (
-                    <div className="flex flex-col justify-end items-center grow p-2 md:p-8">
-                        <div className="grid grid-cols-[min-content_1fr] gap-1">
-                            <NavigationOrderPanel className="col-span-2" />
-
-                            <Navigation className="col-span-2 md:col-span-1" />
-                            <span className="hidden md:block" />
-                        </div>
+                    <div className="flex flex-col justify-end items-center grow p-2 md:p-3">
+                        <Navigation className="col-span-2 md:col-span-1" />
                     </div>
                 )}
 

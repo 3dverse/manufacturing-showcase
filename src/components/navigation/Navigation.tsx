@@ -90,7 +90,7 @@ export const Navigation = ({ className }: { className?: string }) => {
     //--------------------------------------------------------------------------
     // Render
     return (
-        <>
+        <div className="flex gap-2">
             <ViewerPanel
                 className={cn(
                     "flex h-auto border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] appear-in-from-bottom pointer-events-auto select-none",
@@ -115,7 +115,7 @@ export const Navigation = ({ className }: { className?: string }) => {
                     ))}
                 </ul>
             </ViewerPanel>
-        </>
+        </div>
     );
 };
 

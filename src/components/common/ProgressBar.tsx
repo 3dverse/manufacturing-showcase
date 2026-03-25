@@ -16,7 +16,7 @@ export const ProgressBar = ({
     className?: string;
 }) => {
     return (
-        <div className={cn("relative mx-2 border-x border-l-accent border-r-accent-200", className)}>
+        <div className={cn("relative border-x border-l-accent border-r-accent-200", className)}>
             <span className="absolute top-1/2 -left-2 -translate-y-1/2 w-[calc(100%+14px)] h-px bg-accent-200 -z-10" />
             <div
                 className="w-full h-5 bg-accent-100/40"
