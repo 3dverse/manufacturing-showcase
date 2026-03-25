@@ -39,7 +39,6 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
     const { snapshot } = useSnapshot(scope);
     const projection = useProjection(snapshot);
     const order = projection?.productionOrders[0] ?? null;
-    console.log(order);
 
     //--------------------------------------------------------------------------
     const { orderNumber, itemCode } = order ?? { orderNumber: "", itemCode: "" };

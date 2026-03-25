@@ -25,7 +25,5 @@ export function useScope(node: NavGraphNode | null): {
     // arrives) — keeps the Timeline layout stable with no height flicker.
     const level = useMemo(() => scope?.level ?? (node ? levelFromNode(node) : null), [scope, node]);
 
-    console.log("scope", scope);
-
     return { scope, level, isLoading };
 }
