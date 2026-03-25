@@ -15,6 +15,7 @@ import type {
 export type Phase = "completed" | "active" | "future";
 
 export type ProjectedSalesOrder = SalesOrderEntry & {
+    phase:     Phase;    // completed if shipped, active if asOf within window, future otherwise
     isOverdue: boolean;
 };
 
@@ -92,8 +93,13 @@ function interpolateProgress(effectiveStart: number, effectiveEnd: number, phase
 // ---------------------------------------------------------------------------
 
 function projectSalesOrder(e: SalesOrderEntry, asOf: number): ProjectedSalesOrder {
+    const phase: Phase =
+        asOf > e.requestedDeliveryDate ? "completed" :
+        asOf >= e.orderDate            ? "active"    :
+                                         "future";
     return {
         ...e,
+        phase,
         isOverdue: asOf > e.requestedDeliveryDate && e.status !== "shipped",
     };
 }

@@ -10,9 +10,9 @@
  *   - QMS: nonconformances, CAPAs, audits, complaints (generated independently)
  */
 
-import type { RNG } from "../../generator/rng";
+import type { RNG } from "../rng";
 import type { GeneratorConfig } from "../config";
-import type { Dataset, OEEBucket, WorkCenterTimeline } from "../../generator/types";
+import type { Dataset, OEEBucket, WorkCenterTimeline } from "../types";
 import type { Phase1Result } from "./phase1";
 import type { Phase2Result, PlacedPO, PlacedOperation, PlacedMaintenanceWO } from "./phase2";
 import { workingMinutes, shiftCoverage, addDays } from "../shifts";
@@ -507,9 +507,9 @@ export function fillDataset(
     // ========================================================================
 
     const erpSalesOrders    = new Map<string, any>();
-    const erpSalesOrderList: string[] = [];
+    const erpSalesOrderList: any[] = [];
     const erpPurchaseOrders = new Map<string, any>();
-    const erpPurchaseOrderList: string[] = [];
+    const erpPurchaseOrderList: any[] = [];
     const erpInvoices       = new Map<string, any>();
     const erpInvoiceList:    string[] = [];
     const erpPayments       = new Map<string, any>();
@@ -542,13 +542,17 @@ export function fillDataset(
         // ---- Sales Order ----
         const customer   = rng.pick(customerIds);
         const custRec    = entities.erpCustomers.get(customer)!;
-        const orderDate  = addDaysToDate(po.start, -rng.nextInt(3, 10));
-        const delivDate  = addDaysToDate(po.end,    rng.nextInt(1, 3));
+        const orderDate  = addDaysToDate(po.start, -rng.nextInt(0, 3));
+        const delivDate  = addDaysToDate(po.end,    rng.nextInt(0, 2));
         const soStatus   = po.end <= now ? "shipped" : po.start < now ? "in_progress" : "open";
         const soId       = newSoId();
 
-        erpSalesOrders.set(soId, {
+        const mesPO = mesProductionOrders.get(po.id) as any;
+        if (mesPO) mesPO.erpSalesOrderId = soId;
+
+        const soObj = {
             id: soId, companyId,
+            siteId: config.siteId,
             orderNumber: soId,
             customerId:  customer,
             orderDate:   toUnix(orderDate),
@@ -557,8 +561,9 @@ export function fillDataset(
             currency: "USD",
             lines: [{ lineNumber: 1, itemId: po.itemId, quantity: qty, unitPrice, lineAmount }],
             totalAmount: lineAmount,
-        });
-        erpSalesOrderList.push(soId);
+        };
+        erpSalesOrders.set(soId, soObj);
+        erpSalesOrderList.push(soObj);
 
         // ---- Purchase Order (raw materials) ----
         const supplier     = rng.pick(supplierIds);
@@ -570,7 +575,7 @@ export function fillDataset(
         const erpPoId      = newPoId();
         const rmCost       = unitPrice * 0.4; // raw materials ~40 % of unit cost
 
-        erpPurchaseOrders.set(erpPoId, {
+        const poObj = {
             id: erpPoId, companyId,
             orderNumber: erpPoId,
             supplierId: supplier,
@@ -580,8 +585,9 @@ export function fillDataset(
             currency: "USD",
             lines: [{ lineNumber: 1, itemId: "RM-STEEL-BAR", quantity: qty, unitPrice: rmCost, lineAmount: qty * rmCost }],
             totalAmount: qty * rmCost,
-        });
-        erpPurchaseOrderList.push(erpPoId);
+        };
+        erpPurchaseOrders.set(erpPoId, poObj);
+        erpPurchaseOrderList.push(poObj);
 
         // ---- AR Invoice (after shipment) ----
         if (soStatus === "shipped") {
@@ -907,14 +913,13 @@ export function fillDataset(
     }
 
     // Complaints: ~1 in 10 shipped orders
-    for (const soId of erpSalesOrderList) {
-        const so = erpSalesOrders.get(soId) as any;
+    for (const so of erpSalesOrders.values()) {
         if (so?.status === "shipped" && rng.bool(0.1)) {
             const cmpId   = `CMP-${String(compNum++).padStart(4, "0")}`;
             const rcvDate = addDaysToDate(new Date(so.requestedDeliveryDate * 1000), rng.nextInt(2, 7));
             const isRecent = (now.getTime() - rcvDate.getTime()) < 30 * 86400_000;
             qmsComplaints.set(cmpId, {
-                id: cmpId, salesOrderId: soId,
+                id: cmpId, salesOrderId: so.id,
                 receivedDate: toUnix(rcvDate),
                 status: isRecent ? "open" : "closed",
             });

@@ -16,7 +16,7 @@ export function AnchoredPanel({ node, children }: { node: NavGraphNode; children
         <BoundingBoxFaceProjection
             entity={node.entity}
             face="right"
-            className="flex items-end p-8 transform-3d pointer-events-none!"
+            className="flex items-end p-8 transform-3d pointer-events-none!/"
         >
             <ViewerPanel className="h-fit w-fit bg-slate-0/80 rounded-xl [corner-shape:bevel] [outline:2px_solid_#ffffff90] outline-offset-3 transform-3d appear-in-from-bottom opacity-0 [--animation-delay:1s]">
                 <PanelWrapper className="py-4">

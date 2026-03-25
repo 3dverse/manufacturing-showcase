@@ -65,7 +65,8 @@ type ProjectedWorkOrder = WorkOrderEntry & {
 };
 
 type ProjectedSalesOrder = SalesOrderEntry & {
-    isOverdue:  boolean;                 // asOf > requestedDeliveryDate and not shipped
+    phase:      "completed" | "active" | "future";  // shipped → completed; asOf ≥ orderDate → active; else future
+    isOverdue:  boolean;                            // asOf > requestedDeliveryDate and not shipped
 };
 ```
 
@@ -120,6 +121,18 @@ precise count.
 durationAtAsOf = (endedAt ?? asOf) - startedAt
 isOngoing      = endedAt === undefined || endedAt > asOf
 ```
+
+### Phase (SalesOrder)
+
+| Condition | Phase |
+|---|---|
+| `asOf > requestedDeliveryDate` | `completed` |
+| `asOf >= orderDate` | `active` |
+| `asOf < orderDate` | `future` |
+
+Phase is fully derived from `asOf` — the raw `status` field is not used for phase computation.
+
+---
 
 ### Overdue (SalesOrder, WorkOrder)
 

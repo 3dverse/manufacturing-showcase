@@ -8,9 +8,9 @@
  * Nothing in this phase computes quantities or statuses — those are fill-pass concerns.
  */
 
-import type { RNG } from "../../generator/rng";
+import type { RNG } from "../rng";
 import type { GeneratorConfig } from "../config";
-import { getProductionLocations } from "../../generator/graph";
+import { getProductionLocations } from "../graph";
 import { nextShiftStart, clampToShift, addMinutes, addDays } from "../shifts";
 import type {
     POTemplate,

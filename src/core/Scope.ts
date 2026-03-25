@@ -220,15 +220,19 @@ function scopeFactory(_node: FactoryNode, span: TimelineSpan): TimelineScope {
 }
 
 function scopeArea(node: AreaNode, span: TimelineSpan): TimelineScope {
-    const wcHashes = [
-        ...node.lines.flatMap((l) => l.cells.map((c) => c.hash)),
-        ...node.cells.map((c) => c.hash),
-    ];
+    const wcHashes = [...node.lines.flatMap((l) => l.cells.map((c) => c.hash)), ...node.cells.map((c) => c.hash)];
     const dtIds = wcHashes.flatMap((h) => span.downtimeByWorkCenter.get(h) ?? []);
+    const areaPos = resolvePos(span.productionOrdersByLocation.get(node.hash), span);
+
+    // Production areas: show only SOs linked to this area's POs.
+    // Non-production areas (no POs): show all SOs — there is no
+    // production data to filter by, so the full list is the relevant view.
+    const salesOrders =
+        areaPos.length > 0 ? resolveSalesOrdersForPos(areaPos, span) : Array.from(span.salesOrders.values());
     return {
         level: "area",
-        salesOrders: [],
-        productionOrders: resolvePos(span.productionOrdersByLocation.get(node.hash), span),
+        salesOrders,
+        productionOrders: areaPos,
         operations: [],
         downtimeEvents: resolveUnique(dtIds, span.downtimeEvents),
         eamWorkOrders: resolveWorkOrders(span.workOrdersByLocation.get(node.hash), span),
@@ -240,10 +244,11 @@ function scopeLine(node: LineNode, span: TimelineSpan): TimelineScope {
     const poIds = cellHashes.flatMap((h) => span.productionOrdersByWorkCenter.get(h) ?? []);
     const opIds = cellHashes.flatMap((h) => span.operationsByWorkCenter.get(h) ?? []);
     const dtIds = cellHashes.flatMap((h) => span.downtimeByWorkCenter.get(h) ?? []);
+    const pos = resolveUnique(poIds, span.productionOrders);
     return {
         level: "line",
-        salesOrders: [],
-        productionOrders: resolveUnique(poIds, span.productionOrders),
+        salesOrders: resolveSalesOrdersForPos(pos, span),
+        productionOrders: pos,
         operations: resolveUnique(opIds, span.operations),
         downtimeEvents: resolveUnique(dtIds, span.downtimeEvents),
         eamWorkOrders: resolveWorkOrders(span.workOrdersByLocation.get(node.parent.hash), span),
@@ -251,10 +256,11 @@ function scopeLine(node: LineNode, span: TimelineSpan): TimelineScope {
 }
 
 function scopeCell(node: CellNode, span: TimelineSpan): TimelineScope {
+    const pos = resolvePos(span.productionOrdersByWorkCenter.get(node.hash), span);
     return {
         level: "cell",
-        salesOrders: [],
-        productionOrders: resolvePos(span.productionOrdersByWorkCenter.get(node.hash), span),
+        salesOrders: resolveSalesOrdersForPos(pos, span),
+        productionOrders: pos,
         operations: resolveOps(span.operationsByWorkCenter.get(node.hash), span),
         downtimeEvents: resolveDowntimes(span.downtimeByWorkCenter.get(node.hash), span),
         eamWorkOrders: [],
@@ -264,10 +270,11 @@ function scopeCell(node: CellNode, span: TimelineSpan): TimelineScope {
 function scopeMachine(node: MachineNode, span: TimelineSpan): TimelineScope {
     // Operations and production orders are work-center-scoped, not machine-scoped
     const wcId = node.parent.hash;
+    const pos = resolvePos(span.productionOrdersByWorkCenter.get(wcId), span);
     return {
         level: "machine",
-        salesOrders: [],
-        productionOrders: resolvePos(span.productionOrdersByWorkCenter.get(wcId), span),
+        salesOrders: resolveSalesOrdersForPos(pos, span),
+        productionOrders: pos,
         operations: resolveOps(span.operationsByWorkCenter.get(wcId), span),
         downtimeEvents: resolveDowntimes(span.downtimeByWorkCenter.get(wcId), span),
         eamWorkOrders: resolveWorkOrders(span.workOrdersByAsset.get(node.hash), span),
@@ -281,6 +288,11 @@ function scopeMachine(node: MachineNode, span: TimelineSpan): TimelineScope {
 
 function resolvePos(ids: string[] | undefined, span: TimelineSpan): ProductionOrderEntry[] {
     return resolveUnique(ids ?? [], span.productionOrders);
+}
+
+function resolveSalesOrdersForPos(pos: ProductionOrderEntry[], span: TimelineSpan): SalesOrderEntry[] {
+    const soIds = [...new Set(pos.flatMap((po) => (po.erpSalesOrderId ? [po.erpSalesOrderId] : [])))];
+    return resolveUnique(soIds, span.salesOrders);
 }
 
 function resolveOps(ids: string[] | undefined, span: TimelineSpan): OperationEntry[] {

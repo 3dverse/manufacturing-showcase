@@ -36,10 +36,11 @@ to the node's level and hash. The component never touches the span directly.
 | Level | `salesOrders` | `productionOrders` | `operations` | `downtimeEvents` | `eamWorkOrders` |
 |---|---|---|---|---|---|
 | Factory | all in span | — | — | — | — |
-| Area | — | `productionOrdersByLocation[node.hash]` | — | union of `downtimeByWorkCenter[wc]` for all wcs in area | `workOrdersByLocation[node.hash]` |
-| Line | — | union of `productionOrdersByWorkCenter[wc]` for wcs in this line | union of `operationsByWorkCenter[wc]` for wcs in this line | union of `downtimeByWorkCenter[wc]` for wcs in this line | `workOrdersByLocation[node.parent.hash]` |
-| Cell | — | `productionOrdersByWorkCenter[node.hash]` | `operationsByWorkCenter[node.hash]` | `downtimeByWorkCenter[node.hash]` | — |
-| Machine | — | `productionOrdersByWorkCenter[node.parent.hash]` | `operationsByWorkCenter[node.parent.hash]` | `downtimeByWorkCenter[node.parent.hash]` | `workOrdersByAsset[node.hash]` |
+| Area (production) | SOs linked to area's POs via `erpSalesOrderId` | `productionOrdersByLocation[node.hash]` | — | union of `downtimeByWorkCenter[wc]` for all wcs in area | `workOrdersByLocation[node.hash]` |
+| Area (non-production) | all in span | `productionOrdersByLocation[node.hash]` | — | union of `downtimeByWorkCenter[wc]` for all wcs in area | `workOrdersByLocation[node.hash]` |
+| Line | SOs linked to line's POs via `erpSalesOrderId` | union of `productionOrdersByWorkCenter[wc]` for wcs in this line | union of `operationsByWorkCenter[wc]` for wcs in this line | union of `downtimeByWorkCenter[wc]` for wcs in this line | `workOrdersByLocation[node.parent.hash]` |
+| Cell | SOs linked to cell's POs via `erpSalesOrderId` | `productionOrdersByWorkCenter[node.hash]` | `operationsByWorkCenter[node.hash]` | `downtimeByWorkCenter[node.hash]` | — |
+| Machine | SOs linked to work center's POs via `erpSalesOrderId` | `productionOrdersByWorkCenter[node.parent.hash]` | `operationsByWorkCenter[node.parent.hash]` | `downtimeByWorkCenter[node.parent.hash]` | `workOrdersByAsset[node.hash]` |
 
 *Machine-level production orders and operations are scoped to the parent work
 center, since operations are assigned at the work center level.*
@@ -48,6 +49,11 @@ center, since operations are assigned at the work center level.*
 area hash. This is the same location that production orders use, so the two
 stories share the same horizontal axis and maintenance gaps are directly visible
 alongside production runs.*
+
+*Production areas are those with at least one production order in the current
+span. Non-production areas (e.g. shipping, receiving, quality office) have no
+POs to link against — they receive the full sales order list instead. An area
+with work centers but no POs in the current window is treated the same way.*
 
 ---
 

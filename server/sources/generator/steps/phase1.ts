@@ -12,12 +12,12 @@
  * Templates do not appear in the final dataset; they drive Phase 2 placement.
  */
 
-import type { RNG } from "../../generator/rng";
+import type { RNG } from "../rng";
 import type { GeneratorConfig } from "../config";
 import {
     getProductionLocations,
     flattenWorkCenters,
-} from "../../generator/graph";
+} from "../graph";
 import { addDays } from "../shifts";
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { getFolderAssets } from "@3dverse/api";
 
-import { generate } from "../generator2/index";
+import { generate } from "./index";
 import { setDataset } from "./store";
 import { STATIC_SITE_ID, defaultSite } from "./input";
 import { loadSiteFromScene } from "../operations/dataset/generateDataset";

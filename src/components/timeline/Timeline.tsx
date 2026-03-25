@@ -6,6 +6,9 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { useScope } from "@/hooks/useScope";
 import { useProjection } from "@/hooks/useProjection";
+import { useCorrelation } from "@/hooks/useCorrelation";
+import { useFocusStore } from "@/store/useFocusStore";
+import { highlightStateForBar, type EntityType, type HighlightState } from "@/core/Correlation";
 import { cn } from "@/utils/cn";
 import type { TimelineLevel } from "@/core/Scope";
 import type {
@@ -25,6 +28,8 @@ import { PERFORMANCE_MODE } from "@/content/3dverse";
 
 type ZoomKey = "1D" | "1W" | "2W" | "1M" | "3M" | "6M";
 
+type AreaType = "production" | "other";
+
 const ZOOMS: { key: ZoomKey; label: string; days: number }[] = [
     { key: "1D", label: "1D", days: 1 },
     { key: "1W", label: "1W", days: 7 },
@@ -40,6 +45,7 @@ const ZOOMS: { key: ZoomKey; label: string; days: number }[] = [
 
 const AXIS_H = 22;
 const ROW_H = 22;
+const ROW_H_LINE = 8;
 const ROW_GAP = 4;
 const BAR_H = 12;
 
@@ -104,16 +110,27 @@ function buildTicks(winStart: number, winEnd: number, totalDays: number): Tick[]
 
 type BarItem = {
     id: string;
+    entityType: EntityType;
     start: number;
     end: number;
     className: string;
     tooltip: React.ReactNode;
 };
 
-type Story = { id: string; label: string; lanes: BarItem[][] };
+type BarStyle = "bar" | "line";
+type StackingStyle = "swimlane" | "overlap";
+
+type Story = {
+    id: string;
+    label: string;
+    lanes: BarItem[][];
+    barStyle: BarStyle;
+    stackingStyle: StackingStyle;
+    rowHeight: number;
+};
 
 //------------------------------------------------------------------------------
-// Swimlane assignment
+// Lane assignment
 //------------------------------------------------------------------------------
 
 function assignSwimlanes(bars: BarItem[]): BarItem[][] {
@@ -140,6 +157,11 @@ function assignSwimlanes(bars: BarItem[]): BarItem[][] {
     return lanes.length ? lanes : [[]];
 }
 
+function buildLanes(bars: BarItem[], stacking: StackingStyle): BarItem[][] {
+    if (stacking === "overlap") return bars.length ? [bars] : [[]];
+    return assignSwimlanes(bars);
+}
+
 //------------------------------------------------------------------------------
 // Story builders — receive projected entries, read fields directly
 //------------------------------------------------------------------------------
@@ -147,11 +169,12 @@ function assignSwimlanes(bars: BarItem[]): BarItem[][] {
 function buildSalesOrdersStory(orders: ProjectedSalesOrder[]): Story {
     const bars: BarItem[] = orders.map((so) => ({
         id: so.id,
+        entityType: "salesOrder" as EntityType,
         start: so.orderDate,
         end: so.requestedDeliveryDate,
         className: cn(
-            "border border-dashed",
-            so.isOverdue ? "bg-red-400/30 border-red-400/60" : "bg-violet-400/30 border-violet-400/60",
+            "hover:ring-2 hover:ring-offset-0 hover:ring-accent/50",
+            so.phase === "active" ? "bg-accent" : so.phase === "completed" ? "bg-accent/70" : "bg-accent/40",
         ),
         tooltip: (
             <div className="space-y-1.5">
@@ -172,7 +195,14 @@ function buildSalesOrdersStory(orders: ProjectedSalesOrder[]): Story {
             </div>
         ),
     }));
-    return { id: "sales", label: "Sales Orders", lanes: assignSwimlanes(bars) };
+    return {
+        id: "sales",
+        label: "Sales Orders",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "line",
+        stackingStyle: "swimlane",
+        rowHeight: ROW_H_LINE,
+    };
 }
 
 function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
@@ -183,14 +213,15 @@ function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
                 : 0;
         return {
             id: po.id,
+            entityType: "productionOrder" as EntityType,
             start: po.effectiveStart,
             end: po.effectiveEnd,
             className:
                 po.phase === "completed"
-                    ? "bg-emerald-500/40 border border-emerald-400/40"
+                    ? "bg-emerald-500/40 border border-emerald-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50"
                     : po.phase === "future"
-                      ? "bg-blue-400/25 border border-blue-400/60 border-dashed"
-                      : "bg-emerald-500/60 border border-emerald-400/70",
+                      ? "bg-blue-400/25 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
+                      : "bg-emerald-500/60 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
             tooltip: (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{po.orderNumber}</div>
@@ -222,7 +253,14 @@ function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
             ),
         };
     });
-    return { id: "production", label: "Orders", lanes: assignSwimlanes(bars) };
+    return {
+        id: "production",
+        label: "Production orders",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "bar",
+        stackingStyle: "swimlane",
+        rowHeight: ROW_H,
+    };
 }
 
 function buildOperationsStory(ops: ProjectedOperation[]): Story {
@@ -230,14 +268,15 @@ function buildOperationsStory(ops: ProjectedOperation[]): Story {
         const slip = op.actualEnd && op.actualEnd > op.scheduledEnd ? op.actualEnd - op.scheduledEnd : 0;
         return {
             id: op.id,
+            entityType: "operation" as EntityType,
             start: op.effectiveStart,
             end: op.effectiveEnd,
             className:
                 op.phase === "completed"
-                    ? "bg-slate-400/50 border border-slate-300/40"
+                    ? "bg-slate-400/50 border border-slate-300/40 hover:ring-2 hover:ring-offset-0 hover:ring-slate-400/50"
                     : op.phase === "future"
-                      ? "bg-blue-400/25 border border-blue-400/60 border-dashed"
-                      : "bg-emerald-500/60 border border-emerald-400/70",
+                      ? "bg-blue-400/25 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
+                      : "bg-emerald-500/60 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
             tooltip: (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{op.operationCode}</div>
@@ -267,15 +306,26 @@ function buildOperationsStory(ops: ProjectedOperation[]): Story {
             ),
         };
     });
-    return { id: "operations", label: "Operations", lanes: [bars] };
+    return {
+        id: "operations",
+        label: "Operations",
+        lanes: buildLanes(bars, "overlap"),
+        barStyle: "bar",
+        stackingStyle: "overlap",
+        rowHeight: ROW_H,
+    };
 }
 
 function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedWorkOrder[]): Story {
     const dtBars: BarItem[] = events.map((dt) => ({
         id: dt.id,
+        entityType: "downtime" as EntityType,
         start: dt.startedAt,
-        end: dt.startedAt + dt.durationAtAsOf,
-        className: cn("border border-red-400/40", dt.isOngoing ? "bg-red-500/70" : "bg-red-500/55"),
+        end: dt.endedAt ?? Math.floor(Date.now() / 1000),
+        className: cn(
+            "border border-red-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-red-500/50",
+            dt.isOngoing ? "bg-red-500/70" : "bg-red-500/55",
+        ),
         tooltip: (
             <div className="space-y-1.5">
                 <div className="font-semibold text-red-300">
@@ -297,14 +347,15 @@ function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedW
 
     const woBars: BarItem[] = workOrders.map((wo) => ({
         id: wo.id,
+        entityType: "workOrder" as EntityType,
         start: wo.effectiveStart,
         end: wo.effectiveEnd,
         className:
             wo.phase === "completed"
-                ? "bg-amber-500/50 border border-amber-400/50"
+                ? "bg-amber-500/50 border border-amber-400/50 hover:ring-2 hover:ring-offset-0 hover:ring-amber-500/50"
                 : wo.isOverdue
-                  ? "bg-amber-500/70 border border-amber-400/80"
-                  : "bg-amber-500/50 border border-amber-400/50",
+                  ? "bg-amber-500/70 border border-amber-400/80 hover:ring-2 hover:ring-offset-0 hover:ring-amber-500/50"
+                  : "bg-amber-500/50 border border-amber-400/50 hover:ring-2 hover:ring-offset-0 hover:ring-amber-500/50",
         tooltip: (
             <div className="space-y-1.5">
                 <div className="font-semibold text-white">{wo.workOrderNumber}</div>
@@ -329,14 +380,21 @@ function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedW
         ),
     }));
 
-    return { id: "stoppages", label: "Stoppages", lanes: assignSwimlanes([...dtBars, ...woBars]) };
+    return {
+        id: "stoppages",
+        label: "Stoppages",
+        lanes: buildLanes([...dtBars, ...woBars], "overlap"),
+        barStyle: "bar",
+        stackingStyle: "swimlane",
+        rowHeight: ROW_H,
+    };
 }
 
 //------------------------------------------------------------------------------
 // Story selection
 //------------------------------------------------------------------------------
 
-function buildStories(level: TimelineLevel, projection: AsOfProjection | null): Story[] {
+function buildStories(level: TimelineLevel, projection: AsOfProjection | null, areatype?: AreaType): Story[] {
     const so = projection?.salesOrders ?? [];
     const po = projection?.productionOrders ?? [];
     const ops = projection?.operations ?? [];
@@ -347,7 +405,12 @@ function buildStories(level: TimelineLevel, projection: AsOfProjection | null): 
         case "factory":
             return [buildSalesOrdersStory(so)];
         case "area":
-            return [buildProductionOrdersStory(po), buildStoppagesStory(dt, wo)];
+            switch (areatype) {
+                case "production":
+                    return [buildSalesOrdersStory(so), buildProductionOrdersStory(po)];
+                default:
+                    return [buildSalesOrdersStory(so)];
+            }
         case "line":
         case "cell":
             return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo)];
@@ -360,20 +423,32 @@ function buildStories(level: TimelineLevel, projection: AsOfProjection | null): 
 // Bar component
 //------------------------------------------------------------------------------
 
+const LINE_H = 4;
+
 function Bar({
     bar,
     winStart,
     winEnd,
     laneIndex,
+    barStyle,
+    rowHeight,
+    highlightState,
     onEnter,
     onLeave,
+    onFocusEnter,
+    onFocusLeave,
 }: {
     bar: BarItem;
     winStart: number;
     winEnd: number;
     laneIndex: number;
+    barStyle: BarStyle;
+    rowHeight: number;
+    highlightState: HighlightState;
     onEnter: (content: React.ReactNode, e: React.MouseEvent) => void;
     onLeave: () => void;
+    onFocusEnter: () => void;
+    onFocusLeave: () => void;
 }) {
     const left = toPct(bar.start, winStart, winEnd);
     const right = toPct(bar.end, winStart, winEnd);
@@ -382,26 +457,31 @@ function Bar({
     const clampedLeft = Math.max(0, left);
     const clampedRight = Math.min(100, right);
     const widthPct = Math.max(0.25, clampedRight - clampedLeft);
+    const h = barStyle === "line" ? LINE_H : BAR_H;
 
     return (
         <div
             className={cn(
-                "absolute rounded-sm cursor-pointer hover:brightness-125 transition-[filter,opacity]",
+                "absolute cursor-pointer transition-[shadow,opacity]",
+                barStyle === "line" ? "rounded-full" : "rounded-sm",
+                highlightState === "dimmed" && "opacity-20",
                 bar.className,
             )}
             style={{
                 left: `${clampedLeft}%`,
                 width: `${widthPct}%`,
-                top: laneIndex * ROW_H + (ROW_H - BAR_H) / 2,
-                height: BAR_H,
+                top: laneIndex * rowHeight + (rowHeight - h) / 2,
+                height: h,
             }}
             onMouseEnter={(e) => {
                 e.stopPropagation();
                 onEnter(bar.tooltip, e);
+                onFocusEnter();
             }}
             onMouseLeave={(e) => {
                 e.stopPropagation();
                 onLeave();
+                onFocusLeave();
             }}
             onMouseDown={(e) => e.stopPropagation()}
         />
@@ -417,6 +497,12 @@ export function Timeline({ className }: { className?: string }) {
     const { asOf, setAsOf } = useTimelineStore();
     const { scope, level, isLoading } = useScope(selectedNode ?? null);
     const projection = useProjection(scope);
+    const { hovered, setHovered } = useFocusStore();
+    const areaType: AreaType | undefined =
+        level === "area" && (scope?.productionOrders.length ?? 0) > 0 ? "production" : undefined;
+    const correlationEnabled = !(level === "area" && areaType !== "production");
+    const activeFocus = correlationEnabled ? hovered : null;
+    const correlated = useCorrelation(projection, activeFocus);
 
     const [zoom, setZoom] = useState<ZoomKey>("2W");
     const [tooltip, setTooltip] = useState<{ content: React.ReactNode; x: number; y: number } | null>(null);
@@ -432,11 +518,14 @@ export function Timeline({ className }: { className?: string }) {
     const winEnd = refNow + halfSecs;
 
     //--------------------------------------------------------------------------
-    const stories = useMemo(() => (level ? buildStories(level, projection) : []), [level, projection]);
+    const stories = useMemo(
+        () => (level ? buildStories(level, projection, areaType) : []),
+        [level, projection, areaType],
+    );
     const ticks = useMemo(() => buildTicks(winStart, winEnd, zoomDef.days), [winStart, winEnd, zoomDef.days]);
     const nowPct = toPct(refNow, winStart, winEnd);
     const playheadPct = Math.max(0, Math.min(100, toPct(asOf, winStart, winEnd)));
-    const totalH = AXIS_H + ROW_GAP + stories.reduce((sum, s) => sum + s.lanes.length * ROW_H + ROW_GAP, 0);
+    const totalH = AXIS_H + ROW_GAP + stories.reduce((sum, s) => sum + s.lanes.length * s.rowHeight + ROW_GAP, 0);
 
     //--------------------------------------------------------------------------
     // Seek interaction
@@ -526,14 +615,14 @@ export function Timeline({ className }: { className?: string }) {
             <div className="flex h-full">
                 {/* Label column */}
                 <div
-                    className="shrink-0 w-24 border-r border-slate-200/10 flex flex-col"
+                    className="shrink-0 w-34 border-r border-slate-200/10 flex flex-col"
                     style={{ paddingTop: AXIS_H + ROW_GAP }}
                 >
                     {stories.map((story) => (
                         <div
                             key={story.id}
-                            className="flex items-center px-2 shrink-0"
-                            style={{ height: story.lanes.length * ROW_H, marginBottom: ROW_GAP }}
+                            className="flex items-top px-2 shrink-0 justify-end"
+                            style={{ height: story.lanes.length * story.rowHeight, marginBottom: ROW_GAP }}
                         >
                             <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-400 truncate">
                                 {story.label}
@@ -588,7 +677,7 @@ export function Timeline({ className }: { className?: string }) {
                         <div
                             key={story.id}
                             className="relative mx-1 bg-white/[0.035] rounded-sm"
-                            style={{ height: story.lanes.length * ROW_H, marginBottom: ROW_GAP }}
+                            style={{ height: story.lanes.length * story.rowHeight, marginBottom: ROW_GAP }}
                         >
                             {story.lanes.map((lane, laneIdx) =>
                                 lane.map((bar) => (
@@ -598,8 +687,18 @@ export function Timeline({ className }: { className?: string }) {
                                         winStart={winStart}
                                         winEnd={winEnd}
                                         laneIndex={laneIdx}
+                                        barStyle={story.barStyle}
+                                        rowHeight={story.rowHeight}
+                                        highlightState={highlightStateForBar(
+                                            bar.id,
+                                            bar.entityType,
+                                            activeFocus,
+                                            correlated,
+                                        )}
                                         onEnter={showTooltip}
                                         onLeave={hideTooltip}
+                                        onFocusEnter={() => setHovered({ type: bar.entityType, id: bar.id })}
+                                        onFocusLeave={() => setHovered(null)}
                                     />
                                 )),
                             )}

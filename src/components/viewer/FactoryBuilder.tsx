@@ -151,7 +151,7 @@ const LineBuilderItem = ({ line }: { line: LineNode }) => {
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const CellBuilderItem = ({ cell, index }: { cell: CellNode, index: number }) => {
+const CellBuilderItem = ({ cell, index }: { cell: CellNode; index: number }) => {
     //--------------------------------------------------------------------------
     // Render
     return (

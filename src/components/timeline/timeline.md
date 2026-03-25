@@ -72,8 +72,11 @@ when each planning horizon was active.
 
 ### 2. Area  *(production location)*
 
-Bars across two tracks:
+Bars across three tracks:
 
+- **Sales Orders** (ERP) — for production areas, only SOs linked to this area's
+  production orders; for non-production areas (no POs), all site SOs. Same
+  rendering as factory level.
 - **Production Orders** (MES) — each bar spans `scheduledStart → scheduledEnd` for a
   PO assigned to this area. Color encodes status (released, in progress, completed).
   Gives a throughput view: how densely the location is loaded and where gaps fall.

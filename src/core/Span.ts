@@ -13,8 +13,8 @@ import {
 } from "@/core/Scope";
 import type { NavGraphNode } from "@/content/type";
 import type { WorkOrder } from "_prebuild/api-libs/eam";
-import type { DowntimeEvent, OperationDetail, ProductionOrder } from "_prebuild/api-libs/mes";
 import type { SalesOrder } from "_prebuild/api-libs/erp";
+import type { DowntimeEvent, OperationDetail, ProductionOrder } from "_prebuild/api-libs/mes";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -184,8 +184,13 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
     // EAM work orders — one request per location, indexed by location and asset
     const woPages = await Promise.all(
         locationIds.map((locId) =>
-            EAM.getWorkOrders({ siteId, locationId: locId, scheduledFrom: from, scheduledTo: to, pageSize: PAGE_SIZE })
-                .then((r) => r.data.data ?? []),
+            EAM.getWorkOrders({
+                siteId,
+                locationId: locId,
+                scheduledFrom: from,
+                scheduledTo: to,
+                pageSize: PAGE_SIZE,
+            }).then((r) => r.data.data ?? []),
         ),
     );
     for (const wo of woPages.flat()) span.eamWorkOrders.set(wo.id, mapWorkOrder(wo));
