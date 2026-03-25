@@ -23,6 +23,7 @@ out/
 *.sw?
 
 server/dist
+dist/
 _prebuild
 
 .npmrc
