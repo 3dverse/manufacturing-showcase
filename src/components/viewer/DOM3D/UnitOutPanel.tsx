@@ -33,7 +33,7 @@ export function UnitOutPanel({
             const interval = setInterval(() => {
                 if (_unitCompleted >= unitTotal) return clearInterval(interval);
                 setUnitCompleted((prev) => prev + 1);
-            }, 1000);
+            }, 3000);
             return () => clearInterval(interval);
         }, delay * 2000);
     }, [delay]);
@@ -46,12 +46,15 @@ export function UnitOutPanel({
                 face="right"
                 className="transform-3d flex items-end pointer-events-none!"
             >
-                <p className="relative flex gap-1 h-fit w-full min-w-28 pl-2 pt-1 pb-7 pr-4 text-xs text-slate-0 rounded-sm border border-slate-0">
+                <div className="relative flex flex-col justify-between gap-3 h-full min-h-16 w-full min-w-28 px-2 py-1 text-xs text-slate-0 rounded-sm border border-slate-0">
                     <span role="decoration" className="absolute top-0 left-0 bg-slate-1000 w-20 h-8 blur-2xl -z-1" />
-                    <Counter number={_unitCompleted} className="translate-y-px font-bold" /> /{" "}
-                    <span className="font-normal">{unitTotal}</span> units
-                    {children}
-                </p>
+                    <p>Today</p>
+                    <p className="flex gap-1">
+                        <Counter number={_unitCompleted} className="translate-y-px font-bold" /> /{" "}
+                        <span className="font-normal">{unitTotal}</span> units
+                        {children}
+                    </p>
+                </div>
             </BoundingBoxFaceProjection>
             <BoundingBoxFaceProjection
                 entity={outEntity}

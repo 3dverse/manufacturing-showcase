@@ -114,7 +114,9 @@ const FactoryBuilder = () => {
                 selectedNode &&
                 isFactory(selectedNode) &&
                 nodeGraph?.flows.map((flow) => <FlowSpline key={flow.hash} flow={flow} />)}
-            {nodeGraph?.areas.map((area) => <AreaBuilderItem key={area.hash} area={area} />)}
+            {nodeGraph?.areas.map((area) => (
+                <AreaBuilderItem key={area.hash} area={area} />
+            ))}
             {shownLines.map((line) => (
                 <LineBuilderItem key={line.hash} line={line} />
             ))}
@@ -157,7 +159,7 @@ const CellBuilderItem = ({ cell, index }: { cell: CellNode; index: number }) => 
     return (
         <>
             {cell.out.map((out) => (
-                <UnitOutPanel key={out.euid.value} outEntity={out} unitCompleted={96} unitTotal={252} delay={index} />
+                <UnitOutPanel key={out.euid.value} outEntity={out} unitCompleted={96} unitTotal={952} delay={index} />
             ))}
             {isArea(cell.parent) ? (
                 <>

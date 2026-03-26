@@ -93,7 +93,7 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
 
     //--------------------------------------------------------------------------
     return (
-        <Canvas className="w-full h-full filter-[ brightness(1.2)]">
+        <Canvas className="w-full h-full">
             <Viewport
                 ref={viewportRef}
                 cameraEntity={cameraEntity}

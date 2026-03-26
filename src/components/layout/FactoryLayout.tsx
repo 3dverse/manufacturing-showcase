@@ -46,7 +46,7 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                         <KeyStatusIndicators keyStatus={data.keyStatus} />
                     </div>
 
-                    {!thumbnailMode && <GlobalOrderPanel className="max-w-96 2xl:max-w-none" />}
+                    {!thumbnailMode && <GlobalOrderPanel className="max-w-96" />}
                 </div>
 
                 {!thumbnailMode && (

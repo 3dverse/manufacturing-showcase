@@ -46,6 +46,11 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
     const hasIncident = true;
     const machineDetails = getMachineDocumentation(machine.name);
 
+    const quality =
+        goodQuantity + scrapQuantity > 0
+            ? Number((goodQuantity / (goodQuantity + scrapQuantity)) * 100).toFixed(0)
+            : undefined;
+
     //--------------------------------------------------------------------------
     if (!order) return null;
     return (
@@ -106,8 +111,16 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
                             <DataContainer>
                                 <DataLabel>Quality</DataLabel>
                                 <DataValue className="text-2xl text-slate-800">
-                                    {Number((goodQuantity / (goodQuantity + scrapQuantity)) * 100).toFixed(0)}
-                                    <span className="inline-block ml-1 text-sm -translate-y-2 opacity-80">%</span>
+                                    {quality ? (
+                                        <>
+                                            {quality}
+                                            <span className="inline-block ml-1 text-sm -translate-y-2 opacity-80">
+                                                %
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <span className="text-slate-300 font-light">N/A</span>
+                                    )}
                                 </DataValue>
                             </DataContainer>
                             <div className="grid grid-cols-2">
