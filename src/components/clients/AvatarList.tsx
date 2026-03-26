@@ -1,41 +1,52 @@
 //------------------------------------------------------------------------------
-import { ViewerPanel } from "@/components/common/ViewerPanel";
+import { useContext, useEffect, useState } from "react";
 
 //------------------------------------------------------------------------------
-const avatars = [
-    {
-        id: 1,
-        name: "John Doe",
-        color: "#841084",
-    },
-    {
-        id: 2,
-        name: "Abby Doe",
-        color: "#0b660b",
-    },
-    {
-        id: 3,
-        name: "Roger Smith",
-        color: "#0000FF",
-    },
-];
+import type { Client } from "@3dverse/livelink";
+import { LivelinkContext, useClients } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
-const ClientAvatarList = () => {
-    //--------------------------------------------------------------------------
-    return (
-        <ViewerPanel className="flex gap-1 pointer-events-auto h-fit p-1 pr-3 bg-neutral-200/60 border-muted rounded-full backdrop-blur-xl shadow-2xl">
-            {avatars.map((avatar) => (
-                <div
-                    key={avatar.id}
-                    className="flex items-center justify-center w-7 h-7 -mr-2 border border-(--color)/20 rounded-full bg-[color-mix(in_srgb,var(--color)_30%,var(--color-ground))] text-(--color) text-2xs font-medium hover:z-10 hover:border-(--color)/60 transition-all duration-200 cursor-pointer"
-                    style={{ "--color": avatar.color } as React.CSSProperties}
-                >
-                    {avatar.name.slice(0, 1)}
-                </div>
-            ))}
-        </ViewerPanel>
-    );
+const colorBasedOnUuid = (uuid: string) => {
+    const hash = uuid.split("").reduce((acc, char) => {
+        return acc + char.charCodeAt(0);
+    }, 0);
+    return `#${hash.toString(16).padStart(6, "0")}`;
 };
 
-export default ClientAvatarList;
+//------------------------------------------------------------------------------
+export const AvatarList = () => {
+    //--------------------------------------------------------------------------
+    const { instance } = useContext(LivelinkContext);
+    const { clients } = useClients();
+    const [watchedClient, setWatchedClient] = useState<Client | null>(null);
+
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        if (watchedClient && !clients.includes(watchedClient)) {
+            setWatchedClient(null);
+        }
+    }, [clients, watchedClient]);
+
+    //--------------------------------------------------------------------------
+    if (!instance || clients.length === 0) {
+        return null;
+    }
+    //--------------------------------------------------------------------------
+    return (
+        <div className="flex gap-px rtl:space-x-reverse">
+            {clients.map((client) => (
+                <button
+                    key={client.id}
+                    onClick={() => setWatchedClient(client !== watchedClient ? client : null)}
+                    className={`
+                            w-8 h-8 border-2 rounded-full bg-neutral-200/60 border-transparent
+                            ${client === watchedClient ? " border-accent" : "border-transparent"}
+                        `}
+                    style={{
+                        backgroundColor: colorBasedOnUuid(client.id),
+                    }}
+                ></button>
+            ))}
+        </div>
+    );
+};

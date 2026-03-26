@@ -6,15 +6,14 @@ import { Viewer } from "@/components/viewer/Viewer";
 import { MainHeader } from "@/components/layout/MainHeader";
 import { Navigation } from "@/components/navigation/Navigation";
 import { Timeline } from "@/components/timeline/Timeline";
-import { GlobalOrderPanel } from "../orders/GlobalOrderPanel";
-import { KeyStatusIndicators } from "../dashboard/header/StatusIndicators";
+import { GlobalOrderPanel } from "@/components/orders/GlobalOrderPanel";
+import { InvitePanel } from "@/components/clients/InvitePanel";
+import { KeyStatusIndicators } from "@/components/dashboard/header/StatusIndicators";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
 import { Router } from "@/core/Router";
 import { dashboardApi } from "@/services/dashboardApi";
-
-//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -44,9 +43,11 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                     <div className={thumbnailMode ? "" : "flex flex-col items-start w-full max-w-96 2xl:max-w-120"}>
                         <MainHeader thumbnailMode={thumbnailMode} onBack={onBack} />
                         <KeyStatusIndicators keyStatus={data.keyStatus} />
+                        <GlobalOrderPanel />
                     </div>
-
-                    {!thumbnailMode && <GlobalOrderPanel className="max-w-96" />}
+                    <div className="w-full max-w-96 flex flex-col items-end gap-3">
+                        <InvitePanel />
+                    </div>
                 </div>
 
                 {!thumbnailMode && (
