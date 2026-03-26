@@ -1,4 +1,5 @@
 //------------------------------------------------------------------------------
+import { cn } from "@/utils/cn";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
@@ -11,12 +12,12 @@ import type { ReactNode } from "react";
 import type { NavGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export function AnchoredPanel({ node, children }: { node: NavGraphNode; children?: ReactNode }) {
+export function AnchoredPanel({ node, className, children }: { node: NavGraphNode; className?: string; children?: ReactNode }) {
     return (
         <BoundingBoxFaceProjection
             entity={node.entity}
             face="right"
-            className="flex items-end p-8 transform-3d pointer-events-none!/"
+            className={cn("flex items-end p-8 transform-3d", className)}
         >
             <ViewerPanel className="h-fit w-fit bg-slate-0/80 rounded-xl [corner-shape:bevel] [outline:2px_solid_#ffffff90] outline-offset-3 transform-3d appear-in-from-bottom opacity-0 [--animation-delay:1s]">
                 <PanelWrapper className="py-4">

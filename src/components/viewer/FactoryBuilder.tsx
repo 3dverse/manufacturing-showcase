@@ -195,7 +195,7 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
                 </div>
             )}
             {isSelected && (
-                <AnchoredPanel node={area}>
+                <AnchoredPanel node={area} className="pointer-events-none!">
                     {area.name === "storage" && <AreaStorageQuadPanel />}
                     {!["storage", "reception"].includes(area.name) && (
                         <FactoryOrderPanel order={orders[2]} className="min-w-80" />
