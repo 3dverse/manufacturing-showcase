@@ -102,7 +102,7 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
                 setPickedEntity={setPickedEntity}
             >
                 {!isConnecting && (
-                    <div className="absolute top-3 right-3 bg-green-500 text-xs text-white rounded-full py-1 px-3 pointer-events-none animate-[fade-out_.5s_2s_forwards]">
+                    <div className="absolute top-3 right-1/2 -translate-x-1/2 bg-green-500 text-xs text-white rounded-full py-1 px-3 pointer-events-none animate-[fade-out_.5s_2s_forwards]">
                         Connected
                     </div>
                 )}
