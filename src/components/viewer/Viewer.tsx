@@ -16,6 +16,7 @@ import {
 import { ViewerController } from "@/components/viewer/ViewerController";
 import { ViewerToolTips } from "@/components/viewer/ViewerToolTips";
 import FactoryBuilder from "@/components/viewer/FactoryBuilder";
+import { AvatarOverlay } from "@/components/clients/AvatarOverlay";
 
 //------------------------------------------------------------------------------
 import { LivelinkExfilContext } from "@/contexts/LivelinkExfilContext";
@@ -107,6 +108,7 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
                     </div>
                 )}
                 <Exfil />
+                <AvatarOverlay />
                 <CameraController ref={bindCameraController} />
                 {!thumbnailMode && (
                     <>

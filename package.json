@@ -104,6 +104,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "ajv-formats": "^3.0.1",
     "clsx": "^2.1.1",
+    "create-color": "^2.0.6",
     "d3": "^7.9.0",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -128,6 +129,7 @@
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
+    "unique-names-generator": "^4.7.1",
     "vite": "^6.3.5",
     "vitest": "^4.0.18",
     "zustand": "^5.0.11"

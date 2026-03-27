@@ -1,7 +1,16 @@
-import type { Entity, Vec3 } from "@3dverse/livelink";
+import type { Client, Entity, Vec3 } from "@3dverse/livelink";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type { StationId } from "./stations/enum";
 import type { NodeTypes } from "./enums";
+
+//------------------------------------------------------------------------------
+export type Avatar = {
+    client: Client;
+    name: string;
+    initials: string;
+    color: string;
+    textColor: string;
+};
 
 //------------------------------------------------------------------------------
 export type Factory = {
