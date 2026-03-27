@@ -107,7 +107,6 @@ export const AvatarList = () => {
     const viewportProps: { cameraEntity: Entity } | { client: LivelinkClient } = fullScreenWatchedAvatar
         ? { cameraEntity: mainCamera || null }
         : { client: watchedAvatar?.client };
-    console.log("viewportProps", fullScreenWatchedAvatar, viewportProps);
     return (
         <>
             <div className="flex gap-px rtl:space-x-reverse">
