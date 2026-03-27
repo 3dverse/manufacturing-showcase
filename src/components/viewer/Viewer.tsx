@@ -24,6 +24,9 @@ import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
 import { ON_DRAG_THRESHOLD_DISTANCE_IN_PX } from "@/hooks/useDragGuard";
 
 //------------------------------------------------------------------------------
+import { useAvatarsStore } from "@/store/useAvatarsStore";
+
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     //--------------------------------------------------------------------------
@@ -45,6 +48,11 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const { cameraEntity } = useCameraEntity(connectionPOV.current);
+
+    //--------------------------------------------------------------------------
+    // Store
+    const { fullScreenWatchedAvatar, watchedAvatar } = useAvatarsStore();
+    const isFullScreenClientWatched = watchedAvatar?.client && fullScreenWatchedAvatar;
 
     //--------------------------------------------------------------------------
     // Effects
@@ -93,14 +101,17 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     );
 
     //--------------------------------------------------------------------------
+    const viewportProps = isFullScreenClientWatched ? { client: watchedAvatar.client } : { cameraEntity };
+
+    //--------------------------------------------------------------------------
     return (
         <Canvas className="w-full h-full">
             <Viewport
                 ref={viewportRef}
-                cameraEntity={cameraEntity}
                 className="w-full h-full"
                 setHoveredEntity={setHoveredEntity}
                 setPickedEntity={setPickedEntity}
+                {...viewportProps}
             >
                 {!isConnecting && (
                     <div className="absolute top-3 right-1/2 -translate-x-1/2 bg-green-500 text-xs text-white rounded-full py-1 px-3 pointer-events-none animate-[fade-out_.5s_2s_forwards]">
@@ -109,7 +120,7 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
                 )}
                 <Exfil />
                 <AvatarOverlay />
-                <CameraController ref={bindCameraController} />
+                {!isFullScreenClientWatched && <CameraController ref={bindCameraController} />}
                 {!thumbnailMode && (
                     <>
                         {/* eslint-disable-next-line no-constant-binary-expression */}

@@ -8,16 +8,16 @@ import { useAvatarsStore } from "@/store/useAvatarsStore";
 //------------------------------------------------------------------------------
 export const AvatarBadge = ({ avatar }: { avatar: Avatar }) => {
     //--------------------------------------------------------------------------
-    const { watchedClient, setWatchedClient } = useAvatarsStore();
+    const { watchedAvatar, setWatchedAvatar } = useAvatarsStore();
 
     //--------------------------------------------------------------------------
     return (
         <Button
             key={avatar.client.id}
-            onClick={() => setWatchedClient(avatar.client !== watchedClient ? avatar.client : null)}
+            onClick={() => setWatchedAvatar(avatar.client !== watchedAvatar?.client ? avatar : null)}
             className={`
         w-8 h-8 border-2 rounded-full bg-neutral-200/60 border-transparent
-        ${avatar.client === watchedClient ? " border-accent" : "border-transparent"}
+        ${avatar.client === watchedAvatar?.client ? " border-accent" : "border-transparent"}
         flex items-center justify-center font-bold text-xs select-none
       `}
             style={{

@@ -110,42 +110,36 @@ export const InvitePanel = () => {
             <ViewerPanel className="flex gap-x-1 items-center rounded-full pointer-events-auto p-1">
                 <AvatarList />
                 <div className="relative" ref={menuRef}>
-                    {!isLargerThan800 ? (
-                        <Button
-                            variant="primary"
-                            size="md"
-                            className="rounded-full"
-                            onClick={() => setMenuOpen((v) => !v)}
-                            aria-haspopup="menu"
-                            aria-expanded={menuOpen}
-                        >
+                    <Button
+                        variant="primary"
+                        size="md"
+                        className="rounded-full"
+                        onClick={() => setMenuOpen((v) => !v)}
+                        aria-haspopup="menu"
+                        aria-expanded={menuOpen}
+                    >
+                        {!isLargerThan800 ? (
                             <Icon size="lg" icon={faUserPlus} className={isTextCopied ? "hidden" : undefined} />
-                        </Button>
-                    ) : (
-                        <Button
-                            variant="primary"
-                            size="md"
-                            className="rounded-full"
-                            onClick={() => setMenuOpen((v) => !v)}
-                            aria-haspopup="menu"
-                            aria-expanded={menuOpen}
-                        >
-                            <span className={isTextCopied ? "hidden" : undefined}>Invite</span>
-                            {isTextCopied && (
-                                <span
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                    className="animate-appear-top"
-                                >
-                                    <Icon icon={faCheck} size={"lg"} className="mr-1 text-green-500" />
-                                    <span style={{ fontSize: "sm" }}>Copied</span>
-                                </span>
-                            )}
-                        </Button>
-                    )}
+                        ) : (
+                            <>
+                                <span className={isTextCopied ? "hidden" : undefined}>Invite</span>
+                                {isTextCopied && (
+                                    <span
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                        className="animate-appear-top"
+                                    >
+                                        <Icon icon={faCheck} size={"lg"} className="mr-1 text-green-500" />
+                                        <span style={{ fontSize: "sm" }}>Copied</span>
+                                    </span>
+                                )}
+                            </>
+                        )}
+                    </Button>
+
                     {menuOpen && (
                         <div
                             className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50"

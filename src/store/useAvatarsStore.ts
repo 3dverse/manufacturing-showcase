@@ -1,25 +1,28 @@
 import { create } from "zustand";
-import type { Client } from "@3dverse/livelink";
 import type { Avatar } from "@/content/type";
 
 //------------------------------------------------------------------------------
 interface AvatarsState {
     avatars: Avatar[];
-    watchedClient: Client | null;
+    watchedAvatar: Avatar | null;
+    fullScreenWatchedAvatar: boolean;
     showAvatarsOverlay: boolean;
     setAvatars: (avatars: Avatar[]) => void;
     clearAvatars: () => void;
-    setWatchedClient: (client: Client | null) => void;
+    setWatchedAvatar: (avatar: Avatar | null) => void;
+    setFullScreenWatchedAvatar: (fullScreen: boolean) => void;
     setShowAvatarsOverlay: (show: boolean) => void;
 }
 
 //------------------------------------------------------------------------------
 export const useAvatarsStore = create<AvatarsState>((set) => ({
     avatars: [],
-    watchedClient: null,
+    watchedAvatar: null,
+    fullScreenWatchedAvatar: false,
     showAvatarsOverlay: true,
     setAvatars: (avatars) => set({ avatars }),
     clearAvatars: () => set({ avatars: [] }),
-    setWatchedClient: (client) => set({ watchedClient: client }),
+    setWatchedAvatar: (avatar) => set({ watchedAvatar: avatar }),
+    setFullScreenWatchedAvatar: (fullScreen) => set({ fullScreenWatchedAvatar: fullScreen }),
     setShowAvatarsOverlay: (show) => set({ showAvatarsOverlay: show }),
 }));
