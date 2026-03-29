@@ -24,7 +24,7 @@ import { useCorrelation } from "@/hooks/useCorrelation";
 import { fmtDuration, fmtTs, fromPct, toPct } from "./timeUtils";
 
 //------------------------------------------------------------------------------
-import { PERFORMANCE_MODE } from "@/content/3dverse";
+import { PERFORMANCE_MODE, FULL_TIMELINE } from "@/content/3dverse";
 import type {
     AsOfProjection,
     ProjectedSalesOrder,
@@ -34,6 +34,8 @@ import type {
     ProjectedWorkOrder,
     ProjectedReceipt,
     ProjectedAllocation,
+    ProjectedPickTask,
+    ProjectedPutawayTask,
 } from "@/core/Projection";
 
 //------------------------------------------------------------------------------
@@ -497,6 +499,99 @@ function buildAllocationsStory(allocs: ProjectedAllocation[], demandType: "produ
     };
 }
 
+function buildPickTasksStory(tasks: ProjectedPickTask[]): Story {
+    const now = Math.floor(Date.now() / 1000);
+    const bars: BarItem[] = tasks.map((t) => ({
+        id: t.id,
+        entityType: "pickTask" as EntityType,
+        start: t.createdAt,
+        end: t.pickedDate ?? now,
+        className: cn(
+            "hover:ring-2 hover:ring-offset-0 hover:ring-amber-400/50",
+            t.phase === "completed"
+                ? "bg-amber-400/50 border border-amber-300/50"
+                : t.phase === "future"
+                  ? "bg-slate-400/30 border border-slate-400/40 border-dashed"
+                  : "bg-amber-300/40 border border-amber-300/50",
+        ),
+        tooltip: (
+            <div className="space-y-1.5">
+                <div className="font-semibold text-white">{t.id}</div>
+                <div className="text-slate-400 text-[11px]">{t.itemId}</div>
+                <div>
+                    <span className="text-slate-500">Status </span>
+                    <span className="capitalize">{t.status}</span>
+                </div>
+                <div>
+                    <span className="text-slate-500">Qty </span>
+                    {t.quantity} {t.uom}
+                </div>
+                {t.pickedDate && (
+                    <div>
+                        <span className="text-slate-500">Picked </span>
+                        {fmtTs(t.pickedDate)}
+                    </div>
+                )}
+            </div>
+        ),
+    }));
+    return {
+        id: "pick-tasks",
+        label: "Pick tasks",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "bar",
+        stackingStyle: "swimlane",
+        rowHeight: ROW_H,
+    };
+}
+
+function buildPutawayTasksStory(tasks: ProjectedPutawayTask[]): Story {
+    console.log("tasks", tasks);
+    const now = Math.floor(Date.now() / 1000);
+    const bars: BarItem[] = tasks.map((t) => ({
+        id: t.id,
+        entityType: "putawayTask" as EntityType,
+        start: t.createdAt,
+        end: t.putawayDate ?? now,
+        className: cn(
+            "hover:ring-2 hover:ring-offset-0 hover:ring-emerald-400/50",
+            t.phase === "completed"
+                ? "bg-emerald-500/50 border border-emerald-400/50"
+                : t.phase === "future"
+                  ? "bg-slate-400/30 border border-slate-400/40 border-dashed"
+                  : "bg-emerald-400/40 border border-emerald-300/50",
+        ),
+        tooltip: (
+            <div className="space-y-1.5">
+                <div className="font-semibold text-white">{t.id}</div>
+                <div className="text-slate-400 text-[11px]">{t.itemId}</div>
+                <div>
+                    <span className="text-slate-500">Status </span>
+                    <span className="capitalize">{t.status}</span>
+                </div>
+                <div>
+                    <span className="text-slate-500">Qty </span>
+                    {t.quantity}
+                </div>
+                {t.putawayDate && (
+                    <div>
+                        <span className="text-slate-500">Putaway </span>
+                        {fmtTs(t.putawayDate)}
+                    </div>
+                )}
+            </div>
+        ),
+    }));
+    return {
+        id: "putaway-tasks",
+        label: "Putaway tasks",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "bar",
+        stackingStyle: "swimlane",
+        rowHeight: ROW_H,
+    };
+}
+
 //------------------------------------------------------------------------------
 // Story selection
 //------------------------------------------------------------------------------
@@ -510,6 +605,8 @@ function buildStories(level: TimelineLevel, projection: AsOfProjection | null, a
 
     const rcp = projection?.receipts ?? [];
     const alloc = projection?.allocations ?? [];
+    const picks = projection?.pickTasks ?? [];
+    const putaways = projection?.putawayTasks ?? [];
 
     switch (level) {
         case "factory":
@@ -519,9 +616,13 @@ function buildStories(level: TimelineLevel, projection: AsOfProjection | null, a
                 case "production":
                     return [buildSalesOrdersStory(so), buildProductionOrdersStory(po)];
                 case "delivery":
-                    return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "sales_order")];
+                    return [
+                        buildSalesOrdersStory(so),
+                        buildAllocationsStory(alloc, "sales_order"),
+                        ...(FULL_TIMELINE ? [buildPickTasksStory(picks)] : []),
+                    ];
                 case "reception":
-                    return [buildReceiptsStory(rcp)];
+                    return [buildReceiptsStory(rcp), ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways)] : [])];
                 case "storage":
                     return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order")];
                 default:

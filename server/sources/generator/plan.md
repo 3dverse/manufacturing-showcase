@@ -10,6 +10,20 @@ Generation happens in **three distinct passes**:
 
 This separation keeps each pass simple and testable. The entity pass produces a pure structural graph; the timeline pass is purely a scheduling problem; the fill pass is purely a statistics problem.
 
+### Timeless generation
+
+All records are generated **as if already completed**. No record is gated on whether its date falls before or after `now`:
+
+- Every production order, operation, and work order is `completed` with full `actualStart`/`actualEnd`.
+- Every sales order is `shipped`; every purchase order is `received`; every invoice is `paid`.
+- Every receipt and putaway task is `completed`; every inventory movement is emitted.
+- All quantities (produced, issued, shipped) are fully filled in.
+- OEE buckets are generated for the full window, not just the past.
+
+The `now` reference point is still used for **timing** (it anchors the window centre and defines relative dates), but never as a gate that suppresses records or zeroes out fields.
+
+The frontend simulation filter (`applySimulationFilter` in `src/core/Span.ts`, toggled by `FULL_TIMELINE` in `src/content/3dverse.ts`) is the single place responsible for presenting only the subset of data that would be visible at the client's current moment.
+
 ---
 
 ## Configuration
@@ -568,19 +582,23 @@ Free (unallocated) stock = on-hand − sum of all allocations for that item. Thi
 
 ### 3.8 Statuses (summary)
 
-Status is a deterministic function of position relative to `now`:
+All statuses are fixed at their terminal (completed) value — see §Core Philosophy.
 
-| Entity           | Past (`end < now`)   | In-progress (`start < now < end`) | Future (`start > now`) |
-|------------------|----------------------|-----------------------------------|------------------------|
-| Production Order | `completed`          | `in_progress`                     | `planned`              |
-| Operation        | `completed`          | `in_progress`                     | `scheduled`            |
-| EAM Work Order   | `completed`          | `in_progress`                     | `planned`              |
-| Sales Order      | `shipped`            | `in_progress`                     | `open`                 |
-| Purchase Order   | `received`           | `in_progress`                     | `open`                 |
-| Invoice          | `paid` / `overdue`   | `open`                            | `draft`                |
-| WMS Receipt      | `completed`          | —                                 | `pending`              |
-| WMS Shipment     | `shipped`            | —                                 | `pending`              |
-| NC / CAPA        | `closed` (if old)    | `open`                            | —                      |
+| Entity           | Generated status |
+|------------------|-----------------|
+| Production Order | `completed`     |
+| Operation        | `completed`     |
+| EAM Work Order   | `completed`     |
+| Sales Order      | `shipped`       |
+| Purchase Order   | `received`      |
+| Invoice          | `paid`          |
+| WMS Receipt      | `completed`     |
+| WMS Shipment     | `shipped`       |
+| Putaway Task     | `completed`     |
+| Pick Task        | `completed`     |
+| NC / CAPA        | `closed`        |
+| Audit            | `completed`     |
+| Complaint        | `closed`        |
 
 ---
 

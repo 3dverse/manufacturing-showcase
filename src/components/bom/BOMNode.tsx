@@ -8,7 +8,7 @@ import { NODE_WIDTH } from "./content";
 import type { BOMFlowData, BOMNodeData } from "./type";
 
 //------------------------------------------------------------------------------
-export const BOM_NODE_STYLES: Record<BOMNodeData["itemType"], string> = {
+const BOM_NODE_STYLES: Record<BOMNodeData["itemType"], string> = {
     raw_material: "bg-slate-50  border-slate-300 text-slate-700",
     wip: "bg-blue-50   border-blue-300  text-blue-800",
     finished_good: "bg-positive-50 border-positive-400 text-positive-800",

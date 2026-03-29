@@ -994,6 +994,10 @@ components:
         createdAt:
           type: integer
           description: Task creation timestamp.
+        putawayDate:
+          type: integer
+          nullable: true
+          description: Timestamp when the putaway was completed (unix seconds). Null if not yet completed.
       required:
         - id
         - warehouseId
@@ -1045,6 +1049,10 @@ components:
           type: integer
           nullable: true
           description: Timestamp when the pick was completed (unix seconds). Null if not yet picked.
+        salesOrderId:
+          type: string
+          nullable: true
+          description: Sales order this pick task fulfils.
       required:
         - id
         - warehouseId

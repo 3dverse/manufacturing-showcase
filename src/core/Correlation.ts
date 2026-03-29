@@ -111,7 +111,8 @@ export function buildCorrelationIndex(projection: AsOfProjection): CorrelationIn
         if (alloc.demandType === "production_order" && alloc.productionOrderId) {
             allocToPo.set(alloc.id, alloc.productionOrderId);
             addToSet(poToAllocations, alloc.productionOrderId, alloc.id);
-        } else if (alloc.demandType === "sales_order" && alloc.erpSalesOrderId) {
+        }
+        if (alloc.erpSalesOrderId) {
             allocToSo.set(alloc.id, alloc.erpSalesOrderId);
             addToSet(soToAllocations, alloc.erpSalesOrderId, alloc.id);
         }
@@ -228,6 +229,8 @@ export function correlate(focused: FocusedEntity, index: CorrelationIndex): Corr
     // Expand pivot POs to themselves and all linked entities
     for (const poId of pivotPoIds) {
         productionOrders.add(poId);
+        const soId = index.poToSo.get(poId);
+        if (soId) salesOrders.add(soId);
         for (const opId of index.poToOps.get(poId) ?? []) operations.add(opId);
         for (const dtId of index.poToDowntimes.get(poId) ?? []) downtimeEvents.add(dtId);
         for (const woId of index.poToWorkOrders.get(poId) ?? []) eamWorkOrders.add(woId);

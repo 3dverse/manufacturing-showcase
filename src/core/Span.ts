@@ -21,6 +21,7 @@ import type { WorkOrder } from "_prebuild/api-libs/eam";
 import type { SalesOrder } from "_prebuild/api-libs/erp";
 import type { DowntimeEvent, OperationDetail, ProductionOrder } from "_prebuild/api-libs/mes";
 import type { PickTask, Receipt, PutawayTask, StockAllocation } from "_prebuild/api-libs/wms";
+import { FULL_TIMELINE } from "@/content/3dverse";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -36,6 +37,60 @@ const WINDOW_FWD_SECS = 2 * 30 * 86400;
 export function spanWindow(): { from: number; to: number } {
     const refNow = Math.floor(Date.now() / 3_600_000) * 3600;
     return { from: refNow - WINDOW_BACK_SECS, to: refNow + WINDOW_FWD_SECS };
+}
+
+// ---------------------------------------------------------------------------
+// Simulation filter
+// ---------------------------------------------------------------------------
+
+/**
+ * When true, the span is filtered to simulate a "present moment" view:
+ *  - Sales orders:       only those with orderDate ≤ now
+ *  - Production orders:  only those linked to a visible sales order
+ *  - Operations:         only those belonging to a visible production order
+ *  - Downtime events:    only those that started ≤ now
+ *  - WMS receipts / putaway tasks / pick tasks: only those dated ≥ now
+ *    (i.e. upcoming work; completed past records are hidden)
+ *
+ * Toggle this constant to disable the filter during development.
+ */
+
+function applySimulationFilter(span: TimelineSpan): void {
+    const now = Math.floor(Date.now() / 1000);
+
+    // Sales orders: only those already placed
+    for (const [id, so] of span.salesOrders) {
+        if (so.orderDate > now) span.salesOrders.delete(id);
+    }
+
+    // Production orders: only those linked to a visible SO
+    for (const [id, po] of span.productionOrders) {
+        if (po.erpSalesOrderId && !span.salesOrders.has(po.erpSalesOrderId)) span.productionOrders.delete(id);
+    }
+
+    // Operations: only those belonging to a visible PO
+    for (const [id, op] of span.operations) {
+        if (!span.productionOrders.has(op.productionOrderId)) span.operations.delete(id);
+    }
+
+    // Downtime: only events that have already started
+    for (const [id, dt] of span.downtimeEvents) {
+        if (dt.startedAt > now) span.downtimeEvents.delete(id);
+    }
+
+    // WMS: hide future records — show only past/current work (date ≤ now or undated)
+    for (const [id, r] of span.receipts) {
+        if (r.receivedDate > now) span.receipts.delete(id);
+    }
+    for (const [id, pt] of span.putawayTasks) {
+        if (pt.putawayDate !== null && pt.putawayDate > now) span.putawayTasks.delete(id);
+    }
+    for (const [id, pt] of span.pickTasks) {
+        if (pt.pickedDate !== null && pt.pickedDate > now) span.pickTasks.delete(id);
+    }
+    for (const [id, a] of span.allocations) {
+        if (a.allocatedAt > now) span.allocations.delete(id);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -131,18 +186,18 @@ function mapWorkOrder(wo: WorkOrder): WorkOrderEntry {
     };
 }
 
-function mapReceipt(r: Receipt & { receivedDate?: number; itemId?: string; quantity?: number }): ReceiptEntry {
+function mapReceipt(r: Receipt): ReceiptEntry {
     return {
         id: r.id,
         warehouseId: r.warehouseId,
         status: r.status,
-        itemId: r.itemId ?? "",
-        quantity: r.quantity ?? 0,
-        receivedDate: Number(r.receivedDate ?? r.receivedAt ?? 0),
+        itemId: r.lines[0]?.itemId ?? "",
+        quantity: r.lines[0]?.quantity ?? 0,
+        receivedDate: r.receivedAt,
     };
 }
 
-function mapPutawayTask(pt: PutawayTask & { putawayDate?: number | null; fromLocationId?: string }): PutawayTaskEntry {
+function mapPutawayTask(pt: PutawayTask): PutawayTaskEntry {
     return {
         id: pt.id,
         warehouseId: pt.warehouseId,
@@ -151,7 +206,7 @@ function mapPutawayTask(pt: PutawayTask & { putawayDate?: number | null; fromLoc
         itemId: pt.itemId,
         quantity: pt.quantity,
         putawayDate: pt.putawayDate ?? null,
-        createdAt: Number(pt.createdAt ?? 0),
+        createdAt: pt.createdAt,
     };
 }
 
@@ -169,11 +224,11 @@ function mapAllocation(a: StockAllocation): AllocationEntry {
         erpSalesOrderId: a.erpSalesOrderId ?? null,
         status: a.status as "allocated" | "partial",
         allocatedAt: a.allocatedAt,
-        clearedAt: (a as any).clearedAt ?? null,
+        clearedAt: a.clearedAt ?? null,
     };
 }
 
-function mapPickTask(pt: PickTask & { salesOrderId?: string; pickedDate?: number | null }): PickTaskEntry {
+function mapPickTask(pt: PickTask): PickTaskEntry {
     return {
         id: pt.id,
         warehouseId: pt.warehouseId,
@@ -183,7 +238,7 @@ function mapPickTask(pt: PickTask & { salesOrderId?: string; pickedDate?: number
         uom: pt.uom,
         salesOrderId: pt.salesOrderId ?? null,
         pickedDate: pt.pickedDate ?? null,
-        createdAt: Number(pt.createdAt ?? 0),
+        createdAt: pt.createdAt,
     };
 }
 
@@ -263,8 +318,8 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
             WMS.getPickTasks({ siteId, fromDate: from, toDate: to }),
             WMSInventory.getAllocations({ siteId, warehouseId: node.hash }),
         ]);
-        for (const pt of ptResp.data.data)    span.pickTasks.set(pt.id, mapPickTask(pt as any));
-        for (const a  of allocResp.data.data) span.allocations.set(a.id, mapAllocation(a));
+        for (const pt of ptResp.data.data) span.pickTasks.set(pt.id, mapPickTask(pt));
+        for (const a of allocResp.data.data) span.allocations.set(a.id, mapAllocation(a));
     }
 
     // Receipts + putaway tasks — only fetched when navigating to a Reception area node
@@ -273,8 +328,8 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
             WMSInbound.getReceipts({ siteId, fromDate: from, toDate: to }),
             WMSInbound.getPutawayTasks({ siteId, fromDate: from, toDate: to }),
         ]);
-        for (const r  of rcptResp.data.data) span.receipts.set(r.id,    mapReceipt(r as any));
-        for (const pt of putResp.data.data)  span.putawayTasks.set(pt.id, mapPutawayTask(pt as any));
+        for (const r of rcptResp.data.data) span.receipts.set(r.id, mapReceipt(r));
+        for (const pt of putResp.data.data) span.putawayTasks.set(pt.id, mapPutawayTask(pt));
     }
 
     // Storage area: pick tasks (outbound) + putaway tasks (inbound) + stock allocations
@@ -284,11 +339,20 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
             WMSInbound.getPutawayTasks({ siteId, fromDate: from, toDate: to }),
             WMSInventory.getAllocations({ siteId, warehouseId: node.hash }),
         ]);
-        for (const pt  of ptResp.data.data)    span.pickTasks.set(pt.id, mapPickTask(pt as any));
-        for (const put of putResp.data.data)   span.putawayTasks.set(put.id, mapPutawayTask(put as any));
-        for (const a   of allocResp.data.data) span.allocations.set(a.id, mapAllocation(a));
+        for (const pt of ptResp.data.data) span.pickTasks.set(pt.id, mapPickTask(pt));
+        for (const put of putResp.data.data) span.putawayTasks.set(put.id, mapPutawayTask(put));
+        for (const a of allocResp.data.data) span.allocations.set(a.id, mapAllocation(a));
     }
 
+    const allocations = span.allocations.values();
+    console.log(
+        [...allocations].reduce((acc, alloc) => {
+            if (alloc.allocatedAt > acc) return alloc.allocatedAt;
+            return acc;
+        }, 0),
+    );
+
+    if (!FULL_TIMELINE) applySimulationFilter(span);
     buildSpanIndexes(span);
     return span;
 }

@@ -8,8 +8,8 @@ export const getReceipts: WMSOperationHandler<"getReceipts"> = async (_c, req, r
     let receipts = ds.wms.receipts;
     if (warehouseId) receipts = receipts.filter((r) => r.warehouseId === warehouseId);
     if (status) receipts = receipts.filter((r) => r.status === status);
-    if (fromDate) receipts = receipts.filter((r) => r.receivedDate >= Number(fromDate));
-    if (toDate)   receipts = receipts.filter((r) => r.receivedDate <= Number(toDate));
+    if (fromDate) receipts = receipts.filter((r) => r.receivedAt >= Number(fromDate));
+    if (toDate)   receipts = receipts.filter((r) => r.receivedAt <= Number(toDate));
 
     return WMSreplyJSON({ data: receipts }, res);
 };
