@@ -108,6 +108,43 @@ paths:
                           type: string
                 required: [regenerated, errors]
 
+  /bom/{itemId}:
+    get:
+      tags: [DATASET]
+      operationId: getBOM
+      summary: Get the full BOM tree for an item
+      description: >
+        Returns the recursive Bill of Materials tree rooted at a finished good.
+        Each node carries the item identifier, its type (finished_good, wip, or
+        raw_material), the routing step that produces it, and its input children.
+        Raw material leaves have no children and no producing step.
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Finished good item identifier (e.g. FG-a1b2c3d4).
+        - name: siteId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Site whose dataset to query.
+      responses:
+        '200':
+          description: BOM tree for the requested item.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BOMNode'
+                required: [data]
+        '404':
+          description: Item not found in the dataset for the given site.
+
   /graph:
     get:
       tags: [DATASET]
@@ -140,6 +177,58 @@ paths:
 
 components:
   schemas:
+    BOMProducingStep:
+      type: object
+      additionalProperties: false
+      description: The routing step that produces a BOM node's item. Absent for raw material leaves.
+      properties:
+        sequence:
+          type: integer
+          description: Execution order of this step within the routing.
+          example: 20
+        operationCode:
+          type: string
+          description: Operation identifier code.
+          example: ASM-20
+        operationType:
+          type: string
+          enum: [transformation, assembly, quality_control]
+          description: >
+            Material flow classification of the operation.
+            transformation — 1 input is modified into 1 new WIP.
+            assembly — N inputs are combined into 1 output.
+            quality_control — passthrough, same item in and out.
+        workCenterOperationType:
+          type: string
+          description: Work center capability type used to execute this step.
+          example: ASSEMBLY
+      required: [sequence, operationCode, operationType, workCenterOperationType]
+
+    BOMNode:
+      type: object
+      additionalProperties: false
+      description: >
+        A node in the Bill of Materials tree. The root is the finished good;
+        children are the items consumed to produce it, recursively down to
+        raw material leaves. Children have the same shape as this object.
+      properties:
+        itemId:
+          type: string
+          description: Item identifier.
+          example: FG-a1b2c3d4
+        itemType:
+          type: string
+          enum: [finished_good, wip, raw_material]
+          description: Classification of the item in the material flow.
+        producedBy:
+          $ref: '#/components/schemas/BOMProducingStep'
+        children:
+          type: array
+          description: Input items consumed to produce this node's item (same shape as BOMNode).
+          items:
+            type: object
+      required: [itemId, itemType, children]
+
     DatasetMeta:
       type: object
       properties:

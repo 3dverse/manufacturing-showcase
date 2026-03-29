@@ -1,4 +1,4 @@
-import type { SiteNode } from "../operations/dataset/generateDataset";
+import type { SiteNode } from "./site";
 
 export type ShiftDefinition = {
     name:  string;

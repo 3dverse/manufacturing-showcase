@@ -252,68 +252,66 @@ function FactoryDatasetRow({
     const hasDataset = dataset !== null;
 
     return (
-        <li className="bg-white rounded-2xl shadow-sm border border-slate-100 px-6 py-4 flex items-center gap-4">
-            {/* Status dot */}
-            <span
-                className={`shrink-0 w-2.5 h-2.5 rounded-full ${
-                    status === "loading"
-                        ? "bg-warning-400 animate-pulse"
-                        : status === "done"
-                          ? "bg-positive-400"
-                          : status === "error"
-                            ? "bg-negative-400"
-                            : hasDataset
-                              ? "bg-positive-300"
-                              : loadingMeta
-                                ? "bg-slate-200 animate-pulse"
-                                : "bg-slate-300"
-                }`}
-            />
+        <li className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="px-6 py-4 flex items-center gap-4">
+                {/* Status dot */}
+                <span
+                    className={`shrink-0 w-2.5 h-2.5 rounded-full ${
+                        status === "loading"
+                            ? "bg-warning-400 animate-pulse"
+                            : status === "done"
+                              ? "bg-positive-400"
+                              : status === "error"
+                                ? "bg-negative-400"
+                                : hasDataset
+                                  ? "bg-positive-300"
+                                  : loadingMeta
+                                    ? "bg-slate-200 animate-pulse"
+                                    : "bg-slate-300"
+                    }`}
+                />
 
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2 mb-0.5">
-                    <span className="font-semibold text-default truncate">{factory.name}</span>
-                    {factory.location && <span className="text-xs text-subtle shrink-0">{factory.location}</span>}
-                </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 mb-0.5">
+                        <span className="font-semibold text-default truncate">{factory.name}</span>
+                        {factory.location && <span className="text-xs text-subtle shrink-0">{factory.location}</span>}
+                    </div>
 
-                <div className="flex items-center gap-3 text-xs text-muted">
-                    {/* Scene ID */}
-                    <span className="font-mono" title={factory.scene_id}>
-                        {truncate(factory.scene_id, 12)}
-                    </span>
-
-                    <span className="text-slate-300">·</span>
-
-                    {/* Dataset status */}
-                    {loadingMeta && !dataset ? (
-                        <span className="text-slate-400">checking…</span>
-                    ) : hasDataset ? (
-                        <span className="text-subtle">
-                            Generated <span className="text-default">{formatDate(dataset.now)}</span>
+                    <div className="flex items-center gap-3 text-xs text-muted">
+                        <span className="font-mono" title={factory.scene_id}>
+                            {truncate(factory.scene_id, 12)}
                         </span>
-                    ) : (
-                        <span className="text-warning-600 font-medium">No dataset</span>
-                    )}
+                        <span className="text-slate-300">·</span>
+                        {loadingMeta && !dataset ? (
+                            <span className="text-slate-400">checking…</span>
+                        ) : hasDataset ? (
+                            <span className="text-subtle">
+                                Generated <span className="text-default">{formatDate(dataset.now)}</span>
+                            </span>
+                        ) : (
+                            <span className="text-warning-600 font-medium">No dataset</span>
+                        )}
+                    </div>
+
+                    {error && <p className="text-xs text-negative-600 mt-1">{error}</p>}
                 </div>
 
-                {error && <p className="text-xs text-negative-600 mt-1">{error}</p>}
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2 shrink-0">
-                <Button variant="ghost" size="xs" onClick={onOpen}>
-                    Open
-                </Button>
-                <Button
-                    variant="outline"
-                    size="xs"
-                    isLoading={status === "loading"}
-                    disabled={status === "loading"}
-                    onClick={onRegenerate}
-                >
-                    Regenerate
-                </Button>
+                {/* Actions */}
+                <div className="flex items-center gap-2 shrink-0">
+                    <Button variant="ghost" size="xs" onClick={onOpen}>
+                        Open
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="xs"
+                        isLoading={status === "loading"}
+                        disabled={status === "loading"}
+                        onClick={onRegenerate}
+                    >
+                        Regenerate
+                    </Button>
+                </div>
             </div>
         </li>
     );

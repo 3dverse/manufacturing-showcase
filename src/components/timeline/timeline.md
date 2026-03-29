@@ -70,12 +70,27 @@ when each planning horizon was active.
 
 ---
 
-### 2. Area  *(production location)*
+### 2. Area
+
+The area level covers four distinct area types. The `areaType` is inferred from
+the scope data available for the selected node:
+
+| `areaType` | Detection heuristic | Description |
+|---|---|---|
+| `"production"` | `scope.productionOrders.length > 0` | Traditional production floor area |
+| `"reception"` | location name === `"Reception"` | Inbound dock |
+| `"storage"` | location name === `"Storage"` | Main holding area |
+| `"supply"` | location name === `"Supply"` | Staging area near production |
+| `"delivery"` | location name === `"Delivery"` | Outbound dock |
+| `undefined` | fallback | Generic area — show all site SOs |
+
+---
+
+#### 2a. Production area  *(areaType === "production")*
 
 Bars across three tracks:
 
-- **Sales Orders** (ERP) — for production areas, only SOs linked to this area's
-  production orders; for non-production areas (no POs), all site SOs. Same
+- **Sales Orders** (ERP) — only SOs linked to this area's production orders. Same
   rendering as factory level.
 - **Production Orders** (MES) — each bar spans `scheduledStart → scheduledEnd` for a
   PO assigned to this area. Color encodes status (released, in progress, completed).
@@ -84,6 +99,83 @@ Bars across three tracks:
   maintenance work orders whose `locationId` matches this area. Both are rendered
   together on a single track so production gaps and maintenance windows are visible
   against the production schedule.
+
+---
+
+#### 2b. Reception  *(areaType === "reception")*
+
+The inbound dock. Document spine is the **Receipt**.
+
+- **Receipts** — each bar spans `receivedDate → putawayDate` (dwell time in the dock).
+  This is the most important signal: a long bar means a putaway backlog.
+  Color encodes receipt status (`pending` = amber, `completed` = green).
+  Tooltip: item, quantity, linked MES PO name.
+
+API: `GET /wms/receipts?siteId={siteId}`.
+
+---
+
+#### 2c. Storage  *(areaType === "storage")*
+
+The RM holding area. Shows raw-material stock reservations against the demand that
+created them.
+
+- **Sales Orders** (swimlane line graph) — same rendering as factory level. Demand
+  backdrop showing which SOs are driving RM consumption.
+
+- **RM Allocations** (swimlane line graph) — one lane per allocation, spanning
+  `allocatedAt → clearedAt` (open-ended while active). Blue tint for all allocations;
+  dashed border for `partial` status. Width encodes shelf time — how long RM has been
+  reserved for a PO. Historical allocations (completed POs) are included for full
+  shelf-time visibility.
+  Tooltip: item, allocated/required qty, linked PO id, status.
+
+API: `GET /wms/allocations?warehouseId={storageId}` (RM allocations,
+`demandType === "production_order"`).
+
+---
+
+#### 2d. Supply  *(areaType === "supply")*
+
+Staging area near the production line. RM is kitted and staged here just before
+consumption.
+
+> **Not yet populated.** Issue movements currently go directly from Storage
+> without transiting the Supply zone. When Supply staging is added, the timeline
+> will show:
+
+- **Kit staging events** — bars spanning from transfer-into-Supply to issue-out-of-Supply.
+  Linked document: MES Production Order.
+  Tooltip: items staged, operation name, planned consumption time.
+
+Until then, falls back to the generic area view (site-wide Sales Orders).
+
+---
+
+#### 2e. Delivery  *(areaType === "delivery")*
+
+The outbound dock. Shows finished-goods stock reservations against the sales orders
+they fulfil.
+
+- **Sales Orders** (swimlane line graph) — bars spanning `orderDate → requestedDeliveryDate`.
+  Same rendering as factory level. This is the demand backdrop.
+
+- **FG Allocations** (swimlane line graph) — one lane per allocation, spanning
+  `allocatedAt → clearedAt` (open-ended while active). Blue tint; dashed border for
+  `partial` status. `allocatedAt` is when production finished and FG stock was reserved
+  for the SO; `clearedAt` is the pick/ship date. Historical allocations (shipped SOs)
+  are included for full shelf-time visibility.
+  Tooltip: item, allocated/required qty, linked SO id, status.
+
+API: `GET /erp/sales-orders` (filtered to this site) +
+     `GET /wms/allocations?warehouseId={deliveryId}` (FG allocations,
+`demandType === "sales_order"`).
+
+---
+
+#### 2f. Generic area  *(areaType === undefined)*
+
+Bars: **Sales Orders** (all site SOs). Same rendering as factory level.
 
 ---
 

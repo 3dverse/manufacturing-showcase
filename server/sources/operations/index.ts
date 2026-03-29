@@ -1,4 +1,5 @@
 import { getSiteGraph } from "./dataset/generateDataset";
+import { getBOM } from "./dataset/getBOM";
 import { getDatasetMeta } from "./dataset/getDatasetMeta";
 import { listDatasets } from "./dataset/listDatasets";
 import { regenerateDatasets } from "./dataset/regenerateDatasets";
@@ -27,5 +28,5 @@ export const operations: Record<ApiTag, OperationHandlerMap> = {
     MES: mesOperations,
     QMS: qmsOperations,
     WMS: wmsOperations,
-    dataset: { getSiteGraph, getDatasetMeta, listDatasets, regenerateDatasets },
+    dataset: { getFactoryGraph: getSiteGraph, getBOM, getDatasetMeta, listDatasets, regenerateDatasets },
 };

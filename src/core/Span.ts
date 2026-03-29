@@ -1,4 +1,4 @@
-import { EAM, ERP, MES } from "@/core/APIs";
+import { EAM, ERP, MES, WMS, WMSInbound, WMSInventory } from "@/core/APIs";
 import {
     emptySpan,
     buildSpanIndexes,
@@ -10,11 +10,17 @@ import {
     type DowntimeEntry,
     type WorkOrderEntry,
     type SalesOrderEntry,
+    type PickTaskEntry,
+    type ReceiptEntry,
+    type PutawayTaskEntry,
+    type AllocationEntry,
 } from "@/core/Scope";
+import { isArea } from "@/core/NavGraph";
 import type { NavGraphNode } from "@/content/type";
 import type { WorkOrder } from "_prebuild/api-libs/eam";
 import type { SalesOrder } from "_prebuild/api-libs/erp";
 import type { DowntimeEvent, OperationDetail, ProductionOrder } from "_prebuild/api-libs/mes";
+import type { PickTask, Receipt, PutawayTask, StockAllocation } from "_prebuild/api-libs/wms";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -125,6 +131,62 @@ function mapWorkOrder(wo: WorkOrder): WorkOrderEntry {
     };
 }
 
+function mapReceipt(r: Receipt & { receivedDate?: number; itemId?: string; quantity?: number }): ReceiptEntry {
+    return {
+        id: r.id,
+        warehouseId: r.warehouseId,
+        status: r.status,
+        itemId: r.itemId ?? "",
+        quantity: r.quantity ?? 0,
+        receivedDate: Number(r.receivedDate ?? r.receivedAt ?? 0),
+    };
+}
+
+function mapPutawayTask(pt: PutawayTask & { putawayDate?: number | null; fromLocationId?: string }): PutawayTaskEntry {
+    return {
+        id: pt.id,
+        warehouseId: pt.warehouseId,
+        receiptId: pt.receiptId ?? null,
+        status: pt.status,
+        itemId: pt.itemId,
+        quantity: pt.quantity,
+        putawayDate: pt.putawayDate ?? null,
+        createdAt: Number(pt.createdAt ?? 0),
+    };
+}
+
+function mapAllocation(a: StockAllocation): AllocationEntry {
+    return {
+        id: a.id,
+        warehouseId: a.warehouseId,
+        locationId: a.locationId,
+        itemId: a.itemId,
+        quantityAllocated: a.quantityAllocated,
+        quantityRequired: a.quantityRequired,
+        uom: a.uom,
+        demandType: a.demandType as "production_order" | "sales_order",
+        productionOrderId: a.productionOrderId ?? null,
+        erpSalesOrderId: a.erpSalesOrderId ?? null,
+        status: a.status as "allocated" | "partial",
+        allocatedAt: a.allocatedAt,
+        clearedAt: (a as any).clearedAt ?? null,
+    };
+}
+
+function mapPickTask(pt: PickTask & { salesOrderId?: string; pickedDate?: number | null }): PickTaskEntry {
+    return {
+        id: pt.id,
+        warehouseId: pt.warehouseId,
+        status: pt.status,
+        itemId: pt.itemId,
+        quantity: pt.quantity,
+        uom: pt.uom,
+        salesOrderId: pt.salesOrderId ?? null,
+        pickedDate: pt.pickedDate ?? null,
+        createdAt: Number(pt.createdAt ?? 0),
+    };
+}
+
 // ---------------------------------------------------------------------------
 // Fetch
 // ---------------------------------------------------------------------------
@@ -194,6 +256,38 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
         ),
     );
     for (const wo of woPages.flat()) span.eamWorkOrders.set(wo.id, mapWorkOrder(wo));
+
+    // Pick tasks + FG allocations — only fetched when navigating to a Delivery area node
+    if (isArea(node) && node.name.toLowerCase() === "delivery") {
+        const [ptResp, allocResp] = await Promise.all([
+            WMS.getPickTasks({ siteId, fromDate: from, toDate: to }),
+            WMSInventory.getAllocations({ siteId, warehouseId: node.hash }),
+        ]);
+        for (const pt of ptResp.data.data)    span.pickTasks.set(pt.id, mapPickTask(pt as any));
+        for (const a  of allocResp.data.data) span.allocations.set(a.id, mapAllocation(a));
+    }
+
+    // Receipts + putaway tasks — only fetched when navigating to a Reception area node
+    if (isArea(node) && node.name.toLowerCase() === "reception") {
+        const [rcptResp, putResp] = await Promise.all([
+            WMSInbound.getReceipts({ siteId, fromDate: from, toDate: to }),
+            WMSInbound.getPutawayTasks({ siteId, fromDate: from, toDate: to }),
+        ]);
+        for (const r  of rcptResp.data.data) span.receipts.set(r.id,    mapReceipt(r as any));
+        for (const pt of putResp.data.data)  span.putawayTasks.set(pt.id, mapPutawayTask(pt as any));
+    }
+
+    // Storage area: pick tasks (outbound) + putaway tasks (inbound) + stock allocations
+    if (isArea(node) && node.name.toLowerCase() === "storage") {
+        const [ptResp, putResp, allocResp] = await Promise.all([
+            WMS.getPickTasks({ siteId, fromDate: from, toDate: to }),
+            WMSInbound.getPutawayTasks({ siteId, fromDate: from, toDate: to }),
+            WMSInventory.getAllocations({ siteId, warehouseId: node.hash }),
+        ]);
+        for (const pt  of ptResp.data.data)    span.pickTasks.set(pt.id, mapPickTask(pt as any));
+        for (const put of putResp.data.data)   span.putawayTasks.set(put.id, mapPutawayTask(put as any));
+        for (const a   of allocResp.data.data) span.allocations.set(a.id, mapAllocation(a));
+    }
 
     buildSpanIndexes(span);
     return span;

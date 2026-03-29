@@ -13,6 +13,7 @@ import { getPickTasks } from "./getPickTasks";
 import { getShipments } from "./getShipments";
 import { getCycleCounts } from "./getCycleCounts";
 import { getInventoryMovements } from "./getInventoryMovements";
+import { getAllocations } from "./getAllocations";
 
 export const wmsOperations = {
     getWarehouses,
@@ -30,4 +31,5 @@ export const wmsOperations = {
     getShipments,
     getCycleCounts,
     getInventoryMovements,
+    getAllocations,
 };

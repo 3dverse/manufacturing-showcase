@@ -4,6 +4,10 @@ import type {
     OperationEntry,
     DowntimeEntry,
     WorkOrderEntry,
+    PickTaskEntry,
+    ReceiptEntry,
+    PutawayTaskEntry,
+    AllocationEntry,
     TimelineLevel,
     AsOfSnapshot,
 } from "@/core/Scope";
@@ -50,6 +54,21 @@ export type ProjectedWorkOrder = WorkOrderEntry & {
     isOverdue: boolean; // past scheduledEnd and not completed
 };
 
+export type ProjectedPickTask = PickTaskEntry & {
+    phase: Phase; // completed if pickedDate <= asOf, future if createdAt > asOf, else active
+};
+
+export type ProjectedReceipt = ReceiptEntry & {
+    phase: Phase; // completed if putawayDate <= asOf, active if receivedDate <= asOf, else future
+    putawayDate: number | null; // denormalized from linked putaway task
+};
+
+export type ProjectedPutawayTask = PutawayTaskEntry & {
+    phase: Phase; // completed if putawayDate <= asOf, future if createdAt > asOf, else active
+};
+
+export type ProjectedAllocation = AllocationEntry; // point-in-time; no time-based projection needed
+
 export type AsOfProjection = {
     level: TimelineLevel;
     salesOrders: ProjectedSalesOrder[];
@@ -57,6 +76,10 @@ export type AsOfProjection = {
     operations: ProjectedOperation[];
     downtimeEvents: ProjectedDowntime[];
     eamWorkOrders: ProjectedWorkOrder[];
+    pickTasks: ProjectedPickTask[];
+    receipts: ProjectedReceipt[];
+    putawayTasks: ProjectedPutawayTask[];
+    allocations: ProjectedAllocation[];
 };
 
 // ---------------------------------------------------------------------------
@@ -158,11 +181,41 @@ function projectWorkOrder(e: WorkOrderEntry, asOf: number): ProjectedWorkOrder {
     return { ...e, phase, effectiveStart, effectiveEnd, isOverdue };
 }
 
+function projectPickTask(e: PickTaskEntry, asOf: number): ProjectedPickTask {
+    const phase: Phase =
+        e.pickedDate != null && e.pickedDate <= asOf ? "completed" :
+        e.createdAt > asOf                           ? "future"    :
+                                                       "active";
+    return { ...e, phase };
+}
+
+function projectReceipt(e: ReceiptEntry, putawayDate: number | null, asOf: number): ProjectedReceipt {
+    const phase: Phase =
+        putawayDate != null && putawayDate <= asOf ? "completed" :
+        e.receivedDate > asOf                      ? "future"    :
+                                                     "active";
+    return { ...e, phase, putawayDate };
+}
+
+function projectPutawayTask(e: PutawayTaskEntry, asOf: number): ProjectedPutawayTask {
+    const phase: Phase =
+        e.putawayDate != null && e.putawayDate <= asOf ? "completed" :
+        e.createdAt > asOf                             ? "future"    :
+                                                         "active";
+    return { ...e, phase };
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
 export function projectSnapshot(snapshot: AsOfSnapshot, asOf: number): AsOfProjection {
+    // Build a receipt-id → putawayDate lookup for denormalising onto receipts
+    const putawayDateByReceipt = new Map<string, number>();
+    for (const pt of snapshot.putawayTasks) {
+        if (pt.receiptId && pt.putawayDate != null) putawayDateByReceipt.set(pt.receiptId, pt.putawayDate);
+    }
+
     return {
         level: snapshot.level,
         salesOrders: snapshot.salesOrders.map((e) => projectSalesOrder(e, asOf)),
@@ -170,5 +223,9 @@ export function projectSnapshot(snapshot: AsOfSnapshot, asOf: number): AsOfProje
         operations: snapshot.operations.map((e) => projectOperation(e, asOf)),
         downtimeEvents: snapshot.downtimeEvents.map((e) => projectDowntime(e, asOf)),
         eamWorkOrders: snapshot.eamWorkOrders.map((e) => projectWorkOrder(e, asOf)),
+        pickTasks: snapshot.pickTasks.map((e) => projectPickTask(e, asOf)),
+        receipts: snapshot.receipts.map((e) => projectReceipt(e, putawayDateByReceipt.get(e.id) ?? null, asOf)),
+        putawayTasks: snapshot.putawayTasks.map((e) => projectPutawayTask(e, asOf)),
+        allocations: snapshot.allocations,
     };
 }

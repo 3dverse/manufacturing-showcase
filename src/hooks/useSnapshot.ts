@@ -33,6 +33,10 @@ export function useSnapshot(scope: TimelineScope | null): {
             operations:       scope.operations.filter((e) => operationAtAsOf(e, asOf)),
             downtimeEvents:   scope.downtimeEvents.filter((e) => downtimeAtAsOf(e, asOf)),
             eamWorkOrders:    scope.eamWorkOrders.filter((e) => workOrderAtAsOf(e, asOf)),
+            pickTasks:        scope.pickTasks,
+            receipts:         scope.receipts,
+            putawayTasks:     scope.putawayTasks,
+            allocations:      scope.allocations,
         };
     }, [scope, asOf]);
 

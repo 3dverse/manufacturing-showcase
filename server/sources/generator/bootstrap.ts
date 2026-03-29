@@ -3,7 +3,7 @@ import { getFolderAssets } from "@3dverse/api";
 import { generate } from "./index";
 import { setDataset } from "./store";
 import { STATIC_SITE_ID, defaultSite } from "./input";
-import { loadSiteFromScene } from "../operations/dataset/generateDataset";
+import { loadSiteFromScene } from "./site";
 
 //------------------------------------------------------------------------------
 export const PUBLIC_FOLDER_ID = "3b1c6c2a-73e1-4787-a383-a7cdd4de54de";

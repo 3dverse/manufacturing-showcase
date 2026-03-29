@@ -1,5 +1,5 @@
-import { NodeTypes, hashNode } from "../operations/dataset/generateDataset";
-import type { SiteNode } from "../operations/dataset/generateDataset";
+import { NodeTypes, hashNode } from "./site";
+import type { SiteNode } from "./site";
 import type { GeneratorConfig, ItemDefinition, ShiftConfig } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -376,7 +376,6 @@ export const defaultItems: ItemDefinition[] = [
         ],
         components: [
             { itemId: "RM-STEEL-BAR", quantity: 3, uom: "pcs" },
-            { itemId: "RM-PAINT-PRIMER", quantity: 1, uom: "L" },
             { itemId: "RM-FASTENERS", quantity: 2, uom: "set" },
         ],
     },
@@ -550,18 +549,6 @@ export const defaultItems: ItemDefinition[] = [
         itemType: "raw_material",
         uom: "pcs",
         standardCost: 18.0,
-        currency: "USD",
-        routing: [],
-        components: [],
-    },
-    {
-        id: "RM-PAINT-PRIMER",
-        itemNumber: "RM-PAINT-PRIMER",
-        name: "Industrial Paint Primer",
-        description: "Zinc-phosphate industrial primer coating",
-        itemType: "raw_material",
-        uom: "L",
-        standardCost: 8.5,
         currency: "USD",
         routing: [],
         components: [],

@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import { fetchSpan, spanWindow } from "@/core/Span";
 import { scopeKey, workCenterIdsFromNode, type TimelineSpan } from "@/core/Scope";
+import { isArea } from "@/core/NavGraph";
 import type { NavGraphNode } from "@/content/type";
 
 // ---------------------------------------------------------------------------
@@ -38,7 +39,10 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
 
     loadSpan: async (node, siteId) => {
         const { from, to } = spanWindow();
-        const key = `${siteId}:${scopeKey(workCenterIdsFromNode(node))}:${from}:${to}`;
+        const wcKey = scopeKey(workCenterIdsFromNode(node));
+        // WMS zone areas have no work centers — include the node hash to differentiate zones
+        const nodeKey = wcKey === "" && isArea(node) ? node.hash : wcKey;
+        const key = `${siteId}:${nodeKey}:${from}:${to}`;
 
         if (get().spanKey === key) return; // cache hit
         if (_activeKey === key)    return; // already in flight

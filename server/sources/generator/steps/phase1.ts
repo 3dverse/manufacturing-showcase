@@ -16,6 +16,7 @@ import type { RNG } from "../rng";
 import type { GeneratorConfig } from "../config";
 import {
     getProductionLocations,
+    getWMSZones,
     flattenWorkCenters,
 } from "../graph";
 import { addDays } from "../shifts";
@@ -56,6 +57,23 @@ export type MaintenancePlanTemplate = {
     nextDue:         Date;  // mutable during Phase 2
 };
 
+export type RoutingStepTemplate = {
+    sequence:                 number;
+    operationCode:            string;
+    workCenterOperationType:  string;
+    workCenterId:             string;
+    workCenterName:           string;
+    operationType:            "transformation" | "assembly" | "quality_control";
+    inputItemIds:             string[];
+    outputItemId:             string;
+};
+
+export type FGRoutingTemplate = {
+    fgItemId: string;
+    fgName:   string;
+    steps:    RoutingStepTemplate[];
+};
+
 // ---------------------------------------------------------------------------
 // Static data pools
 // ---------------------------------------------------------------------------
@@ -86,12 +104,11 @@ const FG_BY_OP_TYPES: Record<string, { name: string; cost: number }> = {
 };
 
 const RAW_MATERIALS = [
-    { id: "RM-STEEL-BAR",    name: "Steel Bar Stock",          uom: "pcs", cost: 45.0 },
+    { id: "RM-BODY",          name: "Body",                     uom: "pcs", cost: 45.0 },
     { id: "RM-ALU-BLOCK",    name: "Aluminum Block",           uom: "pcs", cost: 38.0 },
-    { id: "RM-PAINT-PRIMER", name: "Industrial Paint Primer",  uom: "L",   cost:  8.5 },
     { id: "RM-PCB-BLANK",    name: "PCB Blank",                uom: "pcs", cost: 18.0 },
-    { id: "RM-FASTENERS",    name: "Fastener Set",             uom: "set", cost: 12.0 },
-    { id: "RM-SEAL-KIT",     name: "Seal Kit",                 uom: "kit", cost: 22.0 },
+    { id: "RM-SCREEN",       name: "Screen",                   uom: "pcs", cost: 12.0 },
+    { id: "RM-LOGIC-BOARD",  name: "Logic Board",              uom: "pcs", cost: 22.0 },
 ];
 
 const CUSTOMER_POOL = [
@@ -176,6 +193,12 @@ export type Phase1Result = {
     wmsLocations:             Map<string, any>;
     wmsLocationList:          string[];
     wmsLocationsByWarehouse:  Map<string, string[]>;
+    wmsZoneIds: {
+        reception: string;
+        storage:   string;
+        supply:    string;
+        delivery:  string;
+    };
 
     // APS master data
     apsPlans:                 Map<string, any>;
@@ -184,11 +207,147 @@ export type Phase1Result = {
     apsScenarioList:          string[];
     apsResources:             Map<string, any>;
     apsResourceList:          string[];
+
+    // Routing templates (generation-only, consumed by Phase 3)
+    routingTemplates: Map<string, FGRoutingTemplate>;
+    wipItems:         Map<string, any>;
 };
 
 // ---------------------------------------------------------------------------
 // generateEntities
 // ---------------------------------------------------------------------------
+
+function buildFGRoutings(
+    poTemplates: Map<string, POTemplate>,
+    fgNames:     Map<string, string>,
+    fgUoms:      Map<string, string>,
+): { routingTemplates: Map<string, FGRoutingTemplate>; wipItems: Map<string, any> } {
+    const routingTemplates = new Map<string, FGRoutingTemplate>();
+    const wipItems         = new Map<string, any>();
+
+    for (const [, tmpl] of poTemplates) {
+        const fgItemId = tmpl.itemId;
+        const fgName   = fgNames.get(fgItemId) ?? fgItemId;
+        const ops      = tmpl.operations;
+
+        const opTypes      = ops.map(o => o.operationType);
+        const hasMachining = opTypes.includes("MACHINING");
+        const hasPainting  = opTypes.includes("PAINTING");
+
+        // Processable bulk RM: ALU-BLOCK when painting step exists, else STEEL-BAR
+        const processableRM = hasPainting ? "RM-ALU-BLOCK" : "RM-BODY";
+
+        // Last non-QC operation index — its output is the finished good
+        let lastProductiveIdx = ops.length - 1;
+        while (lastProductiveIdx > 0 && ops[lastProductiveIdx].operationType === "QUALITY_CONTROL") {
+            lastProductiveIdx--;
+        }
+
+        // Discrete RMs consumed one per assembly step.
+        // Electronics path (no machining): PCB-BLANK is the structural primary; FASTENERS follow.
+        // Mechanical path: SEAL-KIT at first assembly, FASTENERS at second.
+        const discreteRMPool: string[] = hasMachining
+            ? ["RM-LOGIC-BOARD", "RM-SCREEN"]
+            : ["RM-PCB-BLANK", "RM-SCREEN"];
+        let discreteRMIdx = 0;
+
+        const steps: RoutingStepTemplate[] = [];
+        let previousOutputId: string | null = null;
+
+        for (let i = 0; i < ops.length; i++) {
+            const op       = ops[i];
+            const opType   = op.operationType;
+            const sequence = (i + 1) * 10;
+
+            let logicalType: "transformation" | "assembly" | "quality_control";
+            let inputItemIds: string[];
+            let outputItemId: string;
+
+            if (opType === "QUALITY_CONTROL") {
+                logicalType  = "quality_control";
+                const qcItem = previousOutputId ?? processableRM;
+                inputItemIds = [qcItem];
+                outputItemId = qcItem; // passthrough — same item in and out
+
+            } else if (opType === "ASSEMBLY") {
+                logicalType = "assembly";
+
+                // Primary input: WIP from previous step, or the first RM in the pool
+                // if nothing precedes this assembly (pure-assembly routing).
+                const primaryInput = previousOutputId ?? (discreteRMPool[discreteRMIdx++] ?? processableRM);
+
+                // Each assembly step introduces exactly one new discrete RM.
+                const additionalRM = discreteRMPool[discreteRMIdx++];
+                inputItemIds = additionalRM ? [primaryInput, additionalRM] : [primaryInput];
+
+                // If this is the last productive op, output is the finished good
+                if (i === lastProductiveIdx) {
+                    outputItemId = fgItemId;
+                } else {
+                    outputItemId = `WIP-${fgItemId}-${sequence}`;
+                    wipItems.set(outputItemId, {
+                        id: outputItemId, itemNumber: outputItemId,
+                        name: `${fgName} Sub-Assembly`,
+                        description: `Work-in-progress sub-assembly for ${fgName}`,
+                        itemType: "wip", uom: fgUoms.get(fgItemId) ?? "pcs", status: "active",
+                    });
+                }
+
+            } else if (opType === "MACHINING") {
+                logicalType  = "transformation";
+                // First machining step consumes the processable raw material.
+                // Subsequent machining steps transform the WIP from the previous step.
+                inputItemIds = [previousOutputId ?? processableRM];
+                if (i === lastProductiveIdx) {
+                    outputItemId = fgItemId;
+                } else {
+                    outputItemId = `WIP-${fgItemId}-${sequence}`;
+                    wipItems.set(outputItemId, {
+                        id: outputItemId, itemNumber: outputItemId,
+                        name: `${fgName} (Machined)`,
+                        description: `Machined intermediate for ${fgName}`,
+                        itemType: "wip", uom: fgUoms.get(fgItemId) ?? "pcs", status: "active",
+                    });
+                }
+
+            } else {
+                // PAINTING and any other transformation type: 1 input → 1 new WIP
+                logicalType  = "transformation";
+                inputItemIds = [previousOutputId ?? processableRM];
+                if (i === lastProductiveIdx) {
+                    outputItemId = fgItemId;
+                } else {
+                    outputItemId = `WIP-${fgItemId}-${sequence}`;
+                    const suffix = opType === "PAINTING" ? "Painted" : opType;
+                    wipItems.set(outputItemId, {
+                        id: outputItemId, itemNumber: outputItemId,
+                        name: `${fgName} (${suffix})`,
+                        description: `${suffix} intermediate for ${fgName}`,
+                        itemType: "wip", uom: fgUoms.get(fgItemId) ?? "pcs", status: "active",
+                    });
+                }
+            }
+
+            const opCode = `${opType.substring(0, 3).toUpperCase()}-${sequence}`;
+            steps.push({
+                sequence,
+                operationCode:           opCode,
+                workCenterOperationType: opType,
+                workCenterId:            op.workCenterId,
+                workCenterName:          op.workCenterName,
+                operationType:           logicalType,
+                inputItemIds,
+                outputItemId,
+            });
+
+            previousOutputId = outputItemId;
+        }
+
+        routingTemplates.set(fgItemId, { fgItemId, fgName, steps });
+    }
+
+    return { routingTemplates, wipItems };
+}
 
 export function generateEntities(config: GeneratorConfig, rng: RNG): Phase1Result {
     const { site, siteId } = config;
@@ -441,28 +600,70 @@ export function generateEntities(config: GeneratorConfig, rng: RNG): Phase1Resul
         erpItemList.push(rm.id);
     }
 
-    // ---- WMS master data ----
+    // ---- Routing templates + WIP items ----
+    const fgNames = new Map<string, string>();
+    const fgUoms  = new Map<string, string>();
+    for (const loc of prodLocations) {
+        const tmpl      = poTemplates.get(loc.hash)!;
+        const opTypeKey = tmpl.operations.map(o => o.operationType).sort().join(",");
+        const fgInfo    = FG_BY_OP_TYPES[opTypeKey] ?? { name: `Product-${loc.name}`, cost: 800 };
+        fgNames.set(tmpl.itemId, fgInfo.name);
+        fgUoms.set(tmpl.itemId, "pcs");
+    }
+
+    const { routingTemplates, wipItems } = buildFGRoutings(poTemplates, fgNames, fgUoms);
+
+    // Register WIP items in the ERP item master so they can be resolved by phase 3
+    for (const [wipId, wipItem] of wipItems) {
+        erpItems.set(wipId, { ...wipItem, companyId, standardCost: 0, currency: "USD" });
+        erpItemList.push(wipId);
+    }
+
+    // ---- WMS master data — zones derived from site graph ----
     const wmsWarehouses          = new Map<string, any>();
     const wmsLocations           = new Map<string, any>();
     const wmsLocationList:        string[] = [];
     const wmsLocationsByWarehouse = new Map<string, string[]>();
 
-    for (const wh of [
-        { id: "WH-RM", name: "Raw Material Store",   type: "raw_material"   },
-        { id: "WH-FG", name: "Finished Goods Store", type: "finished_goods" },
-    ]) {
-        wmsWarehouses.set(wh.id, { ...wh, code: wh.id, siteId, status: "active" });
-        const bins: string[] = [];
-        for (let b = 1; b <= 4; b++) {
-            const locId = `${wh.id}-BIN-${String(b).padStart(2, "0")}`;
-            wmsLocations.set(locId, {
-                id: locId, warehouseId: wh.id,
-                code: locId, name: `Bin ${b}`, type: "bin", status: "active",
-            });
-            wmsLocationList.push(locId);
-            bins.push(locId);
-        }
-        wmsLocationsByWarehouse.set(wh.id, bins);
+    const zones = getWMSZones(site);
+    if (!zones) {
+        const found = new Set(site.locations.map((l: any) => l.name.toLowerCase()));
+        const missing = ["Reception", "Storage", "Supply", "Delivery"]
+            .filter(n => !found.has(n.toLowerCase()));
+        throw new Error(
+            `Site graph is missing WMS zone location${missing.length > 1 ? "s" : ""}: ` +
+            `${missing.join(", ")}.`,
+        );
+    }
+
+    const wmsZoneIds = {
+        reception: zones.reception.hash,
+        storage:   zones.storage.hash,
+        supply:    zones.supply.hash,
+        delivery:  zones.delivery.hash,
+    };
+
+    const ZONE_TYPES: Record<keyof typeof zones, string> = {
+        reception: "receiving",
+        storage:   "bulk_storage",
+        supply:    "staging",
+        delivery:  "shipping",
+    };
+
+    for (const key of Object.keys(zones) as Array<keyof typeof zones>) {
+        const zone = zones[key];
+        const zoneType = ZONE_TYPES[key];
+        wmsWarehouses.set(zone.hash, {
+            id: zone.hash, code: zone.name, name: prettify(zone.name),
+            type: zoneType, siteId, status: "active",
+        });
+        const binId = `${zone.hash}-BIN-01`;
+        wmsLocations.set(binId, {
+            id: binId, warehouseId: zone.hash,
+            code: binId, name: "Bin 01", type: "bin", status: "active",
+        });
+        wmsLocationList.push(binId);
+        wmsLocationsByWarehouse.set(zone.hash, [binId]);
     }
 
     // ---- APS master data ----
@@ -529,11 +730,14 @@ export function generateEntities(config: GeneratorConfig, rng: RNG): Phase1Resul
         wmsLocations,
         wmsLocationList,
         wmsLocationsByWarehouse,
+        wmsZoneIds,
         apsPlans,
         apsPlanList,
         apsScenarios,
         apsScenarioList,
         apsResources,
         apsResourceList,
+        routingTemplates,
+        wipItems,
     };
 }

@@ -84,6 +84,54 @@ export type WorkOrderEntry = {
     mesProductionOrderId?: string | null;
 };
 
+export type PickTaskEntry = {
+    id: string;
+    warehouseId: string;
+    status: string;
+    itemId: string;
+    quantity: number;
+    uom: string;
+    salesOrderId?: string | null;
+    pickedDate: number | null;
+    createdAt: number;
+};
+
+export type ReceiptEntry = {
+    id: string;
+    warehouseId: string;
+    status: string;
+    itemId: string;
+    quantity: number;
+    receivedDate: number;
+};
+
+export type PutawayTaskEntry = {
+    id: string;
+    warehouseId: string;
+    receiptId: string | null;
+    status: string;
+    itemId: string;
+    quantity: number;
+    putawayDate: number | null;
+    createdAt: number;
+};
+
+export type AllocationEntry = {
+    id: string;
+    warehouseId: string;
+    locationId: string;
+    itemId: string;
+    quantityAllocated: number;
+    quantityRequired: number;
+    uom: string;
+    demandType: "production_order" | "sales_order";
+    productionOrderId: string | null;
+    erpSalesOrderId: string | null;
+    status: "allocated" | "partial";
+    allocatedAt: number;
+    clearedAt: number | null;
+};
+
 // ---------------------------------------------------------------------------
 // Span — timespan-scoped cache
 // ---------------------------------------------------------------------------
@@ -95,6 +143,10 @@ export type TimelineSpan = {
     operations: Map<string, OperationEntry>;
     downtimeEvents: Map<string, DowntimeEntry>;
     eamWorkOrders: Map<string, WorkOrderEntry>;
+    pickTasks: Map<string, PickTaskEntry>;
+    receipts: Map<string, ReceiptEntry>;
+    putawayTasks: Map<string, PutawayTaskEntry>;
+    allocations: Map<string, AllocationEntry>;
     // Indexes built from the above
     productionOrdersByLocation: Map<string, string[]>;
     productionOrdersByWorkCenter: Map<string, string[]>;
@@ -102,6 +154,8 @@ export type TimelineSpan = {
     downtimeByWorkCenter: Map<string, string[]>;
     workOrdersByLocation: Map<string, string[]>;
     workOrdersByAsset: Map<string, string[]>;
+    pickTasksBySalesOrder: Map<string, string[]>;
+    putawayTasksByReceipt: Map<string, string[]>;
 };
 
 export function emptySpan(): TimelineSpan {
@@ -111,12 +165,18 @@ export function emptySpan(): TimelineSpan {
         operations: new Map(),
         downtimeEvents: new Map(),
         eamWorkOrders: new Map(),
+        pickTasks: new Map(),
+        receipts: new Map(),
+        putawayTasks: new Map(),
+        allocations: new Map(),
         productionOrdersByLocation: new Map(),
         productionOrdersByWorkCenter: new Map(),
         operationsByWorkCenter: new Map(),
         downtimeByWorkCenter: new Map(),
         workOrdersByLocation: new Map(),
         workOrdersByAsset: new Map(),
+        pickTasksBySalesOrder: new Map(),
+        putawayTasksByReceipt: new Map(),
     };
 }
 
@@ -132,6 +192,8 @@ export function buildSpanIndexes(span: TimelineSpan): void {
     span.downtimeByWorkCenter.clear();
     span.workOrdersByLocation.clear();
     span.workOrdersByAsset.clear();
+    span.pickTasksBySalesOrder.clear();
+    span.putawayTasksByReceipt.clear();
 
     for (const po of span.productionOrders.values()) {
         appendIndex(span.productionOrdersByLocation, po.locationId, po.id);
@@ -151,6 +213,14 @@ export function buildSpanIndexes(span: TimelineSpan): void {
         if (wo.locationId) appendIndex(span.workOrdersByLocation, wo.locationId, wo.id);
         appendIndex(span.workOrdersByAsset, wo.assetId, wo.id);
     }
+
+    for (const pt of span.pickTasks.values()) {
+        if (pt.salesOrderId) appendIndex(span.pickTasksBySalesOrder, pt.salesOrderId, pt.id);
+    }
+
+    for (const put of span.putawayTasks.values()) {
+        if (put.receiptId) appendIndex(span.putawayTasksByReceipt, put.receiptId, put.id);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -166,6 +236,10 @@ export type TimelineScope = {
     operations: OperationEntry[];
     downtimeEvents: DowntimeEntry[];
     eamWorkOrders: WorkOrderEntry[];
+    pickTasks: PickTaskEntry[];
+    receipts: ReceiptEntry[];
+    putawayTasks: PutawayTaskEntry[];
+    allocations: AllocationEntry[];
 };
 
 /** Point-in-time view of a TimelineScope — same shape, filtered to asOf. */
@@ -216,10 +290,15 @@ function scopeFactory(_node: FactoryNode, span: TimelineSpan): TimelineScope {
         operations: [],
         downtimeEvents: [],
         eamWorkOrders: [],
+        pickTasks: [],
+        receipts: [],
+        putawayTasks: [],
+        allocations: [],
     };
 }
 
 function scopeArea(node: AreaNode, span: TimelineSpan): TimelineScope {
+    const areaName = node.name.toLowerCase();
     const wcHashes = [...node.lines.flatMap((l) => l.cells.map((c) => c.hash)), ...node.cells.map((c) => c.hash)];
     const dtIds = wcHashes.flatMap((h) => span.downtimeByWorkCenter.get(h) ?? []);
     const areaPos = resolvePos(span.productionOrdersByLocation.get(node.hash), span);
@@ -229,6 +308,39 @@ function scopeArea(node: AreaNode, span: TimelineSpan): TimelineScope {
     // production data to filter by, so the full list is the relevant view.
     const salesOrders =
         areaPos.length > 0 ? resolveSalesOrdersForPos(areaPos, span) : Array.from(span.salesOrders.values());
+
+    // Delivery area: pick tasks linked to the scoped SOs.
+    const pickTasks =
+        areaName === "delivery"
+            ? resolveUnique(
+                  salesOrders.flatMap((so) => span.pickTasksBySalesOrder.get(so.id) ?? []),
+                  span.pickTasks,
+              )
+            : [];
+
+    // Reception area: all receipts and their putaway tasks.
+    const receipts    = areaName === "reception" ? Array.from(span.receipts.values())    : [];
+    const putawayTasks = areaName === "reception"
+        ? resolveUnique(
+              receipts.flatMap((r) => span.putawayTasksByReceipt.get(r.id) ?? []),
+              span.putawayTasks,
+          )
+        : areaName === "storage"
+          ? Array.from(span.putawayTasks.values()).filter((pt) => pt.warehouseId === node.hash)
+          : [];
+
+    // Storage area: RM allocations + pick/putaway tasks scoped to the storage warehouse.
+    // Delivery area: FG allocations (reserved against SOs).
+    const storagePicks = areaName === "storage"
+        ? Array.from(span.pickTasks.values()).filter((pt) => pt.warehouseId === node.hash)
+        : [];
+    const allocations =
+        areaName === "storage"
+            ? Array.from(span.allocations.values()).filter((a) => a.demandType === "production_order")
+            : areaName === "delivery"
+              ? Array.from(span.allocations.values()).filter((a) => a.demandType === "sales_order")
+              : [];
+
     return {
         level: "area",
         salesOrders,
@@ -236,6 +348,10 @@ function scopeArea(node: AreaNode, span: TimelineSpan): TimelineScope {
         operations: [],
         downtimeEvents: resolveUnique(dtIds, span.downtimeEvents),
         eamWorkOrders: resolveWorkOrders(span.workOrdersByLocation.get(node.hash), span),
+        pickTasks: areaName === "delivery" ? pickTasks : storagePicks,
+        receipts,
+        putawayTasks,
+        allocations,
     };
 }
 
@@ -252,6 +368,10 @@ function scopeLine(node: LineNode, span: TimelineSpan): TimelineScope {
         operations: resolveUnique(opIds, span.operations),
         downtimeEvents: resolveUnique(dtIds, span.downtimeEvents),
         eamWorkOrders: resolveWorkOrders(span.workOrdersByLocation.get(node.parent.hash), span),
+        pickTasks: [],
+        receipts: [],
+        putawayTasks: [],
+        allocations: [],
     };
 }
 
@@ -264,6 +384,10 @@ function scopeCell(node: CellNode, span: TimelineSpan): TimelineScope {
         operations: resolveOps(span.operationsByWorkCenter.get(node.hash), span),
         downtimeEvents: resolveDowntimes(span.downtimeByWorkCenter.get(node.hash), span),
         eamWorkOrders: [],
+        pickTasks: [],
+        receipts: [],
+        putawayTasks: [],
+        allocations: [],
     };
 }
 
@@ -278,6 +402,10 @@ function scopeMachine(node: MachineNode, span: TimelineSpan): TimelineScope {
         operations: resolveOps(span.operationsByWorkCenter.get(wcId), span),
         downtimeEvents: resolveDowntimes(span.downtimeByWorkCenter.get(wcId), span),
         eamWorkOrders: resolveWorkOrders(span.workOrdersByAsset.get(node.hash), span),
+        pickTasks: [],
+        receipts: [],
+        putawayTasks: [],
+        allocations: [],
     };
 }
 
@@ -406,5 +534,5 @@ function appendIndex<K, V>(map: Map<K, V[]>, key: K, value: V): void {
 }
 
 function emptyScope(level: TimelineLevel): TimelineScope {
-    return { level, salesOrders: [], productionOrders: [], operations: [], downtimeEvents: [], eamWorkOrders: [] };
+    return { level, salesOrders: [], productionOrders: [], operations: [], downtimeEvents: [], eamWorkOrders: [], pickTasks: [], receipts: [], putawayTasks: [], allocations: [] };
 }

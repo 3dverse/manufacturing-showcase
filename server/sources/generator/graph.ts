@@ -3,7 +3,7 @@ import type {
     WorkCenterNode,
     SiteNode,
     MachineNode,
-} from "../operations/dataset/generateDataset";
+} from "./site";
 
 export function flattenWorkCenters(site: SiteNode): WorkCenterNode[] {
     return site.locations.flatMap((a) => a.workCenters);
@@ -55,4 +55,26 @@ export function getLocationForMachine(site: SiteNode, machineHash: string): Loca
         }
     }
     return undefined;
+}
+
+export type WMSZones = {
+    reception: LocationNode;
+    storage:   LocationNode;
+    supply:    LocationNode;
+    delivery:  LocationNode;
+};
+
+/**
+ * Returns the four WMS zone locations (Reception, Storage, Supply, Delivery)
+ * from the site graph. Returns null if any zone is missing.
+ */
+export function getWMSZones(site: SiteNode): WMSZones | null {
+    const find = (name: string) =>
+        site.locations.find(l => l.name.toLowerCase() === name.toLowerCase());
+    const reception = find("reception");
+    const storage   = find("storage");
+    const supply    = find("supply");
+    const delivery  = find("delivery");
+    if (!reception || !storage || !supply || !delivery) return null;
+    return { reception, storage, supply, delivery };
 }

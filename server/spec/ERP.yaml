@@ -911,6 +911,10 @@ components:
         orderedQuantity:
           type: number
           format: double
+        fulfilledQuantity:
+          type: number
+          format: double
+          description: Quantity that has been shipped and fulfilled for this line.
         uom:
           type: string
         unitPrice:
@@ -980,6 +984,10 @@ components:
         orderedQuantity:
           type: number
           format: double
+        receivedQuantity:
+          type: number
+          format: double
+          description: Quantity that has been physically received into the warehouse for this line.
         uom:
           type: string
         unitPrice:

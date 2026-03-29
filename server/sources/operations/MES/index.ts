@@ -8,6 +8,7 @@ import { listDispatchItems } from "./listDispatchItems";
 import { listProductionEvents } from "./listProductionEvents";
 import { listDowntimeEvents } from "./listDowntimeEvents";
 import { getPerformance } from "./getPerformance";
+import { listRoutings } from "./listRoutings";
 
 export const mesOperations = {
     listWorkCenters,
@@ -20,4 +21,5 @@ export const mesOperations = {
     listProductionEvents,
     listDowntimeEvents,
     getPerformance,
+    listRoutings,
 };

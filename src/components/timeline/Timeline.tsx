@@ -3,14 +3,28 @@ import { createPortal } from "react-dom";
 
 //------------------------------------------------------------------------------
 import { SelectionContext } from "@/contexts/SelectionContext";
+
+//------------------------------------------------------------------------------
 import { useTimelineStore } from "@/store/useTimelineStore";
+import { useFocusStore } from "@/store/useFocusStore";
+
+//------------------------------------------------------------------------------
+import { highlightStateForBar, type EntityType, type HighlightState } from "@/core/Correlation";
+import { isArea } from "@/core/NavGraph";
+import type { TimelineLevel } from "@/core/Scope";
+
+import { cn } from "@/utils/cn";
+
+//------------------------------------------------------------------------------
 import { useScope } from "@/hooks/useScope";
 import { useProjection } from "@/hooks/useProjection";
 import { useCorrelation } from "@/hooks/useCorrelation";
-import { useFocusStore } from "@/store/useFocusStore";
-import { highlightStateForBar, type EntityType, type HighlightState } from "@/core/Correlation";
-import { cn } from "@/utils/cn";
-import type { TimelineLevel } from "@/core/Scope";
+
+//------------------------------------------------------------------------------
+import { fmtDuration, fmtTs, fromPct, toPct } from "./timeUtils";
+
+//------------------------------------------------------------------------------
+import { PERFORMANCE_MODE } from "@/content/3dverse";
 import type {
     AsOfProjection,
     ProjectedSalesOrder,
@@ -18,9 +32,9 @@ import type {
     ProjectedOperation,
     ProjectedDowntime,
     ProjectedWorkOrder,
+    ProjectedReceipt,
+    ProjectedAllocation,
 } from "@/core/Projection";
-import { fmtDuration, fmtTs, fromPct, toPct } from "./timeUtils";
-import { PERFORMANCE_MODE } from "@/content/3dverse";
 
 //------------------------------------------------------------------------------
 // Zoom levels
@@ -28,7 +42,7 @@ import { PERFORMANCE_MODE } from "@/content/3dverse";
 
 type ZoomKey = "1D" | "1W" | "2W" | "1M" | "3M" | "6M";
 
-type AreaType = "production" | "other";
+type AreaType = "production" | "delivery" | "reception" | "storage" | "other";
 
 const ZOOMS: { key: ZoomKey; label: string; days: number }[] = [
     { key: "1D", label: "1D", days: 1 },
@@ -390,6 +404,99 @@ function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedW
     };
 }
 
+function buildReceiptsStory(receipts: ProjectedReceipt[]): Story {
+    const bars: BarItem[] = receipts.map((r) => {
+        const end = r.putawayDate ?? Math.floor(Date.now() / 1000);
+        return {
+            id: r.id,
+            entityType: "receipt" as EntityType,
+            start: r.receivedDate,
+            end: end > r.receivedDate ? end : r.receivedDate + 3600,
+            className: cn(
+                "hover:ring-2 hover:ring-offset-0 hover:ring-sky-500/50",
+                r.phase === "completed"
+                    ? "bg-sky-500/50 border border-sky-400/50"
+                    : r.phase === "future"
+                      ? "bg-slate-400/30 border border-slate-400/40 border-dashed"
+                      : "bg-amber-400/60 border border-amber-300/60",
+            ),
+            tooltip: (
+                <div className="space-y-1.5">
+                    <div className="font-semibold text-white">{r.id}</div>
+                    <div className="text-slate-400 text-[11px]">{r.itemId}</div>
+                    <div>
+                        <span className="text-slate-500">Status </span>
+                        <span className="capitalize">{r.status.replace("_", " ")}</span>
+                    </div>
+                    <div>
+                        <span className="text-slate-500">Qty </span>
+                        {r.quantity}
+                    </div>
+                    <div>
+                        <span className="text-slate-500">Received </span>
+                        {fmtTs(r.receivedDate)}
+                    </div>
+                    {r.putawayDate && (
+                        <div>
+                            <span className="text-slate-500">Putaway </span>
+                            {fmtTs(r.putawayDate)}
+                        </div>
+                    )}
+                </div>
+            ),
+        };
+    });
+    return {
+        id: "receipts",
+        label: "Receipts",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "bar",
+        stackingStyle: "swimlane",
+        rowHeight: ROW_H,
+    };
+}
+
+function buildAllocationsStory(allocs: ProjectedAllocation[], demandType: "production_order" | "sales_order"): Story {
+    const now = Math.floor(Date.now() / 1000);
+    const filtered = allocs.filter((a) => a.demandType === demandType);
+    const isRM = demandType === "production_order";
+    const bars: BarItem[] = filtered.map((a) => ({
+        id: a.id,
+        entityType: "allocation" as EntityType,
+        start: a.allocatedAt,
+        end: a.clearedAt ?? now,
+        className: cn(
+            "hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50",
+            a.status === "partial"
+                ? "bg-blue-400/35 border border-blue-400/50 border-dashed"
+                : "bg-blue-400/60 border border-blue-400/60",
+        ),
+        tooltip: (
+            <div className="space-y-1.5">
+                <div className="font-semibold text-white">{a.id}</div>
+                <div className="text-slate-400 text-[11px]">{a.itemId}</div>
+                <div>
+                    <span className="text-slate-500">Allocated </span>
+                    {a.quantityAllocated} / {a.quantityRequired} {a.uom}
+                    {a.status === "partial" && <span className="ml-1.5 text-amber-400">partial</span>}
+                </div>
+                <div>
+                    <span className="text-slate-500">Since </span>
+                    {fmtTs(a.allocatedAt)}
+                </div>
+            </div>
+        ),
+    }));
+    return {
+        id: isRM ? "alloc-rm" : "alloc-fg",
+        label: isRM ? "RM allocations" : "FG allocations",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "line",
+        stackingStyle: "swimlane",
+        rowHeight: ROW_H_LINE,
+    };
+}
+
 //------------------------------------------------------------------------------
 // Story selection
 //------------------------------------------------------------------------------
@@ -401,6 +508,9 @@ function buildStories(level: TimelineLevel, projection: AsOfProjection | null, a
     const dt = projection?.downtimeEvents ?? [];
     const wo = projection?.eamWorkOrders ?? [];
 
+    const rcp = projection?.receipts ?? [];
+    const alloc = projection?.allocations ?? [];
+
     switch (level) {
         case "factory":
             return [buildSalesOrdersStory(so)];
@@ -408,6 +518,12 @@ function buildStories(level: TimelineLevel, projection: AsOfProjection | null, a
             switch (areatype) {
                 case "production":
                     return [buildSalesOrdersStory(so), buildProductionOrdersStory(po)];
+                case "delivery":
+                    return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "sales_order")];
+                case "reception":
+                    return [buildReceiptsStory(rcp)];
+                case "storage":
+                    return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order")];
                 default:
                     return [buildSalesOrdersStory(so)];
             }
@@ -498,9 +614,22 @@ export function Timeline({ className }: { className?: string }) {
     const { scope, level, isLoading } = useScope(selectedNode ?? null);
     const projection = useProjection(scope);
     const { hovered, setHovered } = useFocusStore();
-    const areaType: AreaType | undefined =
-        level === "area" && (scope?.productionOrders.length ?? 0) > 0 ? "production" : undefined;
-    const correlationEnabled = !(level === "area" && areaType !== "production");
+    const areaType: AreaType | undefined = (() => {
+        if (level !== "area" || !selectedNode || !isArea(selectedNode)) return undefined;
+        if ((scope?.productionOrders.length ?? 0) > 0) return "production";
+        const name = selectedNode.name.toLowerCase();
+        if (name === "delivery") return "delivery";
+        if (name === "reception") return "reception";
+        if (name === "storage") return "storage";
+        return undefined;
+    })();
+    const correlationEnabled = !(
+        level === "area" &&
+        areaType !== "production" &&
+        areaType !== "delivery" &&
+        areaType !== "reception" &&
+        areaType !== "storage"
+    );
     const activeFocus = correlationEnabled ? hovered : null;
     const correlated = useCorrelation(projection, activeFocus);
 

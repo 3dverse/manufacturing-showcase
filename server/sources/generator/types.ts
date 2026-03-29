@@ -1,4 +1,5 @@
 // All generator input and internal types
+import type { FGRoutingTemplate } from "./steps/phase1";
 
 export type ShiftDefinition = {
     name: string;
@@ -32,7 +33,7 @@ export type ItemDefinition = {
     itemNumber: string;
     name: string;
     description: string;
-    itemType: "finished_good" | "raw_material";
+    itemType: "finished_good" | "raw_material" | "wip";
     uom: string;
     standardCost: number;
     currency: string;
@@ -101,6 +102,7 @@ export type OEEBucket = {
 export type Dataset = {
     siteId: string;
     now: Date;
+    routingTemplates: Map<string, FGRoutingTemplate>;
 
     erp: {
         companies: Map<string, any>;
@@ -173,6 +175,8 @@ export type Dataset = {
         downtimeByWorkCenter: Map<string, any[]>;
         oeeByWorkCenter: Map<string, OEEBucket[]>;
         workCenterTimelines: Map<string, WorkCenterTimeline>;
+        routings: Map<string, any>;
+        routingList: string[];
     };
 
     eam: {
@@ -231,5 +235,6 @@ export type Dataset = {
         shipments: any[];
         cycleCounts: any[];
         inventoryMovements: any[];
+        stockAllocations: any[];
     };
 };

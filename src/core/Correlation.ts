@@ -4,7 +4,7 @@ import type { AsOfProjection } from "@/core/Projection";
 // Entity types
 // ---------------------------------------------------------------------------
 
-export type EntityType = "salesOrder" | "productionOrder" | "operation" | "downtime" | "workOrder";
+export type EntityType = "salesOrder" | "productionOrder" | "operation" | "downtime" | "workOrder" | "pickTask" | "receipt" | "putawayTask" | "allocation";
 
 export type FocusedEntity = { type: EntityType; id: string };
 
@@ -31,6 +31,22 @@ export type CorrelationIndex = {
     poToWorkOrders: Map<string, Set<string>>;
     /** work order id → PO id (if any) */
     workOrderToPo: Map<string, string>;
+    /** SO id → set of pick task ids linked via salesOrderId */
+    soToPickTasks: Map<string, Set<string>>;
+    /** pick task id → SO id (if any) */
+    pickTaskToSo: Map<string, string>;
+    /** receipt id → set of putaway task ids */
+    receiptToPutawayTasks: Map<string, Set<string>>;
+    /** putaway task id → receipt id (if any) */
+    putawayTaskToReceipt: Map<string, string>;
+    /** PO id → set of allocation ids (demand_type = production_order) */
+    poToAllocations: Map<string, Set<string>>;
+    /** allocation id → PO id (if any) */
+    allocToPo: Map<string, string>;
+    /** SO id → set of allocation ids (demand_type = sales_order) */
+    soToAllocations: Map<string, Set<string>>;
+    /** allocation id → SO id (if any) */
+    allocToSo: Map<string, string>;
 };
 
 export function buildCorrelationIndex(projection: AsOfProjection): CorrelationIndex {
@@ -42,6 +58,14 @@ export function buildCorrelationIndex(projection: AsOfProjection): CorrelationIn
     const downtimeToPo = new Map<string, string>();
     const poToWorkOrders = new Map<string, Set<string>>();
     const workOrderToPo = new Map<string, string>();
+    const soToPickTasks = new Map<string, Set<string>>();
+    const pickTaskToSo = new Map<string, string>();
+    const receiptToPutawayTasks = new Map<string, Set<string>>();
+    const putawayTaskToReceipt = new Map<string, string>();
+    const poToAllocations = new Map<string, Set<string>>();
+    const allocToPo = new Map<string, string>();
+    const soToAllocations = new Map<string, Set<string>>();
+    const allocToSo = new Map<string, string>();
 
     for (const po of projection.productionOrders) {
         if (po.erpSalesOrderId) {
@@ -69,7 +93,31 @@ export function buildCorrelationIndex(projection: AsOfProjection): CorrelationIn
         }
     }
 
-    return { soToPos, poToSo, poToOps, opToPo, poToDowntimes, downtimeToPo, poToWorkOrders, workOrderToPo };
+    for (const pt of projection.pickTasks) {
+        if (pt.salesOrderId) {
+            pickTaskToSo.set(pt.id, pt.salesOrderId);
+            addToSet(soToPickTasks, pt.salesOrderId, pt.id);
+        }
+    }
+
+    for (const put of projection.putawayTasks) {
+        if (put.receiptId) {
+            putawayTaskToReceipt.set(put.id, put.receiptId);
+            addToSet(receiptToPutawayTasks, put.receiptId, put.id);
+        }
+    }
+
+    for (const alloc of projection.allocations) {
+        if (alloc.demandType === "production_order" && alloc.productionOrderId) {
+            allocToPo.set(alloc.id, alloc.productionOrderId);
+            addToSet(poToAllocations, alloc.productionOrderId, alloc.id);
+        } else if (alloc.demandType === "sales_order" && alloc.erpSalesOrderId) {
+            allocToSo.set(alloc.id, alloc.erpSalesOrderId);
+            addToSet(soToAllocations, alloc.erpSalesOrderId, alloc.id);
+        }
+    }
+
+    return { soToPos, poToSo, poToOps, opToPo, poToDowntimes, downtimeToPo, poToWorkOrders, workOrderToPo, soToPickTasks, pickTaskToSo, receiptToPutawayTasks, putawayTaskToReceipt, poToAllocations, allocToPo, soToAllocations, allocToSo };
 }
 
 // ---------------------------------------------------------------------------
@@ -82,6 +130,10 @@ export type CorrelatedSet = {
     operations: Set<string>;
     downtimeEvents: Set<string>;
     eamWorkOrders: Set<string>;
+    pickTasks: Set<string>;
+    receipts: Set<string>;
+    putawayTasks: Set<string>;
+    allocations: Set<string>;
 };
 
 export function correlate(focused: FocusedEntity, index: CorrelationIndex): CorrelatedSet {
@@ -90,6 +142,10 @@ export function correlate(focused: FocusedEntity, index: CorrelationIndex): Corr
     const operations = new Set<string>();
     const downtimeEvents = new Set<string>();
     const eamWorkOrders = new Set<string>();
+    const pickTasks = new Set<string>();
+    const receipts = new Set<string>();
+    const putawayTasks = new Set<string>();
+    const allocations = new Set<string>();
 
     // Resolve the set of PO ids that are the pivot for this focus
     const pivotPoIds = new Set<string>();
@@ -98,6 +154,8 @@ export function correlate(focused: FocusedEntity, index: CorrelationIndex): Corr
         case "salesOrder": {
             salesOrders.add(focused.id);
             for (const poId of index.soToPos.get(focused.id) ?? []) pivotPoIds.add(poId);
+            for (const ptId of index.soToPickTasks.get(focused.id) ?? []) pickTasks.add(ptId);
+            for (const aId of index.soToAllocations.get(focused.id) ?? []) allocations.add(aId);
             break;
         }
         case "productionOrder": {
@@ -140,6 +198,31 @@ export function correlate(focused: FocusedEntity, index: CorrelationIndex): Corr
             }
             break;
         }
+        case "pickTask": {
+            pickTasks.add(focused.id);
+            const soId = index.pickTaskToSo.get(focused.id);
+            if (soId) salesOrders.add(soId);
+            break;
+        }
+        case "receipt": {
+            receipts.add(focused.id);
+            for (const putId of index.receiptToPutawayTasks.get(focused.id) ?? []) putawayTasks.add(putId);
+            break;
+        }
+        case "putawayTask": {
+            putawayTasks.add(focused.id);
+            const rcptId = index.putawayTaskToReceipt.get(focused.id);
+            if (rcptId) receipts.add(rcptId);
+            break;
+        }
+        case "allocation": {
+            allocations.add(focused.id);
+            const poId = index.allocToPo.get(focused.id);
+            if (poId) { pivotPoIds.add(poId); productionOrders.add(poId); }
+            const soId = index.allocToSo.get(focused.id);
+            if (soId) salesOrders.add(soId);
+            break;
+        }
     }
 
     // Expand pivot POs to themselves and all linked entities
@@ -148,9 +231,10 @@ export function correlate(focused: FocusedEntity, index: CorrelationIndex): Corr
         for (const opId of index.poToOps.get(poId) ?? []) operations.add(opId);
         for (const dtId of index.poToDowntimes.get(poId) ?? []) downtimeEvents.add(dtId);
         for (const woId of index.poToWorkOrders.get(poId) ?? []) eamWorkOrders.add(woId);
+        for (const aId of index.poToAllocations.get(poId) ?? []) allocations.add(aId);
     }
 
-    return { salesOrders, productionOrders, operations, downtimeEvents, eamWorkOrders };
+    return { salesOrders, productionOrders, operations, downtimeEvents, eamWorkOrders, pickTasks, receipts, putawayTasks, allocations };
 }
 
 // ---------------------------------------------------------------------------
@@ -183,10 +267,14 @@ function addToSet<K, V>(map: Map<K, Set<V>>, key: K, value: V): void {
 
 function entitySet(type: EntityType, correlated: CorrelatedSet): Set<string> {
     switch (type) {
-        case "salesOrder":    return correlated.salesOrders;
+        case "salesOrder":      return correlated.salesOrders;
         case "productionOrder": return correlated.productionOrders;
-        case "operation":     return correlated.operations;
-        case "downtime":      return correlated.downtimeEvents;
-        case "workOrder":     return correlated.eamWorkOrders;
+        case "operation":       return correlated.operations;
+        case "downtime":        return correlated.downtimeEvents;
+        case "workOrder":       return correlated.eamWorkOrders;
+        case "pickTask":        return correlated.pickTasks;
+        case "receipt":         return correlated.receipts;
+        case "putawayTask":     return correlated.putawayTasks;
+        case "allocation":      return correlated.allocations;
     }
 }

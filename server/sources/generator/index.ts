@@ -10,7 +10,7 @@ import { createRng } from "./rng";
 import type { Dataset } from "./types";
 import { buildConfig } from "./config";
 import type { GeneratorConfig } from "./config";
-import type { SiteNode } from "../operations/dataset/generateDataset";
+import type { SiteNode } from "./site";
 import { generateEntities } from "./steps/phase1";
 import { placeTimeline }    from "./steps/phase2";
 import { fillDataset }      from "./steps/phase3";

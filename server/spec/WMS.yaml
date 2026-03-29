@@ -147,6 +147,15 @@ paths:
         - $ref: '#/components/parameters/LotNumberQuery'
         - $ref: '#/components/parameters/SerialNumberQuery'
         - $ref: '#/components/parameters/HandlingUnitIdQuery'
+        - name: asOf
+          in: query
+          required: false
+          description: |
+            Project inventory state at this Unix timestamp. When provided, inventory
+            positions are computed by replaying all movements up to and including this
+            timestamp, enabling point-in-time stock queries.
+          schema:
+            type: integer
       responses:
         '200':
           description: Inventory position list.
@@ -174,6 +183,12 @@ paths:
         - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
         - $ref: '#/components/parameters/ItemIdQuery'
+        - name: asOf
+          in: query
+          required: false
+          description: Project inventory summary at this Unix timestamp.
+          schema:
+            type: integer
       responses:
         '200':
           description: Inventory summary list.
@@ -314,6 +329,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
+        - name: receiptId
+          in: query
+          required: false
+          description: Filter putaway tasks by the source receipt that generated them.
+          schema:
+            type: string
         - $ref: '#/components/parameters/StatusFilter'
         - $ref: '#/components/parameters/FromDateQuery'
         - $ref: '#/components/parameters/ToDateQuery'
@@ -343,6 +364,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/SiteId'
         - $ref: '#/components/parameters/WarehouseIdQuery'
+        - name: shipmentId
+          in: query
+          required: false
+          description: Filter pick tasks by the outbound shipment they belong to.
+          schema:
+            type: string
         - $ref: '#/components/parameters/StatusFilter'
         - $ref: '#/components/parameters/FromDateQuery'
         - $ref: '#/components/parameters/ToDateQuery'
@@ -387,6 +414,46 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Shipment'
+                required: [data]
+
+  /allocations:
+    get:
+      tags: [WMS Inventory]
+      operationId: getAllocations
+      summary: List stock allocations
+      description: |
+        Returns stock allocation records showing how on-hand inventory is reserved against
+        demand documents such as production orders or sales orders. Use this endpoint to
+        determine which production orders have stock reserved and how much remains available
+        for other demand.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/WarehouseIdQuery'
+        - $ref: '#/components/parameters/ItemIdQuery'
+        - name: productionOrderId
+          in: query
+          required: false
+          description: Filter allocations by production order.
+          schema:
+            type: string
+        - name: erpSalesOrderId
+          in: query
+          required: false
+          description: Filter allocations by ERP sales order.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Allocation list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StockAllocation'
                 required: [data]
 
   /cycle-counts:
@@ -440,7 +507,7 @@ paths:
           description: Filter by movement type.
           schema:
             type: string
-            enum: [receipt, putaway, pick, shipment, transfer, count_adjustment, return]
+            enum: [receipt, putaway, pick, shipment, transfer, count_adjustment, return, issue, production]
         - name: fromDate
           in: query
           required: false
@@ -826,6 +893,33 @@ components:
           description: Current warehouse inventory state for the serial.
       required: [serialNumber, itemId, warehouseId, locationId, inventoryStatus]
 
+    ReceiptLine:
+      type: object
+      description: A single item line within an inbound warehouse receipt.
+      properties:
+        lineNumber:
+          type: integer
+          description: Line sequence number within the receipt.
+        itemId:
+          type: string
+          description: Inventory item received.
+        quantity:
+          type: number
+          format: double
+          description: Quantity received on this line.
+        uom:
+          type: string
+          description: Quantity unit of measure.
+        lotNumber:
+          type: string
+          nullable: true
+          description: Lot number assigned to the received quantity.
+        handlingUnitId:
+          type: string
+          nullable: true
+          description: Handling unit containing this line when applicable.
+      required: [lineNumber, itemId, quantity, uom]
+
     Receipt:
       type: object
       description: Warehouse receipt record for inbound physical goods.
@@ -856,7 +950,12 @@ components:
         lineCount:
           type: integer
           description: Number of item lines in the receipt.
-      required: [id, warehouseId, receiptNumber, status, receivedAt, lineCount]
+        lines:
+          type: array
+          description: Item lines received in this receipt.
+          items:
+            $ref: '#/components/schemas/ReceiptLine'
+      required: [id, warehouseId, receiptNumber, status, receivedAt, lineCount, lines]
 
     PutawayTask:
       type: object
@@ -868,6 +967,10 @@ components:
         warehouseId:
           type: string
           description: Warehouse responsible for the task.
+        receiptId:
+          type: string
+          nullable: true
+          description: Source receipt that generated this putaway task.
         status:
           type: string
           description: Current execution status.
@@ -937,7 +1040,11 @@ components:
           description: Associated outbound shipment when applicable.
         createdAt:
           type: integer
-          description: Task creation timestamp.
+          description: Task creation timestamp (unix seconds).
+        pickedDate:
+          type: integer
+          nullable: true
+          description: Timestamp when the pick was completed (unix seconds). Null if not yet picked.
       required:
         - id
         - warehouseId
@@ -947,6 +1054,37 @@ components:
         - uom
         - sourceLocationId
         - createdAt
+
+    ShipmentLine:
+      type: object
+      description: A single item line within an outbound warehouse shipment.
+      properties:
+        lineNumber:
+          type: integer
+          description: Line sequence number within the shipment.
+        itemId:
+          type: string
+          description: Inventory item shipped.
+        quantity:
+          type: number
+          format: double
+          description: Quantity shipped on this line.
+        uom:
+          type: string
+          description: Quantity unit of measure.
+        lotNumber:
+          type: string
+          nullable: true
+          description: Lot number of the shipped quantity.
+        serialNumber:
+          type: string
+          nullable: true
+          description: Serial number of the shipped unit when serial-controlled.
+        handlingUnitId:
+          type: string
+          nullable: true
+          description: Handling unit from which the quantity was picked.
+      required: [lineNumber, itemId, quantity, uom]
 
     Shipment:
       type: object
@@ -979,7 +1117,12 @@ components:
         lineCount:
           type: integer
           description: Number of shipment lines.
-      required: [id, warehouseId, shipmentNumber, status, lineCount]
+        lines:
+          type: array
+          description: Item lines included in this shipment.
+          items:
+            $ref: '#/components/schemas/ShipmentLine'
+      required: [id, warehouseId, shipmentNumber, status, lineCount, lines]
 
     CycleCount:
       type: object
@@ -1029,6 +1172,72 @@ components:
           type: string
       required: [line1, city, state, postalCode, country]
 
+    StockAllocation:
+      type: object
+      description: A reservation of on-hand stock against a specific demand document.
+      properties:
+        id:
+          type: string
+          description: Unique allocation identifier.
+        warehouseId:
+          type: string
+          description: Warehouse holding the allocated stock.
+        locationId:
+          type: string
+          description: Storage location where the stock is reserved.
+        itemId:
+          type: string
+          description: Inventory item allocated.
+        lotNumber:
+          type: string
+          nullable: true
+          description: Lot number of the allocated stock.
+        quantityAllocated:
+          type: number
+          format: double
+          description: Quantity reserved against the demand document.
+        uom:
+          type: string
+          description: Quantity unit of measure.
+        demandType:
+          type: string
+          description: Type of demand document driving the allocation.
+          enum: [production_order, sales_order]
+        productionOrderId:
+          type: string
+          nullable: true
+          description: Production order this stock is allocated to.
+        erpSalesOrderId:
+          type: string
+          nullable: true
+          description: ERP sales order this stock is allocated to.
+        quantityRequired:
+          type: number
+          format: double
+          description: Full quantity demanded. Compare with quantityAllocated to determine shortfall.
+        status:
+          type: string
+          description: Coverage status of this allocation.
+          enum: [allocated, partial]
+        allocatedAt:
+          type: integer
+          description: Timestamp when the allocation was created (unix seconds).
+        clearedAt:
+          type: integer
+          nullable: true
+          description: Timestamp when the allocation was released — i.e. when the demand was fulfilled (pick completed for FG, consumption started for RM). Null if the allocation is still active.
+      required:
+        - id
+        - warehouseId
+        - locationId
+        - itemId
+        - quantityRequired
+        - quantityAllocated
+        - uom
+        - demandType
+        - status
+        - allocatedAt
+
     InventoryMovement:
       type: object
       description: A discrete inventory transaction recorded by the WMS.
@@ -1045,7 +1254,7 @@ components:
         movementType:
           type: string
           description: Classification of the inventory movement.
-          enum: [receipt, putaway, pick, shipment, transfer, count_adjustment, return]
+          enum: [receipt, putaway, pick, shipment, transfer, count_adjustment, return, issue, production]
         itemId:
           type: string
           description: Inventory item affected.
@@ -1081,6 +1290,13 @@ components:
           type: string
           nullable: true
           description: ID of the source document that triggered this movement.
+        locationId:
+          type: string
+          nullable: true
+          description: |
+            The stock location whose balance is affected by this movement. Positive
+            quantity increases this location's stock; negative decreases it. Use this
+            field together with quantity for point-in-time inventory projection.
         erpPurchaseOrderId:
           type: string
           nullable: true
@@ -1089,6 +1305,14 @@ components:
           type: string
           nullable: true
           description: ERP sales order associated with this movement, if applicable.
+        productionOrderId:
+          type: string
+          nullable: true
+          description: MES production order that triggered this movement (issue or production types).
+        operationId:
+          type: string
+          nullable: true
+          description: MES operation that triggered this movement (issue or production types).
       required:
         - id
         - warehouseId
