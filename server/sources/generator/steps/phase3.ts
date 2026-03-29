@@ -23,9 +23,15 @@ const toUnix = (d: Date): number => Math.floor(d.getTime() / 1000);
 // Helpers
 // ---------------------------------------------------------------------------
 
-function poStatus(_po: PlacedPO): string { return "completed"; }
-function opStatus(_op: PlacedOperation): string { return "completed"; }
-function woStatus(_wo: PlacedMaintenanceWO): string { return "completed"; }
+function poStatus(_po: PlacedPO): string {
+    return "completed";
+}
+function opStatus(_op: PlacedOperation): string {
+    return "completed";
+}
+function woStatus(_wo: PlacedMaintenanceWO): string {
+    return "completed";
+}
 
 function addDaysToDate(d: Date, n: number): Date {
     const r = new Date(d);
@@ -46,8 +52,7 @@ function computeOpQty(
     rng: RNG,
 ): { producedQty: number; goodQty: number; scrapQty: number; effectiveYield: number } {
     const shiftMins = workingMinutes(op.start, op.end, config.shifts, config.workDays);
-    const downtimeMins = op.downtimes
-        .reduce((sum, dt) => sum + (dt.end.getTime() - dt.start.getTime()) / 60_000, 0);
+    const downtimeMins = op.downtimes.reduce((sum, dt) => sum + (dt.end.getTime() - dt.start.getTime()) / 60_000, 0);
 
     const netMins = Math.max(0, shiftMins - downtimeMins);
     const producedQty = Math.floor((netMins * po.effectiveUnitsPerHour) / 60);
@@ -69,12 +74,7 @@ function resolveItem(itemId: string, entities: Phase1Result): any {
     return entities.erpItems.get(itemId) ?? entities.wipItems.get(itemId);
 }
 
-function buildOpInputs(
-    fgItemId: string,
-    opIndex: number,
-    producedQty: number,
-    entities: Phase1Result,
-): any[] {
+function buildOpInputs(fgItemId: string, opIndex: number, producedQty: number, entities: Phase1Result): any[] {
     const step = entities.routingTemplates.get(fgItemId)?.steps[opIndex];
     if (!step) return [];
 
@@ -273,7 +273,6 @@ export function fillDataset(
             const wcOps = mesOperationsByWC.get(op.workCenterId) ?? [];
             wcOps.push(op.id);
             mesOperationsByWC.set(op.workCenterId, wcOps);
-
         }
 
         mesOperationsByPO.set(po.id, opIds);
@@ -712,33 +711,6 @@ export function fillDataset(
             });
         }
 
-        // ---- Purchase Order (raw materials) ----
-        const supplier = rng.pick(supplierIds);
-        const suppRec = entities.erpSuppliers.get(supplier)!;
-        const leadTime = (suppRec as any).leadTimeDays ?? 7;
-        const poOrderDate = addDaysToDate(po.start, -(leadTime + rng.nextInt(1, 3)));
-        const poDelivDate = addDaysToDate(po.start, -rng.nextInt(0, 2));
-        const poErpStatus = "received";
-        const erpPoId = newPoId();
-        const rmCost = unitPrice * 0.4; // raw materials ~40 % of unit cost
-
-        const poObj = {
-            id: erpPoId,
-            companyId,
-            orderNumber: erpPoId,
-            supplierId: supplier,
-            orderDate: toUnix(poOrderDate),
-            expectedDeliveryDate: toUnix(poDelivDate),
-            status: poErpStatus,
-            currency: "USD",
-            lines: [
-                { lineNumber: 1, itemId: "RM-STEEL-BAR", quantity: qty, unitPrice: rmCost, lineAmount: qty * rmCost },
-            ],
-            totalAmount: qty * rmCost,
-        };
-        erpPurchaseOrders.set(erpPoId, poObj);
-        erpPurchaseOrderList.push(poObj);
-
         // ---- AR Invoice ----
         {
             const invDate = addDaysToDate(shipDate, rng.nextInt(0, 2));
@@ -799,30 +771,6 @@ export function fillDataset(
             });
             erpJournalEntryList.push(jeDebit, jeCredit);
         }
-
-        // ---- AP Invoice ----
-        {
-            const apInvDate = addDaysToDate(poDelivDate, rng.nextInt(1, 3));
-            const apTerms = (suppRec as any).paymentTermsDays ?? 30;
-            const apDue = addDaysToDate(apInvDate, apTerms);
-            const apInvId = newInvId();
-            const apAmount = qty * rmCost;
-
-            erpInvoices.set(apInvId, {
-                id: apInvId,
-                companyId,
-                invoiceNumber: apInvId,
-                type: "ap",
-                supplierId: supplier,
-                purchaseOrderId: erpPoId,
-                invoiceDate: toUnix(apInvDate),
-                dueDate: toUnix(apDue),
-                amount: apAmount,
-                currency: "USD",
-                status: "paid",
-            });
-            erpInvoiceList.push(apInvId);
-        }
     }
 
     // ---- Fiscal periods ----
@@ -857,18 +805,30 @@ export function fillDataset(
     // (pick tasks and shipments are generated in the ERP loop above, anchored to SO.orderDate)
     // ========================================================================
 
-    for (const po of placedPOs) {
+    // ---- RM stock simulation: reorder-point driven per material ----
+    // Each RM starts at a random initial stock (5–10 days of production worth).
+    // Whenever projected stock after a consumption event would fall below the 5-day minimum,
+    // a purchase order + receipt arrives just before that event, restoring stock to 10 days.
+    // This decouples shipment timing across materials, making the timeline organic.
+
+    const RM_MIN_DAYS = 5;
+    const RM_MAX_DAYS = 10;
+    const windowDays = Math.max(1, (windowEnd.getTime() - windowStart.getTime()) / (24 * 60 * 60 * 1000));
+
+    // Build per-RM consumption schedule sorted chronologically
+    const sortedPOs = [...placedPOs].sort((a, b) => a.start.getTime() - b.start.getTime());
+
+    const rmConsumptionSchedule = new Map<string, Array<{ date: Date; qty: number }>>();
+    for (const po of sortedPOs) {
         const mePo = mesProductionOrders.get(po.id) as any;
-        const qty = mePo?.quantities?.producedQuantity ?? 0;
-        const plannedQty = (mePo?.quantities?.plannedQuantity ?? 0) as number;
+        const poQty = Math.max(
+            (mePo?.quantities?.producedQuantity ?? 0) as number,
+            (mePo?.quantities?.plannedQuantity ?? 0) as number,
+        );
+        if (poQty === 0) continue;
 
-        // ---- RM receipt (timed just before PO start) ----
-        const rcvDate = addDaysToDate(po.start, -rng.nextInt(0, 2));
-        const rcvStatus = "completed";
-
-        // Collect all distinct RM items across all routing steps
         const routing = entities.routingTemplates.get(po.itemId);
-        const allRmIds = routing
+        const rmIds: string[] = routing
             ? [
                   ...new Set(
                       routing.steps.flatMap((s: any) => s.inputItemIds.filter((id: string) => id.startsWith("RM-"))),
@@ -876,71 +836,173 @@ export function fillDataset(
               ]
             : ["RM-STEEL-BAR"];
 
-        const rcvQty = Math.max(plannedQty, qty);
-
-        // One receipt + putaway task per RM item (same received date, same PO linkage)
-        const putawayDate = addDaysToDate(rcvDate, 1); // putaway happens next day
-
-        for (const rmItemId of allRmIds) {
-            const lineRcptId  = `RCP-${String(receiptNum++).padStart(4, "0")}`;
-            const putawayId   = `PUT-${String(putawayNum++).padStart(4, "0")}`;
-            const putawayStatus = "completed";
-
-            wmsReceipts.push({
-                id: lineRcptId,
-                warehouseId: reception,
-                receiptNumber: lineRcptId,
-                status: rcvStatus,
-                receivedAt: toUnix(rcvDate),
-                dockLocationId: receptionBin,
-                lineCount: 1,
-                lines: [{ lineNumber: 1, itemId: rmItemId, quantity: rcvQty, uom: "pcs" }],
-            });
-
-            wmsPutawayTasks.push({
-                id: putawayId,
-                warehouseId: storage,
-                receiptId: lineRcptId,
-                itemId: rmItemId,
-                quantity: rcvQty,
-                uom: "pcs",
-                sourceLocationId: receptionBin,
-                destinationLocationId: storageBin,
-                createdAt: toUnix(rcvDate),
-                putawayDate: toUnix(putawayDate),
-                status: putawayStatus,
-            });
-
-            if (rcvQty > 0) {
-                // Receipt: RM arrives at Reception
-                mkMov({
-                    warehouseId: reception, locationId: receptionBin,
-                    occurredAt: toUnix(rcvDate), movementType: "receipt",
-                    itemId: rmItemId, quantity: rcvQty, uom: "pcs",
-                    fromLocationId: null, toLocationId: receptionBin,
-                    sourceDocumentType: "receipt", sourceDocumentId: lineRcptId,
-                    productionOrderId: po.id, operationId: null,
-                });
-                // Putaway: RM moves from Reception to Storage
-                mkMov({
-                    warehouseId: storage, locationId: storageBin,
-                    occurredAt: toUnix(putawayDate), movementType: "putaway",
-                    itemId: rmItemId, quantity: rcvQty, uom: "pcs",
-                    fromLocationId: receptionBin, toLocationId: storageBin,
-                    sourceDocumentType: "putaway_task", sourceDocumentId: putawayId,
-                    productionOrderId: po.id, operationId: null,
-                });
-                // Debit Reception (stock leaves)
-                mkMov({
-                    warehouseId: reception, locationId: receptionBin,
-                    occurredAt: toUnix(putawayDate), movementType: "putaway",
-                    itemId: rmItemId, quantity: -rcvQty, uom: "pcs",
-                    fromLocationId: receptionBin, toLocationId: storageBin,
-                    sourceDocumentType: "putaway_task", sourceDocumentId: putawayId,
-                    productionOrderId: po.id, operationId: null,
-                });
-            }
+        for (const rmId of rmIds) {
+            const list = rmConsumptionSchedule.get(rmId) ?? [];
+            list.push({ date: po.start, qty: poQty });
+            rmConsumptionSchedule.set(rmId, list);
         }
+    }
+
+    for (const [rmId, consumptions] of rmConsumptionSchedule) {
+        const totalConsumed = consumptions.reduce((s, e) => s + e.qty, 0);
+        const dailyRate = totalConsumed / windowDays;
+
+        // Each material starts at a different random stock level, spreading reorder events
+        const initialStockDays = rng.nextFloat(RM_MIN_DAYS, RM_MAX_DAYS);
+        let currentStock = initialStockDays * dailyRate;
+
+        const rmItem = entities.erpItems.get(rmId);
+        const rmUnitCost = (rmItem as any)?.standardCost ?? 50;
+
+        for (const evt of consumptions) {
+            // Reorder before this consumption if stock would drop below the minimum
+            if (currentStock - evt.qty < RM_MIN_DAYS * dailyRate) {
+                // Vary the restock target (8–12 days) so materials don't re-synchronize after each order
+                const targetDays = rng.nextFloat(RM_MAX_DAYS - 2, RM_MAX_DAYS + 2);
+                const reorderQty = Math.ceil(targetDays * dailyRate - currentStock + evt.qty);
+                if (reorderQty > 0) {
+                    const supplier = rng.pick(supplierIds);
+                    const suppRec = entities.erpSuppliers.get(supplier)!;
+                    const leadTime = (suppRec as any).leadTimeDays ?? 7;
+
+                    const rcvDate = addDaysToDate(evt.date, -rng.nextInt(0, 2));
+                    const poOrderDate = addDaysToDate(rcvDate, -(leadTime + rng.nextInt(1, 3)));
+                    const erpPoId = newPoId();
+                    const lineAmount = reorderQty * rmUnitCost;
+
+                    const rmPoObj = {
+                        id: erpPoId,
+                        companyId,
+                        orderNumber: erpPoId,
+                        supplierId: supplier,
+                        orderDate: toUnix(poOrderDate),
+                        receivedAt: toUnix(rcvDate),
+                        status: "received",
+                        currency: "USD",
+                        lines: [
+                            {
+                                lineNumber: 1,
+                                itemId: rmId,
+                                orderedQuantity: reorderQty,
+                                expectedReceiptDate: toUnix(rcvDate),
+                                unitPrice: rmUnitCost,
+                                lineAmount,
+                            },
+                        ],
+                        totalAmount: lineAmount,
+                    };
+                    erpPurchaseOrders.set(erpPoId, rmPoObj);
+                    erpPurchaseOrderList.push(rmPoObj);
+
+                    // AP Invoice
+                    const apInvDate = addDaysToDate(rcvDate, rng.nextInt(1, 3));
+                    const apTerms = (suppRec as any).paymentTermsDays ?? 30;
+                    const apDue = addDaysToDate(apInvDate, apTerms);
+                    const apInvId = newInvId();
+                    erpInvoices.set(apInvId, {
+                        id: apInvId,
+                        companyId,
+                        invoiceNumber: apInvId,
+                        type: "ap",
+                        supplierId: supplier,
+                        purchaseOrderId: erpPoId,
+                        invoiceDate: toUnix(apInvDate),
+                        dueDate: toUnix(apDue),
+                        amount: lineAmount,
+                        currency: "USD",
+                        status: "paid",
+                    });
+                    erpInvoiceList.push(apInvId);
+
+                    // WMS receipt + putaway
+                    const lineRcptId = `RCP-${String(receiptNum++).padStart(4, "0")}`;
+                    const putawayId = `PUT-${String(putawayNum++).padStart(4, "0")}`;
+                    const putawayDate = addDaysToDate(rcvDate, 1);
+
+                    wmsReceipts.push({
+                        id: lineRcptId,
+                        warehouseId: reception,
+                        receiptNumber: lineRcptId,
+                        status: "completed",
+                        receivedAt: toUnix(rcvDate),
+                        dockLocationId: receptionBin,
+                        erpPurchaseOrderId: erpPoId,
+                        lineCount: 1,
+                        lines: [{ lineNumber: 1, itemId: rmId, quantity: reorderQty, uom: "pcs" }],
+                    });
+                    wmsPutawayTasks.push({
+                        id: putawayId,
+                        warehouseId: storage,
+                        receiptId: lineRcptId,
+                        itemId: rmId,
+                        quantity: reorderQty,
+                        uom: "pcs",
+                        sourceLocationId: receptionBin,
+                        destinationLocationId: storageBin,
+                        createdAt: toUnix(rcvDate),
+                        putawayDate: toUnix(putawayDate),
+                        status: "completed",
+                    });
+
+                    // Receipt: RM arrives at Reception
+                    mkMov({
+                        warehouseId: reception,
+                        locationId: receptionBin,
+                        occurredAt: toUnix(rcvDate),
+                        movementType: "receipt",
+                        itemId: rmId,
+                        quantity: reorderQty,
+                        uom: "pcs",
+                        fromLocationId: null,
+                        toLocationId: receptionBin,
+                        sourceDocumentType: "receipt",
+                        sourceDocumentId: lineRcptId,
+                        productionOrderId: null,
+                        operationId: null,
+                    });
+                    // Putaway: RM moves from Reception to Storage
+                    mkMov({
+                        warehouseId: storage,
+                        locationId: storageBin,
+                        occurredAt: toUnix(putawayDate),
+                        movementType: "putaway",
+                        itemId: rmId,
+                        quantity: reorderQty,
+                        uom: "pcs",
+                        fromLocationId: receptionBin,
+                        toLocationId: storageBin,
+                        sourceDocumentType: "putaway_task",
+                        sourceDocumentId: putawayId,
+                        productionOrderId: null,
+                        operationId: null,
+                    });
+                    // Debit Reception (stock leaves)
+                    mkMov({
+                        warehouseId: reception,
+                        locationId: receptionBin,
+                        occurredAt: toUnix(putawayDate),
+                        movementType: "putaway",
+                        itemId: rmId,
+                        quantity: -reorderQty,
+                        uom: "pcs",
+                        fromLocationId: receptionBin,
+                        toLocationId: storageBin,
+                        sourceDocumentType: "putaway_task",
+                        sourceDocumentId: putawayId,
+                        productionOrderId: null,
+                        operationId: null,
+                    });
+
+                    currentStock += reorderQty;
+                }
+            }
+            currentStock -= evt.qty;
+        }
+    }
+
+    for (const po of placedPOs) {
+        const mePo = mesProductionOrders.get(po.id) as any;
+        const qty = mePo?.quantities?.producedQuantity ?? 0;
 
         // FG production movement at PO end — FG lands in Storage
         if (qty > 0) {
@@ -1076,9 +1138,9 @@ export function fillDataset(
         if (requiredQty === 0 || allRmIds.length === 0) continue;
 
         for (const rmItemId of allRmIds) {
-            const allocQty    = requiredQty;
+            const allocQty = requiredQty;
             const allocatedAt = Number(mePo.timing?.scheduledStart ?? nowTs) - 86400;
-            const clearedAt   = Number(mePo.timing?.actualStart ?? mePo.timing?.scheduledStart ?? nowTs);
+            const clearedAt = Number(mePo.timing?.actualStart ?? mePo.timing?.scheduledStart ?? nowTs);
 
             wmsStockAllocations.push({
                 id: `ALLOC-${String(allocNum++).padStart(5, "0")}`,

@@ -103,6 +103,7 @@ export type ReceiptEntry = {
     itemId: string;
     quantity: number;
     receivedDate: number;
+    erpPurchaseOrderId: string | null;
 };
 
 export type PutawayTaskEntry = {
@@ -114,6 +115,19 @@ export type PutawayTaskEntry = {
     quantity: number;
     putawayDate: number | null;
     createdAt: number;
+};
+
+export type PurchaseOrderEntry = {
+    id: string;
+    orderNumber: string;
+    supplierId: string;
+    supplierName?: string;
+    itemId: string;
+    orderedQuantity: number;
+    orderDate: number;
+    expectedDeliveryDate: number | null;
+    receivedAt: number | null;
+    status: string;
 };
 
 export type AllocationEntry = {
@@ -146,6 +160,7 @@ export type TimelineSpan = {
     pickTasks: Map<string, PickTaskEntry>;
     receipts: Map<string, ReceiptEntry>;
     putawayTasks: Map<string, PutawayTaskEntry>;
+    purchaseOrders: Map<string, PurchaseOrderEntry>;
     allocations: Map<string, AllocationEntry>;
     // Indexes built from the above
     productionOrdersByLocation: Map<string, string[]>;
@@ -168,6 +183,7 @@ export function emptySpan(): TimelineSpan {
         pickTasks: new Map(),
         receipts: new Map(),
         putawayTasks: new Map(),
+        purchaseOrders: new Map(),
         allocations: new Map(),
         productionOrdersByLocation: new Map(),
         productionOrdersByWorkCenter: new Map(),
@@ -239,6 +255,7 @@ export type TimelineScope = {
     pickTasks: PickTaskEntry[];
     receipts: ReceiptEntry[];
     putawayTasks: PutawayTaskEntry[];
+    purchaseOrders: PurchaseOrderEntry[];
     allocations: AllocationEntry[];
 };
 
@@ -293,6 +310,7 @@ function scopeFactory(_node: FactoryNode, span: TimelineSpan): TimelineScope {
         pickTasks: [],
         receipts: [],
         putawayTasks: [],
+        purchaseOrders: [],
         allocations: [],
     };
 }
@@ -318,22 +336,23 @@ function scopeArea(node: AreaNode, span: TimelineSpan): TimelineScope {
               )
             : [];
 
-    // Reception area: all receipts and their putaway tasks.
-    const receipts    = areaName === "reception" ? Array.from(span.receipts.values())    : [];
-    const putawayTasks = areaName === "reception"
-        ? resolveUnique(
-              receipts.flatMap((r) => span.putawayTasksByReceipt.get(r.id) ?? []),
-              span.putawayTasks,
-          )
-        : areaName === "storage"
-          ? Array.from(span.putawayTasks.values()).filter((pt) => pt.warehouseId === node.hash)
-          : [];
+    // Reception area: all receipts, putaway tasks, and purchase orders.
+    const receipts = areaName === "reception" ? Array.from(span.receipts.values()) : [];
+    const purchaseOrders = areaName === "reception" ? Array.from(span.purchaseOrders.values()) : [];
+    const putawayTasks =
+        areaName === "reception"
+            ? resolveUnique(
+                  receipts.flatMap((r) => span.putawayTasksByReceipt.get(r.id) ?? []),
+                  span.putawayTasks,
+              )
+            : areaName === "storage"
+              ? Array.from(span.putawayTasks.values()).filter((pt) => pt.warehouseId === node.hash)
+              : [];
 
     // Storage area: RM allocations + pick/putaway tasks scoped to the storage warehouse.
     // Delivery area: FG allocations (reserved against SOs).
-    const storagePicks = areaName === "storage"
-        ? Array.from(span.pickTasks.values()).filter((pt) => pt.warehouseId === node.hash)
-        : [];
+    const storagePicks =
+        areaName === "storage" ? Array.from(span.pickTasks.values()).filter((pt) => pt.warehouseId === node.hash) : [];
     const allocations =
         areaName === "storage"
             ? Array.from(span.allocations.values()).filter((a) => a.demandType === "production_order")
@@ -351,6 +370,7 @@ function scopeArea(node: AreaNode, span: TimelineSpan): TimelineScope {
         pickTasks: areaName === "delivery" ? pickTasks : storagePicks,
         receipts,
         putawayTasks,
+        purchaseOrders,
         allocations,
     };
 }
@@ -371,6 +391,7 @@ function scopeLine(node: LineNode, span: TimelineSpan): TimelineScope {
         pickTasks: [],
         receipts: [],
         putawayTasks: [],
+        purchaseOrders: [],
         allocations: [],
     };
 }
@@ -387,6 +408,7 @@ function scopeCell(node: CellNode, span: TimelineSpan): TimelineScope {
         pickTasks: [],
         receipts: [],
         putawayTasks: [],
+        purchaseOrders: [],
         allocations: [],
     };
 }
@@ -405,6 +427,7 @@ function scopeMachine(node: MachineNode, span: TimelineSpan): TimelineScope {
         pickTasks: [],
         receipts: [],
         putawayTasks: [],
+        purchaseOrders: [],
         allocations: [],
     };
 }
@@ -534,5 +557,17 @@ function appendIndex<K, V>(map: Map<K, V[]>, key: K, value: V): void {
 }
 
 function emptyScope(level: TimelineLevel): TimelineScope {
-    return { level, salesOrders: [], productionOrders: [], operations: [], downtimeEvents: [], eamWorkOrders: [], pickTasks: [], receipts: [], putawayTasks: [], allocations: [] };
+    return {
+        level,
+        salesOrders: [],
+        productionOrders: [],
+        operations: [],
+        downtimeEvents: [],
+        eamWorkOrders: [],
+        pickTasks: [],
+        receipts: [],
+        putawayTasks: [],
+        purchaseOrders: [],
+        allocations: [],
+    };
 }

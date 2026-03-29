@@ -1,9 +1,11 @@
 import { useContext, useMemo } from "react";
 
 //------------------------------------------------------------------------------
-import { AreaStorageQuadPanel } from "@/components/nodes/areas/storage/AreaStorageQuadPanel";
-import { AreaStorageOverlay } from "@/components/nodes/areas/storage/AreaStorageOverlay";
-import { FactoryOrderPanel } from "../orders/FactoryOrderPanel";
+import { StorageAreaSummary } from "@/components/nodes/areas/storage/StorageAreaSummary";
+import { StorageAreaOverlay } from "@/components/nodes/areas/storage/StorageAreaOverlay";
+import { ProductionAreaSummary } from "@/components/nodes/areas/production/ProductionAreaSummary";
+
+//------------------------------------------------------------------------------
 import { FloatingLabel } from "./DOM3D/FloatingLabel";
 import { AnchoredPanel } from "./DOM3D/AnchoredPanel";
 import { FloorOutline } from "./DOM3D/FloorOutline";
@@ -27,10 +29,11 @@ import { useTimelineStore } from "@/store/useTimelineStore";
 import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
-import { orders } from "@/content/orders";
 import type { AreaNode, CellNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 import { useNavNode } from "../navigation/hooks";
+import { BadgeOEE } from "../common/BadgeOEE";
+import { useAreaOEE } from "@/hooks/useAreaOEE";
 
 const SHOW_FLOW_LINES = false;
 
@@ -178,30 +181,73 @@ const CellBuilderItem = ({ cell, index }: { cell: CellNode; index: number }) => 
 const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
-    const { isSelected, isChildSelected } = useNavNode(area, "dom3d");
+    const { isSelected } = useNavNode(area, "dom3d");
 
     //--------------------------------------------------------------------------
     // Context
     const { selectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
+    // Hooks
+    const oee = useAreaOEE(area);
+
+    //--------------------------------------------------------------------------
+    // Memos
+    const kpi = useMemo(() => {
+        if (oee === null) return null;
+        return (
+            <div className="starting:opacity-0 starting:translate-y-4 opacity-100 translate-y-0 transition-all duration-300 delay-1700 transform-3d">
+                <BadgeOEE
+                    oee={oee}
+                    className="text-2xl -translate-y-8 px-3 py-2 shadow-xl transform-3d backdrop-blur-3xl"
+                />
+            </div>
+        );
+    }, [oee]);
+
+    //--------------------------------------------------------------------------
+    const areaSummary = useMemo(() => {
+        if (!isSelected) return;
+        switch (area.name) {
+            case "storage":
+                return <StorageAreaSummary />;
+            case "production":
+                return <ProductionAreaSummary className="min-w-80" />;
+            case "reception":
+                return; //TODO
+            case "supply":
+                return; //TODO
+            case "control":
+                return; //TODO
+            case "delivery":
+                return; //TODO
+        }
+    }, [area.name]);
+
+    //--------------------------------------------------------------------------
+    const areaAddOn = useMemo(() => {
+        switch (area.name) {
+            case "storage":
+                return (
+                    <div className="pointer-events-none">
+                        <StorageAreaOverlay area={area} />
+                    </div>
+                );
+        }
+    }, []);
+
+    //--------------------------------------------------------------------------
+
+    //--------------------------------------------------------------------------
     // Render
     return (
         <>
             <FloorOutline node={area} />
-            {(isSelected || isChildSelected) && area.name === "storage" && (
-                <div className="pointer-events-none">
-                    <AreaStorageOverlay area={area} />
-                </div>
-            )}
-            {isSelected && (
-                <AnchoredPanel node={area} className="pointer-events-none!">
-                    {area.name === "storage" && <AreaStorageQuadPanel />}
-                    {!["storage", "reception"].includes(area.name) && (
-                        <FactoryOrderPanel order={orders[2]} className="min-w-80" />
-                    )}
-                </AnchoredPanel>
-            )}
+
+            <AnchoredPanel node={area} className="pointer-events-none!" kpi={kpi}>
+                {areaSummary}
+            </AnchoredPanel>
+            {areaAddOn}
             {selectedNode && isFactory(selectedNode) && <TopPanel node={area} />}
         </>
     );

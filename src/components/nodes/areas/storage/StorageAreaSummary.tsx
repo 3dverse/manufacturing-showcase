@@ -3,7 +3,7 @@ import { AreaStorageKpiCharts } from "@/components/nodes/areas/storage/AreaStora
 import { MOCK_KPI_DATA } from "@/components/nodes/areas/storage/content";
 
 //------------------------------------------------------------------------------
-export function AreaStorageQuadPanel() {
+export function StorageAreaSummary() {
     //--------------------------------------------------------------------------
     return <AreaStorageKpiCharts data={MOCK_KPI_DATA} />;
 }

@@ -4,7 +4,17 @@ import type { AsOfProjection } from "@/core/Projection";
 // Entity types
 // ---------------------------------------------------------------------------
 
-export type EntityType = "salesOrder" | "productionOrder" | "operation" | "downtime" | "workOrder" | "pickTask" | "receipt" | "putawayTask" | "allocation";
+export type EntityType =
+    | "salesOrder"
+    | "productionOrder"
+    | "operation"
+    | "downtime"
+    | "workOrder"
+    | "pickTask"
+    | "receipt"
+    | "putawayTask"
+    | "purchaseOrder"
+    | "allocation";
 
 export type FocusedEntity = { type: EntityType; id: string };
 
@@ -39,6 +49,10 @@ export type CorrelationIndex = {
     receiptToPutawayTasks: Map<string, Set<string>>;
     /** putaway task id → receipt id (if any) */
     putawayTaskToReceipt: Map<string, string>;
+    /** ERP purchase order id → set of receipt ids */
+    erpPoToReceipts: Map<string, Set<string>>;
+    /** receipt id → ERP purchase order id (if any) */
+    receiptToErpPo: Map<string, string>;
     /** PO id → set of allocation ids (demand_type = production_order) */
     poToAllocations: Map<string, Set<string>>;
     /** allocation id → PO id (if any) */
@@ -62,6 +76,8 @@ export function buildCorrelationIndex(projection: AsOfProjection): CorrelationIn
     const pickTaskToSo = new Map<string, string>();
     const receiptToPutawayTasks = new Map<string, Set<string>>();
     const putawayTaskToReceipt = new Map<string, string>();
+    const erpPoToReceipts = new Map<string, Set<string>>();
+    const receiptToErpPo = new Map<string, string>();
     const poToAllocations = new Map<string, Set<string>>();
     const allocToPo = new Map<string, string>();
     const soToAllocations = new Map<string, Set<string>>();
@@ -107,6 +123,13 @@ export function buildCorrelationIndex(projection: AsOfProjection): CorrelationIn
         }
     }
 
+    for (const r of projection.receipts) {
+        if (r.erpPurchaseOrderId) {
+            receiptToErpPo.set(r.id, r.erpPurchaseOrderId);
+            addToSet(erpPoToReceipts, r.erpPurchaseOrderId, r.id);
+        }
+    }
+
     for (const alloc of projection.allocations) {
         if (alloc.demandType === "production_order" && alloc.productionOrderId) {
             allocToPo.set(alloc.id, alloc.productionOrderId);
@@ -118,7 +141,26 @@ export function buildCorrelationIndex(projection: AsOfProjection): CorrelationIn
         }
     }
 
-    return { soToPos, poToSo, poToOps, opToPo, poToDowntimes, downtimeToPo, poToWorkOrders, workOrderToPo, soToPickTasks, pickTaskToSo, receiptToPutawayTasks, putawayTaskToReceipt, poToAllocations, allocToPo, soToAllocations, allocToSo };
+    return {
+        soToPos,
+        poToSo,
+        poToOps,
+        opToPo,
+        poToDowntimes,
+        downtimeToPo,
+        poToWorkOrders,
+        workOrderToPo,
+        soToPickTasks,
+        pickTaskToSo,
+        receiptToPutawayTasks,
+        putawayTaskToReceipt,
+        erpPoToReceipts,
+        receiptToErpPo,
+        poToAllocations,
+        allocToPo,
+        soToAllocations,
+        allocToSo,
+    };
 }
 
 // ---------------------------------------------------------------------------
@@ -134,6 +176,7 @@ export type CorrelatedSet = {
     pickTasks: Set<string>;
     receipts: Set<string>;
     putawayTasks: Set<string>;
+    purchaseOrders: Set<string>;
     allocations: Set<string>;
 };
 
@@ -146,6 +189,7 @@ export function correlate(focused: FocusedEntity, index: CorrelationIndex): Corr
     const pickTasks = new Set<string>();
     const receipts = new Set<string>();
     const putawayTasks = new Set<string>();
+    const purchaseOrders = new Set<string>();
     const allocations = new Set<string>();
 
     // Resolve the set of PO ids that are the pivot for this focus
@@ -208,18 +252,35 @@ export function correlate(focused: FocusedEntity, index: CorrelationIndex): Corr
         case "receipt": {
             receipts.add(focused.id);
             for (const putId of index.receiptToPutawayTasks.get(focused.id) ?? []) putawayTasks.add(putId);
+            const erpPoId = index.receiptToErpPo.get(focused.id);
+            if (erpPoId) purchaseOrders.add(erpPoId);
             break;
         }
         case "putawayTask": {
             putawayTasks.add(focused.id);
             const rcptId = index.putawayTaskToReceipt.get(focused.id);
-            if (rcptId) receipts.add(rcptId);
+            if (rcptId) {
+                receipts.add(rcptId);
+                const erpPoId = index.receiptToErpPo.get(rcptId);
+                if (erpPoId) purchaseOrders.add(erpPoId);
+            }
+            break;
+        }
+        case "purchaseOrder": {
+            purchaseOrders.add(focused.id);
+            for (const rcptId of index.erpPoToReceipts.get(focused.id) ?? []) {
+                receipts.add(rcptId);
+                for (const putId of index.receiptToPutawayTasks.get(rcptId) ?? []) putawayTasks.add(putId);
+            }
             break;
         }
         case "allocation": {
             allocations.add(focused.id);
             const poId = index.allocToPo.get(focused.id);
-            if (poId) { pivotPoIds.add(poId); productionOrders.add(poId); }
+            if (poId) {
+                pivotPoIds.add(poId);
+                productionOrders.add(poId);
+            }
             const soId = index.allocToSo.get(focused.id);
             if (soId) salesOrders.add(soId);
             break;
@@ -237,7 +298,18 @@ export function correlate(focused: FocusedEntity, index: CorrelationIndex): Corr
         for (const aId of index.poToAllocations.get(poId) ?? []) allocations.add(aId);
     }
 
-    return { salesOrders, productionOrders, operations, downtimeEvents, eamWorkOrders, pickTasks, receipts, putawayTasks, allocations };
+    return {
+        salesOrders,
+        productionOrders,
+        operations,
+        downtimeEvents,
+        eamWorkOrders,
+        pickTasks,
+        receipts,
+        putawayTasks,
+        purchaseOrders,
+        allocations,
+    };
 }
 
 // ---------------------------------------------------------------------------
@@ -270,14 +342,25 @@ function addToSet<K, V>(map: Map<K, Set<V>>, key: K, value: V): void {
 
 function entitySet(type: EntityType, correlated: CorrelatedSet): Set<string> {
     switch (type) {
-        case "salesOrder":      return correlated.salesOrders;
-        case "productionOrder": return correlated.productionOrders;
-        case "operation":       return correlated.operations;
-        case "downtime":        return correlated.downtimeEvents;
-        case "workOrder":       return correlated.eamWorkOrders;
-        case "pickTask":        return correlated.pickTasks;
-        case "receipt":         return correlated.receipts;
-        case "putawayTask":     return correlated.putawayTasks;
-        case "allocation":      return correlated.allocations;
+        case "salesOrder":
+            return correlated.salesOrders;
+        case "productionOrder":
+            return correlated.productionOrders;
+        case "operation":
+            return correlated.operations;
+        case "downtime":
+            return correlated.downtimeEvents;
+        case "workOrder":
+            return correlated.eamWorkOrders;
+        case "pickTask":
+            return correlated.pickTasks;
+        case "receipt":
+            return correlated.receipts;
+        case "putawayTask":
+            return correlated.putawayTasks;
+        case "purchaseOrder":
+            return correlated.purchaseOrders;
+        case "allocation":
+            return correlated.allocations;
     }
 }

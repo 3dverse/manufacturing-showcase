@@ -11,7 +11,7 @@ import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export function AreaStorageOverlay({ area }: { area: AreaNode }) {
+export function StorageAreaOverlay({ area }: { area: AreaNode }) {
     //--------------------------------------------------------------------------
     const [childrenEntities, setChildrenEntities] = useState<{
         screen: Entity[];

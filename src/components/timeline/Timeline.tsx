@@ -36,6 +36,7 @@ import type {
     ProjectedAllocation,
     ProjectedPickTask,
     ProjectedPutawayTask,
+    ProjectedPurchaseOrder,
 } from "@/core/Projection";
 
 //------------------------------------------------------------------------------
@@ -592,6 +593,64 @@ function buildPutawayTasksStory(tasks: ProjectedPutawayTask[]): Story {
     };
 }
 
+function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[]): Story {
+    const bars: BarItem[] = pos.map((po) => {
+        const end = po.receivedAt ?? po.expectedDeliveryDate ?? Math.floor(Date.now() / 1000);
+        return {
+            id: po.id,
+            entityType: "purchaseOrder" as EntityType,
+            start: po.orderDate,
+            end: end > po.orderDate ? end : po.orderDate + 3600,
+            className: cn(
+                "hover:ring-2 hover:ring-offset-0 hover:ring-violet-500/50",
+                po.phase === "completed"
+                    ? "bg-violet-500/50 border border-violet-400/50"
+                    : po.phase === "future"
+                      ? "bg-slate-400/30 border border-slate-400/40 border-dashed"
+                      : "bg-violet-400/40 border border-violet-300/50",
+            ),
+            tooltip: (
+                <div className="space-y-1.5">
+                    <div className="font-semibold text-white">{po.orderNumber}</div>
+                    <div className="text-slate-400 text-[11px]">{po.itemId}</div>
+                    <div>
+                        <span className="text-slate-500">Supplier </span>
+                        {po.supplierName ?? po.supplierId}
+                    </div>
+                    <div>
+                        <span className="text-slate-500">Qty </span>
+                        {po.orderedQuantity}
+                    </div>
+                    <div>
+                        <span className="text-slate-500">Ordered </span>
+                        {fmtTs(po.orderDate)}
+                    </div>
+                    {po.expectedDeliveryDate && (
+                        <div>
+                            <span className="text-slate-500">Expected </span>
+                            {fmtTs(po.expectedDeliveryDate)}
+                        </div>
+                    )}
+                    {po.receivedAt && (
+                        <div>
+                            <span className="text-slate-500">Received </span>
+                            {fmtTs(po.receivedAt)}
+                        </div>
+                    )}
+                </div>
+            ),
+        };
+    });
+    return {
+        id: "purchase-orders",
+        label: "Purchase orders",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "bar",
+        stackingStyle: "swimlane",
+        rowHeight: ROW_H,
+    };
+}
+
 //------------------------------------------------------------------------------
 // Story selection
 //------------------------------------------------------------------------------
@@ -607,6 +666,7 @@ function buildStories(level: TimelineLevel, projection: AsOfProjection | null, a
     const alloc = projection?.allocations ?? [];
     const picks = projection?.pickTasks ?? [];
     const putaways = projection?.putawayTasks ?? [];
+    const purchaseOrders = projection?.purchaseOrders ?? [];
 
     switch (level) {
         case "factory":
@@ -622,7 +682,11 @@ function buildStories(level: TimelineLevel, projection: AsOfProjection | null, a
                         ...(FULL_TIMELINE ? [buildPickTasksStory(picks)] : []),
                     ];
                 case "reception":
-                    return [buildReceiptsStory(rcp), ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways)] : [])];
+                    return [
+                        buildPurchaseOrdersStory(purchaseOrders),
+                        buildReceiptsStory(rcp),
+                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways)] : []),
+                    ];
                 case "storage":
                     return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order")];
                 default:

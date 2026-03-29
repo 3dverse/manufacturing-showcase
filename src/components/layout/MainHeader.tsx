@@ -14,6 +14,7 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
+import { useFactoryOEE } from "@/hooks/useFactoryOEE";
 
 //------------------------------------------------------------------------------
 export const MainHeader = ({
@@ -29,6 +30,7 @@ export const MainHeader = ({
     // Contexts
     const { setSelectedNode } = useContext(SelectionContext);
     const { nodeGraph, factory } = useContext(FactoryContext);
+    const oee = useFactoryOEE(factory?.scene_id ?? "");
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -119,7 +121,7 @@ export const MainHeader = ({
                 </div>
 
                 <div className={cn("flex bg-slate-0/90 h-full", widgetStateClassName)}>
-                    <BadgeOEE oee={95} className="text-3xl px-4 py-2" />
+                    {oee !== null && <BadgeOEE oee={oee} className="text-3xl px-4 py-2" />}
                 </div>
             </ViewerPanel>
         </header>

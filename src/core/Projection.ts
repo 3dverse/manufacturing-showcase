@@ -7,6 +7,7 @@ import type {
     PickTaskEntry,
     ReceiptEntry,
     PutawayTaskEntry,
+    PurchaseOrderEntry,
     AllocationEntry,
     TimelineLevel,
     AsOfSnapshot,
@@ -19,7 +20,7 @@ import type {
 export type Phase = "completed" | "active" | "future";
 
 export type ProjectedSalesOrder = SalesOrderEntry & {
-    phase:     Phase;    // completed if shipped, active if asOf within window, future otherwise
+    phase: Phase; // completed if shipped, active if asOf within window, future otherwise
     isOverdue: boolean;
 };
 
@@ -69,6 +70,10 @@ export type ProjectedPutawayTask = PutawayTaskEntry & {
 
 export type ProjectedAllocation = AllocationEntry; // point-in-time; no time-based projection needed
 
+export type ProjectedPurchaseOrder = PurchaseOrderEntry & {
+    phase: Phase; // completed if receivedAt <= asOf, future if orderDate > asOf, else active
+};
+
 export type AsOfProjection = {
     level: TimelineLevel;
     salesOrders: ProjectedSalesOrder[];
@@ -79,6 +84,7 @@ export type AsOfProjection = {
     pickTasks: ProjectedPickTask[];
     receipts: ProjectedReceipt[];
     putawayTasks: ProjectedPutawayTask[];
+    purchaseOrders: ProjectedPurchaseOrder[];
     allocations: ProjectedAllocation[];
 };
 
@@ -116,10 +122,7 @@ function interpolateProgress(effectiveStart: number, effectiveEnd: number, phase
 // ---------------------------------------------------------------------------
 
 function projectSalesOrder(e: SalesOrderEntry, asOf: number): ProjectedSalesOrder {
-    const phase: Phase =
-        asOf > e.requestedDeliveryDate ? "completed" :
-        asOf >= e.orderDate            ? "active"    :
-                                         "future";
+    const phase: Phase = asOf > e.requestedDeliveryDate ? "completed" : asOf >= e.orderDate ? "active" : "future";
     return {
         ...e,
         phase,
@@ -183,25 +186,25 @@ function projectWorkOrder(e: WorkOrderEntry, asOf: number): ProjectedWorkOrder {
 
 function projectPickTask(e: PickTaskEntry, asOf: number): ProjectedPickTask {
     const phase: Phase =
-        e.pickedDate != null && e.pickedDate <= asOf ? "completed" :
-        e.createdAt > asOf                           ? "future"    :
-                                                       "active";
+        e.pickedDate != null && e.pickedDate <= asOf ? "completed" : e.createdAt > asOf ? "future" : "active";
     return { ...e, phase };
 }
 
 function projectReceipt(e: ReceiptEntry, putawayDate: number | null, asOf: number): ProjectedReceipt {
     const phase: Phase =
-        putawayDate != null && putawayDate <= asOf ? "completed" :
-        e.receivedDate > asOf                      ? "future"    :
-                                                     "active";
+        putawayDate != null && putawayDate <= asOf ? "completed" : e.receivedDate > asOf ? "future" : "active";
     return { ...e, phase, putawayDate };
 }
 
 function projectPutawayTask(e: PutawayTaskEntry, asOf: number): ProjectedPutawayTask {
     const phase: Phase =
-        e.putawayDate != null && e.putawayDate <= asOf ? "completed" :
-        e.createdAt > asOf                             ? "future"    :
-                                                         "active";
+        e.putawayDate != null && e.putawayDate <= asOf ? "completed" : e.createdAt > asOf ? "future" : "active";
+    return { ...e, phase };
+}
+
+function projectPurchaseOrder(e: PurchaseOrderEntry, asOf: number): ProjectedPurchaseOrder {
+    const phase: Phase =
+        e.receivedAt != null && e.receivedAt <= asOf ? "completed" : e.orderDate > asOf ? "future" : "active";
     return { ...e, phase };
 }
 
@@ -226,6 +229,7 @@ export function projectSnapshot(snapshot: AsOfSnapshot, asOf: number): AsOfProje
         pickTasks: snapshot.pickTasks.map((e) => projectPickTask(e, asOf)),
         receipts: snapshot.receipts.map((e) => projectReceipt(e, putawayDateByReceipt.get(e.id) ?? null, asOf)),
         putawayTasks: snapshot.putawayTasks.map((e) => projectPutawayTask(e, asOf)),
+        purchaseOrders: snapshot.purchaseOrders.map((e) => projectPurchaseOrder(e, asOf)),
         allocations: snapshot.allocations,
     };
 }

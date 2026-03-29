@@ -1,10 +1,7 @@
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
-import { FactoryOrderPanel } from "@/components/orders/FactoryOrderPanel";
+import { ProductionAreaSummary } from "@/components/nodes/areas/production/ProductionAreaSummary";
 import { PlanningPanel } from "@/components/orders/PlanningPanel";
-
-//------------------------------------------------------------------------------
-import { orders } from "@/content/orders";
 
 //------------------------------------------------------------------------------
 export const FactoryPanel = () => {
@@ -18,7 +15,7 @@ export const FactoryPanel = () => {
             className="w-full h-fit border border-accent-400 divide-y divide-slate-100 shadow-[0_36px_56px_-20px_var(--color-slate-200)] pointer-events-auto appear-in-from-left opacity-0 [--animation-delay:.75s]"
         >
             <article className="p-2">
-                <FactoryOrderPanel order={orders[2]} />
+                <ProductionAreaSummary />
             </article>
 
             {SHOW_PLANNING_PANEL && (

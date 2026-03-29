@@ -22,6 +22,7 @@ import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
 import type { NavGraphNode, AreaNode, CellNode, LineNode } from "@/content/type";
+import { useAreaOEE } from "@/hooks/useAreaOEE";
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const Navigation = ({ className }: { className?: string }) => {
@@ -178,6 +179,9 @@ const AreaNav = ({
     );
 
     //--------------------------------------------------------------------------
+    const oee = useAreaOEE(area);
+
+    //--------------------------------------------------------------------------
     // Memos
     const children = useMemo(() => [...area.lines, ...area.cells].sort(sortNode), [area]);
 
@@ -218,7 +222,7 @@ const AreaNav = ({
             {SHOW_FLOW_BUTTON && index === 0 && <FlowNode isSelected={isSelected} />}
             <div className="flex justify-between gap-1">
                 <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
-                {area.name === "production" && <BadgeOEE oee={89} hideLabel />}
+                {area.name === "production" && oee !== null && <BadgeOEE oee={oee} hideLabel />}
             </div>
             <ul className="flex overflow-visible">
                 {children.map((child, index) => (

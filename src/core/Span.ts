@@ -13,12 +13,13 @@ import {
     type PickTaskEntry,
     type ReceiptEntry,
     type PutawayTaskEntry,
+    type PurchaseOrderEntry,
     type AllocationEntry,
 } from "@/core/Scope";
 import { isArea } from "@/core/NavGraph";
 import type { NavGraphNode } from "@/content/type";
 import type { WorkOrder } from "_prebuild/api-libs/eam";
-import type { SalesOrder } from "_prebuild/api-libs/erp";
+import type { PurchaseOrder, SalesOrder } from "_prebuild/api-libs/erp";
 import type { DowntimeEvent, OperationDetail, ProductionOrder } from "_prebuild/api-libs/mes";
 import type { PickTask, Receipt, PutawayTask, StockAllocation } from "_prebuild/api-libs/wms";
 import { FULL_TIMELINE } from "@/content/3dverse";
@@ -90,6 +91,11 @@ function applySimulationFilter(span: TimelineSpan): void {
     }
     for (const [id, a] of span.allocations) {
         if (a.allocatedAt > now) span.allocations.delete(id);
+    }
+
+    // Purchase orders: only those already placed
+    for (const [id, po] of span.purchaseOrders) {
+        if (po.orderDate > now) span.purchaseOrders.delete(id);
     }
 }
 
@@ -194,6 +200,7 @@ function mapReceipt(r: Receipt): ReceiptEntry {
         itemId: r.lines[0]?.itemId ?? "",
         quantity: r.lines[0]?.quantity ?? 0,
         receivedDate: r.receivedAt,
+        erpPurchaseOrderId: r.erpPurchaseOrderId ?? null,
     };
 }
 
@@ -239,6 +246,22 @@ function mapPickTask(pt: PickTask): PickTaskEntry {
         salesOrderId: pt.salesOrderId ?? null,
         pickedDate: pt.pickedDate ?? null,
         createdAt: pt.createdAt,
+    };
+}
+
+function mapPurchaseOrder(po: PurchaseOrder): PurchaseOrderEntry {
+    const firstLine = po.lines[0];
+    return {
+        id: po.id,
+        orderNumber: po.orderNumber,
+        supplierId: po.supplierId,
+        supplierName: po.supplierName,
+        itemId: firstLine?.itemId ?? "",
+        orderedQuantity: firstLine?.orderedQuantity ?? 0,
+        orderDate: po.orderDate,
+        expectedDeliveryDate: firstLine?.expectedReceiptDate ?? null,
+        receivedAt: po.receivedAt ?? null,
+        status: po.status,
     };
 }
 
@@ -322,14 +345,16 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
         for (const a of allocResp.data.data) span.allocations.set(a.id, mapAllocation(a));
     }
 
-    // Receipts + putaway tasks — only fetched when navigating to a Reception area node
+    // Receipts + putaway tasks + purchase orders — only fetched when navigating to a Reception area node
     if (isArea(node) && node.name.toLowerCase() === "reception") {
-        const [rcptResp, putResp] = await Promise.all([
+        const [rcptResp, putResp, poResp] = await Promise.all([
             WMSInbound.getReceipts({ siteId, fromDate: from, toDate: to }),
             WMSInbound.getPutawayTasks({ siteId, fromDate: from, toDate: to }),
+            ERP.getPurchaseOrders({ siteId, orderDateFrom: from, orderDateTo: to, pageSize: PAGE_SIZE }),
         ]);
         for (const r of rcptResp.data.data) span.receipts.set(r.id, mapReceipt(r));
         for (const pt of putResp.data.data) span.putawayTasks.set(pt.id, mapPutawayTask(pt));
+        for (const po of poResp.data.data) span.purchaseOrders.set(po.id, mapPurchaseOrder(po));
     }
 
     // Storage area: pick tasks (outbound) + putaway tasks (inbound) + stock allocations
