@@ -162,6 +162,8 @@ export type AreaNode = _NavGraphNode & {
     parent: FactoryNode;
     lines: LineNode[];
     cells: CellNode[];
+    aisles: AisleNode[];
+    racks: RackNode[];
 };
 
 export type LineNode = _NavGraphNode & { type: NodeTypes.line; parent: AreaNode; cells: CellNode[] };
@@ -174,6 +176,15 @@ export type CellNode = _NavGraphNode & {
 };
 export type MachineNode = _NavGraphNode & { type: NodeTypes.machine; parent: CellNode };
 
+export type AisleNode = _NavGraphNode & { type: NodeTypes.aisle; parent: AreaNode; racks: RackNode[] };
+
+export type RackNode = _NavGraphNode & {
+    type: NodeTypes.rack;
+    parent: AreaNode | AisleNode;
+    bins: BinNode[];
+};
+export type BinNode = _NavGraphNode & { type: NodeTypes.bin; parent: RackNode };
+
 export type FlowNode = _NavGraphNode & {
     type: NodeTypes.flow;
     entityInEUID: string;
@@ -183,7 +194,7 @@ export type FlowNode = _NavGraphNode & {
 };
 
 //------------------------------------------------------------------------------
-export type NavGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode;
+export type NavGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode | AisleNode | RackNode | BinNode;
 
 //------------------------------------------------------------------------------
 // TODO delete VVV

@@ -21,7 +21,7 @@ import { useTimelineStore } from "@/store/useTimelineStore";
 import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
-import type { NavGraphNode, AreaNode, CellNode, LineNode } from "@/content/type";
+import type { NavGraphNode, AreaNode, CellNode, LineNode, AisleNode, RackNode } from "@/content/type";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -50,11 +50,15 @@ export const Navigation = ({ className }: { className?: string }) => {
         for (const area of nodeGraph.areas) {
             result.push(area);
             const children = [...area.lines, ...area.cells].sort(sortNode);
+            // const children = [...area.lines, ...area.cells, ...area.aisles, ...area.racks].sort(sortNode);
             for (const child of children) {
                 result.push(child);
                 if (isLine(child)) {
                     child.cells.forEach((cell) => result.push(cell));
                 }
+                // if (isAisle(child)) {
+                //     child.racks.forEach((rack) => result.push(rack));
+                // }
             }
         }
         return result;
@@ -183,7 +187,10 @@ const AreaNav = ({
 
     //--------------------------------------------------------------------------
     // Memos
-    const children = useMemo(() => [...area.lines, ...area.cells].sort(sortNode), [area]);
+    const children = useMemo(() => {
+        //return [...area.lines, ...area.cells, ...area.aisles, ...area.racks].sort(sortNode);
+        return [...area.lines, ...area.cells].sort(sortNode);
+    }, [area]);
 
     //--------------------------------------------------------------------------
     const stateClassName = useMemo(() => {
@@ -247,7 +254,7 @@ const ChildNode = ({
     isLast,
     downtimeCellIds,
 }: {
-    node: LineNode | CellNode;
+    node: LineNode | CellNode | AisleNode | RackNode;
     isFirst: boolean;
     isLast: boolean;
     downtimeCellIds: Set<string>;

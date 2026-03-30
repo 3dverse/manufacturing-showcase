@@ -3,7 +3,18 @@ import type { Entity, Vec3 } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
-import type { FactoryNode, AreaNode, CellNode, NavGraphNode, LineNode, MachineNode, FlowNode } from "@/content/type";
+import type {
+    FactoryNode,
+    AreaNode,
+    CellNode,
+    NavGraphNode,
+    LineNode,
+    MachineNode,
+    FlowNode,
+    AisleNode,
+    RackNode,
+    BinNode,
+} from "@/content/type";
 
 //------------------------------------------------------------------------------
 export const buildNavGraph = async (params: {
@@ -18,6 +29,9 @@ export const buildNavGraph = async (params: {
     const lines: Entity[] = [];
     const cells: Entity[] = [];
     const machines: Entity[] = [];
+    const aisles: Entity[] = [];
+    const racks: Entity[] = [];
+    const bins: Entity[] = [];
     const flows: Entity[] = [];
     const out: Entity[] = [];
 
@@ -43,6 +57,15 @@ export const buildNavGraph = async (params: {
                 break;
             case "machine":
                 machines.push(e);
+                break;
+            case "aisle":
+                aisles.push(e);
+                break;
+            case "rack":
+                racks.push(e);
+                break;
+            case "bin":
+                bins.push(e);
                 break;
             case "flow":
                 flows.push(e);
@@ -109,6 +132,8 @@ export const buildNavGraph = async (params: {
             parent,
             lines: [],
             cells: [],
+            aisles: [],
+            racks: [],
         };
 
         area.lines = lines
@@ -123,8 +148,18 @@ export const buildNavGraph = async (params: {
             )
             .map((e) => mapCellEntity(e, area))
             .sort(sortNode);
+        area.aisles = aisles
+            .filter((l) => inLineage(l, areaEntity.euid.value))
+            .map((e) => mapAisleEntity(e, area))
+            .sort(sortNode);
 
-        list.push(area);
+        area.racks = racks
+            .filter(
+                (c) =>
+                    inLineage(c, areaEntity.euid.value) && area.aisles.every((l) => !inLineage(c, l.entity.euid.value)),
+            )
+            .map((e) => mapRackEntity(e, area))
+            .sort(sortNode);
         return area;
     };
 
@@ -182,6 +217,59 @@ export const buildNavGraph = async (params: {
         };
         list.push(machine);
         return machine;
+    };
+    //--------------------------------------------------------------------------
+    const mapAisleEntity = (aisleEntity: Entity, parent: AreaNode) => {
+        const aisle: AisleNode = {
+            hash: hashEntity(aisleEntity),
+            entity: aisleEntity,
+            type: NodeTypes.aisle,
+            name: parseName(aisleEntity),
+            id: parseId(aisleEntity),
+            parent,
+            racks: [],
+        };
+
+        aisle.racks = racks
+            .filter((c) => inLineage(c, aisleEntity.euid.value))
+            .map((e) => mapRackEntity(e, aisle))
+            .sort(sortNode);
+
+        list.push(aisle);
+        return aisle;
+    };
+
+    //--------------------------------------------------------------------------
+    const mapRackEntity = (rackEntity: Entity, parent: AreaNode | AisleNode) => {
+        const rack: RackNode = {
+            hash: hashEntity(rackEntity),
+            entity: rackEntity,
+            type: NodeTypes.rack,
+            name: parseName(rackEntity),
+            id: parseId(rackEntity),
+            parent,
+            bins: [],
+        };
+        rack.bins = bins
+            .filter((m) => inLineage(m, rackEntity.euid.value))
+            .map((e) => mapBinEntity(e, rack))
+            .sort(sortNode);
+        list.push(rack);
+        return rack;
+    };
+
+    //--------------------------------------------------------------------------
+    const mapBinEntity = (binEntity: Entity, parent: RackNode) => {
+        const bin: BinNode = {
+            hash: hashEntity(binEntity),
+            entity: binEntity,
+            type: NodeTypes.bin,
+            name: parseName(binEntity),
+            id: parseId(binEntity),
+            parent,
+        };
+        list.push(bin);
+        return bin;
     };
 
     //--------------------------------------------------------------------------
@@ -299,4 +387,19 @@ export const isCell = (node: NavGraphNode): node is CellNode => {
 //------------------------------------------------------------------------------
 export const isMachine = (node: NavGraphNode): node is MachineNode => {
     return node.type === NodeTypes.machine;
+};
+
+//------------------------------------------------------------------------------
+export const isAisle = (node: NavGraphNode): node is AisleNode => {
+    return node.type === NodeTypes.aisle;
+};
+
+//------------------------------------------------------------------------------
+export const isRack = (node: NavGraphNode): node is RackNode => {
+    return node.type === NodeTypes.rack;
+};
+
+//------------------------------------------------------------------------------
+export const isBin = (node: NavGraphNode): node is BinNode => {
+    return node.type === NodeTypes.bin;
 };

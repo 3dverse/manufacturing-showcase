@@ -147,12 +147,24 @@ export const getChildNodes = (node: NavGraphNode) => {
             case NodeTypes.factory:
                 return [node, ...node.areas.flatMap(flatten)];
             case NodeTypes.area:
-                return [node, ...node.lines.flatMap(flatten), ...node.cells.flatMap(flatten)];
+                return [
+                    node,
+                    ...node.lines.flatMap(flatten),
+                    ...node.cells.flatMap(flatten),
+                    ...node.aisles.flatMap(flatten),
+                    ...node.racks.flatMap(flatten),
+                ];
             case NodeTypes.line:
                 return [node, ...node.cells.flatMap(flatten)];
             case NodeTypes.cell:
                 return [node, ...node.machines.flatMap(flatten)];
             case NodeTypes.machine:
+                return [node];
+            case NodeTypes.aisle:
+                return [node, ...node.racks.flatMap(flatten)];
+            case NodeTypes.rack:
+                return [node, ...node.bins.flatMap(flatten)];
+            case NodeTypes.bin:
                 return [node];
         }
     }

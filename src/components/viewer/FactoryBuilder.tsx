@@ -4,6 +4,8 @@ import { useContext, useMemo } from "react";
 import { StorageAreaSummary } from "@/components/nodes/areas/storage/StorageAreaSummary";
 import { StorageAreaOverlay } from "@/components/nodes/areas/storage/StorageAreaOverlay";
 import { ProductionAreaSummary } from "@/components/nodes/areas/production/ProductionAreaSummary";
+import { ReceptionAreaSummary } from "@/components/nodes/areas/reception/ReceptionAreaSummary";
+import { DeliveryAreaSummary } from "@/components/nodes/areas/delivery/DeliveryAreaSummary";
 
 //------------------------------------------------------------------------------
 import { FloatingLabel } from "./DOM3D/FloatingLabel";
@@ -214,15 +216,15 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
             case "production":
                 return <ProductionAreaSummary className="min-w-80" />;
             case "reception":
-                return; //TODO
+                return <ReceptionAreaSummary />;
             case "supply":
                 return; //TODO
             case "control":
                 return; //TODO
             case "delivery":
-                return; //TODO
+                return <DeliveryAreaSummary />;
         }
-    }, [area.name]);
+    }, [area.name, isSelected]);
 
     //--------------------------------------------------------------------------
     const areaAddOn = useMemo(() => {
@@ -234,7 +236,7 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
                     </div>
                 );
         }
-    }, []);
+    }, [area]);
 
     //--------------------------------------------------------------------------
 
