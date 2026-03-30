@@ -211,14 +211,14 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
     const areaSummary = useMemo(() => {
         if (!isSelected) return;
         switch (area.name) {
-            case "storage":
-                return <StorageAreaSummary />;
-            case "production":
-                return <ProductionAreaSummary className="min-w-80" />;
             case "reception":
                 return <ReceptionAreaSummary />;
+            case "storage":
+                return <StorageAreaSummary />;
             case "supply":
                 return; //TODO
+            case "production":
+                return <ProductionAreaSummary className="min-w-80" />;
             case "control":
                 return; //TODO
             case "delivery":

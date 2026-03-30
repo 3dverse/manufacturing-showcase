@@ -14,10 +14,12 @@ import { cn } from "@/utils/cn";
 import type { BOMNodeData, MESRoutingItem } from "./type";
 import { findNodeByWorkCenter } from "./utils";
 import { BOMFlow } from "./BomFlow";
+import { BOMDetails } from "./BOMDetails";
 
 //------------------------------------------------------------------------------
 const API = "/-/api/dataset";
 const MES_API = "/-/api/mes";
+const SHOW_DETAILS = false;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -66,7 +68,7 @@ export function BOMPanel({ className }: { className?: string }) {
 
     //--------------------------------------------------------------------------
     const selectedBOMNode = useMemo(
-        () => (bom && selectedWorkCenterId ? findNodeByWorkCenter(bom, selectedWorkCenterId) : null),
+        () => (bom && selectedWorkCenterId ? findNodeByWorkCenter(bom, selectedWorkCenterId) : undefined),
         [bom, selectedWorkCenterId],
     );
 
@@ -178,28 +180,8 @@ export function BOMPanel({ className }: { className?: string }) {
                             />
                         ) : null}
                     </div>
-                    {selectedBOMNode && (
-                        <div className="mx-6 mb-4 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-start gap-4">
-                            <div>
-                                <div className="text-muted uppercase tracking-wide mb-0.5">Item</div>
-                                <div className="font-mono font-semibold">{selectedBOMNode.itemId}</div>
-                                <div className="text-muted capitalize">
-                                    {selectedBOMNode.itemType.replace(/_/g, " ")}
-                                </div>
-                            </div>
-                            {selectedBOMNode.producedBy?.operationCode && (
-                                <div>
-                                    <div className="text-muted uppercase tracking-wide mb-0.5">Produced by</div>
-                                    <div className="font-semibold">{selectedBOMNode.producedBy.operationCode}</div>
-                                    <div className="text-muted capitalize">
-                                        {selectedBOMNode.producedBy.operationType.replace(/_/g, " ")}
-                                    </div>
-                                </div>
-                            )}
-                            <button onClick={deselectHandler} className="ml-auto text-muted hover:text-default">
-                                ✕
-                            </button>
-                        </div>
+                    {SHOW_DETAILS && selectedBOMNode && (
+                        <BOMDetails BOMNode={selectedBOMNode} onDeselect={deselectHandler} />
                     )}
                 </>
             )}

@@ -369,14 +369,6 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
         for (const a of allocResp.data.data) span.allocations.set(a.id, mapAllocation(a));
     }
 
-    const allocations = span.allocations.values();
-    console.log(
-        [...allocations].reduce((acc, alloc) => {
-            if (alloc.allocatedAt > acc) return alloc.allocatedAt;
-            return acc;
-        }, 0),
-    );
-
     if (!FULL_TIMELINE) applySimulationFilter(span);
     buildSpanIndexes(span);
     return span;
