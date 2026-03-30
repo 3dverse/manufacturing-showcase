@@ -19,6 +19,7 @@ import { cn } from "@/utils/cn";
 import { useScope } from "@/hooks/useScope";
 import { useProjection } from "@/hooks/useProjection";
 import { useCorrelation } from "@/hooks/useCorrelation";
+import { CorrelationModal } from "@/components/correlation/CorrelationModal";
 
 //------------------------------------------------------------------------------
 import { fmtDuration, fmtTs, fromPct, toPct } from "./timeUtils";
@@ -718,6 +719,7 @@ function Bar({
     onLeave,
     onFocusEnter,
     onFocusLeave,
+    onClick,
 }: {
     bar: BarItem;
     winStart: number;
@@ -730,6 +732,7 @@ function Bar({
     onLeave: () => void;
     onFocusEnter: () => void;
     onFocusLeave: () => void;
+    onClick: () => void;
 }) {
     const left = toPct(bar.start, winStart, winEnd);
     const right = toPct(bar.end, winStart, winEnd);
@@ -765,6 +768,10 @@ function Bar({
                 onFocusLeave();
             }}
             onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+            }}
         />
     );
 }
@@ -778,7 +785,7 @@ export function Timeline({ className }: { className?: string }) {
     const { asOf, setAsOf } = useTimelineStore();
     const { scope, level, isLoading } = useScope(selectedNode ?? null);
     const projection = useProjection(scope);
-    const { hovered, setHovered } = useFocusStore();
+    const { hovered, setHovered, setSelected } = useFocusStore();
     const areaType: AreaType | undefined = (() => {
         if (level !== "area" || !selectedNode || !isArea(selectedNode)) return undefined;
         if ((scope?.productionOrders.length ?? 0) > 0) return "production";
@@ -868,196 +875,200 @@ export function Timeline({ className }: { className?: string }) {
 
     //--------------------------------------------------------------------------
     return (
-        <aside
-            className={cn(
-                "pointer-events-auto border-t border-slate-200/15 select-none",
-                PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
-                className,
-            )}
-        >
-            {/* Header */}
-            <div className="flex items-center justify-between gap-4 px-3 h-8 border-b border-slate-200/10">
-                <div className="flex items-center gap-0.5">
-                    {ZOOMS.map((z) => (
-                        <button
-                            key={z.key}
-                            onClick={() => setZoom(z.key)}
-                            className={cn(
-                                "px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide transition-colors",
-                                zoom === z.key ? "bg-accent/20 text-accent" : "text-slate-400 hover:text-slate-200",
-                            )}
-                        >
-                            {z.label}
-                        </button>
-                    ))}
-                </div>
-                <div className="flex items-center gap-1.5">
-                    {asOf !== refNow && (
-                        <button
-                            onClick={() => setAsOf(refNow)}
-                            className="text-[9px] font-semibold uppercase tracking-wide text-accent/80 hover:text-accent transition-colors"
-                            title="Reset to now"
-                        >
-                            ↺ now
-                        </button>
-                    )}
-                    <span className="text-[10px] font-mono text-slate-300 tabular-nums">{fmtTs(asOf)}</span>
-                </div>
-            </div>
-
-            {/* Body */}
-            <div className="flex h-full">
-                {/* Label column */}
-                <div
-                    className="shrink-0 w-34 border-r border-slate-200/10 flex flex-col"
-                    style={{ paddingTop: AXIS_H + ROW_GAP }}
-                >
-                    {stories.map((story) => (
-                        <div
-                            key={story.id}
-                            className="flex items-top px-2 shrink-0 justify-end"
-                            style={{ height: story.lanes.length * story.rowHeight, marginBottom: ROW_GAP }}
-                        >
-                            <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-400 truncate">
-                                {story.label}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Track */}
-                <div
-                    ref={trackRef}
-                    className="flex-1 relative overflow-hidden cursor-crosshair"
-                    onMouseDown={handleTrackMouseDown}
-                    onMouseMove={trackMouseMove}
-                    onMouseLeave={hideTooltip}
-                >
-                    {/* Axis */}
-                    <div className="relative pointer-events-none" style={{ height: AXIS_H }}>
-                        {ticks.map((tick) => {
-                            const pct = toPct(tick.ts, winStart, winEnd);
-                            if (pct < 0 || pct > 100) return null;
-                            return (
-                                <div
-                                    key={tick.ts}
-                                    className="absolute top-0"
-                                    style={{ left: `${pct}%`, height: totalH }}
-                                >
-                                    <div
-                                        className={cn(
-                                            "absolute top-0 w-px",
-                                            tick.major ? "bg-slate-300/20" : "bg-slate-300/10",
-                                        )}
-                                        style={{ height: totalH }}
-                                    />
-                                    <span
-                                        className={cn(
-                                            "absolute top-1 left-1 whitespace-nowrap",
-                                            tick.major
-                                                ? "text-[10px] font-medium text-slate-300"
-                                                : "text-[9px] text-slate-500",
-                                        )}
-                                    >
-                                        {tick.label}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Story rows */}
-                    {stories.map((story) => (
-                        <div
-                            key={story.id}
-                            className="relative mx-1 bg-white/[0.035] rounded-sm"
-                            style={{ height: story.lanes.length * story.rowHeight, marginBottom: ROW_GAP }}
-                        >
-                            {story.lanes.map((lane, laneIdx) =>
-                                lane.map((bar) => (
-                                    <Bar
-                                        key={bar.id}
-                                        bar={bar}
-                                        winStart={winStart}
-                                        winEnd={winEnd}
-                                        laneIndex={laneIdx}
-                                        barStyle={story.barStyle}
-                                        rowHeight={story.rowHeight}
-                                        highlightState={highlightStateForBar(
-                                            bar.id,
-                                            bar.entityType,
-                                            activeFocus,
-                                            correlated,
-                                        )}
-                                        onEnter={showTooltip}
-                                        onLeave={hideTooltip}
-                                        onFocusEnter={() => setHovered({ type: bar.entityType, id: bar.id })}
-                                        onFocusLeave={() => setHovered(null)}
-                                    />
-                                )),
-                            )}
-                        </div>
-                    ))}
-
-                    {/* Future zone tint */}
-                    {nowPct >= 0 && nowPct <= 100 && (
-                        <div
-                            className="absolute top-0 bottom-0 bg-white/[0.025] pointer-events-none"
-                            style={{ left: `${nowPct}%`, right: 0 }}
-                        />
-                    )}
-
-                    {/* Now marker */}
-                    {nowPct >= 0 && nowPct <= 100 && (
-                        <div
-                            className="absolute top-0 bottom-0 w-px bg-accent/50 pointer-events-none"
-                            style={{ left: `${nowPct}%` }}
-                        >
-                            <span className="absolute top-1 left-1 text-[9px] font-bold text-accent whitespace-nowrap">
-                                NOW
-                            </span>
-                        </div>
-                    )}
-
-                    {/* Playhead */}
-                    <div
-                        className="absolute top-0 bottom-0 z-20 cursor-ew-resize"
-                        style={{ left: `${playheadPct}%` }}
-                        onMouseDown={handleTrackMouseDown}
-                    >
-                        <div className="absolute top-1 -translate-x-1/2 w-3 h-3 rounded-full bg-accent border-2 border-white/90 shadow-md" />
-                        <div className="absolute top-3.5 bottom-0 w-px -translate-x-1/2 bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-                    </div>
-
-                    {/* Loading overlay */}
-                    {isLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <span className="text-[10px] text-slate-400 animate-pulse">Loading…</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Tooltip portal */}
-            {tooltip &&
-                createPortal(
-                    <div
-                        className="fixed z-[9999] pointer-events-none"
-                        style={{
-                            ...(tooltip.x > window.innerWidth * 0.6
-                                ? { right: window.innerWidth - tooltip.x + 14 }
-                                : { left: tooltip.x + 14 }),
-                            ...(tooltip.y > window.innerHeight * 0.65
-                                ? { bottom: window.innerHeight - tooltip.y + 8 }
-                                : { top: tooltip.y - 8 }),
-                        }}
-                    >
-                        <div className="bg-slate-900/95 border border-slate-700/60 rounded-lg px-3 py-2.5 shadow-xl text-slate-300 text-xs max-w-64">
-                            {tooltip.content}
-                        </div>
-                    </div>,
-                    document.body,
+        <>
+            <aside
+                className={cn(
+                    "pointer-events-auto border-t border-slate-200/15 select-none",
+                    PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
+                    className,
                 )}
-        </aside>
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between gap-4 px-3 h-8 border-b border-slate-200/10">
+                    <div className="flex items-center gap-0.5">
+                        {ZOOMS.map((z) => (
+                            <button
+                                key={z.key}
+                                onClick={() => setZoom(z.key)}
+                                className={cn(
+                                    "px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide transition-colors",
+                                    zoom === z.key ? "bg-accent/20 text-accent" : "text-slate-400 hover:text-slate-200",
+                                )}
+                            >
+                                {z.label}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        {asOf !== refNow && (
+                            <button
+                                onClick={() => setAsOf(refNow)}
+                                className="text-[9px] font-semibold uppercase tracking-wide text-accent/80 hover:text-accent transition-colors"
+                                title="Reset to now"
+                            >
+                                ↺ now
+                            </button>
+                        )}
+                        <span className="text-[10px] font-mono text-slate-300 tabular-nums">{fmtTs(asOf)}</span>
+                    </div>
+                </div>
+
+                {/* Body */}
+                <div className="flex h-full">
+                    {/* Label column */}
+                    <div
+                        className="shrink-0 w-34 border-r border-slate-200/10 flex flex-col"
+                        style={{ paddingTop: AXIS_H + ROW_GAP }}
+                    >
+                        {stories.map((story) => (
+                            <div
+                                key={story.id}
+                                className="flex items-top px-2 shrink-0 justify-end"
+                                style={{ height: story.lanes.length * story.rowHeight, marginBottom: ROW_GAP }}
+                            >
+                                <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-400 truncate">
+                                    {story.label}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Track */}
+                    <div
+                        ref={trackRef}
+                        className="flex-1 relative overflow-hidden cursor-crosshair"
+                        onMouseDown={handleTrackMouseDown}
+                        onMouseMove={trackMouseMove}
+                        onMouseLeave={hideTooltip}
+                    >
+                        {/* Axis */}
+                        <div className="relative pointer-events-none" style={{ height: AXIS_H }}>
+                            {ticks.map((tick) => {
+                                const pct = toPct(tick.ts, winStart, winEnd);
+                                if (pct < 0 || pct > 100) return null;
+                                return (
+                                    <div
+                                        key={tick.ts}
+                                        className="absolute top-0"
+                                        style={{ left: `${pct}%`, height: totalH }}
+                                    >
+                                        <div
+                                            className={cn(
+                                                "absolute top-0 w-px",
+                                                tick.major ? "bg-slate-300/20" : "bg-slate-300/10",
+                                            )}
+                                            style={{ height: totalH }}
+                                        />
+                                        <span
+                                            className={cn(
+                                                "absolute top-1 left-1 whitespace-nowrap",
+                                                tick.major
+                                                    ? "text-[10px] font-medium text-slate-300"
+                                                    : "text-[9px] text-slate-500",
+                                            )}
+                                        >
+                                            {tick.label}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Story rows */}
+                        {stories.map((story) => (
+                            <div
+                                key={story.id}
+                                className="relative mx-1 bg-white/[0.035] rounded-sm"
+                                style={{ height: story.lanes.length * story.rowHeight, marginBottom: ROW_GAP }}
+                            >
+                                {story.lanes.map((lane, laneIdx) =>
+                                    lane.map((bar) => (
+                                        <Bar
+                                            key={bar.id}
+                                            bar={bar}
+                                            winStart={winStart}
+                                            winEnd={winEnd}
+                                            laneIndex={laneIdx}
+                                            barStyle={story.barStyle}
+                                            rowHeight={story.rowHeight}
+                                            highlightState={highlightStateForBar(
+                                                bar.id,
+                                                bar.entityType,
+                                                activeFocus,
+                                                correlated,
+                                            )}
+                                            onEnter={showTooltip}
+                                            onLeave={hideTooltip}
+                                            onFocusEnter={() => setHovered({ type: bar.entityType, id: bar.id })}
+                                            onFocusLeave={() => setHovered(null)}
+                                            onClick={() => setSelected({ type: bar.entityType, id: bar.id })}
+                                        />
+                                    )),
+                                )}
+                            </div>
+                        ))}
+
+                        {/* Future zone tint */}
+                        {nowPct >= 0 && nowPct <= 100 && (
+                            <div
+                                className="absolute top-0 bottom-0 bg-white/[0.025] pointer-events-none"
+                                style={{ left: `${nowPct}%`, right: 0 }}
+                            />
+                        )}
+
+                        {/* Now marker */}
+                        {nowPct >= 0 && nowPct <= 100 && (
+                            <div
+                                className="absolute top-0 bottom-0 w-px bg-accent/50 pointer-events-none"
+                                style={{ left: `${nowPct}%` }}
+                            >
+                                <span className="absolute top-1 left-1 text-[9px] font-bold text-accent whitespace-nowrap">
+                                    NOW
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Playhead */}
+                        <div
+                            className="absolute top-0 bottom-0 z-20 cursor-ew-resize"
+                            style={{ left: `${playheadPct}%` }}
+                            onMouseDown={handleTrackMouseDown}
+                        >
+                            <div className="absolute top-1 -translate-x-1/2 w-3 h-3 rounded-full bg-accent border-2 border-white/90 shadow-md" />
+                            <div className="absolute top-3.5 bottom-0 w-px -translate-x-1/2 bg-accent shadow-[0_0_6px_var(--color-accent)]" />
+                        </div>
+
+                        {/* Loading overlay */}
+                        {isLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <span className="text-[10px] text-slate-400 animate-pulse">Loading…</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Tooltip portal */}
+                {tooltip &&
+                    createPortal(
+                        <div
+                            className="fixed z-[9999] pointer-events-none"
+                            style={{
+                                ...(tooltip.x > window.innerWidth * 0.6
+                                    ? { right: window.innerWidth - tooltip.x + 14 }
+                                    : { left: tooltip.x + 14 }),
+                                ...(tooltip.y > window.innerHeight * 0.65
+                                    ? { bottom: window.innerHeight - tooltip.y + 8 }
+                                    : { top: tooltip.y - 8 }),
+                            }}
+                        >
+                            <div className="bg-slate-900/95 border border-slate-700/60 rounded-lg px-3 py-2.5 shadow-xl text-slate-300 text-xs max-w-64">
+                                {tooltip.content}
+                            </div>
+                        </div>,
+                        document.body,
+                    )}
+            </aside>
+            <CorrelationModal />
+        </>
     );
 }
