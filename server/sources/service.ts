@@ -39,6 +39,10 @@ export async function startService(): Promise<Service> {
         "/-/api",
         // TODO:express5
         //attachLogger,
+        (_req, res, next) => {
+            res.setHeader("Cache-Control", "no-store");
+            next();
+        },
         apiRequestHandler,
         // TODO:express5
         //, defaultErrorHandler
