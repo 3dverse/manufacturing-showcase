@@ -16,13 +16,14 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 //------------------------------------------------------------------------------
 import { isFactory, isLine, sortNode } from "@/core/NavGraph";
 import { useNavNode } from "./hooks";
+import { useAreaOEE } from "@/hooks/useAreaOEE";
 import { cn } from "@/utils/cn";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
 import type { NavGraphNode, AreaNode, CellNode, LineNode, AisleNode, RackNode } from "@/content/type";
-import { useAreaOEE } from "@/hooks/useAreaOEE";
+
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const Navigation = ({ className }: { className?: string }) => {
@@ -229,7 +230,7 @@ const AreaNav = ({
             {SHOW_FLOW_BUTTON && index === 0 && <FlowNode isSelected={isSelected} />}
             <div className="flex justify-between gap-1">
                 <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
-                {area.name === "production" && oee !== null && <BadgeOEE oee={oee} hideLabel />}
+                {area.name === "production" && oee !== undefined && <BadgeOEE oee={oee} hideLabel />}
             </div>
             <ul className="flex overflow-visible">
                 {children.map((child, index) => (

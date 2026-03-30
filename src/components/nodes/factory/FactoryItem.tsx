@@ -3,6 +3,7 @@ import { Triangle } from "@/components/common/icons/Triangle";
 
 //------------------------------------------------------------------------------
 import { useNavigate } from "@/hooks/useNavigate";
+import { useFactoryItemOEE } from "@/hooks/useFactoryItemOEE";
 
 //------------------------------------------------------------------------------
 import type { Factory } from "@/content/type";
@@ -13,6 +14,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const navigate = useNavigate();
+    const oee = useFactoryItemOEE(factoryItem.scene_id);
 
     //--------------------------------------------------------------------------
     // Render
@@ -53,7 +55,8 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                 </div>
                 <div className="flex flex-col text-left px-6 py-3 border-l border-slate-100">
                     <p className="text-3xl font-semibold text-positive-800">
-                        97<span className="text-sm opacity-60">%</span>
+                        {oee ?? "—"}
+                        <span className="text-sm opacity-60">{oee !== null ? "%" : ""}</span>
                     </p>
                     <p>
                         OEE <Triangle />

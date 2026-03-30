@@ -196,7 +196,7 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
     //--------------------------------------------------------------------------
     // Memos
     const kpi = useMemo(() => {
-        if (oee === null) return null;
+        if (oee === undefined) return;
         return (
             <div className="starting:opacity-0 starting:translate-y-4 opacity-100 translate-y-0 transition-all duration-300 delay-1700 transform-3d">
                 <BadgeOEE

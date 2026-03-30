@@ -3,6 +3,7 @@ import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
 import { BadgeOEE } from "@/components/common/BadgeOEE";
+import { useAreaOEE } from "@/hooks/useAreaOEE";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -22,6 +23,9 @@ export const TopPanel = ({
     children?: ReactNode;
 }) => {
     //--------------------------------------------------------------------------
+    const oee = useAreaOEE(node);
+
+    //--------------------------------------------------------------------------
     // Render
     return (
         <BoundingBoxFaceProjection
@@ -37,9 +41,9 @@ export const TopPanel = ({
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 aspect-square border-10 border-accent border-double rounded-full" />
                     89<span className="ml-1 text-[70%] opacity-80">%</span>
                 </div> */}
-                {node.name === "production" && (
+                {oee !== undefined && (
                     <BadgeOEE
-                        oee={89}
+                        oee={oee}
                         className="mt-8 text-[10rem] leading-35 px-10 py-8 shadow-2xl rounded-4xl backdrop-blur-lg transform-3d"
                     />
                 )}

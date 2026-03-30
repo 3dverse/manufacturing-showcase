@@ -30,7 +30,7 @@ export const MainHeader = ({
     // Contexts
     const { setSelectedNode } = useContext(SelectionContext);
     const { nodeGraph, factory } = useContext(FactoryContext);
-    const oee = useFactoryOEE(factory?.scene_id ?? "");
+    const oee = useFactoryOEE();
 
     //--------------------------------------------------------------------------
     // Handlers

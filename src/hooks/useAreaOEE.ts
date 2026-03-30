@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 
 import { useTimelineStore } from "@/store/useTimelineStore";
-import type { AreaNode } from "@/content/type";
+import type { NavGraphNode } from "@/content/type";
+import { NodeTypes } from "@/content/enums";
 
 /**
  * Computes OEE (0–100) for an area by aggregating all completed operations
@@ -12,14 +13,15 @@ import type { AreaNode } from "@/content/type";
  *
  * Returns null while the span is loading or if no completed operations exist.
  */
-export function useAreaOEE(area: AreaNode): number | null {
-    const span = useTimelineStore((s) => s.span);
+export function useAreaOEE(node: NavGraphNode): number | undefined {
     const asOf = useTimelineStore((s) => s.asOf);
+    const span = useTimelineStore((s) => s.span);
 
     return useMemo(() => {
-        if (!span) return null;
+        if (node.type !== NodeTypes.area || node.name !== "production") return undefined;
+        if (!span) return undefined;
 
-        const wcIds = [...area.lines.flatMap((l) => l.cells.map((c) => c.hash)), ...area.cells.map((c) => c.hash)];
+        const wcIds = [...node.lines.flatMap((l) => l.cells.map((c) => c.hash)), ...node.cells.map((c) => c.hash)];
 
         const opIds = wcIds.flatMap((wcId) => span.operationsByWorkCenter.get(wcId) ?? []);
         const ops = [...new Set(opIds)].flatMap((id) => {
@@ -28,7 +30,7 @@ export function useAreaOEE(area: AreaNode): number | null {
         });
 
         const completed = ops.filter((op) => op.actualEnd !== undefined && op.actualEnd <= asOf);
-        if (completed.length === 0) return null;
+        if (completed.length === 0) return;
 
         const totalGood = completed.reduce((s, op) => s + (op.quantities.goodQuantity ?? 0), 0);
         const totalProduced = completed.reduce((s, op) => s + (op.quantities.producedQuantity ?? 0), 0);
@@ -39,5 +41,5 @@ export function useAreaOEE(area: AreaNode): number | null {
         const availability = totalPlanned > 0 ? Math.min(1, totalActual / totalPlanned) : 1;
 
         return Math.round(availability * quality * 100);
-    }, [span, asOf, area]);
+    }, [span, asOf, node]);
 }
