@@ -125,7 +125,6 @@ const FactoryBuilder = () => {
             {shownLines.map((line) => (
                 <LineBuilderItem key={line.hash} line={line} />
             ))}
-            {/* TODO: When factory is selected, show only the cells floors, not the NodeSummary */}
             {shownCells.map((cell, index) => (
                 <CellBuilderItem key={cell.hash} cell={cell} index={index} />
             ))}
@@ -136,9 +135,8 @@ const FactoryBuilder = () => {
                     <MachineLabel machine={selectedNode.machines[0]} />
                 </>
             )}
-            {downtimeCells.map((cell) => (
-                <IncidentInfoPanel key={cell.hash} cell={cell} />
-            ))}
+            {(!selectedNode || !isCell(selectedNode)) &&
+                downtimeCells.map((cell) => <IncidentInfoPanel key={cell.hash} cell={cell} />)}
         </>
     );
 };
@@ -147,11 +145,15 @@ const FactoryBuilder = () => {
 //------------------------------------------------------------------------------
 const LineBuilderItem = ({ line }: { line: LineNode }) => {
     //--------------------------------------------------------------------------
+    // Context
+    const { selectedNode } = useContext(SelectionContext);
+
+    //--------------------------------------------------------------------------
     // Render
     return (
         <>
             <FloorRegion node={line} />
-            <NodeSummary node={line} />
+            {selectedNode && isArea(selectedNode) && <NodeSummary node={line} />}
         </>
     );
 };
@@ -159,6 +161,10 @@ const LineBuilderItem = ({ line }: { line: LineNode }) => {
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 const CellBuilderItem = ({ cell, index }: { cell: CellNode; index: number }) => {
+    //--------------------------------------------------------------------------
+    // Context
+    const { selectedNode } = useContext(SelectionContext);
+
     //--------------------------------------------------------------------------
     // Render
     return (
@@ -169,7 +175,7 @@ const CellBuilderItem = ({ cell, index }: { cell: CellNode; index: number }) => 
             {isArea(cell.parent) ? (
                 <>
                     <FloorRegion node={cell} />
-                    <NodeSummary node={cell} />
+                    {selectedNode && isArea(selectedNode) && <NodeSummary node={cell} />}
                 </>
             ) : (
                 <FloatingLabel node={cell} />
@@ -194,7 +200,6 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
     const oee = useAreaOEE(area);
 
     //--------------------------------------------------------------------------
-    // Memos
     const kpi = useMemo(() => {
         if (oee === undefined) return;
         return (
@@ -245,12 +250,15 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
     return (
         <>
             <FloorOutline node={area} />
-
-            <AnchoredPanel node={area} className="pointer-events-none!" kpi={kpi}>
-                {areaSummary}
-            </AnchoredPanel>
-            {areaAddOn}
             {selectedNode && isFactory(selectedNode) && <TopPanel node={area} />}
+            {isSelected && (
+                <>
+                    <AnchoredPanel node={area} className="pointer-events-none!" kpi={kpi}>
+                        {areaSummary}
+                    </AnchoredPanel>
+                    {areaAddOn}
+                </>
+            )}
         </>
     );
 };

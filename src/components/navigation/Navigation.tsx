@@ -36,6 +36,7 @@ export const Navigation = ({ className }: { className?: string }) => {
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
 
+    //--------------------------------------------------------------------------
     const downtimeCellIds = useMemo(() => {
         if (!span) return new Set<string>();
         return new Set(
@@ -267,13 +268,14 @@ const ChildNode = ({
         "nav",
     );
 
+    //--------------------------------------------------------------------------
+    // Memos
     const hasDowntime = useMemo(
         () => (isLine(node) ? node.cells.some((c) => downtimeCellIds.has(c.hash)) : downtimeCellIds.has(node.hash)),
         [node, downtimeCellIds],
     );
 
     //--------------------------------------------------------------------------
-    // Memos
     const stateClassName = useMemo(() => {
         if (isActive) {
             if (isHovered) {

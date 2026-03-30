@@ -6,6 +6,7 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 
 //------------------------------------------------------------------------------
 import { buildNavGraph } from "@/core/NavGraph";
+import { useTimelineStore } from "@/store/useTimelineStore";
 
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";
@@ -26,6 +27,10 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
     const [nodeList, setNodeList] = useState<NavGraphNode[] | undefined>(undefined);
 
     //--------------------------------------------------------------------------
+    // Store
+    const loadSpan = useTimelineStore((s) => s.loadSpan);
+
+    //--------------------------------------------------------------------------
     // Effects
     useEffect(() => {
         const entities = [...sceneRefEntities, ...tagEntities.filter((e) => !e.scene_ref)];
@@ -38,6 +43,12 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
                 console.warn("error loading entities");
             });
     }, [sceneRefEntities, tagEntities]);
+
+    useEffect(() => {
+        if (!nodeGraph) return;
+        const productionArea = nodeGraph.areas.find((a) => a.name.toLowerCase() === "production");
+        if (productionArea) loadSpan(productionArea, factory.scene_id);
+    }, [nodeGraph, factory.scene_id, loadSpan]);
 
     //--------------------------------------------------------------------------
     // Memos

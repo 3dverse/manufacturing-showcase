@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useContext, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 import { faChartLine, faCheckToSlot, faFilePdf } from "@fortawesome/sharp-regular-svg-icons";
 import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
@@ -20,6 +20,8 @@ import { getMachineDocumentation } from "@/content/machine";
 import { useProjection } from "@/hooks/useProjection";
 import { useScope } from "@/hooks/useScope";
 import { useSnapshot } from "@/hooks/useSnapshot";
+import { useTimelineStore } from "@/store/useTimelineStore";
+import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
@@ -41,9 +43,18 @@ export function MachineInfoPanel({ machine }: { machine: MachineNode }) {
     const order = projection?.productionOrders[0] ?? null;
 
     //--------------------------------------------------------------------------
+    const span = useTimelineStore((s) => s.span);
+    const asOf = useTimelineStore((s) => s.asOf);
+
+    const hasIncident = useMemo(() => {
+        if (!span) return false;
+        const cellHash = machine.parent.hash;
+        return [...span.downtimeEvents.values()].some((e) => e.workCenterId === cellHash && downtimeAtAsOf(e, asOf));
+    }, [span, asOf, machine.parent.hash]);
+
+    //--------------------------------------------------------------------------
     const { orderNumber, itemCode } = order ?? { orderNumber: "", itemCode: "" };
     const { goodQuantity = 0, scrapQuantity = 0 } = order?.quantities ?? {};
-    const hasIncident = true;
     const machineDetails = getMachineDocumentation(machine.name);
 
     const quality =

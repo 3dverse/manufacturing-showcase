@@ -239,6 +239,26 @@ export function buildSpanIndexes(span: TimelineSpan): void {
     }
 }
 
+export function mergeSpan(a: TimelineSpan, b: TimelineSpan): TimelineSpan {
+    const result = emptySpan();
+    const merge = <V>(r: Map<string, V>, ma: Map<string, V>, mb: Map<string, V>) => {
+        for (const [k, v] of ma) r.set(k, v);
+        for (const [k, v] of mb) r.set(k, v);
+    };
+    merge(result.salesOrders, a.salesOrders, b.salesOrders);
+    merge(result.productionOrders, a.productionOrders, b.productionOrders);
+    merge(result.operations, a.operations, b.operations);
+    merge(result.downtimeEvents, a.downtimeEvents, b.downtimeEvents);
+    merge(result.eamWorkOrders, a.eamWorkOrders, b.eamWorkOrders);
+    merge(result.pickTasks, a.pickTasks, b.pickTasks);
+    merge(result.receipts, a.receipts, b.receipts);
+    merge(result.putawayTasks, a.putawayTasks, b.putawayTasks);
+    merge(result.purchaseOrders, a.purchaseOrders, b.purchaseOrders);
+    merge(result.allocations, a.allocations, b.allocations);
+    buildSpanIndexes(result);
+    return result;
+}
+
 // ---------------------------------------------------------------------------
 // Scope — node-scoped view derived from the span
 // ---------------------------------------------------------------------------
