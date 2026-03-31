@@ -15,7 +15,7 @@ import { BOMPanel } from "@/components/bom/BOMPanel";
 import { cn } from "@/utils/cn";
 import { Router } from "@/core/Router";
 import { dashboardApi } from "@/services/dashboardApi";
-import { FooterTabsContext } from "@/contexts/FooterTabsContext";
+import { FooterTabsContext, type FooterTab } from "@/contexts/FooterTabsContext";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
