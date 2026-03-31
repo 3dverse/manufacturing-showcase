@@ -15,6 +15,7 @@ import type { BOMNodeData, MESRoutingItem } from "./type";
 import { findNodeByWorkCenter } from "./utils";
 import { BOMFlow } from "./BomFlow";
 import { BOMDetails } from "./BOMDetails";
+import { FooterTabs } from "../common/FooterTabs";
 
 //------------------------------------------------------------------------------
 const API = "/-/api/dataset";
@@ -185,6 +186,9 @@ export function BOMPanel({ className }: { className?: string }) {
                     )}
                 </>
             )}
+            <div className="flex items-center justify-between gap-4 px-2 h-8 border-b border-slate-200/10">
+                <FooterTabs />
+            </div>
         </div>
     );
 }

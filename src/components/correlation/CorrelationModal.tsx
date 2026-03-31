@@ -32,7 +32,7 @@ function getFocusedLabel(focused: FocusedEntity, projection: AsOfProjection): st
         }
         case "productionOrder": {
             const e = projection.productionOrders.find((p) => p.id === focused.id);
-            return `Production Order${e ? ` — ${e.orderNumber}` : ""}`;
+            return `Manufacturing Order${e ? ` — ${e.orderNumber}` : ""}`;
         }
         case "operation": {
             const e = projection.operations.find((o) => o.id === focused.id);

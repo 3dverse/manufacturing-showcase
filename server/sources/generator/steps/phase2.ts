@@ -12,74 +12,70 @@ import type { RNG } from "../rng";
 import type { GeneratorConfig } from "../config";
 import { getProductionLocations } from "../graph";
 import { nextShiftStart, clampToShift, addMinutes, addDays } from "../shifts";
-import type {
-    POTemplate,
-    DowntimeTemplate,
-    MaintenancePlanTemplate,
-} from "./phase1";
+import type { POTemplate, DowntimeTemplate, MaintenancePlanTemplate } from "./phase1";
 
 // ---------------------------------------------------------------------------
 // Placed entity types (internal to Phase 2 / 3)
 // ---------------------------------------------------------------------------
 
 export type PlacedDowntime = {
-    id:              string;
-    templateCode:    string;
-    description:     string;
-    operationId:     string;
-    workCenterId:    string;
-    start:           Date;
-    end:             Date;
+    id: string;
+    templateCode: string;
+    description: string;
+    operationId: string;
+    workCenterId: string;
+    start: Date;
+    end: Date;
     durationMinutes: number;
 };
 
 export type PlacedOperation = {
-    id:             string;
-    operationType:  string;
-    workCenterId:   string;
+    id: string;
+    operationType: string;
+    workCenterId: string;
     workCenterName: string;
-    locationId:     string;
-    poId:           string;
-    start:          Date;
-    end:            Date;
-    setupMinutes:   number;
-    downtimes:      PlacedDowntime[];
+    locationId: string;
+    poId: string;
+    start: Date;
+    end: Date;
+    setupMinutes: number;
+    downtimes: PlacedDowntime[];
 };
 
 export type PlacedPO = {
-    id:                    string;
-    locationId:            string;
-    locationName:          string;
-    itemId:                string;
-    start:                 Date;  // = ops[0].start
-    end:                   Date;  // = ops[last].end
-    operations:            PlacedOperation[];
+    id: string;
+    locationId: string;
+    locationName: string;
+    itemId: string;
+    start: Date; // = ops[0].start
+    end: Date; // = ops[last].end
+    operations: PlacedOperation[];
     effectiveUnitsPerHour: number; // sampled once per PO: unitsPerHour × U(0.9, 1.1)
 };
 
 export type PlacedMaintenanceWO = {
-    id:         string;
-    planId:     string;
-    assetId:    string;
-    assetName:  string;
+    id: string;
+    planId: string;
+    assetId: string;
+    assetName: string;
     locationId: string;
-    start:      Date;
-    end:        Date;
+    start: Date;
+    end: Date;
 };
 
 export type PlacedGap = {
     locationId: string;
-    start:      Date;
-    end:        Date;
+    start: Date;
+    end: Date;
     workOrders: PlacedMaintenanceWO[];
 };
 
 export type Phase2Result = {
-    placedPOs:      PlacedPO[];
-    placedGaps:     PlacedGap[];
-    posByLocation:  Map<string, PlacedPO[]>;
-    wosByAsset:     Map<string, PlacedMaintenanceWO[]>;
-    allPlacedWOs:   PlacedMaintenanceWO[];
+    placedPOs: PlacedPO[];
+    placedGaps: PlacedGap[];
+    posByLocation: Map<string, PlacedPO[]>;
+    wosByAsset: Map<string, PlacedMaintenanceWO[]>;
+    allPlacedWOs: PlacedMaintenanceWO[];
 };
 
 // ---------------------------------------------------------------------------
@@ -101,15 +97,15 @@ function injectDowntimes(
     if (!rng.bool(0.25)) return;
 
     const addEvent = () => {
-        const tmpl     = rng.pick(templates);
+        const tmpl = rng.pick(templates);
         const duration = rng.nextInt(tmpl.minDurationMinutes, tmpl.maxDurationMinutes);
-        const opSpan   = (op.end.getTime() - op.start.getTime()) / 60_000;
+        const opSpan = (op.end.getTime() - op.start.getTime()) / 60_000;
         if (duration >= opSpan) return;
 
         const maxOffset = opSpan - duration;
-        const offset    = rng.nextFloat(0, maxOffset);
-        const start     = addMinutes(op.start, offset);
-        const end       = addMinutes(start, duration);
+        const offset = rng.nextFloat(0, maxOffset);
+        const start = addMinutes(op.start, offset);
+        const end = addMinutes(start, duration);
 
         // Skip if overlapping an existing event on this operation
         for (const existing of op.downtimes) {
@@ -117,11 +113,11 @@ function injectDowntimes(
         }
 
         op.downtimes.push({
-            id:              nextId("DT"),
-            templateCode:    tmpl.code,
-            description:     tmpl.description,
-            operationId:     op.id,
-            workCenterId:    op.workCenterId,
+            id: nextId("DT"),
+            templateCode: tmpl.code,
+            description: tmpl.description,
+            operationId: op.id,
+            workCenterId: op.workCenterId,
             start,
             end,
             durationMinutes: duration,
@@ -154,8 +150,8 @@ export function placeTimeline(
 
     // Distribute productionOrderCount across locations proportional to work-center count
     const totalWCs = prodLocations.reduce((s, l) => s + l.workCenters.length, 0);
-    const poCountPerLoc = prodLocations.map(loc =>
-        Math.max(1, Math.round(config.productionOrderCount * loc.workCenters.length / totalWCs)),
+    const poCountPerLoc = prodLocations.map((loc) =>
+        Math.max(1, Math.round((config.productionOrderCount * loc.workCenters.length) / totalWCs)),
     );
 
     // Group maintenance plan templates by location
@@ -163,25 +159,25 @@ export function placeTimeline(
     for (const loc of prodLocations) {
         pmByLocation.set(
             loc.hash,
-            maintenancePlanTemplates.filter(p => p.locationId === loc.hash),
+            maintenancePlanTemplates.filter((p) => p.locationId === loc.hash),
         );
     }
 
-    const allPOs:  PlacedPO[]            = [];
-    const allGaps: PlacedGap[]           = [];
-    const allWOs:  PlacedMaintenanceWO[] = [];
+    const allPOs: PlacedPO[] = [];
+    const allGaps: PlacedGap[] = [];
+    const allWOs: PlacedMaintenanceWO[] = [];
     const posByLocation = new Map<string, PlacedPO[]>();
-    const wosByAsset    = new Map<string, PlacedMaintenanceWO[]>();
+    const wosByAsset = new Map<string, PlacedMaintenanceWO[]>();
 
     for (let li = 0; li < prodLocations.length; li++) {
-        const loc      = prodLocations[li];
+        const loc = prodLocations[li];
         const template = poTemplates.get(loc.hash);
         if (!template || template.operations.length === 0) continue;
 
         const targetPOs = poCountPerLoc[li];
-        const locPMs    = pmByLocation.get(loc.hash) ?? [];
-        const hasPMs    = locPMs.length > 0;
-        const locPOs:   PlacedPO[] = [];
+        const locPMs = pmByLocation.get(loc.hash) ?? [];
+        const hasPMs = locPMs.length > 0;
+        const locPOs: PlacedPO[] = [];
 
         // Pipeline stagger: time until the first item flows out of op[i] into op[i+1]
         // = setupMinutes_of_op_i + one_cycle_time
@@ -193,24 +189,24 @@ export function placeTimeline(
         for (let i = 0; i < targetPOs && cursor < windowEnd; i++) {
             // Per-PO throughput variance: ±10 %
             const effectiveUPH = config.unitsPerHour * rng.nextFloat(0.9, 1.1);
-            const poId = nextId("PO");
+            const poId = nextId("MO");
 
             // Place operations pipeline-style
             const ops: PlacedOperation[] = template.operations.map((opTmpl, j) => {
-                const stagger   = opTmpl.setupMinutes + cycleTime; // time to deliver first item
-                const opStart   = addMinutes(cursor, j * stagger);
-                const opEnd     = addMinutes(opStart, config.operationDurationMinutes);
+                const stagger = opTmpl.setupMinutes + cycleTime; // time to deliver first item
+                const opStart = addMinutes(cursor, j * stagger);
+                const opEnd = addMinutes(opStart, config.operationDurationMinutes);
                 return {
-                    id:             nextId("OP"),
-                    operationType:  opTmpl.operationType,
-                    workCenterId:   opTmpl.workCenterId,
+                    id: nextId("OP"),
+                    operationType: opTmpl.operationType,
+                    workCenterId: opTmpl.workCenterId,
                     workCenterName: opTmpl.workCenterName,
-                    locationId:     loc.hash,
+                    locationId: loc.hash,
                     poId,
-                    start:          opStart,
-                    end:            opEnd,
-                    setupMinutes:   opTmpl.setupMinutes,
-                    downtimes:      [],
+                    start: opStart,
+                    end: opEnd,
+                    setupMinutes: opTmpl.setupMinutes,
+                    downtimes: [],
                 };
             });
 
@@ -220,13 +216,13 @@ export function placeTimeline(
             }
 
             const po: PlacedPO = {
-                id:                    poId,
-                locationId:            loc.hash,
-                locationName:          loc.name,
-                itemId:                template.itemId,
-                start:                 ops[0].start,
-                end:                   ops[ops.length - 1].end,
-                operations:            ops,
+                id: poId,
+                locationId: loc.hash,
+                locationName: loc.name,
+                itemId: template.itemId,
+                start: ops[0].start,
+                end: ops[ops.length - 1].end,
+                operations: ops,
                 effectiveUnitsPerHour: effectiveUPH,
             };
 
@@ -237,20 +233,20 @@ export function placeTimeline(
             // ---- Maintenance gap check ----
             // A gap opens after this PO if at least one machine in the location has a PM due.
             if (hasPMs) {
-                const due = locPMs.filter(p => p.nextDue <= cursor);
+                const due = locPMs.filter((p) => p.nextDue <= cursor);
                 if (due.length > 0) {
                     const gapStart = clampToShift(cursor, config.shifts, config.workDays);
-                    const gapEnd   = addMinutes(gapStart, config.pmDurationHours * 60);
+                    const gapEnd = addMinutes(gapStart, config.pmDurationHours * 60);
 
-                    const wos: PlacedMaintenanceWO[] = due.map(p => {
+                    const wos: PlacedMaintenanceWO[] = due.map((p) => {
                         const wo: PlacedMaintenanceWO = {
-                            id:         nextId("WO"),
-                            planId:     p.planId,
-                            assetId:    p.assetId,
-                            assetName:  p.assetName,
+                            id: nextId("WO"),
+                            planId: p.planId,
+                            assetId: p.assetId,
+                            assetName: p.assetName,
                             locationId: loc.hash,
-                            start:      gapStart,
-                            end:        gapEnd,
+                            start: gapStart,
+                            end: gapEnd,
                         };
                         const list = wosByAsset.get(p.assetId) ?? [];
                         list.push(wo);
@@ -293,13 +289,13 @@ export function placeTimeline(
                 const gapEnd = addMinutes(gapStart, pm.pmDurationHours * 60);
 
                 const wo: PlacedMaintenanceWO = {
-                    id:         nextId("WO"),
-                    planId:     pm.planId,
-                    assetId:    pm.assetId,
-                    assetName:  pm.assetName,
+                    id: nextId("WO"),
+                    planId: pm.planId,
+                    assetId: pm.assetId,
+                    assetName: pm.assetName,
                     locationId: loc.hash,
-                    start:      gapStart,
-                    end:        gapEnd,
+                    start: gapStart,
+                    end: gapEnd,
                 };
 
                 const list = wosByAsset.get(pm.assetId) ?? [];

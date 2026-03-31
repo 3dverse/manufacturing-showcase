@@ -9,25 +9,22 @@ import { Timeline } from "@/components/timeline/Timeline";
 import { GlobalOrderPanel } from "@/components/orders/GlobalOrderPanel";
 import { InvitePanel } from "@/components/clients/InvitePanel";
 import { KeyStatusIndicators } from "@/components/dashboard/header/StatusIndicators";
-import { Tabs, TabItem } from "@/components/common/Tabs";
 import { BOMPanel } from "@/components/bom/BOMPanel";
-import { Icon } from "@/components/common/Icon";
-import { faChartGantt, faListTree } from "@fortawesome/pro-light-svg-icons";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
 import { Router } from "@/core/Router";
 import { dashboardApi } from "@/services/dashboardApi";
+import { FooterTabsContext } from "@/contexts/FooterTabsContext";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-type BottomView = "timeline" | "bom";
 
 const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onBack?: () => void }) => {
     //--------------------------------------------------------------------------
     // Context
     const data = dashboardApi.getDashboardData();
-    const [bottomView, setBottomView] = useState<BottomView>("timeline");
+    const [footerTab, setFooterTab] = useState<FooterTab>("timeline");
 
     //--------------------------------------------------------------------------
     // Map workCenterId (hash) → CellNode for direct BOM-to-cell linking
@@ -68,33 +65,13 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
 
                 {!thumbnailMode && (
                     <div className="w-full self-end appear-in-from-bottom opacity-0 [--animation-delay:1s]">
-                        <div className="pointer-events-auto flex px-3 pb-1">
-                            <Tabs>
-                                <TabItem
-                                    isSelected={bottomView === "timeline"}
-                                    onClick={() => setBottomView("timeline")}
-                                    title="Timeline"
-                                    className="w-8 h-8 rounded-full !px-0 !py-0 flex items-center justify-center bg-neutral-200 hover:bg-neutral-100"
-                                    selectedClassName="bg-accent hover:bg-accent/90"
-                                >
-                                    <Icon icon={faChartGantt} />
-                                </TabItem>
-                                <TabItem
-                                    isSelected={bottomView === "bom"}
-                                    onClick={() => setBottomView("bom")}
-                                    title="Bill of Materials"
-                                    className="w-8 h-8 rounded-full !px-0 !py-0 flex items-center justify-center bg-neutral-200 hover:bg-neutral-100"
-                                    selectedClassName="bg-accent hover:bg-accent/90"
-                                >
-                                    <Icon icon={faListTree} />
-                                </TabItem>
-                            </Tabs>
-                        </div>
-                        {bottomView === "timeline" ? (
-                            <Timeline className="h-full min-h-40" />
-                        ) : (
-                            <BOMPanel className="border-t border-slate-200/15 bg-slate-0/80 backdrop-blur-xl" />
-                        )}
+                        <FooterTabsContext.Provider value={{ footerTab, setFooterTab }}>
+                            {footerTab === "timeline" ? (
+                                <Timeline className="h-full min-h-40" />
+                            ) : (
+                                <BOMPanel className="border-t border-slate-200/15 bg-slate-0/80 backdrop-blur-xl" />
+                            )}
+                        </FooterTabsContext.Provider>
                     </div>
                 )}
             </div>

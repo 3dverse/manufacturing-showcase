@@ -39,6 +39,7 @@ import type {
     ProjectedPutawayTask,
     ProjectedPurchaseOrder,
 } from "@/core/Projection";
+import { FooterTabs } from "../common/FooterTabs";
 
 //------------------------------------------------------------------------------
 // Zoom levels
@@ -140,11 +141,11 @@ type StackingStyle = "swimlane" | "overlap";
 
 type Story = {
     id: string;
+    title: string;
     label: string;
     lanes: BarItem[][];
     barStyle: BarStyle;
     stackingStyle: StackingStyle;
-    rowHeight: number;
 };
 
 //------------------------------------------------------------------------------
@@ -215,11 +216,11 @@ function buildSalesOrdersStory(orders: ProjectedSalesOrder[]): Story {
     }));
     return {
         id: "sales",
-        label: "Sales Orders",
+        title: "Sales Orders",
+        label: "SO",
         lanes: buildLanes(bars, "swimlane"),
         barStyle: "line",
         stackingStyle: "swimlane",
-        rowHeight: ROW_H_LINE,
     };
 }
 
@@ -273,11 +274,11 @@ function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
     });
     return {
         id: "production",
-        label: "Production orders",
+        title: "Manufacturing orders",
+        label: "MO",
         lanes: buildLanes(bars, "swimlane"),
         barStyle: "bar",
         stackingStyle: "swimlane",
-        rowHeight: ROW_H,
     };
 }
 
@@ -326,11 +327,11 @@ function buildOperationsStory(ops: ProjectedOperation[]): Story {
     });
     return {
         id: "operations",
-        label: "Operations",
+        title: "Operations",
+        label: "OP",
         lanes: buildLanes(bars, "overlap"),
         barStyle: "bar",
         stackingStyle: "overlap",
-        rowHeight: ROW_H,
     };
 }
 
@@ -400,11 +401,11 @@ function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedW
 
     return {
         id: "stoppages",
-        label: "Stoppages",
+        label: "Stops",
+        title: "Work Orders and Downtime Events",
         lanes: buildLanes([...dtBars, ...woBars], "overlap"),
         barStyle: "bar",
         stackingStyle: "swimlane",
-        rowHeight: ROW_H,
     };
 }
 
@@ -452,11 +453,11 @@ function buildReceiptsStory(receipts: ProjectedReceipt[]): Story {
     });
     return {
         id: "receipts",
-        label: "Receipts",
+        label: "RCP",
+        title: "Receipts",
         lanes: buildLanes(bars, "swimlane"),
         barStyle: "bar",
         stackingStyle: "swimlane",
-        rowHeight: ROW_H,
     };
 }
 
@@ -493,11 +494,11 @@ function buildAllocationsStory(allocs: ProjectedAllocation[], demandType: "produ
     }));
     return {
         id: isRM ? "alloc-rm" : "alloc-fg",
-        label: isRM ? "RM allocations" : "FG allocations",
+        title: isRM ? "Raw Material Allocations" : "Final Good Allocations",
+        label: isRM ? "RM alloc" : "FG alloc",
         lanes: buildLanes(bars, "swimlane"),
         barStyle: "line",
         stackingStyle: "swimlane",
-        rowHeight: ROW_H_LINE,
     };
 }
 
@@ -539,11 +540,11 @@ function buildPickTasksStory(tasks: ProjectedPickTask[]): Story {
     }));
     return {
         id: "pick-tasks",
-        label: "Pick tasks",
+        label: "Pickup",
+        title: "Pickup tasks",
         lanes: buildLanes(bars, "swimlane"),
         barStyle: "bar",
         stackingStyle: "swimlane",
-        rowHeight: ROW_H,
     };
 }
 
@@ -586,11 +587,11 @@ function buildPutawayTasksStory(tasks: ProjectedPutawayTask[]): Story {
     }));
     return {
         id: "putaway-tasks",
-        label: "Putaway tasks",
+        label: "Putaway",
+        title: "Putaway Tasks",
         lanes: buildLanes(bars, "swimlane"),
         barStyle: "bar",
         stackingStyle: "swimlane",
-        rowHeight: ROW_H,
     };
 }
 
@@ -643,13 +644,12 @@ function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[]): Story {
         };
     });
     return {
-        //asd
         id: "purchase-orders",
-        label: "Purchase orders",
+        label: "PO",
+        title: "Purchase orders",
         lanes: buildLanes(bars, "swimlane"),
         barStyle: "line",
         stackingStyle: "swimlane",
-        rowHeight: ROW_H_LINE,
     };
 }
 
@@ -714,7 +714,6 @@ function Bar({
     winEnd,
     laneIndex,
     barStyle,
-    rowHeight,
     highlightState,
     onEnter,
     onLeave,
@@ -727,7 +726,6 @@ function Bar({
     winEnd: number;
     laneIndex: number;
     barStyle: BarStyle;
-    rowHeight: number;
     highlightState: HighlightState;
     onEnter: (content: React.ReactNode, e: React.MouseEvent) => void;
     onLeave: () => void;
@@ -743,6 +741,7 @@ function Bar({
     const clampedRight = Math.min(100, right);
     const widthPct = Math.max(0.25, clampedRight - clampedLeft);
     const h = barStyle === "line" ? LINE_H : BAR_H;
+    const rowHeight = barStyle === "bar" ? ROW_H : ROW_H_LINE;
 
     return (
         <div
@@ -827,7 +826,10 @@ export function Timeline({ className }: { className?: string }) {
     const ticks = useMemo(() => buildTicks(winStart, winEnd, zoomDef.days), [winStart, winEnd, zoomDef.days]);
     const nowPct = toPct(refNow, winStart, winEnd);
     const playheadPct = Math.max(0, Math.min(100, toPct(asOf, winStart, winEnd)));
-    const totalH = AXIS_H + ROW_GAP + stories.reduce((sum, s) => sum + s.lanes.length * s.rowHeight + ROW_GAP, 0);
+    const totalH =
+        AXIS_H +
+        ROW_GAP +
+        stories.reduce((sum, s) => sum + s.lanes.length * (s.barStyle === "bar" ? ROW_H : ROW_H_LINE) + ROW_GAP, 0);
 
     //--------------------------------------------------------------------------
     // Seek interaction
@@ -879,55 +881,31 @@ export function Timeline({ className }: { className?: string }) {
         <>
             <aside
                 className={cn(
-                    "pointer-events-auto border-t border-slate-200/15 select-none",
+                    "flex flex-col pointer-events-auto border-t border-slate-200/15 select-none",
                     PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
                     className,
                 )}
             >
-                {/* Header */}
-                <div className="flex items-center justify-between gap-4 px-3 h-8 border-b border-slate-200/10">
-                    <div className="flex items-center gap-0.5">
-                        {ZOOMS.map((z) => (
-                            <button
-                                key={z.key}
-                                onClick={() => setZoom(z.key)}
-                                className={cn(
-                                    "px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide transition-colors",
-                                    zoom === z.key ? "bg-accent/20 text-accent" : "text-slate-400 hover:text-slate-200",
-                                )}
-                            >
-                                {z.label}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        {asOf !== refNow && (
-                            <button
-                                onClick={() => setAsOf(refNow)}
-                                className="text-[9px] font-semibold uppercase tracking-wide text-accent/80 hover:text-accent transition-colors"
-                                title="Reset to now"
-                            >
-                                ↺ now
-                            </button>
-                        )}
-                        <span className="text-[10px] font-mono text-slate-300 tabular-nums">{fmtTs(asOf)}</span>
-                    </div>
-                </div>
-
                 {/* Body */}
-                <div className="flex h-full">
+                <div className="flex flex-grow">
                     {/* Label column */}
                     <div
-                        className="shrink-0 w-34 border-r border-slate-200/10 flex flex-col"
+                        className="shrink-0 w-18 border-r border-slate-200/30 flex flex-col"
                         style={{ paddingTop: AXIS_H + ROW_GAP }}
                     >
                         {stories.map((story) => (
                             <div
                                 key={story.id}
                                 className="flex items-top px-2 shrink-0 justify-end"
-                                style={{ height: story.lanes.length * story.rowHeight, marginBottom: ROW_GAP }}
+                                style={{
+                                    height: story.lanes.length * (story.barStyle === "bar" ? ROW_H : ROW_H_LINE),
+                                    marginBottom: ROW_GAP,
+                                }}
                             >
-                                <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-400 truncate">
+                                <span
+                                    className="text-[9px] font-semibold uppercase tracking-widest text-slate-400 truncate"
+                                    title={story.title}
+                                >
                                     {story.label}
                                 </span>
                             </div>
@@ -980,7 +958,10 @@ export function Timeline({ className }: { className?: string }) {
                             <div
                                 key={story.id}
                                 className="relative mx-1 bg-white/[0.035] rounded-sm"
-                                style={{ height: story.lanes.length * story.rowHeight, marginBottom: ROW_GAP }}
+                                style={{
+                                    height: story.lanes.length * (story.barStyle === "bar" ? ROW_H : ROW_H_LINE),
+                                    marginBottom: ROW_GAP,
+                                }}
                             >
                                 {story.lanes.map((lane, laneIdx) =>
                                     lane.map((bar) => (
@@ -991,7 +972,6 @@ export function Timeline({ className }: { className?: string }) {
                                             winEnd={winEnd}
                                             laneIndex={laneIdx}
                                             barStyle={story.barStyle}
-                                            rowHeight={story.rowHeight}
                                             highlightState={highlightStateForBar(
                                                 bar.id,
                                                 bar.entityType,
@@ -1048,28 +1028,61 @@ export function Timeline({ className }: { className?: string }) {
                     </div>
                 </div>
 
+                {/* Header */}
+                <div className="flex items-center pr-3 h-8 border-b border-slate-200/10">
+                    <div className="w-18 px-2 border-r border-slate-200/30">
+                        <FooterTabs />
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                        {ZOOMS.map((z) => (
+                            <button
+                                key={z.key}
+                                onClick={() => setZoom(z.key)}
+                                className={cn(
+                                    "px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide transition-colors",
+                                    zoom === z.key ? "bg-accent/20 text-accent" : "text-slate-400 hover:text-slate-200",
+                                )}
+                            >
+                                {z.label}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex-grow" />
+                    <div className="flex items-center gap-1.5">
+                        {asOf !== refNow && (
+                            <button
+                                onClick={() => setAsOf(refNow)}
+                                className="text-[9px] font-semibold uppercase tracking-wide text-accent/80 hover:text-accent transition-colors"
+                                title="Reset to now"
+                            >
+                                ↺ now
+                            </button>
+                        )}
+                        <span className="text-[10px] font-mono text-slate-300 tabular-nums">{fmtTs(asOf)}</span>
+                    </div>
+                </div>
                 {/* Tooltip portal */}
-                {tooltip &&
-                    createPortal(
-                        <div
-                            className="fixed z-[9999] pointer-events-none"
-                            style={{
-                                ...(tooltip.x > window.innerWidth * 0.6
-                                    ? { right: window.innerWidth - tooltip.x + 14 }
-                                    : { left: tooltip.x + 14 }),
-                                ...(tooltip.y > window.innerHeight * 0.65
-                                    ? { bottom: window.innerHeight - tooltip.y + 8 }
-                                    : { top: tooltip.y - 8 }),
-                            }}
-                        >
-                            <div className="bg-slate-900/95 border border-slate-700/60 rounded-lg px-3 py-2.5 shadow-xl text-slate-300 text-xs max-w-64">
-                                {tooltip.content}
-                            </div>
-                        </div>,
-                        document.body,
-                    )}
             </aside>
             <CorrelationModal />
+            {tooltip &&
+                createPortal(
+                    <div
+                        className="fixed z-[9999] pointer-events-none"
+                        style={{
+                            ...(tooltip.x > window.innerWidth * 0.6
+                                ? { right: window.innerWidth - tooltip.x + 14 }
+                                : { left: tooltip.x + 14 }),
+                            ...(tooltip.y > window.innerHeight * 0.65
+                                ? { bottom: window.innerHeight - tooltip.y + 8 }
+                                : { top: tooltip.y - 8 }),
+                        }}
+                    >
+                        <div className="bg-slate-900/95 border border-slate-700/60 rounded-lg px-3 py-2.5 shadow-xl text-slate-300 text-xs max-w-64">
+                            {tooltip.content}
+                        </div>
+                    </div>,
+                    document.body,
+                )}
         </>
     );
 }

@@ -34,9 +34,7 @@ function woStatus(_wo: PlacedMaintenanceWO): string {
 }
 
 function addDaysToDate(d: Date, n: number): Date {
-    const r = new Date(d);
-    r.setDate(r.getDate() + n);
-    return r;
+    return new Date(d.getTime() + n * 86_400_000);
 }
 
 function addHoursToDate(d: Date, h: number): Date {
@@ -284,7 +282,7 @@ export function fillDataset(
         );
         mesProductionOrders.set(po.id, {
             id: po.id,
-            orderNumber: `MO-${po.id}`,
+            orderNumber: `${po.id}`,
             siteId,
             locationId: po.locationId,
             locationName: po.locationName,
@@ -628,7 +626,7 @@ export function fillDataset(
         const mesPO = mesProductionOrders.get(po.id) as any;
         const earliestAllocation = new Date(((mesPO?.timing?.scheduledStart ?? toUnix(po.start)) - 86400) * 1000);
         const orderDate = addDaysToDate(earliestAllocation, -rng.nextInt(2, 3));
-        const delivDate = addDaysToDate(po.end, rng.nextInt(1, 5));
+        const delivDate = addDaysToDate(po.end, rng.nextFloat(0.5, 2));
 
         // Pick and ship happen on the delivery date
         const pickDate = delivDate;
@@ -1142,7 +1140,7 @@ export function fillDataset(
 
         for (const rmItemId of allRmIds) {
             const allocQty = requiredQty;
-            const allocatedAt = Number(mePo.timing?.scheduledStart ?? nowTs) - 86400;
+            const allocatedAt = Number(mePo.timing?.scheduledStart ?? nowTs) - rng.nextFloat(1800, 86400);
             const clearedAt = Number(mePo.timing?.actualStart ?? mePo.timing?.scheduledStart ?? nowTs);
 
             wmsStockAllocations.push({
