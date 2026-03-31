@@ -11,7 +11,7 @@ type Props = {
 export function ProductionOrderSheet({ items, focusedId }: Props) {
     return (
         <SectionWrapper
-            label="Production Orders"
+            label="Manufacturing Orders"
             items={items}
             focusedId={focusedId}
             getId={(e) => e.id}
