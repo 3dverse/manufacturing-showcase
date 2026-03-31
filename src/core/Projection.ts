@@ -1,3 +1,4 @@
+import { USE_PROJECTION } from "@/content/3dverse";
 import type {
     SalesOrderEntry,
     ProductionOrderEntry,
@@ -35,12 +36,15 @@ export type ProjectedProductionOrder = Omit<ProductionOrderEntry, "quantities"> 
     };
 };
 
-export type ProjectedOperation = OperationEntry & {
+export type ProjectedOperation = Omit<OperationEntry, "quantities"> & {
     phase: Phase;
     effectiveStart: number;
     effectiveEnd: number;
     estimatedProgress: number; // 0–1
     progressPercent: number; // replaces API value: round(estimatedProgress * 100)
+    quantities: OperationEntry["quantities"] & {
+        producedQuantity: number; // replaces API value: plannedQuantity * estimatedProgress
+    };
 };
 
 export type ProjectedDowntime = DowntimeEntry & {
@@ -66,6 +70,8 @@ export type ProjectedReceipt = ReceiptEntry & {
 
 export type ProjectedPutawayTask = PutawayTaskEntry & {
     phase: Phase; // completed if putawayDate <= asOf, future if createdAt > asOf, else active
+    estimatedProgress: number; // 0–1; interpolated between createdAt and putawayDate when both are known
+    progressPercent: number;
 };
 
 export type ProjectedAllocation = AllocationEntry; // point-in-time; no time-based projection needed
@@ -160,14 +166,24 @@ function projectOperation(e: OperationEntry, asOf: number): ProjectedOperation {
     const effectiveEnd = e.actualEnd ?? e.scheduledEnd;
     const phase = classifyPhase(e.scheduledStart, e.scheduledEnd, e.actualStart, e.actualEnd, asOf);
     const estimatedProgress = interpolateProgress(effectiveStart, effectiveEnd, phase, asOf);
-    return {
+    const isFuture = phase === "future";
+
+    const output = {
         ...e,
         phase,
         effectiveStart,
         effectiveEnd,
         estimatedProgress,
         progressPercent: Math.round(estimatedProgress * 100),
+        quantities: {
+            ...e.quantities,
+            producedQuantity: Math.round(e.quantities.plannedQuantity * estimatedProgress),
+            goodQuantity: isFuture ? 0 : Math.round(e.quantities.goodQuantity * estimatedProgress),
+            scrapQuantity: isFuture ? 0 : Math.round(e.quantities.scrapQuantity * estimatedProgress),
+        },
     };
+    console.log(e, output.quantities);
+    return output;
 }
 
 function projectDowntime(e: DowntimeEntry, asOf: number): ProjectedDowntime {
@@ -199,7 +215,20 @@ function projectReceipt(e: ReceiptEntry, putawayDate: number | null, asOf: numbe
 function projectPutawayTask(e: PutawayTaskEntry, asOf: number): ProjectedPutawayTask {
     const phase: Phase =
         e.putawayDate != null && e.putawayDate <= asOf ? "completed" : e.createdAt > asOf ? "future" : "active";
-    return { ...e, phase };
+    const estimatedProgress =
+        phase === "completed"
+            ? 1
+            : phase === "future"
+              ? 0
+              : e.putawayDate != null
+                ? clamp((asOf - e.createdAt) / (e.putawayDate - e.createdAt), 0, 1)
+                : 0; // active with no putawayDate — can't interpolate
+    return {
+        ...e,
+        phase,
+        estimatedProgress,
+        progressPercent: Math.round(estimatedProgress * 100),
+    } satisfies ProjectedPutawayTask;
 }
 
 function projectPurchaseOrder(e: PurchaseOrderEntry, asOf: number): ProjectedPurchaseOrder {
@@ -208,9 +237,9 @@ function projectPurchaseOrder(e: PurchaseOrderEntry, asOf: number): ProjectedPur
     return { ...e, phase };
 }
 
-// ---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Main
-// ---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 export function projectSnapshot(snapshot: AsOfSnapshot, asOf: number): AsOfProjection {
     // Build a receipt-id → putawayDate lookup for denormalising onto receipts
@@ -218,7 +247,7 @@ export function projectSnapshot(snapshot: AsOfSnapshot, asOf: number): AsOfProje
     for (const pt of snapshot.putawayTasks) {
         if (pt.receiptId && pt.putawayDate != null) putawayDateByReceipt.set(pt.receiptId, pt.putawayDate);
     }
-
+    if (!USE_PROJECTION) return snapshot as AsOfProjection;
     return {
         level: snapshot.level,
         salesOrders: snapshot.salesOrders.map((e) => projectSalesOrder(e, asOf)),

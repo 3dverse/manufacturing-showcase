@@ -14,7 +14,6 @@ import { FloorOutline } from "./DOM3D/FloorOutline";
 import { FloorRegion } from "./DOM3D/FloorRegion";
 import { NodeSummary } from "./DOM3D/NodeSummary";
 import { FlowSpline } from "./DOM3D/FlowSpline";
-import { MachineInfoPanel } from "./DOM3D/MachineInfoPanel";
 import { MachineOutline } from "./DOM3D/MachineOutline";
 import { MachineLabel } from "./DOM3D/MachineLabel";
 import { TopPanel } from "./DOM3D/TopPanel";
@@ -36,6 +35,7 @@ import { NodeTypes } from "@/content/enums";
 import { useNavNode } from "../navigation/hooks";
 import { BadgeOEE } from "../common/BadgeOEE";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
+import { CellInfoPanel } from "./DOM3D/CellInfoPanel";
 
 const SHOW_FLOW_LINES = false;
 
@@ -130,9 +130,14 @@ const FactoryBuilder = () => {
             ))}
             {selectedNode && isCell(selectedNode) && selectedNode.machines.length > 0 && (
                 <>
-                    <MachineInfoPanel machine={selectedNode.machines[0]} />
-                    <MachineOutline machine={selectedNode.machines[0]} />
-                    <MachineLabel machine={selectedNode.machines[0]} />
+                    <CellInfoPanel cell={selectedNode} />
+
+                    {selectedNode.machines.map((machine) => (
+                        <>
+                            <MachineOutline machine={machine} />
+                            <MachineLabel machine={machine} />
+                        </>
+                    ))}
                 </>
             )}
             {(!selectedNode || !isCell(selectedNode)) &&

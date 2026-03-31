@@ -51,17 +51,15 @@ function computeOpQty(
     config: GeneratorConfig,
     rng: RNG,
 ): { producedQty: number; goodQty: number; scrapQty: number; effectiveYield: number } {
-    const shiftMins = workingMinutes(op.start, op.end, config.shifts, config.workDays);
-    const downtimeMins = op.downtimes.reduce((sum, dt) => sum + (dt.end.getTime() - dt.start.getTime()) / 60_000, 0);
-
-    const netMins = Math.max(0, shiftMins - downtimeMins);
-    const producedQty = Math.floor((netMins * po.effectiveUnitsPerHour) / 60);
+    const plannedRunMinutes = config.operationDurationMinutes - op.setupMinutes;
+    const plannedQty = Math.floor((plannedRunMinutes * po.effectiveUnitsPerHour) / 60);
 
     // Yield: global median ± defectRate (see plan §3.1)
     const defectRate = 1 - config.yieldRate;
     const effectiveYield = Math.min(1, Math.max(0, config.yieldRate + rng.nextFloat(-defectRate, defectRate)));
-    const goodQty = Math.floor(producedQty * effectiveYield);
-    const scrapQty = producedQty - goodQty;
+    const goodQty = plannedQty;
+    const scrapQty = Math.floor(plannedQty * (1 - effectiveYield));
+    const producedQty = goodQty + scrapQty;
 
     return { producedQty, goodQty, scrapQty, effectiveYield };
 }
