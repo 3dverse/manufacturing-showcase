@@ -54,7 +54,7 @@ const ZOOMS: { key: ZoomKey; label: string; days: number }[] = [
     { key: "2W", label: "2W", days: 14 },
     { key: "1M", label: "1M", days: 30 },
     { key: "3M", label: "3M", days: 90 },
-    { key: "6M", label: "6M", days: 180 },
+    //{ key: "6M", label: "6M", days: 180 },
 ];
 
 //------------------------------------------------------------------------------
@@ -643,12 +643,13 @@ function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[]): Story {
         };
     });
     return {
+        //asd
         id: "purchase-orders",
         label: "Purchase orders",
         lanes: buildLanes(bars, "swimlane"),
-        barStyle: "bar",
+        barStyle: "line",
         stackingStyle: "swimlane",
-        rowHeight: ROW_H,
+        rowHeight: ROW_H_LINE,
     };
 }
 
@@ -815,7 +816,7 @@ export function Timeline({ className }: { className?: string }) {
     const refNow = Math.floor(Date.now() / 1000);
     const zoomDef = ZOOMS.find((z) => z.key === zoom)!;
     const halfSecs = (zoomDef.days * 86400) / 2;
-    const winStart = refNow - halfSecs;
+    const winStart = refNow - zoomDef.days * 86400;
     const winEnd = refNow + halfSecs;
 
     //--------------------------------------------------------------------------

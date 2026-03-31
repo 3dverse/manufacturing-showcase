@@ -39,6 +39,10 @@ function addDaysToDate(d: Date, n: number): Date {
     return r;
 }
 
+function addHoursToDate(d: Date, h: number): Date {
+    return new Date(d.getTime() + h * 60 * 60 * 1000);
+}
+
 const TECHNICIANS = ["J. Smith", "M. Johnson", "P. Williams", "K. Brown", "C. Davis"];
 
 // ---------------------------------------------------------------------------
@@ -621,7 +625,9 @@ export function fillDataset(
         // ---- Sales Order (placed before production starts; delivery after production ends) ----
         const customer = rng.pick(customerIds);
         const custRec = entities.erpCustomers.get(customer)!;
-        const orderDate = addDaysToDate(po.start, -rng.nextInt(3, 10));
+        const mesPO = mesProductionOrders.get(po.id) as any;
+        const earliestAllocation = new Date(((mesPO?.timing?.scheduledStart ?? toUnix(po.start)) - 86400) * 1000);
+        const orderDate = addDaysToDate(earliestAllocation, -rng.nextInt(2, 3));
         const delivDate = addDaysToDate(po.end, rng.nextInt(1, 5));
 
         // Pick and ship happen on the delivery date
@@ -630,7 +636,6 @@ export function fillDataset(
         const soStatus = "shipped";
         const soId = newSoId();
 
-        const mesPO = mesProductionOrders.get(po.id) as any;
         if (mesPO) mesPO.erpSalesOrderId = soId;
 
         const soObj = {
@@ -864,7 +869,7 @@ export function fillDataset(
                     const leadTime = (suppRec as any).leadTimeDays ?? 7;
 
                     const rcvDate = addDaysToDate(evt.date, -rng.nextInt(0, 2));
-                    const poOrderDate = addDaysToDate(rcvDate, -(leadTime + rng.nextInt(1, 3)));
+                    const poOrderDate = addDaysToDate(rcvDate, -Math.round((leadTime + rng.nextInt(1, 3)) / 2));
                     const erpPoId = newPoId();
                     const lineAmount = reorderQty * rmUnitCost;
 
@@ -915,7 +920,7 @@ export function fillDataset(
                     // WMS receipt + putaway
                     const lineRcptId = `RCP-${String(receiptNum++).padStart(4, "0")}`;
                     const putawayId = `PUT-${String(putawayNum++).padStart(4, "0")}`;
-                    const putawayDate = addDaysToDate(rcvDate, 1);
+                    const putawayDate = addHoursToDate(rcvDate, 4);
 
                     wmsReceipts.push({
                         id: lineRcptId,
