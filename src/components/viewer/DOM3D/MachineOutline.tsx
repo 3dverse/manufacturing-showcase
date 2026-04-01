@@ -20,15 +20,31 @@ export function MachineOutline({ machine }: { machine: MachineNode }) {
     //--------------------------------------------------------------------------
     useEffect(() => {
         const cameraOrientation = viewport?.camera_projection?.world_euler_orientation;
-        if (!cameraOrientation) return;
+        if (!cameraOrientation) {
+            return;
+        }
 
+        let frameId: number | undefined;
+        let cancelled = false;
         const update = () => {
+            if (cancelled) {
+                return;
+            }
             const cameraOrientation = viewport.camera_projection?.world_euler_orientation;
-            if (!cameraOrientation) return;
+            if (!cameraOrientation) {
+                return;
+            }
             setCameraRotation(cameraOrientation[1]);
-            requestAnimationFrame(update);
+            frameId = requestAnimationFrame(update);
         };
         update();
+
+        return () => {
+            cancelled = true;
+            if (frameId !== undefined) {
+                cancelAnimationFrame(frameId);
+            }
+        };
     }, [viewport]);
 
     //--------------------------------------------------------------------------
