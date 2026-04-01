@@ -17,13 +17,24 @@ export const FloorOutline = ({ node }: { node: NavGraphNode }) => {
     const { pointerDownHandler, clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } =
         useNavNode(node, "dom3d");
 
-    //--------------------------------------------------------------------------
     // Memos
     const stateClassName = useMemo(() => {
-        const classNames = [isSelected ? "pointer-events-none border-3 outline-80" : "cursor-pointer bg-accent-500/05"];
-        if (!isSelected && isHovered)
-            classNames.push("bg-accent-500/10 outline-80 outline-accent-500/20 border-accent");
+        const classNames = [isSelected ? "pointer-events-none" : "cursor-pointer bg-accent-500/05"];
+        if (!isSelected && isHovered) {
+            classNames.push("bg-accent-500/10");
+        }
         return cn(...classNames);
+    }, [isSelected, isHovered]);
+
+    //--------------------------------------------------------------------------
+    const stateStyle = useMemo(() => {
+        if (isSelected) {
+            return { boxShadow: "inset 0 0 0 2px rgba(56, 189, 248, 0.95)" };
+        }
+        if (isHovered) {
+            return { boxShadow: "inset 0 0 0 1px rgba(56, 189, 248, 0.65)" };
+        }
+        return undefined;
     }, [isSelected, isHovered]);
 
     //--------------------------------------------------------------------------
@@ -31,10 +42,8 @@ export const FloorOutline = ({ node }: { node: NavGraphNode }) => {
     return (
         <BoundingBoxFaceProjection entity={node.entity} face="bottom">
             <div
-                className={cn(
-                    "w-full h-full rounded-xl border-3 border-accent/80 outline-accent-500/0 outline-40 transition-all duration-200 pointer-events-auto",
-                    stateClassName,
-                )}
+                className={cn("w-full h-full transition-colors duration-200 pointer-events-auto", stateClassName)}
+                style={stateStyle}
                 onPointerDown={pointerDownHandler}
                 onClick={clickHandler}
                 onMouseEnter={mouseEnterHandler}
