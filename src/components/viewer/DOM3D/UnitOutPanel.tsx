@@ -27,16 +27,39 @@ export function UnitOutPanel({
     // State
     const [_unitCompleted, setUnitCompleted] = useState(unitCompleted);
 
-    // Increment every 1s
+    // Keep local counter in sync if parent value changes.
     useEffect(() => {
-        setTimeout(() => {
-            const interval = setInterval(() => {
-                if (_unitCompleted >= unitTotal) return clearInterval(interval);
-                setUnitCompleted((prev) => prev + 1);
+        setUnitCompleted(unitCompleted);
+    }, [unitCompleted]);
+
+    // Increment periodically with proper timeout/interval cleanup.
+    useEffect(() => {
+        let intervalId: ReturnType<typeof setInterval> | undefined;
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+        timeoutId = setTimeout(() => {
+            timeoutId = undefined;
+            intervalId = setInterval(() => {
+                setUnitCompleted((prev) => {
+                    if (prev >= unitTotal) {
+                        if (intervalId) {
+                            clearInterval(intervalId);
+                        }
+                        return prev;
+                    }
+                    return prev + 1;
+                });
             }, 3000);
-            return () => clearInterval(interval);
         }, delay * 2000);
-    }, [delay]);
+
+        return () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
+    }, [delay, unitTotal]);
 
     //--------------------------------------------------------------------------
     return (
