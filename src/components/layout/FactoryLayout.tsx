@@ -38,11 +38,11 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
     //--------------------------------------------------------------------------
     // Render
     return (
-        <div className="relative flex-1 h-full w-full transition-all duration-200 overflow-hidden">
+        <div className="relative flex-1 h-full w-full overflow-hidden">
             <Viewer thumbnailMode={thumbnailMode} />
             <div
                 className={cn(
-                    "absolute bottom-0 left-0 flex flex-col w-full h-full pointer-events-none z-50 transition-all",
+                    "absolute bottom-0 left-0 flex flex-col w-full h-full pointer-events-none z-50",
                     thumbnailMode ? "p-0" : "p-0",
                 )}
             >
@@ -64,7 +64,7 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                 )}
 
                 {!thumbnailMode && (
-                    <div className="w-full self-end appear-in-from-bottom opacity-0 [--animation-delay:1s]">
+                    <div className="w-full self-end">
                         <FooterTabsContext.Provider value={{ footerTab, setFooterTab }}>
                             {footerTab === "timeline" ? (
                                 <Timeline className="h-full min-h-40" />

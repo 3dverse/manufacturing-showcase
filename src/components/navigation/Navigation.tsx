@@ -100,7 +100,7 @@ export const Navigation = ({ className }: { className?: string }) => {
         <div className="flex gap-2">
             <ViewerPanel
                 className={cn(
-                    "flex h-auto border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] appear-in-from-bottom pointer-events-auto select-none",
+                    "flex h-auto border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto select-none",
                     className,
                 )}
             >
@@ -108,7 +108,7 @@ export const Navigation = ({ className }: { className?: string }) => {
             </ViewerPanel>
             <ViewerPanel
                 as="nav"
-                className="max-w-[90vw] overflow-x-auto p-1 border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] appear-in-from-bottom pointer-events-auto select-none"
+                className="max-w-[90vw] overflow-x-auto p-1 border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto select-none"
             >
                 <ul className="list-none flex gap-1">
                     {nodeGraph.areas.map((area, index) => (
