@@ -112,14 +112,21 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
                                 <Icon icon={faExclamationTriangle} className="mr-2 text-sm text-warning-100" />
                                 Incident reported
                             </PanelTitle>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="mt-2 w-full border-warning-400 text-warning-100 hover:bg-warning-400 hover:text-warning-100"
+                            <a
+                                target="_blank"
+                                href="/public/assets/fiche-intervention.pptx"
+                                rel="noopener noreferrer"
+                                style={{ display: "block" }}
                             >
-                                <Icon icon={faFilePdf} className="mr-2 text-sm text-warning-100" />
-                                Read the report
-                            </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="button mt-2 w-full border-warning-400 text-warning-100 hover:bg-warning-400 hover:text-warning-100"
+                                >
+                                    <Icon icon={faFilePdf} className="mr-2 text-sm text-warning-100" />
+                                    Read the report
+                                </Button>
+                            </a>
                         </PanelWrapper>
                     </ViewerPanel>
                 </>
