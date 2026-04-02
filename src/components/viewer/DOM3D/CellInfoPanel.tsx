@@ -21,6 +21,7 @@ import { useSpanProjection } from "@/hooks/useSpanProjection";
 import { useCorrelation } from "@/hooks/useCorrelation";
 import { fmtDuration } from "@/components/timeline/timeUtils";
 import type { CellNode } from "@/content/type";
+const reportFile = "/assets/interventionReport.pptx";
 
 //------------------------------------------------------------------------------
 const URL = "https://explorer-test.productys.com/?zoom_level=20&dashboard_id=168";
@@ -112,12 +113,7 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
                                 <Icon icon={faExclamationTriangle} className="mr-2 text-sm text-warning-100" />
                                 Incident reported
                             </PanelTitle>
-                            <a
-                                target="_blank"
-                                href="/public/assets/fiche-intervention.pptx"
-                                rel="noopener noreferrer"
-                                style={{ display: "block" }}
-                            >
+                            <a target="_blank" href={reportFile} rel="noopener noreferrer" style={{ display: "block" }}>
                                 <Button
                                     size="sm"
                                     variant="outline"
