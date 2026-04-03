@@ -94,6 +94,7 @@ export type PickTaskEntry = {
     salesOrderId?: string | null;
     pickedDate: number | null;
     createdAt: number;
+    sourceLocationId: string | null;
 };
 
 export type ReceiptEntry = {
@@ -115,6 +116,8 @@ export type PutawayTaskEntry = {
     quantity: number;
     putawayDate: number | null;
     createdAt: number;
+    sourceLocationId: string | null;
+    destinationLocationId: string | null;
 };
 
 export type PurchaseOrderEntry = {
@@ -359,26 +362,28 @@ function scopeArea(node: AreaNode, span: TimelineSpan): TimelineScope {
     // Reception area: all receipts, putaway tasks, and purchase orders.
     const receipts = areaName === "reception" ? Array.from(span.receipts.values()) : [];
     const purchaseOrders = areaName === "reception" ? Array.from(span.purchaseOrders.values()) : [];
-    const putawayTasks =
-        areaName === "reception"
-            ? resolveUnique(
-                  receipts.flatMap((r) => span.putawayTasksByReceipt.get(r.id) ?? []),
-                  span.putawayTasks,
-              )
-            : areaName === "storage"
-              ? Array.from(span.putawayTasks.values()).filter((pt) => pt.warehouseId === node.hash)
-              : [];
+    const getPutawayTasks = () => {
+        switch (areaName) {
+            case "reception":
+                return resolveUnique(
+                    receipts.flatMap((r) => span.putawayTasksByReceipt.get(r.id) ?? []),
+                    span.putawayTasks,
+                );
+            case "storage":
+                return Array.from(span.putawayTasks.values()).filter((pt) => pt.warehouseId === node.hash);
+            default:
+                return [];
+        }
+    };
+    const putawayTasks = getPutawayTasks();
 
-    // Storage area: RM allocations + pick/putaway tasks scoped to the storage warehouse.
-    // Delivery area: FG allocations (reserved against SOs).
-    const storagePicks =
-        areaName === "storage" ? Array.from(span.pickTasks.values()).filter((pt) => pt.warehouseId === node.hash) : [];
+    // Storage area: all allocations scoped to the storage warehouse (RM production_order + FG pre-QC sales_order).
+    // Delivery area: FG allocations scoped to the delivery warehouse (post-QC sales_order).
+    // Allocations are fetched with warehouseId: node.hash so the filter just passes them all through.
     const allocations =
-        areaName === "storage"
-            ? Array.from(span.allocations.values()).filter((a) => a.demandType === "production_order")
-            : areaName === "delivery"
-              ? Array.from(span.allocations.values()).filter((a) => a.demandType === "sales_order")
-              : [];
+        areaName === "storage" || areaName === "delivery"
+            ? Array.from(span.allocations.values()).filter((a) => a.warehouseId === node.hash)
+            : [];
 
     return {
         level: "area",
@@ -387,7 +392,7 @@ function scopeArea(node: AreaNode, span: TimelineSpan): TimelineScope {
         operations: [],
         downtimeEvents: resolveUnique(dtIds, span.downtimeEvents),
         eamWorkOrders: resolveWorkOrders(span.workOrdersByLocation.get(node.hash), span),
-        pickTasks: areaName === "delivery" ? pickTasks : storagePicks,
+        pickTasks: areaName === "delivery" ? pickTasks : [],
         receipts,
         putawayTasks,
         purchaseOrders,

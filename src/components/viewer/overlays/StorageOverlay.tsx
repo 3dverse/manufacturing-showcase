@@ -1,0 +1,127 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+//------------------------------------------------------------------------------
+import { DOMEntity } from "@3dverse/livelink-react";
+import type { Entity } from "@3dverse/livelink";
+
+//------------------------------------------------------------------------------
+import type { AreaNode } from "@/content/type";
+import { useInteractiveDom3DItem } from "@/hooks/useInteractiveDom3DItem";
+import { getBinOccupancy, type BinOccupancy } from "@/core/occupancy";
+import { useFactoryStore } from "@/store/useFactoryStore";
+import { useTimelineStore } from "@/store/useTimelineStore";
+
+//------------------------------------------------------------------------------
+// Deterministic color palette per itemId
+const ITEM_COLORS = [
+    "#e57373", // red
+    "#64b5f6", // blue
+    "#81c784", // green
+    "#ffb74d", // orange
+    "#ba68c8", // purple
+    "#4db6ac", // teal
+    "#fff176", // yellow
+    "#f06292", // pink
+];
+
+function itemColor(itemId: string): string {
+    let hash = 0;
+    for (let i = 0; i < itemId.length; i++) hash = (hash * 31 + itemId.charCodeAt(i)) >>> 0;
+    return ITEM_COLORS[hash % ITEM_COLORS.length];
+}
+
+//------------------------------------------------------------------------------
+type OverlayNode = { entity: Entity; hash: string };
+
+//------------------------------------------------------------------------------
+export function StorageOverlay({ areaNode }: { areaNode: AreaNode }) {
+    //--------------------------------------------------------------------------
+    // Store
+    const siteId = useFactoryStore((s) => s.currentFactory?.scene_id ?? "");
+    const asOf = useTimelineStore((s) => s.asOf);
+
+    //--------------------------------------------------------------------------
+    // Derive display nodes and WMS bin IDs.
+    //
+    // Storage: has aisles → racks → bins; one WMS location per bin (bin.hash).
+    // Delivery: has cells as display nodes; all movements go to a single zone
+    //   bin (${areaNode.hash}-BIN-01), so we query that and distribute across cells.
+    const { displayNodes, queryBinIds, isPerBin } = useMemo(() => {
+        const bins: OverlayNode[] = areaNode.aisles.flatMap((a) => a.racks.flatMap((r) => r.bins));
+        if (bins.length > 0) {
+            return { displayNodes: bins, queryBinIds: bins.map((b) => b.hash), isPerBin: true };
+        }
+        const zoneBinId = `${areaNode.hash}-BIN-01`;
+        return { displayNodes: areaNode.cells as OverlayNode[], queryBinIds: [zoneBinId], isPerBin: false };
+    }, [areaNode]);
+
+    //--------------------------------------------------------------------------
+    // State
+    const [occupancy, setOccupancy] = useState<Map<string, BinOccupancy[]>>(new Map());
+
+    useEffect(() => {
+        if (!siteId || !queryBinIds.length) return;
+        getBinOccupancy({ siteId, warehouseId: areaNode.hash, binIds: queryBinIds, asOf }).then(setOccupancy);
+    }, [siteId, areaNode.hash, queryBinIds, asOf]);
+
+    useEffect(() => {
+        console.log("occupancy", occupancy);
+    }, [occupancy]);
+
+    //--------------------------------------------------------------------------
+    // Map display nodes to their occupancy.
+    // Per-bin (storage): each node owns its slot.
+    // Zone (delivery): distribute the zone's item list across display nodes.
+    const nodeOccupancy = useMemo((): BinOccupancy[][] => {
+        if (isPerBin) {
+            return displayNodes.map((n) => occupancy.get(n.hash) ?? []);
+        }
+        const zoneBinId = queryBinIds[0];
+        const items = [...(occupancy.get(zoneBinId) ?? [])].sort((a, b) => a.itemId.localeCompare(b.itemId));
+        if (!items.length) return displayNodes.map(() => []);
+        const perItem = Math.ceil(displayNodes.length / items.length);
+        return displayNodes.map((_, i) => {
+            const item = items[Math.floor(i / perItem)];
+            return item ? [item] : [];
+        });
+    }, [isPerBin, displayNodes, occupancy, queryBinIds]);
+
+    //--------------------------------------------------------------------------
+    // Render
+    return displayNodes.map((node, i) => (
+        <StorageOverlayItem key={node.hash} node={node} occupancy={nodeOccupancy[i]} />
+    ));
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+function StorageOverlayItem({ node, occupancy }: { node: OverlayNode; occupancy: BinOccupancy[] }) {
+    //--------------------------------------------------------------------------
+    // Hooks
+    const setRef = useInteractiveDom3DItem();
+
+    //--------------------------------------------------------------------------
+    // Handler
+    const clickHandler = useCallback(() => {
+        console.log("click");
+    }, []);
+
+    //--------------------------------------------------------------------------
+    // Render
+    const primary = occupancy[0] ?? null;
+    const totalQty = occupancy.reduce((s, o) => s + o.quantity, 0);
+    if (!totalQty) return null;
+
+    return (
+        <DOMEntity entity={node.entity}>
+            <div
+                className="h-6 min-w-6 px-1 pointer-events-auto cursor-pointer rounded-full flex items-center justify-center text-[10px] font-bold text-black/70 leading-none"
+                style={{ backgroundColor: primary ? itemColor(primary.itemId) : "rgba(100,116,139,0.5)" }}
+                ref={setRef}
+                onClick={clickHandler}
+            >
+                {totalQty}
+            </div>
+        </DOMEntity>
+    );
+}

@@ -160,6 +160,7 @@ export const buildNavGraph = async (params: {
             )
             .map((e) => mapRackEntity(e, area))
             .sort(sortNode);
+        list.push(area);
         return area;
     };
 

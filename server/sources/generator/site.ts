@@ -25,13 +25,23 @@ export enum NodeTypes {
     location = "LOCATION",
     workCenter = "WORK_CENTER",
     machine = "MACHINE",
+    aisle = "AISLE",
+    rack = "RACK",
+    bin = "BIN",
 }
 
 export type SiteNode = _NavGraphNode & { type: NodeTypes.site; locations: LocationNode[] };
-export type LocationNode = _NavGraphNode & { type: NodeTypes.location; workCenters: WorkCenterNode[] };
+export type LocationNode = _NavGraphNode & {
+    type: NodeTypes.location;
+    workCenters: WorkCenterNode[];
+    aisles: AisleNode[];
+};
 export type WorkCenterNode = _NavGraphNode & { type: NodeTypes.workCenter; machines: MachineNode[] };
 export type MachineNode = _NavGraphNode & { type: NodeTypes.machine };
-export type GraphNode = SiteNode | LocationNode | WorkCenterNode | MachineNode;
+export type AisleNode = _NavGraphNode & { type: NodeTypes.aisle; racks: RackNode[] };
+export type RackNode = _NavGraphNode & { type: NodeTypes.rack; bins: BinNode[] };
+export type BinNode = _NavGraphNode & { type: NodeTypes.bin };
+export type GraphNode = SiteNode | LocationNode | WorkCenterNode | MachineNode | AisleNode | RackNode | BinNode;
 
 // ---------------------------------------------------------------------------
 // Hashing
@@ -75,7 +85,6 @@ function parseDebugName(value: string) {
 // ---------------------------------------------------------------------------
 // Scene loaders
 // ---------------------------------------------------------------------------
-
 const loadMachine = async (machineEntity: any, _scene_id: string, lineage: string[]): Promise<MachineNode> => {
     const { name } = parseDebugName(machineEntity.debug_name.value);
     return {
@@ -88,6 +97,73 @@ const loadMachine = async (machineEntity: any, _scene_id: string, lineage: strin
     };
 };
 
+//------------------------------------------------------------------------------
+const loadBin = (binEntity: any, lineage: string[]): BinNode => {
+    const { name } = parseDebugName(binEntity.debug_name.value);
+    return {
+        type: NodeTypes.bin,
+        lineage,
+        ordinal: binEntity.lineage?.ordinal ?? 0,
+        name: name ?? binEntity.debug_name.value,
+        hash: hashNode(binEntity.euid.value, lineage),
+        tags: loadTags(binEntity),
+    };
+};
+
+//------------------------------------------------------------------------------
+const loadRack = async (rackEntity: any, scene_id: string, lineage: string[]): Promise<RackNode> => {
+    const { name } = parseDebugName(rackEntity.debug_name.value);
+    const rackLineage = [...lineage, rackEntity.euid.value];
+    const rack: RackNode = {
+        type: NodeTypes.rack,
+        lineage,
+        ordinal: rackEntity.lineage?.ordinal ?? 0,
+        name: name ?? rackEntity.debug_name.value,
+        hash: hashNode(rackEntity.euid.value, lineage),
+        bins: [],
+        tags: loadTags(rackEntity),
+    };
+
+    if (scene_id) {
+        const rackScene = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
+        const binEntities = (rackScene.entities ?? []).filter((e: any) => {
+            if (!e.debug_name?.value?.includes(":")) return false;
+            return parseDebugName(e.debug_name.value).type === "bin";
+        });
+        rack.bins = binEntities.map((e: any) => loadBin(e, rackLineage)).sort(sortNode);
+    }
+
+    return rack;
+};
+
+//------------------------------------------------------------------------------
+const loadAisle = async (aisleEntity: any, scene_id: string, lineage: string[]): Promise<AisleNode> => {
+    const { name } = parseDebugName(aisleEntity.debug_name.value);
+    const aisleLineage = [...lineage, aisleEntity.euid.value];
+    const aisle: AisleNode = {
+        type: NodeTypes.aisle,
+        lineage,
+        ordinal: aisleEntity.lineage?.ordinal ?? 0,
+        name: name ?? aisleEntity.debug_name.value,
+        hash: hashNode(aisleEntity.euid.value, lineage),
+        racks: [],
+        tags: loadTags(aisleEntity),
+    };
+
+    if (scene_id) {
+        const aisleScene = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
+        const rackEntities = (aisleScene.entities ?? []).filter((e: any) => {
+            if (!e.debug_name?.value?.includes(":")) return false;
+            return parseDebugName(e.debug_name.value).type === "rack";
+        });
+        aisle.racks = await Promise.all(rackEntities.map((e: any) => loadRack(e, e.scene_ref?.value, aisleLineage)));
+        aisle.racks.sort(sortNode);
+    }
+
+    return aisle;
+};
+
+//------------------------------------------------------------------------------
 const loadWorkCenter = async (workCenterEntity: any, scene_id: string, lineage: string[]): Promise<WorkCenterNode> => {
     const { name } = parseDebugName(workCenterEntity.debug_name.value);
     const workCenter: WorkCenterNode = {
@@ -119,6 +195,7 @@ const loadWorkCenter = async (workCenterEntity: any, scene_id: string, lineage: 
     return workCenter;
 };
 
+//------------------------------------------------------------------------------
 const loadLineWorkCenters = async (lineEntity: any, scene_id: string, lineage: string[]): Promise<WorkCenterNode[]> => {
     const lineScene = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
     if (!lineScene.entities) return [];
@@ -134,6 +211,7 @@ const loadLineWorkCenters = async (lineEntity: any, scene_id: string, lineage: s
     ).sort(sortNode);
 };
 
+//------------------------------------------------------------------------------
 const loadLocation = async (locationEntity: any, scene_id: string, lineage: string[]): Promise<LocationNode> => {
     const { name } = parseDebugName(locationEntity.debug_name.value);
     const location: LocationNode = {
@@ -143,6 +221,7 @@ const loadLocation = async (locationEntity: any, scene_id: string, lineage: stri
         name,
         hash: hashNode(locationEntity.euid.value, lineage),
         workCenters: [],
+        aisles: [],
         tags: loadTags(locationEntity),
     };
 
@@ -150,17 +229,20 @@ const loadLocation = async (locationEntity: any, scene_id: string, lineage: stri
     const asset_description = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
     if (!asset_description.entities) throw NotFound;
 
-    const locationChildrenEntities = asset_description.entities
-        .filter((entity: any) => {
-            if (!entity.scene_ref || !entity.debug_name.value.includes(":")) return false;
-            const { type } = parseDebugName(entity.debug_name.value);
-            return type === "cell" || type === "line";
-        })
-        .sort(sortEntity);
+    const cellAndLineEnts: any[] = [];
+    const aisleEnts: any[] = [];
+
+    for (const entity of asset_description.entities as any[]) {
+        if (!entity.scene_ref || !entity.debug_name.value.includes(":")) continue;
+        const { type } = parseDebugName(entity.debug_name.value);
+        if (type === "cell" || type === "line") cellAndLineEnts.push(entity);
+        else if (type === "aisle") aisleEnts.push(entity);
+    }
+    cellAndLineEnts.sort(sortEntity);
 
     const workCenters = (
         await Promise.all(
-            locationChildrenEntities.map((ent: any) => {
+            cellAndLineEnts.map((ent: any) => {
                 const { type } = parseDebugName(ent.debug_name.value);
                 switch (type) {
                     case "cell":
@@ -173,9 +255,14 @@ const loadLocation = async (locationEntity: any, scene_id: string, lineage: stri
     ).flat();
 
     location.workCenters = workCenters as WorkCenterNode[];
+    location.aisles = (
+        await Promise.all(aisleEnts.map((ent: any) => loadAisle(ent, ent.scene_ref?.value, locationLineage)))
+    ).sort(sortNode);
+
     return location;
 };
 
+//------------------------------------------------------------------------------
 const loadSite = async (siteEntity: any, scene_id: string): Promise<SiteNode> => {
     const { name } = parseDebugName(siteEntity.debug_name.value);
     const lineage: string[] = [];
@@ -206,6 +293,7 @@ const loadSite = async (siteEntity: any, scene_id: string): Promise<SiteNode> =>
     return site;
 };
 
+//------------------------------------------------------------------------------
 const loadTags = (entity: any) => {
     if (!Array.isArray(entity?.tags?.value)) return {};
     const tags = entity.tags.value.reduce((acc: Record<string, string>, t: string) => {

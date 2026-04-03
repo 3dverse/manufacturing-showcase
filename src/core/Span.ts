@@ -50,8 +50,8 @@ export function spanWindow(): { from: number; to: number } {
  *  - Production orders:  only those linked to a visible sales order
  *  - Operations:         only those belonging to a visible production order
  *  - Downtime events:    only those that started ≤ now
- *  - WMS receipts / putaway tasks / pick tasks: only those dated ≥ now
- *    (i.e. upcoming work; completed past records are hidden)
+ *  - WMS receipts / putaway tasks / pick tasks / allocations: only those dated ≤ now
+ *    (i.e. records that have already occurred; future records are hidden)
  *
  * Toggle this constant to disable the filter during development.
  */
@@ -214,6 +214,8 @@ function mapPutawayTask(pt: PutawayTask): PutawayTaskEntry {
         quantity: pt.quantity,
         putawayDate: pt.putawayDate ?? null,
         createdAt: pt.createdAt,
+        sourceLocationId: pt.sourceLocationId ?? null,
+        destinationLocationId: pt.destinationLocationId ?? null,
     };
 }
 
@@ -246,6 +248,7 @@ function mapPickTask(pt: PickTask): PickTaskEntry {
         salesOrderId: pt.salesOrderId ?? null,
         pickedDate: pt.pickedDate ?? null,
         createdAt: pt.createdAt,
+        sourceLocationId: pt.sourceLocationId ?? null,
     };
 }
 
@@ -357,14 +360,12 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
         for (const po of poResp.data.data) span.purchaseOrders.set(po.id, mapPurchaseOrder(po));
     }
 
-    // Storage area: pick tasks (outbound) + putaway tasks (inbound) + stock allocations
+    // Storage area: putaway tasks (inbound) + stock allocations (RM + FG pre-QC)
     if (isArea(node) && node.name.toLowerCase() === "storage") {
-        const [ptResp, putResp, allocResp] = await Promise.all([
-            WMS.getPickTasks({ siteId, fromDate: from, toDate: to }),
+        const [putResp, allocResp] = await Promise.all([
             WMSInbound.getPutawayTasks({ siteId, fromDate: from, toDate: to }),
             WMSInventory.getAllocations({ siteId, warehouseId: node.hash }),
         ]);
-        for (const pt of ptResp.data.data) span.pickTasks.set(pt.id, mapPickTask(pt));
         for (const put of putResp.data.data) span.putawayTasks.set(put.id, mapPutawayTask(put));
         for (const a of allocResp.data.data) span.allocations.set(a.id, mapAllocation(a));
     }

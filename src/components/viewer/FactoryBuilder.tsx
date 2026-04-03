@@ -36,6 +36,7 @@ import { useNavNode } from "../navigation/hooks";
 import { BadgeOEE } from "../common/BadgeOEE";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
 import { CellInfoPanel } from "./DOM3D/CellInfoPanel";
+import { StorageOverlay } from "./overlays/StorageOverlay";
 
 const SHOW_FLOW_LINES = false;
 
@@ -226,7 +227,7 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
             case "storage":
                 return <StorageAreaSummary />;
             case "supply":
-                return; //TODO
+                return; // TODO
             case "production":
                 return <ProductionAreaSummary className="min-w-80" />;
             case "control":
@@ -249,13 +250,15 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
     }, [area]);
 
     //--------------------------------------------------------------------------
-
-    //--------------------------------------------------------------------------
     // Render
     return (
         <>
             <FloorOutline node={area} />
             {selectedNode && isFactory(selectedNode) && <TopPanel node={area} />}
+            {isSelected &&
+                selectedNode &&
+                isArea(selectedNode) &&
+                ["storage", "delivery"].includes(selectedNode.name) && <StorageOverlay areaNode={selectedNode} />}
             {isSelected && (
                 <>
                     <AnchoredPanel node={area} className="pointer-events-none!" kpi={kpi}>

@@ -182,7 +182,6 @@ function projectOperation(e: OperationEntry, asOf: number): ProjectedOperation {
             scrapQuantity: isFuture ? 0 : Math.round(e.quantities.scrapQuantity * estimatedProgress),
         },
     };
-    console.log(e, output.quantities);
     return output;
 }
 

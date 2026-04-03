@@ -1,4 +1,5 @@
 import { SectionWrapper, Field, PhaseBadge, Divider } from "@/components/correlation/SectionWrapper";
+import { NodeLink } from "@/components/correlation/NodeLink";
 import { fmtTs } from "@/components/timeline/timeUtils";
 import type { ProjectedPutawayTask } from "@/core/Projection";
 
@@ -31,7 +32,9 @@ export function PutawayTaskSheet({ items, focusedId }: Props) {
                         <Field label="Qty" value={t.quantity} />
                         <Field label="Created" value={fmtTs(t.createdAt)} />
                         {t.putawayDate && <Field label="Putaway" value={fmtTs(t.putawayDate)} />}
-                        <Field label="Warehouse" value={t.warehouseId} />
+                        <Field label="From bin" value={<NodeLink hash={t.sourceLocationId} />} />
+                        <Field label="To warehouse" value={<NodeLink hash={t.warehouseId} />} />
+                        <Field label="To bin" value={<NodeLink hash={t.destinationLocationId} />} />
                     </div>
                 </div>
             )}

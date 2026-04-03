@@ -217,6 +217,9 @@ Invented from scratch with realistic names/codes.
 
 ### 1.5a Item & material flow model
 
+See `ITEMS.md` for the full item type definitions, BOM structure, operation types, and WIP derivation algorithm. Summary below.
+
+
 Three item types are tracked as inventory:
 
 | Type | Code prefix | Origin |
@@ -279,29 +282,35 @@ The final non-QC operation's output is the finished good item.
 
 #### Warehouses and movement types
 
-Three warehouses hold inventory:
+See `inventory.md` for the authoritative model. Summary:
 
-| Warehouse | Contents |
+Four physical zones hold inventory:
+
+| Zone | Contents |
 |---|---|
-| `WH-RM` | Raw materials received from suppliers |
-| `WH-WIP` | Intermediate WIP between operations |
-| `WH-FG` | Finished goods awaiting shipment |
+| Reception | RM just arrived from suppliers, awaiting putaway |
+| Storage | RM on shelves allocated to production; WIP between operations; FG post-production awaiting QC |
+| Supply | RM staged near production lines, ready for consumption |
+| Delivery | FG cleared by QC, awaiting shipment |
 
 Every stock change is recorded as a timestamped `InventoryMovement`:
 
 | Movement type | Triggered by | Effect |
 |---|---|---|
-| `receipt` | RM receipt completed | `+qty` at `WH-RM` |
-| `issue` | Operation starts (RM/WIP inputs only; QC passthrough skipped) | `−qty` from source warehouse |
-| `production` | WIP: operation completes; FG: production order completes | `+qty` at `WH-WIP` or `WH-FG` |
-| `shipment` | Shipment dispatched | `−qty` from `WH-FG` |
+| `receipt` | RM arrives at dock | `+qty` at reception |
+| `putaway` | Putaway task executed | `−qty` reception, `+qty` storage |
+| `replenishment` | RM moved to supply staging | `−qty` storage, `+qty` supply |
+| `issue` | Operation starts (RM/WIP inputs; QC passthrough skipped) | `−qty` supply (RM) or storage (WIP) |
+| `production` | WIP: operation ends; FG: production order ends | `+qty` storage |
+| `quality_control` | FG passes QC | `−qty` storage, `+qty` delivery |
+| `pick` / `shipment` | Pick task or shipment dispatched | `−qty` delivery |
 
-Inventory positions at any point in time are derived by projecting movements up to that timestamp (`asOf` parameter on inventory endpoints).
+Inventory positions at any point in time are derived by projecting movements up to that timestamp.
 
 ### 1.6 WMS master data
 
-- **Warehouses** — `WH-RM` (raw materials), `WH-WIP` (WIP staging), `WH-FG` (finished goods)
-- **WMS Locations** — 4 bins per warehouse
+- **Warehouses** — four physical zones derived from the 3D scene: Reception, Storage, Supply, Delivery
+- **WMS Locations** — Storage and Delivery use real bins from the 3D scene; Reception and Supply each use a single fallback bin (`{zoneId}-BIN-01`)
 
 ### 1.7 APS master data
 
@@ -343,10 +352,14 @@ Sales Orders and Purchase Orders are placed relative to the MES timeline:
 
 ### 2.4 WMS movement events
 
-- **Receipts** — one per RM item per PO, timed to arrive 0–2 days before PO start. All RM items in the routing are covered, not just the first step.
-- **Putaway tasks** — one per completed receipt, moving RM from the receiving area to a storage bin.
-- **Pick tasks** — created 1 day before `SO.requestedDeliveryDate`; picked on `SO.requestedDeliveryDate`. One per PO/SO pair.
-- **Shipments** — linked to the pick task; shipped same day as pick completion (`SO.requestedDeliveryDate`).
+- **Receipts** — RM arrives at the reception dock, chunked into batches of 10–20 operations per receipt. Timed to arrive 2 days before the first operation in each batch needs the material.
+- **Putaway tasks** — one per operation (not per receipt), moving RM from reception to a storage bin. Bin assigned via greedy allocator; bin held from putaway date until consumption.
+- **Replenishment** — RM moved from storage to the supply staging zone just before each operation starts.
+- **Issue / consumption** — RM or WIP consumed at operation start, debited from supply (RM) or storage (WIP).
+- **Production** — WIP or FG produced at operation/PO end, credited to storage.
+- **Quality control transfer** — FG moves from storage to the delivery zone after the production order completes.
+- **Pick tasks** — created 1 day before `SO.requestedDeliveryDate`. One per PO/SO pair.
+- **Shipments** — FG leaves the delivery zone on `shipDate` (`pickDate + 6–12 h`). Shipment is the inventory-deleting event; pick task does not generate a separate movement.
 - **Stock allocations** — generated after all movements are settled; see §3.5.
 
 ### 2.5 APS scheduled operations
@@ -469,77 +482,72 @@ The model is **make-to-stock**: production is PO-driven and forecast-independent
 
 ### 3.5 WMS
 
+See `inventory.md` for the full movement and allocation model. Implementation notes below.
+
 **Receipts**
-- One receipt per RM item per PO (all RM items in the routing, not just the first step)
-- `receivedDate` — just before PO start (0–2 days prior)
-- `quantity` — `max(plannedQty, producedQty)` from the linked MES production order
-- `status` — `completed` if past, `pending` if future
+- Consumptions are sorted by time and chunked into batches of 10–20 operations per receipt
+- Receipt arrives 2 days before the first operation in the batch needs the material
+- One ERP purchase order, AP invoice, and WMS receipt record per chunk
+- `status` — `completed`
 
 **Putaway tasks**
-Generated from completed receipts. Each task represents the physical act of moving received RM from the receiving area to a storage bin.
+- One task per individual operation (consumption) within the receipt chunk, not per receipt
+- `sourceLocationId` — reception fallback bin
+- `destinationLocationId` — storage bin assigned by greedy allocator; bin held from `putawayDate` until `op.actualStart`
+- `putawayDate` — `op.actualStart − 24h`
+- `status` — `completed`
 
-- One task per completed receipt line
-- `sourceLocationId` — `WH-RM-BIN-01` (receiving area; same as receipt drop location)
-- `destinationLocationId` — cycled across `WH-RM-BIN-01` through `WH-RM-BIN-04` based on receipt number
-- `assignedAt` — same as `receivedDate`
-- `completedAt` — `receivedDate` + 1–4 hours (if completed)
-- `status`:
-  - `completed` — receipt was completed more than 4 hours before `now`
-  - `open` — receipt completed within the last 4 hours (recently arrived, not yet put away)
-  - `pending` — receipt not yet completed
+**Replenishment movements**
+- No task record; movements only
+- Emitted per RM input at operation start: `−qty` storage bin (from `opBinAssignment`), `+qty` supply fallback bin
+
+**Issue / consumption movements**
+- Emitted per operation input at `op.actualStart`
+- RM: `−qty` from supply fallback bin
+- WIP: `−qty` from storage fallback bin
+- QC passthrough inputs are skipped
+
+**Production movements**
+- WIP: `+qty` storage fallback bin at `op.actualEnd`, per operation output
+- FG: `+qty` storage fallback bin at `po.end`, using `producedQuantity`
+
+**Quality control transfer movements**
+- No task record; movements only
+- Emitted once per PO after production: `−qty` storage fallback bin, `+qty` assigned delivery bin
+- Timing: `po.end` (immediately after FG production movement)
 
 **Pick tasks**
-- Created once a SO exists for a completed or future PO
-- `createdAt` — `SO.requestedDeliveryDate − 1 day` (pick instruction released to warehouse floor)
-- `pickedDate` — `SO.requestedDeliveryDate` (pick completes on the promised delivery date)
-- `quantity` — PO `producedQuantity`
-- `status` — `completed` if `pickedDate ≤ now`, `open` otherwise
+- One per PO/SO pair
+- `sourceLocationId` — assigned delivery bin (greedy allocator; held from `pickDate` to `shipDate`)
+- `createdAt` — `pickDate − 1 day`
+- `pickedDate` — `delivDate` (`po.end + U(0.5, 2) days`)
+- `status` — `completed`
 
 **Shipments**
-- `shippedDate` — same as `pickedDate` (`SO.requestedDeliveryDate`)
-- `status` — `shipped` if `shippedDate ≤ now`, `pending` otherwise
+- `shippedDate` — `pickDate + U(6, 12) hours`
+- Shipment is the sole inventory-deleting event: `−qty` delivery bin
+- Pick task does not generate a separate inventory movement
+- `status` — `shipped`
 
-**Inventory movement log**
-Every stock change emits a timestamped `InventoryMovement` record (see §1.5a). The full log enables point-in-time inventory projection via the `asOf` API parameter.
-
-- `receipt` movements — emitted for each completed RM receipt
-- `issue` movements — emitted per operation input at `op.actualStart`; RM and WIP only (QC passthrough inputs are skipped)
-- `production` movements — WIP items emitted per operation output at `op.actualEnd`; FG items emitted once at `po.end` using `producedQuantity` (same value as the linked shipment, for balance consistency)
-- `shipment` movements — emitted for each dispatched shipment
-
-**Inventory positions** (snapshot at `now`)
-- Derived by projecting the movement log up to `now` — not computed independently
-- Positions with zero or negative balance are excluded from the snapshot
+**Inventory positions**
+- Derived by projecting all movements — not computed independently
+- Positions with zero or negative balance are excluded
 
 **Stock allocations**
-Generated after inventory positions are settled. Represent committed (reserved) stock — on-hand inventory that is spoken for by a specific demand.
+Represent committed stock spoken for by a known demand. See `inventory.md` for allocation windows.
 
-Two demand types:
+_RM allocations → production orders_ (storage zone)
+- One allocation per RM item per PO
+- `allocatedAt` — `max(PO.scheduledStart, putawayDate)` (effective once both demand and stock exist)
+- `clearedAt` — `op.actualStart` (consumed)
+- `allocatedQty` — `min(requiredQty, available)`; decrement available in PO date order
 
-_RM allocations → production orders_
-- Purpose: answers "is there enough RM on hand to start this PO?" and provides a full history of how long RM sat on the shelf before being consumed.
-- Scope: all POs in the window — active (planned/in_progress) and completed
-- Warehouse: **Storage** — RM allocations are tied to the storage zone where RM physically sits
-- Priority: chronological order — earliest PO start date gets first claim on available stock
-- For each PO, for each RM item in its routing:
-  - `requiredQty` — from the operation's `inputs[].requiredQuantity`
-  - `allocatedQty` — `min(requiredQty, available[rmItem])`; decrement available
-  - `status` — `allocated` if full, `partial` if `0 < allocatedQty < requiredQty`, omitted if zero
-  - `allocatedAt` — `max(PO.scheduledStart, RM putaway date)` FIFO: the allocation is effective once both the demand exists (PO scheduled) and the stock has arrived (putaway completed)
+_FG allocations → sales orders_ (storage zone, then delivery zone)
+- Storage allocation: from `po.end` (production) to `qcClearDate` (QC transfer)
+- Delivery allocation: from `qcClearDate` to `shipDate`
+- `allocatedQty` — `min(requiredQty, available)`; decrement available in SO delivery date order
 
-_FG allocations → sales orders_
-- Purpose: answers "is this sales order ready to ship?" and provides a full history of how long FG sat on the shelf before being picked.
-- Scope: all SOs in the window — active (open/in_progress) and shipped
-- Warehouse: **Delivery** — FG allocations are tied to the delivery zone, not storage
-- Priority: chronological order by requested delivery date
-- For each SO, for the linked FG item:
-  - `requiredQty` — SO line quantity
-  - `allocatedQty` — `min(requiredQty, available[fgItem])`; decrement available
-  - `status` — `allocated` if full, `partial` if `0 < allocatedQty < requiredQty`, omitted if zero
-  - `allocatedAt` — `linkedPO.timing.actualEnd ?? linkedPO.timing.scheduledEnd` (allocation begins when production completes and FG lands in stock)
-  - `clearedAt` — `SO.requestedDeliveryDate` if shipped, `null` otherwise (allocation ends when goods are picked for delivery)
-
-Free (unallocated) stock = on-hand − sum of all allocations for that item. This is the inventory available to absorb new demand.
+Free (unallocated) stock = `quantityOnHand − quantityAllocated` per bin.
 
 ### 3.6 APS
 
@@ -612,7 +620,8 @@ All statuses are fixed at their terminal (completed) value — see §Core Philos
 - [x] Nonconformances are QMS-only entities, generated independently of MES scrap. Rate and MES linkage deferred pending QMS API schema review.
 - [x] Item model: three types (FG, RM, WIP); WIP auto-derived from routing; operation inputs/outputs assigned per step; full inventory movement log with `asOf` projection. See §1.5a.
 - [ ] Downtime template pool: specific categories to include — deferred
-- [ ] Putaway tasks: generated from completed receipts; each receipt produces one putaway task moving RM from receiving dock to bin — strategy defined in §3.5, not yet implemented.
+- [x] Putaway tasks: one task per operation consumption, receipt chunked into 10–20 ops, greedy bin allocator tracks storage bin per operation.
 - [ ] Stock allocations: RM reserved for upcoming production orders; FG committed to sales orders — strategy defined in §3.5, not yet implemented.
+- [ ] Replenishment movements (storage → supply) and quality control transfer movements (storage → delivery): defined in §3.5 and `inventory.md`, not yet implemented.
 - [x] Cross-system linking: APS scheduled operations reference their MES counterpart via `mesOperationId`. EAM work orders and production orders are independent in the final dataset — their only relationship is temporal competition (WOs occupy gaps that POs cannot). Internal generation references (e.g. which gap a WO occupies) may exist during the timeline phase for coherence but are not emitted to the final dataset.
 

@@ -1,9 +1,4 @@
-import type {
-    LocationNode,
-    WorkCenterNode,
-    SiteNode,
-    MachineNode,
-} from "./site";
+import type { LocationNode, WorkCenterNode, SiteNode, MachineNode, BinNode } from "./site";
 
 export function flattenWorkCenters(site: SiteNode): WorkCenterNode[] {
     return site.locations.flatMap((a) => a.workCenters);
@@ -57,11 +52,25 @@ export function getLocationForMachine(site: SiteNode, machineHash: string): Loca
     return undefined;
 }
 
+/** Returns all bin nodes from the storage zone's aisle/rack hierarchy. */
+export function getStorageBins(site: SiteNode): BinNode[] {
+    const storage = site.locations.find((l) => l.name.toLowerCase() === "storage");
+    if (!storage) return [];
+    return storage.aisles.flatMap((a) => a.racks.flatMap((r) => r.bins));
+}
+
+/** Returns all bin nodes from the delivery zone's aisle/rack hierarchy. */
+export function getDeliveryBins(site: SiteNode): BinNode[] {
+    const delivery = site.locations.find((l) => l.name.toLowerCase() === "delivery");
+    if (!delivery) return [];
+    return delivery.aisles.flatMap((a) => a.racks.flatMap((r) => r.bins));
+}
+
 export type WMSZones = {
     reception: LocationNode;
-    storage:   LocationNode;
-    supply:    LocationNode;
-    delivery:  LocationNode;
+    storage: LocationNode;
+    supply: LocationNode;
+    delivery: LocationNode;
 };
 
 /**
@@ -69,12 +78,11 @@ export type WMSZones = {
  * from the site graph. Returns null if any zone is missing.
  */
 export function getWMSZones(site: SiteNode): WMSZones | null {
-    const find = (name: string) =>
-        site.locations.find(l => l.name.toLowerCase() === name.toLowerCase());
+    const find = (name: string) => site.locations.find((l) => l.name.toLowerCase() === name.toLowerCase());
     const reception = find("reception");
-    const storage   = find("storage");
-    const supply    = find("supply");
-    const delivery  = find("delivery");
+    const storage = find("storage");
+    const supply = find("supply");
+    const delivery = find("delivery");
     if (!reception || !storage || !supply || !delivery) return null;
     return { reception, storage, supply, delivery };
 }

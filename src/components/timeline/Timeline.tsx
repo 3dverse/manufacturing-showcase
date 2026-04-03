@@ -47,7 +47,7 @@ import { FooterTabs } from "../common/FooterTabs";
 
 type ZoomKey = "1D" | "1W" | "2W" | "1M" | "3M" | "6M";
 
-type AreaType = "production" | "delivery" | "reception" | "storage" | "other";
+type AreaType = "production" | "delivery" | "reception" | "storage" | "quality" | "other";
 
 const ZOOMS: { key: ZoomKey; label: string; days: number }[] = [
     { key: "1D", label: "1D", days: 1 },
@@ -486,8 +486,12 @@ function buildAllocationsStory(allocs: ProjectedAllocation[], demandType: "produ
                     {a.status === "partial" && <span className="ml-1.5 text-amber-400">partial</span>}
                 </div>
                 <div>
-                    <span className="text-slate-500">Since </span>
+                    <span className="text-slate-500">From </span>
                     {fmtTs(a.allocatedAt)}
+                </div>
+                <div>
+                    <span className="text-slate-500">Until </span>
+                    {a.clearedAt ? fmtTs(a.clearedAt) : "—"}
                 </div>
             </div>
         ),
@@ -549,7 +553,6 @@ function buildPickTasksStory(tasks: ProjectedPickTask[]): Story {
 }
 
 function buildPutawayTasksStory(tasks: ProjectedPutawayTask[]): Story {
-    console.log("tasks", tasks);
     const now = Math.floor(Date.now() / 1000);
     const bars: BarItem[] = tasks.map((t) => ({
         id: t.id,
@@ -657,7 +660,12 @@ function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[]): Story {
 // Story selection
 //------------------------------------------------------------------------------
 
-function buildStories(level: TimelineLevel, projection: AsOfProjection | null, areatype?: AreaType): Story[] {
+function buildStories(
+    level: TimelineLevel,
+    projection: AsOfProjection | null,
+    areatype?: AreaType,
+    nodeHash?: string,
+): Story[] {
     const so = projection?.salesOrders ?? [];
     const po = projection?.productionOrders ?? [];
     const ops = projection?.operations ?? [];
@@ -666,8 +674,18 @@ function buildStories(level: TimelineLevel, projection: AsOfProjection | null, a
 
     const rcp = projection?.receipts ?? [];
     const alloc = projection?.allocations ?? [];
-    const picks = projection?.pickTasks ?? [];
-    const putaways = projection?.putawayTasks ?? [];
+    const picks = (projection?.pickTasks ?? []).filter((t) => {
+        if (!nodeHash) return true;
+        if (areatype === "storage") return t.warehouseId === nodeHash;
+        if (areatype === "delivery") return t.warehouseId === nodeHash;
+        return true;
+    });
+    const putaways = (projection?.putawayTasks ?? []).filter((t) => {
+        if (!nodeHash) return true;
+        if (areatype === "storage") return t.warehouseId === nodeHash;
+        if (areatype === "reception") return t.sourceLocationId?.startsWith(nodeHash) ?? false;
+        return true;
+    });
     const purchaseOrders = projection?.purchaseOrders ?? [];
 
     switch (level) {
@@ -691,6 +709,8 @@ function buildStories(level: TimelineLevel, projection: AsOfProjection | null, a
                     ];
                 case "storage":
                     return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order")];
+                case "quality":
+                    return [buildSalesOrdersStory(so), ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways)] : [])];
                 default:
                     return [buildSalesOrdersStory(so)];
             }
@@ -797,10 +817,10 @@ export function Timeline({ className }: { className?: string }) {
     })();
     const correlationEnabled = !(
         level === "area" &&
-        areaType !== "production" &&
-        areaType !== "delivery" &&
         areaType !== "reception" &&
-        areaType !== "storage"
+        areaType !== "storage" &&
+        areaType !== "production" &&
+        areaType !== "delivery"
     );
     const activeFocus = correlationEnabled ? hovered : null;
     const correlated = useCorrelation(projection, activeFocus);
@@ -820,8 +840,8 @@ export function Timeline({ className }: { className?: string }) {
 
     //--------------------------------------------------------------------------
     const stories = useMemo(
-        () => (level ? buildStories(level, projection, areaType) : []),
-        [level, projection, areaType],
+        () => (level ? buildStories(level, projection, areaType, selectedNode?.hash) : []),
+        [level, projection, areaType, selectedNode],
     );
     const ticks = useMemo(() => buildTicks(winStart, winEnd, zoomDef.days), [winStart, winEnd, zoomDef.days]);
     const nowPct = toPct(refNow, winStart, winEnd);

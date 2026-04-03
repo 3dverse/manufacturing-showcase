@@ -1,4 +1,5 @@
 import { SectionWrapper, Field, PhaseBadge, Divider } from "@/components/correlation/SectionWrapper";
+import { NodeLink } from "@/components/correlation/NodeLink";
 import { fmtTs } from "@/components/timeline/timeUtils";
 import type { ProjectedPickTask } from "@/core/Projection";
 
@@ -31,7 +32,8 @@ export function PickTaskSheet({ items, focusedId }: Props) {
                         <Field label="Qty" value={`${t.quantity} ${t.uom}`} />
                         <Field label="Created" value={fmtTs(t.createdAt)} />
                         {t.pickedDate && <Field label="Picked" value={fmtTs(t.pickedDate)} />}
-                        <Field label="Warehouse" value={t.warehouseId} />
+                        <Field label="Warehouse" value={<NodeLink hash={t.warehouseId} />} />
+                        <Field label="Bin" value={<NodeLink hash={t.sourceLocationId} />} />
                     </div>
                 </div>
             )}

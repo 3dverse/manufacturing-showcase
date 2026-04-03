@@ -27,13 +27,13 @@ import { ON_DRAG_THRESHOLD_DISTANCE_IN_PX } from "@/hooks/useDragGuard";
 import { useAvatarsStore } from "@/store/useAvatarsStore";
 
 //------------------------------------------------------------------------------
+// Camera constraints
+const MIN_DOLLY_DISTANCE = 3;
+const MAX_DOLLY_DISTANCE = 50;
+
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
-    //--------------------------------------------------------------------------
-    // Camera constraints
-    const MIN_DOLLY_DISTANCE = 3;
-    const MAX_DOLLY_DISTANCE = 50;
-
     //--------------------------------------------------------------------------
     // Contexts
     const { isConnecting } = useContext(LivelinkContext);

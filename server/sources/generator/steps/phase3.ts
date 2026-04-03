@@ -37,10 +37,6 @@ function addDaysToDate(d: Date, n: number): Date {
     return new Date(d.getTime() + n * 86_400_000);
 }
 
-function addHoursToDate(d: Date, h: number): Date {
-    return new Date(d.getTime() + h * 60 * 60 * 1000);
-}
-
 const TECHNICIANS = ["J. Smith", "M. Johnson", "P. Williams", "K. Brown", "C. Davis"];
 
 // ---------------------------------------------------------------------------
@@ -587,10 +583,47 @@ export function fillDataset(
     };
 
     // Zone IDs derived from site graph (Reception, Storage, Supply, Delivery)
-    const { reception, storage, delivery } = entities.wmsZoneIds;
+    const { reception, storage, supply, delivery } = entities.wmsZoneIds;
     const receptionBin = `${reception}-BIN-01`;
-    const storageBin = `${storage}-BIN-01`;
-    const deliveryBin = `${delivery}-BIN-01`;
+    const supplyBin = `${supply}-BIN-01`;
+
+    // Storage bin pool — real bins from the 3D scene (or single fallback)
+    const storageBinIds: string[] = entities.wmsLocationsByWarehouse.get(storage) ?? [];
+    const storageFallbackBin = storageBinIds[0] ?? `${storage}-BIN-01`;
+
+    // Delivery bin pool — real bins from the 3D scene (or single fallback)
+    const deliveryBinIds: string[] = entities.wmsLocationsByWarehouse.get(delivery) ?? [];
+    const deliveryFallbackBin = deliveryBinIds[0] ?? `${delivery}-BIN-01`;
+
+    // Tracks which delivery bin each PO's FG lands in, set when pick tasks are assigned
+    const poDeliveryBin = new Map<string, string>();
+
+    // Greedy bin pool allocator: tracks when each bin becomes free again.
+    // A bin is "free" when its freeAt timestamp <= the arrival timestamp.
+    function makeBinAllocator(binIds: string[]) {
+        const freeAt = new Map<string, number>(binIds.map((id) => [id, 0]));
+        return function claimBin(arrivalAt: number, departureAt: number): string {
+            let bestId = binIds[0];
+            let bestFreeAt = freeAt.get(bestId) ?? 0;
+            for (const id of binIds) {
+                const fa = freeAt.get(id) ?? 0;
+                if (fa <= arrivalAt) {
+                    freeAt.set(id, departureAt);
+                    return id;
+                }
+                if (fa < bestFreeAt) {
+                    bestId = id;
+                    bestFreeAt = fa;
+                }
+            }
+            // All bins occupied — use the soonest-free one
+            freeAt.set(bestId, Math.max(bestFreeAt, departureAt));
+            return bestId;
+        };
+    }
+
+    const claimBin = makeBinAllocator(storageBinIds);
+    const claimDeliveryBin = makeBinAllocator(deliveryBinIds);
 
     let soNum = 1;
     let poNum = 1;
@@ -614,6 +647,12 @@ export function fillDataset(
         return `JE-${String(jeNum++).padStart(4, "0")}`;
     }
 
+    // Staging window per SO — populated in the PO loop, consumed in the FG allocation loop
+    const soStagingWindow = new Map<
+        string,
+        { pickAt: number; shipAt: number; deliveryBin: string; poActualEnd: number }
+    >();
+
     for (const po of placedPOs) {
         const item = entities.erpItems.get(po.itemId);
         const unitPrice = item?.standardCost ?? 500;
@@ -628,9 +667,9 @@ export function fillDataset(
         const orderDate = addDaysToDate(earliestAllocation, -rng.nextInt(2, 3));
         const delivDate = addDaysToDate(po.end, rng.nextFloat(0.5, 2));
 
-        // Pick and ship happen on the delivery date
+        // FG stages in Delivery for a few hours before shipping out
         const pickDate = delivDate;
-        const shipDate = delivDate;
+        const shipDate = addDaysToDate(delivDate, rng.nextFloat(0.25, 0.5)); // 6–12h dwell
         const soStatus = "shipped";
         const soId = newSoId();
 
@@ -657,10 +696,14 @@ export function fillDataset(
             const pickId = `PICK-${String(pickNum++).padStart(4, "0")}`;
             const shipId = `SHIP-${String(shipNum++).padStart(4, "0")}`;
 
+            // Claim a delivery bin for the staging window (pick arrival → ship departure)
+            const assignedDeliveryBin = claimDeliveryBin(toUnix(pickDate), toUnix(shipDate));
+            poDeliveryBin.set(po.id, assignedDeliveryBin);
+
             wmsPickTasks.push({
                 id: pickId,
-                warehouseId: storage,
-                sourceLocationId: storageBin,
+                warehouseId: delivery,
+                sourceLocationId: assignedDeliveryBin,
                 itemId: po.itemId,
                 quantity: qty,
                 uom: "pcs",
@@ -679,36 +722,30 @@ export function fillDataset(
                 salesOrderId: soId,
             });
 
-            const pickFields = {
-                occurredAt: toUnix(pickDate),
-                movementType: "pick",
-                itemId: po.itemId,
-                uom: "pcs",
-                fromLocationId: storageBin,
-                toLocationId: deliveryBin,
-                sourceDocumentType: "pick_task",
-                sourceDocumentId: pickId,
-                productionOrderId: po.id,
-                operationId: null,
-            };
-            // Pick: debit Storage, credit Delivery
-            mkMov({ warehouseId: storage, locationId: storageBin, quantity: -qty, ...pickFields });
-            mkMov({ warehouseId: delivery, locationId: deliveryBin, quantity: +qty, ...pickFields });
             // Shipment: FG leaves Delivery zone
             mkMov({
                 warehouseId: delivery,
-                locationId: deliveryBin,
+                locationId: assignedDeliveryBin,
                 occurredAt: toUnix(shipDate),
                 movementType: "shipment",
                 itemId: po.itemId,
                 quantity: -qty,
                 uom: "pcs",
-                fromLocationId: deliveryBin,
+                fromLocationId: assignedDeliveryBin,
                 toLocationId: null,
                 sourceDocumentType: "shipment",
                 sourceDocumentId: shipId,
                 productionOrderId: po.id,
                 operationId: null,
+            });
+
+            // Record delivery bin alongside staging window for use in the FG allocation loop
+            const poActualEnd = Number(mesPO?.timing?.actualEnd ?? mesPO?.timing?.scheduledEnd ?? toUnix(po.end));
+            soStagingWindow.set(soId, {
+                pickAt: toUnix(pickDate),
+                shipAt: toUnix(shipDate),
+                deliveryBin: assignedDeliveryBin,
+                poActualEnd,
             });
         }
 
@@ -806,198 +843,185 @@ export function fillDataset(
     // (pick tasks and shipments are generated in the ERP loop above, anchored to SO.orderDate)
     // ========================================================================
 
-    // ---- RM stock simulation: reorder-point driven per material ----
-    // Each RM starts at a random initial stock (5–10 days of production worth).
-    // Whenever projected stock after a consumption event would fall below the 5-day minimum,
-    // a purchase order + receipt arrives just before that event, restoring stock to 10 days.
-    // This decouples shipment timing across materials, making the timeline organic.
+    // ---- RM receipts: operation-driven, one putaway task per operation ----
+    // For each RM, collect all operations that consume it, sort chronologically,
+    // chunk into groups of 10–20 (each chunk = one receipt/PO), then assign
+    // each operation its own free storage bin via the greedy pool allocator.
 
-    const RM_MIN_DAYS = 5;
-    const RM_MAX_DAYS = 10;
-    const windowDays = Math.max(1, (windowEnd.getTime() - windowStart.getTime()) / (24 * 60 * 60 * 1000));
+    // Map<`${opId}|${rmId}`, binId> — consumed later when emitting issue movements
+    const opBinAssignment = new Map<string, string>();
 
-    // Build per-RM consumption schedule sorted chronologically
-    const sortedPOs = [...placedPOs].sort((a, b) => a.start.getTime() - b.start.getTime());
+    type RMConsumption = { opId: string; qty: number; putawayAt: number; consumedAt: number };
+    const rmConsumptionsByItem = new Map<string, RMConsumption[]>();
 
-    const rmConsumptionSchedule = new Map<string, Array<{ date: Date; qty: number }>>();
-    for (const po of sortedPOs) {
-        const mePo = mesProductionOrders.get(po.id) as any;
-        const poQty = Math.max(
-            (mePo?.quantities?.producedQuantity ?? 0) as number,
-            (mePo?.quantities?.plannedQuantity ?? 0) as number,
-        );
-        if (poQty === 0) continue;
-
-        const routing = entities.routingTemplates.get(po.itemId);
-        const rmIds: string[] = routing
-            ? [
-                  ...new Set(
-                      routing.steps.flatMap((s: any) => s.inputItemIds.filter((id: string) => id.startsWith("RM-"))),
-                  ),
-              ]
-            : ["RM-STEEL-BAR"];
-
-        for (const rmId of rmIds) {
-            const list = rmConsumptionSchedule.get(rmId) ?? [];
-            list.push({ date: po.start, qty: poQty });
-            rmConsumptionSchedule.set(rmId, list);
+    for (const op of mesOperations.values() as IterableIterator<any>) {
+        for (const input of (op.inputs ?? []) as any[]) {
+            if (!(input.itemId as string).startsWith("RM-")) continue;
+            if ((input.issuedQuantity ?? 0) === 0) continue;
+            const list = rmConsumptionsByItem.get(input.itemId) ?? [];
+            list.push({
+                opId: op.id,
+                qty: input.issuedQuantity,
+                putawayAt: (op.actualStart as number) - 24 * 3600, // 1 day before op
+                consumedAt: op.actualStart as number,
+            });
+            rmConsumptionsByItem.set(input.itemId, list);
         }
     }
 
-    for (const [rmId, consumptions] of rmConsumptionSchedule) {
-        const totalConsumed = consumptions.reduce((s, e) => s + e.qty, 0);
-        const dailyRate = totalConsumed / windowDays;
-
-        // Each material starts at a different random stock level, spreading reorder events
-        const initialStockDays = rng.nextFloat(RM_MIN_DAYS, RM_MAX_DAYS);
-        let currentStock = initialStockDays * dailyRate;
+    for (const [rmId, consumptions] of rmConsumptionsByItem) {
+        consumptions.sort((a, b) => a.consumedAt - b.consumedAt);
 
         const rmItem = entities.erpItems.get(rmId);
         const rmUnitCost = (rmItem as any)?.standardCost ?? 50;
 
-        for (const evt of consumptions) {
-            // Reorder before this consumption if stock would drop below the minimum
-            if (currentStock - evt.qty < RM_MIN_DAYS * dailyRate) {
-                // Vary the restock target (8–12 days) so materials don't re-synchronize after each order
-                const targetDays = rng.nextFloat(RM_MAX_DAYS - 2, RM_MAX_DAYS + 2);
-                const reorderQty = Math.ceil(targetDays * dailyRate - currentStock + evt.qty);
-                if (reorderQty > 0) {
-                    const supplier = rng.pick(supplierIds);
-                    const suppRec = entities.erpSuppliers.get(supplier)!;
-                    const leadTime = (suppRec as any).leadTimeDays ?? 7;
+        let i = 0;
+        while (i < consumptions.length) {
+            const chunkSize = rng.nextInt(10, 20);
+            const chunk = consumptions.slice(i, i + chunkSize);
+            i += chunkSize;
 
-                    const rcvDate = addDaysToDate(evt.date, -rng.nextInt(0, 2));
-                    const poOrderDate = addDaysToDate(rcvDate, -Math.round((leadTime + rng.nextInt(1, 3)) / 2));
-                    const erpPoId = newPoId();
-                    const lineAmount = reorderQty * rmUnitCost;
+            const totalQty = chunk.reduce((s, c) => s + c.qty, 0);
 
-                    const rmPoObj = {
-                        id: erpPoId,
-                        companyId,
-                        orderNumber: erpPoId,
-                        supplierId: supplier,
-                        orderDate: toUnix(poOrderDate),
-                        receivedAt: toUnix(rcvDate),
-                        status: "received",
-                        currency: "USD",
-                        lines: [
-                            {
-                                lineNumber: 1,
-                                itemId: rmId,
-                                orderedQuantity: reorderQty,
-                                expectedReceiptDate: toUnix(rcvDate),
-                                unitPrice: rmUnitCost,
-                                lineAmount,
-                            },
-                        ],
-                        totalAmount: lineAmount,
-                    };
-                    erpPurchaseOrders.set(erpPoId, rmPoObj);
-                    erpPurchaseOrderList.push(rmPoObj);
+            // Receipt arrives 2 days before the first op in this chunk needs its material
+            const rcvDate = new Date((chunk[0].putawayAt - 24 * 3600) * 1000);
+            const supplier = rng.pick(supplierIds);
+            const suppRec = entities.erpSuppliers.get(supplier)!;
+            const leadTime = (suppRec as any).leadTimeDays ?? 7;
+            const poOrderDate = addDaysToDate(rcvDate, -Math.round(leadTime / 2));
+            const erpPoId = newPoId();
+            const lineAmount = totalQty * rmUnitCost;
 
-                    // AP Invoice
-                    const apInvDate = addDaysToDate(rcvDate, rng.nextInt(1, 3));
-                    const apTerms = (suppRec as any).paymentTermsDays ?? 30;
-                    const apDue = addDaysToDate(apInvDate, apTerms);
-                    const apInvId = newInvId();
-                    erpInvoices.set(apInvId, {
-                        id: apInvId,
-                        companyId,
-                        invoiceNumber: apInvId,
-                        type: "ap",
-                        supplierId: supplier,
-                        purchaseOrderId: erpPoId,
-                        invoiceDate: toUnix(apInvDate),
-                        dueDate: toUnix(apDue),
-                        amount: lineAmount,
-                        currency: "USD",
-                        status: "paid",
-                    });
-                    erpInvoiceList.push(apInvId);
-
-                    // WMS receipt + putaway
-                    const lineRcptId = `RCP-${String(receiptNum++).padStart(4, "0")}`;
-                    const putawayId = `PUT-${String(putawayNum++).padStart(4, "0")}`;
-                    const putawayDate = addHoursToDate(rcvDate, 4);
-
-                    wmsReceipts.push({
-                        id: lineRcptId,
-                        warehouseId: reception,
-                        receiptNumber: lineRcptId,
-                        status: "completed",
-                        receivedAt: toUnix(rcvDate),
-                        dockLocationId: receptionBin,
-                        erpPurchaseOrderId: erpPoId,
-                        lineCount: 1,
-                        lines: [{ lineNumber: 1, itemId: rmId, quantity: reorderQty, uom: "pcs" }],
-                    });
-                    wmsPutawayTasks.push({
-                        id: putawayId,
-                        warehouseId: storage,
-                        receiptId: lineRcptId,
+            const rmPoObj = {
+                id: erpPoId,
+                companyId,
+                orderNumber: erpPoId,
+                supplierId: supplier,
+                orderDate: toUnix(poOrderDate),
+                receivedAt: toUnix(rcvDate),
+                status: "received",
+                currency: "USD",
+                lines: [
+                    {
+                        lineNumber: 1,
                         itemId: rmId,
-                        quantity: reorderQty,
-                        uom: "pcs",
-                        sourceLocationId: receptionBin,
-                        destinationLocationId: storageBin,
-                        createdAt: toUnix(rcvDate),
-                        putawayDate: toUnix(putawayDate),
-                        status: "completed",
-                    });
+                        orderedQuantity: totalQty,
+                        expectedReceiptDate: toUnix(rcvDate),
+                        unitPrice: rmUnitCost,
+                        lineAmount,
+                    },
+                ],
+                totalAmount: lineAmount,
+            };
+            erpPurchaseOrders.set(erpPoId, rmPoObj);
+            erpPurchaseOrderList.push(rmPoObj);
 
-                    // Receipt: RM arrives at Reception
-                    mkMov({
-                        warehouseId: reception,
-                        locationId: receptionBin,
-                        occurredAt: toUnix(rcvDate),
-                        movementType: "receipt",
-                        itemId: rmId,
-                        quantity: reorderQty,
-                        uom: "pcs",
-                        fromLocationId: null,
-                        toLocationId: receptionBin,
-                        sourceDocumentType: "receipt",
-                        sourceDocumentId: lineRcptId,
-                        productionOrderId: null,
-                        operationId: null,
-                    });
-                    // Putaway: RM moves from Reception to Storage
-                    mkMov({
-                        warehouseId: storage,
-                        locationId: storageBin,
-                        occurredAt: toUnix(putawayDate),
-                        movementType: "putaway",
-                        itemId: rmId,
-                        quantity: reorderQty,
-                        uom: "pcs",
-                        fromLocationId: receptionBin,
-                        toLocationId: storageBin,
-                        sourceDocumentType: "putaway_task",
-                        sourceDocumentId: putawayId,
-                        productionOrderId: null,
-                        operationId: null,
-                    });
-                    // Debit Reception (stock leaves)
-                    mkMov({
-                        warehouseId: reception,
-                        locationId: receptionBin,
-                        occurredAt: toUnix(putawayDate),
-                        movementType: "putaway",
-                        itemId: rmId,
-                        quantity: -reorderQty,
-                        uom: "pcs",
-                        fromLocationId: receptionBin,
-                        toLocationId: storageBin,
-                        sourceDocumentType: "putaway_task",
-                        sourceDocumentId: putawayId,
-                        productionOrderId: null,
-                        operationId: null,
-                    });
+            // AP Invoice
+            const apInvDate = addDaysToDate(rcvDate, rng.nextInt(1, 3));
+            const apTerms = (suppRec as any).paymentTermsDays ?? 30;
+            const apDue = addDaysToDate(apInvDate, apTerms);
+            const apInvId = newInvId();
+            erpInvoices.set(apInvId, {
+                id: apInvId,
+                companyId,
+                invoiceNumber: apInvId,
+                type: "ap",
+                supplierId: supplier,
+                purchaseOrderId: erpPoId,
+                invoiceDate: toUnix(apInvDate),
+                dueDate: toUnix(apDue),
+                amount: lineAmount,
+                currency: "USD",
+                status: "paid",
+            });
+            erpInvoiceList.push(apInvId);
 
-                    currentStock += reorderQty;
-                }
+            // WMS receipt record — covers the whole chunk
+            const rcptId = `RCP-${String(receiptNum++).padStart(4, "0")}`;
+            wmsReceipts.push({
+                id: rcptId,
+                warehouseId: reception,
+                receiptNumber: rcptId,
+                status: "completed",
+                receivedAt: toUnix(rcvDate),
+                dockLocationId: receptionBin,
+                erpPurchaseOrderId: erpPoId,
+                lineCount: 1,
+                lines: [{ lineNumber: 1, itemId: rmId, quantity: totalQty, uom: "pcs" }],
+            });
+
+            // Receipt movement: bulk arrival at dock
+            mkMov({
+                warehouseId: reception,
+                locationId: receptionBin,
+                occurredAt: toUnix(rcvDate),
+                movementType: "receipt",
+                itemId: rmId,
+                quantity: totalQty,
+                uom: "pcs",
+                fromLocationId: null,
+                toLocationId: receptionBin,
+                sourceDocumentType: "receipt",
+                sourceDocumentId: rcptId,
+                productionOrderId: null,
+                operationId: null,
+            });
+
+            // One putaway task per operation in the chunk
+            for (const consumption of chunk) {
+                const putawayDate = new Date(consumption.putawayAt * 1000);
+                const targetBinId = claimBin(consumption.putawayAt, consumption.consumedAt);
+                opBinAssignment.set(`${consumption.opId}|${rmId}`, targetBinId);
+
+                const putawayId = `PUT-${String(putawayNum++).padStart(4, "0")}`;
+                wmsPutawayTasks.push({
+                    id: putawayId,
+                    warehouseId: storage,
+                    receiptId: rcptId,
+                    itemId: rmId,
+                    quantity: consumption.qty,
+                    uom: "pcs",
+                    sourceLocationId: receptionBin,
+                    destinationLocationId: targetBinId,
+                    createdAt: toUnix(rcvDate),
+                    putawayDate: toUnix(putawayDate),
+                    status: "completed",
+                    operationId: consumption.opId,
+                });
+
+                // Putaway: RM enters its dedicated storage bin
+                mkMov({
+                    warehouseId: storage,
+                    locationId: targetBinId,
+                    occurredAt: toUnix(putawayDate),
+                    movementType: "putaway",
+                    itemId: rmId,
+                    quantity: consumption.qty,
+                    uom: "pcs",
+                    fromLocationId: receptionBin,
+                    toLocationId: targetBinId,
+                    sourceDocumentType: "putaway_task",
+                    sourceDocumentId: putawayId,
+                    productionOrderId: null,
+                    operationId: consumption.opId,
+                });
+                // Debit Reception
+                mkMov({
+                    warehouseId: reception,
+                    locationId: receptionBin,
+                    occurredAt: toUnix(putawayDate),
+                    movementType: "putaway",
+                    itemId: rmId,
+                    quantity: -consumption.qty,
+                    uom: "pcs",
+                    fromLocationId: receptionBin,
+                    toLocationId: targetBinId,
+                    sourceDocumentType: "putaway_task",
+                    sourceDocumentId: putawayId,
+                    productionOrderId: null,
+                    operationId: consumption.opId,
+                });
             }
-            currentStock -= evt.qty;
         }
     }
 
@@ -1009,14 +1033,47 @@ export function fillDataset(
         if (qty > 0) {
             mkMov({
                 warehouseId: storage,
-                locationId: storageBin,
+                locationId: storageFallbackBin,
                 occurredAt: toUnix(po.end),
                 movementType: "production",
                 itemId: po.itemId,
                 quantity: qty,
                 uom: "pcs",
                 fromLocationId: null,
-                toLocationId: storageBin,
+                toLocationId: storageFallbackBin,
+                sourceDocumentType: null,
+                sourceDocumentId: null,
+                productionOrderId: po.id,
+                operationId: null,
+            });
+
+            // QC transfer: FG moves from Storage to Delivery after production completes
+            const destBin = poDeliveryBin.get(po.id) ?? deliveryFallbackBin;
+            mkMov({
+                warehouseId: storage,
+                locationId: storageFallbackBin,
+                occurredAt: toUnix(po.end),
+                movementType: "quality_control",
+                itemId: po.itemId,
+                quantity: -qty,
+                uom: "pcs",
+                fromLocationId: storageFallbackBin,
+                toLocationId: destBin,
+                sourceDocumentType: null,
+                sourceDocumentId: null,
+                productionOrderId: po.id,
+                operationId: null,
+            });
+            mkMov({
+                warehouseId: delivery,
+                locationId: destBin,
+                occurredAt: toUnix(po.end),
+                movementType: "quality_control",
+                itemId: po.itemId,
+                quantity: qty,
+                uom: "pcs",
+                fromLocationId: storageFallbackBin,
+                toLocationId: destBin,
                 sourceDocumentType: null,
                 sourceDocumentId: null,
                 productionOrderId: po.id,
@@ -1025,45 +1082,60 @@ export function fillDataset(
         }
     }
 
-    // ---- Issue + production movements from MES operations (WIP only) ----
+    // ---- Issue + production movements from MES operations ----
     for (const op of mesOperations.values() as IterableIterator<any>) {
-        // Issue movements: RM/WIP consumed at operation start (drawn from Storage).
-        // Skip FG items — QC is a passthrough; the FG stays in Storage.
+        // Replenishment + issue movements for RM inputs.
+        // Replenishment + issue movements for RM inputs only.
+        // WIP is not tracked as inventory — no movements emitted for WIP inputs or outputs.
         for (const input of (op.inputs ?? []) as any[]) {
             if ((input.issuedQuantity ?? 0) === 0) continue;
-            if (!input.itemId.startsWith("RM-") && !input.itemId.startsWith("WIP-")) continue;
+            if (!input.itemId.startsWith("RM-")) continue;
+
+            const storageBin = opBinAssignment.get(`${op.id}|${input.itemId}`) ?? storageFallbackBin;
+
+            // Replenishment: storage bin → supply bin
             mkMov({
                 warehouseId: storage,
                 locationId: storageBin,
                 occurredAt: op.actualStart,
-                movementType: "issue",
+                movementType: "replenishment",
                 itemId: input.itemId,
                 quantity: -input.issuedQuantity,
                 uom: input.uom ?? "pcs",
                 fromLocationId: storageBin,
-                toLocationId: null,
+                toLocationId: supplyBin,
                 sourceDocumentType: null,
                 sourceDocumentId: null,
                 productionOrderId: op.productionOrderId,
                 operationId: op.id,
             });
-        }
-
-        // Production movements: WIP produced at operation end — lands in Storage.
-        // FG production movements are emitted in the PO loop above (consistent qty with shipment).
-        for (const output of (op.outputs ?? []) as any[]) {
-            if ((output.reportedQuantity ?? 0) === 0) continue;
-            if (!output.itemId.startsWith("WIP-")) continue; // FG handled by PO loop
             mkMov({
-                warehouseId: storage,
-                locationId: storageBin,
-                occurredAt: op.actualEnd,
-                movementType: "production",
-                itemId: output.itemId,
-                quantity: output.reportedQuantity,
-                uom: output.uom ?? "pcs",
-                fromLocationId: null,
-                toLocationId: storageBin,
+                warehouseId: supply,
+                locationId: supplyBin,
+                occurredAt: op.actualStart,
+                movementType: "replenishment",
+                itemId: input.itemId,
+                quantity: input.issuedQuantity,
+                uom: input.uom ?? "pcs",
+                fromLocationId: storageBin,
+                toLocationId: supplyBin,
+                sourceDocumentType: null,
+                sourceDocumentId: null,
+                productionOrderId: op.productionOrderId,
+                operationId: op.id,
+            });
+
+            // Issue: RM consumed from supply
+            mkMov({
+                warehouseId: supply,
+                locationId: supplyBin,
+                occurredAt: op.actualStart,
+                movementType: "issue",
+                itemId: input.itemId,
+                quantity: -input.issuedQuantity,
+                uom: input.uom ?? "pcs",
+                fromLocationId: supplyBin,
+                toLocationId: null,
                 sourceDocumentType: null,
                 sourceDocumentId: null,
                 productionOrderId: op.productionOrderId,
@@ -1073,7 +1145,6 @@ export function fillDataset(
     }
 
     // ---- Inventory positions derived by projecting all movements ----
-    const nowTs = toUnix(now);
     const balances = new Map<
         string,
         { itemId: string; warehouseId: string; locationId: string; qty: number; uom: string }
@@ -1094,34 +1165,57 @@ export function fillDataset(
 
     const wmsInventoryPositions: any[] = [];
     const wmsInventorySummary: any[] = [];
-    const summaryByItem = new Map<string, number>();
+    const summaryByWarehouseItem = new Map<string, { itemId: string; warehouseId: string; qty: number; uom: string }>();
 
     for (const { itemId, warehouseId, locationId, qty, uom } of balances.values()) {
         if (qty <= 0) continue;
-        const pos = { itemId, warehouseId, locationId, quantityOnHand: qty, uom };
+        const pos = {
+            itemId,
+            warehouseId,
+            locationId,
+            quantityOnHand: qty,
+            quantityAllocated: 0,
+            quantityAvailable: qty,
+            uom,
+            inventoryStatus: "available",
+        };
         wmsInventoryPositions.push(pos);
         const list = wmsInventoryByItem.get(itemId) ?? [];
         list.push(pos);
         wmsInventoryByItem.set(itemId, list);
-        summaryByItem.set(itemId, (summaryByItem.get(itemId) ?? 0) + qty);
+        const sumKey = `${warehouseId}|${itemId}`;
+        if (!summaryByWarehouseItem.has(sumKey))
+            summaryByWarehouseItem.set(sumKey, { itemId, warehouseId, qty: 0, uom });
+        summaryByWarehouseItem.get(sumKey)!.qty += qty;
     }
-    for (const [itemId, totalQty] of summaryByItem) {
-        wmsInventorySummary.push({ itemId, totalQuantityOnHand: totalQty, uom: "pcs" });
+    for (const { itemId, warehouseId, qty, uom } of summaryByWarehouseItem.values()) {
+        wmsInventorySummary.push({
+            itemId,
+            warehouseId,
+            quantityOnHand: qty,
+            quantityAllocated: 0,
+            quantityAvailable: qty,
+            uom,
+        });
     }
 
     // ========================================================================
     // WMS — stock allocations
     // ========================================================================
-    // Generated after inventory positions are settled.
-    // RM → planned/in-progress POs (FIFO by PO start date)
-    // FG → open/in-progress SOs  (FIFO by SO order date)
 
     const wmsStockAllocations: any[] = [];
     let allocNum = 1;
 
-    // RM allocations — all POs across the window
-    // allocatedAt ≈ day before PO start (when RM was putaway),
-    // clearedAt = when production started (RM was issued)
+    // RM allocations — one per RM per production order (FIFO by scheduled start)
+    // Available stock is the total quantity ever put away into storage (putaway credit movements),
+    // not the end-of-time net balance (which is ~0 because replenishment drains storage).
+    const rmAvailable = new Map<string, number>();
+    for (const mv of wmsMovements) {
+        if (!mv.itemId.startsWith("RM-")) continue;
+        if (mv.movementType !== "putaway" || mv.warehouseId !== storage || mv.quantity <= 0) continue;
+        rmAvailable.set(mv.itemId, (rmAvailable.get(mv.itemId) ?? 0) + mv.quantity);
+    }
+
     const allMesPOs = ([...mesProductionOrders.values()] as any[]).sort(
         (a, b) => (a.timing?.scheduledStart ?? 0) - (b.timing?.scheduledStart ?? 0),
     );
@@ -1139,38 +1233,44 @@ export function fillDataset(
         if (requiredQty === 0 || allRmIds.length === 0) continue;
 
         for (const rmItemId of allRmIds) {
-            const allocQty = requiredQty;
-            const allocatedAt = Number(mePo.timing?.scheduledStart ?? nowTs) - rng.nextFloat(1800, 86400);
-            const clearedAt = Number(mePo.timing?.actualStart ?? mePo.timing?.scheduledStart ?? nowTs);
+            // Find the actual storage bin assigned to this PO's operations for this RM
+            let rmBinId = storageFallbackBin;
+            for (const op of mesOperations.values() as IterableIterator<any>) {
+                if (op.productionOrderId !== mePo.id) continue;
+                const assigned = opBinAssignment.get(`${op.id}|${rmItemId}`);
+                if (assigned) {
+                    rmBinId = assigned;
+                    break;
+                }
+            }
 
+            const available = rmAvailable.get(rmItemId) ?? 0;
+            const allocatedQty = Math.min(requiredQty, available);
+            if (allocatedQty === 0) continue;
+            rmAvailable.set(rmItemId, available - allocatedQty);
+
+            const allocatedAt = Number(mePo.timing?.scheduledStart ?? 0) - rng.nextFloat(1800, 86400);
+            const clearedAt = Number(mePo.timing?.actualStart ?? mePo.timing?.scheduledStart ?? 0);
             wmsStockAllocations.push({
                 id: `ALLOC-${String(allocNum++).padStart(5, "0")}`,
                 warehouseId: storage,
-                locationId: storageBin,
+                locationId: rmBinId,
                 itemId: rmItemId,
-                quantityAllocated: allocQty,
+                quantityAllocated: allocatedQty,
                 quantityRequired: requiredQty,
                 uom: entities.erpItems.get(rmItemId)?.uom ?? "pcs",
                 demandType: "production_order",
                 productionOrderId: mePo.id,
                 erpSalesOrderId: mePo.erpSalesOrderId ?? null,
-                status: allocQty >= requiredQty ? "allocated" : "partial",
+                status: allocatedQty >= requiredQty ? "allocated" : "partial",
                 allocatedAt,
                 clearedAt,
             });
         }
     }
 
-    // FG allocations — FIFO by SO requested delivery date
-    // allocatedAt = when production completed (FG lands in stock)
-    // clearedAt   = SO.requestedDeliveryDate (when goods are picked for delivery)
-    const mesPOByEsoId = new Map<string, any>();
-    for (const [, mpo] of mesProductionOrders) {
-        if ((mpo as any).erpSalesOrderId) mesPOByEsoId.set((mpo as any).erpSalesOrderId, mpo);
-    }
-
-    // FG allocations — all SOs across the window
-    // allocatedAt = production end (or scheduledEnd), clearedAt = requestedDeliveryDate
+    // FG allocations — one per sales order (FIFO by requested delivery date)
+    // Two allocation records per SO: storage (production → QC transfer) + delivery (QC transfer → shipment).
     const allSOs = ([...erpSalesOrders.values()] as any[]).sort(
         (a, b) => a.requestedDeliveryDate - b.requestedDeliveryDate,
     );
@@ -1180,32 +1280,70 @@ export function fillDataset(
         const requiredQty = so.lines[0]?.quantity ?? 0;
         if (!fgItemId || requiredQty === 0) continue;
 
-        const linkedMesPo = mesPOByEsoId.get(so.id);
-        const allocatedAt = linkedMesPo
-            ? Number(linkedMesPo.timing?.actualEnd ?? linkedMesPo.timing?.scheduledEnd ?? so.orderDate)
-            : so.orderDate;
+        const staging = soStagingWindow.get(so.id);
+        const productionEnd = staging?.poActualEnd ?? so.orderDate;
+        // QC transfer is modelled as instantaneous at po.end; qcClearDate = productionEnd
+        const qcClearDate = productionEnd;
+        const pickAt = staging?.pickAt ?? so.requestedDeliveryDate;
+        const stagingBin = staging?.deliveryBin ?? deliveryFallbackBin;
+        const uom = entities.erpItems.get(fgItemId)?.uom ?? "pcs";
 
-        let allocQty: number;
-        let clearedAt: number | null;
-
-        allocQty = requiredQty;
-        clearedAt = so.requestedDeliveryDate;
-
+        // Storage allocation: FG held in storage between production and QC clearance
         wmsStockAllocations.push({
             id: `ALLOC-${String(allocNum++).padStart(5, "0")}`,
-            warehouseId: delivery,
-            locationId: deliveryBin,
+            warehouseId: storage,
+            locationId: storageFallbackBin,
             itemId: fgItemId,
-            quantityAllocated: allocQty,
+            quantityAllocated: requiredQty,
             quantityRequired: requiredQty,
-            uom: entities.erpItems.get(fgItemId)?.uom ?? "pcs",
+            uom,
             demandType: "sales_order",
             productionOrderId: null,
             erpSalesOrderId: so.id,
-            status: allocQty >= requiredQty ? "allocated" : "partial",
-            allocatedAt,
-            clearedAt,
+            status: "allocated",
+            allocatedAt: productionEnd,
+            clearedAt: qcClearDate,
         });
+
+        // Delivery allocation: FG held in delivery zone between QC clearance and shipment
+        wmsStockAllocations.push({
+            id: `ALLOC-${String(allocNum++).padStart(5, "0")}`,
+            warehouseId: delivery,
+            locationId: stagingBin,
+            itemId: fgItemId,
+            quantityAllocated: requiredQty,
+            quantityRequired: requiredQty,
+            uom,
+            demandType: "sales_order",
+            productionOrderId: null,
+            erpSalesOrderId: so.id,
+            status: "allocated",
+            allocatedAt: qcClearDate,
+            clearedAt: pickAt,
+        });
+    }
+
+    // ---- Apply allocations back to inventory positions and summaries ----
+    // Build lookup maps keyed by itemId|locationId and itemId|warehouseId
+    const positionByKey = new Map<string, any>();
+    for (const pos of wmsInventoryPositions) {
+        positionByKey.set(`${pos.itemId}|${pos.locationId}`, pos);
+    }
+    const summaryByKey = new Map<string, any>();
+    for (const sum of wmsInventorySummary) {
+        summaryByKey.set(`${sum.itemId}|${sum.warehouseId}`, sum);
+    }
+    for (const alloc of wmsStockAllocations) {
+        const pos = positionByKey.get(`${alloc.itemId}|${alloc.locationId}`);
+        if (pos) {
+            pos.quantityAllocated += alloc.quantityAllocated;
+            pos.quantityAvailable = Math.max(0, pos.quantityOnHand - pos.quantityAllocated);
+        }
+        const sum = summaryByKey.get(`${alloc.itemId}|${alloc.warehouseId}`);
+        if (sum) {
+            sum.quantityAllocated = (sum.quantityAllocated ?? 0) + alloc.quantityAllocated;
+            sum.quantityAvailable = Math.max(0, sum.quantityOnHand - sum.quantityAllocated);
+        }
     }
 
     // ========================================================================
