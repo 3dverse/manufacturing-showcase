@@ -595,8 +595,9 @@ export function fillDataset(
     const deliveryBinIds: string[] = entities.wmsLocationsByWarehouse.get(delivery) ?? [];
     const deliveryFallbackBin = deliveryBinIds[0] ?? `${delivery}-BIN-01`;
 
-    // Tracks which delivery bin each PO's FG lands in, set when pick tasks are assigned
-    const poDeliveryBin = new Map<string, string>();
+    // Tracks which delivery bins each PO's FG is split across, set when pick tasks are assigned
+    const poDeliveryBin = new Map<string, { binId: string; qty: number }[]>();
+    const ITEMS_PER_BIN = 25;
 
     // Greedy bin pool allocator: tracks when each bin becomes free again.
     // A bin is "free" when its freeAt timestamp <= the arrival timestamp.
@@ -696,14 +697,21 @@ export function fillDataset(
             const pickId = `PICK-${String(pickNum++).padStart(4, "0")}`;
             const shipId = `SHIP-${String(shipNum++).padStart(4, "0")}`;
 
-            // Claim a delivery bin for the staging window (pick arrival → ship departure)
-            const assignedDeliveryBin = claimDeliveryBin(toUnix(pickDate), toUnix(shipDate));
-            poDeliveryBin.set(po.id, assignedDeliveryBin);
+            // Claim delivery bins for the staging window — split across 25-per-bin slots
+            const nDeliveryBins = Math.min(Math.ceil(qty / ITEMS_PER_BIN), deliveryBinIds.length || 1);
+            const deliveryBinSlots: { binId: string; qty: number }[] = [];
+            for (let b = 0; b < nDeliveryBins; b++) {
+                const binQty = b < nDeliveryBins - 1 ? ITEMS_PER_BIN : qty - ITEMS_PER_BIN * (nDeliveryBins - 1);
+                if (binQty === 0) continue;
+                deliveryBinSlots.push({ binId: claimDeliveryBin(toUnix(pickDate), toUnix(shipDate)), qty: binQty });
+            }
+            poDeliveryBin.set(po.id, deliveryBinSlots);
+            const primaryDeliveryBin = deliveryBinSlots[0]?.binId ?? deliveryFallbackBin;
 
             wmsPickTasks.push({
                 id: pickId,
                 warehouseId: delivery,
-                sourceLocationId: assignedDeliveryBin,
+                sourceLocationId: primaryDeliveryBin,
                 itemId: po.itemId,
                 quantity: qty,
                 uom: "pcs",
@@ -722,29 +730,31 @@ export function fillDataset(
                 salesOrderId: soId,
             });
 
-            // Shipment: FG leaves Delivery zone
-            mkMov({
-                warehouseId: delivery,
-                locationId: assignedDeliveryBin,
-                occurredAt: toUnix(shipDate),
-                movementType: "shipment",
-                itemId: po.itemId,
-                quantity: -qty,
-                uom: "pcs",
-                fromLocationId: assignedDeliveryBin,
-                toLocationId: null,
-                sourceDocumentType: "shipment",
-                sourceDocumentId: shipId,
-                productionOrderId: po.id,
-                operationId: null,
-            });
+            // Shipment: FG leaves Delivery zone — one movement per bin slot
+            for (const { binId, qty: binQty } of deliveryBinSlots) {
+                mkMov({
+                    warehouseId: delivery,
+                    locationId: binId,
+                    occurredAt: toUnix(shipDate),
+                    movementType: "shipment",
+                    itemId: po.itemId,
+                    quantity: -binQty,
+                    uom: "pcs",
+                    fromLocationId: binId,
+                    toLocationId: null,
+                    sourceDocumentType: "shipment",
+                    sourceDocumentId: shipId,
+                    productionOrderId: po.id,
+                    operationId: null,
+                });
+            }
 
-            // Record delivery bin alongside staging window for use in the FG allocation loop
+            // Record staging window for FG allocation loop (primary bin as representative)
             const poActualEnd = Number(mesPO?.timing?.actualEnd ?? mesPO?.timing?.scheduledEnd ?? toUnix(po.end));
             soStagingWindow.set(soId, {
                 pickAt: toUnix(pickDate),
                 shipAt: toUnix(shipDate),
-                deliveryBin: assignedDeliveryBin,
+                deliveryBin: primaryDeliveryBin,
                 poActualEnd,
             });
         }
@@ -849,7 +859,7 @@ export function fillDataset(
     // each operation its own free storage bin via the greedy pool allocator.
 
     // Map<`${opId}|${rmId}`, binId> — consumed later when emitting issue movements
-    const opBinAssignment = new Map<string, string>();
+    const opBinAssignment = new Map<string, { binId: string; qty: number }[]>();
 
     type RMConsumption = { opId: string; qty: number; putawayAt: number; consumedAt: number };
     const rmConsumptionsByItem = new Map<string, RMConsumption[]>();
@@ -967,60 +977,67 @@ export function fillDataset(
                 operationId: null,
             });
 
-            // One putaway task per operation in the chunk
+            // One set of putaway tasks per operation in the chunk, split across N bins
             for (const consumption of chunk) {
                 const putawayDate = new Date(consumption.putawayAt * 1000);
-                const targetBinId = claimBin(consumption.putawayAt, consumption.consumedAt);
-                opBinAssignment.set(`${consumption.opId}|${rmId}`, targetBinId);
+                const nBins = Math.min(Math.ceil(consumption.qty / ITEMS_PER_BIN), storageBinIds.length || 1);
+                const binSlots: { binId: string; qty: number }[] = [];
 
-                const putawayId = `PUT-${String(putawayNum++).padStart(4, "0")}`;
-                wmsPutawayTasks.push({
-                    id: putawayId,
-                    warehouseId: storage,
-                    receiptId: rcptId,
-                    itemId: rmId,
-                    quantity: consumption.qty,
-                    uom: "pcs",
-                    sourceLocationId: receptionBin,
-                    destinationLocationId: targetBinId,
-                    createdAt: toUnix(rcvDate),
-                    putawayDate: toUnix(putawayDate),
-                    status: "completed",
-                    operationId: consumption.opId,
-                });
+                for (let b = 0; b < nBins; b++) {
+                    const binQty = b < nBins - 1 ? ITEMS_PER_BIN : consumption.qty - ITEMS_PER_BIN * (nBins - 1);
+                    if (binQty === 0) continue;
+                    const targetBinId = claimBin(consumption.putawayAt, consumption.consumedAt);
+                    binSlots.push({ binId: targetBinId, qty: binQty });
 
-                // Putaway: RM enters its dedicated storage bin
-                mkMov({
-                    warehouseId: storage,
-                    locationId: targetBinId,
-                    occurredAt: toUnix(putawayDate),
-                    movementType: "putaway",
-                    itemId: rmId,
-                    quantity: consumption.qty,
-                    uom: "pcs",
-                    fromLocationId: receptionBin,
-                    toLocationId: targetBinId,
-                    sourceDocumentType: "putaway_task",
-                    sourceDocumentId: putawayId,
-                    productionOrderId: null,
-                    operationId: consumption.opId,
-                });
-                // Debit Reception
-                mkMov({
-                    warehouseId: reception,
-                    locationId: receptionBin,
-                    occurredAt: toUnix(putawayDate),
-                    movementType: "putaway",
-                    itemId: rmId,
-                    quantity: -consumption.qty,
-                    uom: "pcs",
-                    fromLocationId: receptionBin,
-                    toLocationId: targetBinId,
-                    sourceDocumentType: "putaway_task",
-                    sourceDocumentId: putawayId,
-                    productionOrderId: null,
-                    operationId: consumption.opId,
-                });
+                    const putawayId = `PUT-${String(putawayNum++).padStart(4, "0")}`;
+                    wmsPutawayTasks.push({
+                        id: putawayId,
+                        warehouseId: storage,
+                        receiptId: rcptId,
+                        itemId: rmId,
+                        quantity: binQty,
+                        uom: "pcs",
+                        sourceLocationId: receptionBin,
+                        destinationLocationId: targetBinId,
+                        createdAt: toUnix(rcvDate),
+                        putawayDate: toUnix(putawayDate),
+                        status: "completed",
+                        operationId: consumption.opId,
+                    });
+
+                    mkMov({
+                        warehouseId: storage,
+                        locationId: targetBinId,
+                        occurredAt: toUnix(putawayDate),
+                        movementType: "putaway",
+                        itemId: rmId,
+                        quantity: binQty,
+                        uom: "pcs",
+                        fromLocationId: receptionBin,
+                        toLocationId: targetBinId,
+                        sourceDocumentType: "putaway_task",
+                        sourceDocumentId: putawayId,
+                        productionOrderId: null,
+                        operationId: consumption.opId,
+                    });
+                    mkMov({
+                        warehouseId: reception,
+                        locationId: receptionBin,
+                        occurredAt: toUnix(putawayDate),
+                        movementType: "putaway",
+                        itemId: rmId,
+                        quantity: -binQty,
+                        uom: "pcs",
+                        fromLocationId: receptionBin,
+                        toLocationId: targetBinId,
+                        sourceDocumentType: "putaway_task",
+                        sourceDocumentId: putawayId,
+                        productionOrderId: null,
+                        operationId: consumption.opId,
+                    });
+                }
+
+                opBinAssignment.set(`${consumption.opId}|${rmId}`, binSlots);
             }
         }
     }
@@ -1047,38 +1064,40 @@ export function fillDataset(
                 operationId: null,
             });
 
-            // QC transfer: FG moves from Storage to Delivery after production completes
-            const destBin = poDeliveryBin.get(po.id) ?? deliveryFallbackBin;
-            mkMov({
-                warehouseId: storage,
-                locationId: storageFallbackBin,
-                occurredAt: toUnix(po.end),
-                movementType: "quality_control",
-                itemId: po.itemId,
-                quantity: -qty,
-                uom: "pcs",
-                fromLocationId: storageFallbackBin,
-                toLocationId: destBin,
-                sourceDocumentType: null,
-                sourceDocumentId: null,
-                productionOrderId: po.id,
-                operationId: null,
-            });
-            mkMov({
-                warehouseId: delivery,
-                locationId: destBin,
-                occurredAt: toUnix(po.end),
-                movementType: "quality_control",
-                itemId: po.itemId,
-                quantity: qty,
-                uom: "pcs",
-                fromLocationId: storageFallbackBin,
-                toLocationId: destBin,
-                sourceDocumentType: null,
-                sourceDocumentId: null,
-                productionOrderId: po.id,
-                operationId: null,
-            });
+            // QC transfer: FG moves from Storage to Delivery — one movement pair per bin slot
+            const destBinSlots = poDeliveryBin.get(po.id) ?? [{ binId: deliveryFallbackBin, qty }];
+            for (const { binId: destBin, qty: binQty } of destBinSlots) {
+                mkMov({
+                    warehouseId: storage,
+                    locationId: storageFallbackBin,
+                    occurredAt: toUnix(po.end),
+                    movementType: "quality_control",
+                    itemId: po.itemId,
+                    quantity: -binQty,
+                    uom: "pcs",
+                    fromLocationId: storageFallbackBin,
+                    toLocationId: destBin,
+                    sourceDocumentType: null,
+                    sourceDocumentId: null,
+                    productionOrderId: po.id,
+                    operationId: null,
+                });
+                mkMov({
+                    warehouseId: delivery,
+                    locationId: destBin,
+                    occurredAt: toUnix(po.end),
+                    movementType: "quality_control",
+                    itemId: po.itemId,
+                    quantity: binQty,
+                    uom: "pcs",
+                    fromLocationId: storageFallbackBin,
+                    toLocationId: destBin,
+                    sourceDocumentType: null,
+                    sourceDocumentId: null,
+                    productionOrderId: po.id,
+                    operationId: null,
+                });
+            }
         }
     }
 
@@ -1091,41 +1110,45 @@ export function fillDataset(
             if ((input.issuedQuantity ?? 0) === 0) continue;
             if (!input.itemId.startsWith("RM-")) continue;
 
-            const storageBin = opBinAssignment.get(`${op.id}|${input.itemId}`) ?? storageFallbackBin;
+            const binSlots = opBinAssignment.get(`${op.id}|${input.itemId}`) ?? [
+                { binId: storageFallbackBin, qty: input.issuedQuantity },
+            ];
 
-            // Replenishment: storage bin → supply bin
-            mkMov({
-                warehouseId: storage,
-                locationId: storageBin,
-                occurredAt: op.actualStart,
-                movementType: "replenishment",
-                itemId: input.itemId,
-                quantity: -input.issuedQuantity,
-                uom: input.uom ?? "pcs",
-                fromLocationId: storageBin,
-                toLocationId: supplyBin,
-                sourceDocumentType: null,
-                sourceDocumentId: null,
-                productionOrderId: op.productionOrderId,
-                operationId: op.id,
-            });
-            mkMov({
-                warehouseId: supply,
-                locationId: supplyBin,
-                occurredAt: op.actualStart,
-                movementType: "replenishment",
-                itemId: input.itemId,
-                quantity: input.issuedQuantity,
-                uom: input.uom ?? "pcs",
-                fromLocationId: storageBin,
-                toLocationId: supplyBin,
-                sourceDocumentType: null,
-                sourceDocumentId: null,
-                productionOrderId: op.productionOrderId,
-                operationId: op.id,
-            });
+            // Replenishment: one movement pair per storage bin → supply bin
+            for (const { binId, qty } of binSlots) {
+                mkMov({
+                    warehouseId: storage,
+                    locationId: binId,
+                    occurredAt: op.actualStart,
+                    movementType: "replenishment",
+                    itemId: input.itemId,
+                    quantity: -qty,
+                    uom: input.uom ?? "pcs",
+                    fromLocationId: binId,
+                    toLocationId: supplyBin,
+                    sourceDocumentType: null,
+                    sourceDocumentId: null,
+                    productionOrderId: op.productionOrderId,
+                    operationId: op.id,
+                });
+                mkMov({
+                    warehouseId: supply,
+                    locationId: supplyBin,
+                    occurredAt: op.actualStart,
+                    movementType: "replenishment",
+                    itemId: input.itemId,
+                    quantity: qty,
+                    uom: input.uom ?? "pcs",
+                    fromLocationId: binId,
+                    toLocationId: supplyBin,
+                    sourceDocumentType: null,
+                    sourceDocumentId: null,
+                    productionOrderId: op.productionOrderId,
+                    operationId: op.id,
+                });
+            }
 
-            // Issue: RM consumed from supply
+            // Issue: RM consumed from supply (single movement for the total qty)
             mkMov({
                 warehouseId: supply,
                 locationId: supplyBin,
@@ -1238,8 +1261,8 @@ export function fillDataset(
             for (const op of mesOperations.values() as IterableIterator<any>) {
                 if (op.productionOrderId !== mePo.id) continue;
                 const assigned = opBinAssignment.get(`${op.id}|${rmItemId}`);
-                if (assigned) {
-                    rmBinId = assigned;
+                if (assigned?.[0]) {
+                    rmBinId = assigned[0].binId;
                     break;
                 }
             }

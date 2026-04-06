@@ -19,6 +19,7 @@ export type DeliverySummary = {
     // Allocations
     totalAllocCount: number;
     partialAllocCount: number; // status = "partial" (stock not fully reserved)
+    stockedOrderCount: number; // SOs with FG currently sitting in the delivery zone
 };
 
 const EMPTY: DeliverySummary = {
@@ -31,6 +32,7 @@ const EMPTY: DeliverySummary = {
     pendingPickUnits: 0,
     totalAllocCount: 0,
     partialAllocCount: 0,
+    stockedOrderCount: 0,
 };
 
 export function useDeliverySummary(): DeliverySummary {
@@ -57,6 +59,12 @@ export function useDeliverySummary(): DeliverySummary {
 
         // Allocations
         const partialAllocs = allocations.filter((a) => a.status === "partial");
+        const stockedSoIds = new Set(
+            allocations
+                .filter((a) => a.allocatedAt <= asOf && (a.clearedAt === null || a.clearedAt > asOf))
+                .map((a) => a.erpSalesOrderId)
+                .filter(Boolean),
+        );
 
         return {
             isLoading,
@@ -68,6 +76,7 @@ export function useDeliverySummary(): DeliverySummary {
             pendingPickUnits,
             totalAllocCount: allocations.length,
             partialAllocCount: partialAllocs.length,
+            stockedOrderCount: stockedSoIds.size,
         };
     }, [span, asOf, isLoading]);
 }

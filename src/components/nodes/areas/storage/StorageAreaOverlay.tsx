@@ -3,10 +3,14 @@ import { Fragment, useEffect, useState } from "react";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 
 //------------------------------------------------------------------------------
-import { MOCK_STORAGE_DATA } from "@/components/nodes/areas/storage/content";
+import type { AreaNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
-import type { AreaNode } from "@/content/type";
+const STORAGE_ITEMS = [
+    { name: "Screen", id: "screen", quantity: 84, maxQuantity: 300 },
+    { name: "Case", id: "case", quantity: 256, maxQuantity: 350 },
+    { name: "Electronics", id: "electronics", quantity: 278, maxQuantity: 320 },
+];
 import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
@@ -43,7 +47,7 @@ export function StorageAreaOverlay({ area }: { area: AreaNode }) {
             <BoundingBoxFaceProjection entity={area.entity} face="right" className="transform-3d pointer-events-none">
                 <div className="absolute bottom-0 left-96 flex items-end gap-px transform-3d">
                     <p className="absolute bottom-1 -left-3 -translate-x-full text-xs text-accent">Quantity</p>
-                    {MOCK_STORAGE_DATA.map((item) => (
+                    {STORAGE_ITEMS.map((item) => (
                         <div
                             key={item.id}
                             className="relative w-16 p-1 flex items-end text-slate-900 backdrop-blur-xl"

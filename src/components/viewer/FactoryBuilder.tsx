@@ -225,7 +225,7 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
             case "reception":
                 return <ReceptionAreaSummary />;
             case "storage":
-                return <StorageAreaSummary />;
+                return <StorageAreaSummary areaNode={area} />;
             case "supply":
                 return; // TODO
             case "production":
@@ -233,7 +233,7 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
             case "control":
                 return; //TODO
             case "delivery":
-                return <DeliveryAreaSummary />;
+                return <DeliveryAreaSummary areaNode={area} />;
         }
     }, [area.name, isSelected]);
 
@@ -241,6 +241,7 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
     const areaAddOn = useMemo(() => {
         switch (area.name) {
             case "storage":
+                return;
                 return (
                     <div className="pointer-events-none">
                         <StorageAreaOverlay area={area} />
