@@ -28,11 +28,10 @@ import DatasetPage from "@/pages/DatasetPage";
 
 //------------------------------------------------------------------------------
 import type { Factory } from "@/content/type";
+import { DevMode, PUBLIC_FOLDER_ID, SCENE_WHITELIST, USER_TOKEN } from "./content/3dverse";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const USER_TOKEN = "public_OJTstp3bLFmUw0OS";
-const PUBLIC_FOLDER_ID = "3b1c6c2a-73e1-4787-a383-a7cdd4de54de";
 
 //------------------------------------------------------------------------------
 setUserToken(USER_TOKEN);
@@ -86,17 +85,20 @@ function AppLayout() {
         getFolderAssets({ folder_id: PUBLIC_FOLDER_ID, offset: 0, limit: 10, filter: { asset_type: "scene" } }).then(
             (resp) => {
                 setFactories(
-                    resp.data.scenes?.map((d, index) => {
-                        const slug = formatSlug(d.name);
-                        const factory: Factory = {
-                            slug,
-                            name: d.name,
-                            location: index % 2 === 0 ? "Paris, France" : "Tokyo, Japan",
-                            description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
-                            scene_id: d.asset_id,
-                        };
-                        return factory;
-                    }) || [],
+                    resp.data.scenes
+                        ?.map((d, index) => {
+                            const slug = formatSlug(d.name);
+                            const factory: Factory = {
+                                slug,
+                                name: d.name,
+                                location: index % 2 === 0 ? "Paris, France" : "Tokyo, Japan",
+                                description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
+                                scene_id: d.asset_id,
+                                enabled: DevMode.active || SCENE_WHITELIST.includes(d.asset_id),
+                            };
+                            return factory;
+                        })
+                        .sort((f) => (f.enabled ? -1 : 1)) || [],
                 );
             },
         );

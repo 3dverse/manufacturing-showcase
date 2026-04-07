@@ -19,6 +19,7 @@ export type Factory = {
     location: string;
     description?: string;
     scene_id: string;
+    enabled: boolean;
 };
 
 //------------------------------------------------------------------------------

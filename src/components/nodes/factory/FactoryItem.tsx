@@ -1,7 +1,10 @@
+import { useCallback, useMemo } from "react";
+
 //------------------------------------------------------------------------------
 import { Triangle } from "@/components/common/icons/Triangle";
 
 //------------------------------------------------------------------------------
+import { cn } from "@/utils/cn";
 import { useNavigate } from "@/hooks/useNavigate";
 import { useFactoryItemOEE } from "@/hooks/useFactoryItemOEE";
 
@@ -17,11 +20,27 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
     const oee = useFactoryItemOEE(factoryItem.scene_id);
 
     //--------------------------------------------------------------------------
+    // Memos
+    const className = useMemo(() => {
+        if (!factoryItem.enabled) return "grayscale pointer-events-none opacity-50";
+    }, [factoryItem.enabled]);
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    const clickHandler = useCallback(() => {
+        if (!factoryItem.enabled) return;
+        navigate(`/${factoryItem.slug}`);
+    }, [navigate, factoryItem]);
+
+    //--------------------------------------------------------------------------
     // Render
     return (
         <button
-            onClick={() => navigate(`/${factoryItem.slug}`)}
-            className="relative w-full h-full text-left bg-slate-50 rounded-md md:rounded-3xl shadow-2xl hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group"
+            onClick={clickHandler}
+            className={cn(
+                "relative w-full h-full text-left bg-slate-50 rounded-md md:rounded-3xl shadow-2xl hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group",
+                className,
+            )}
         >
             <div className="flex">
                 <div className="grow pl-7 pr-5 pt-5 pb-4">
