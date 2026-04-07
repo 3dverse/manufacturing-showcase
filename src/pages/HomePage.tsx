@@ -5,14 +5,14 @@ import { FactoriesContext } from "@/contexts/FactoriesContext";
 
 //------------------------------------------------------------------------------
 import { FactoryItem } from "@/components/nodes/factory/FactoryItem";
-import { useNavigate } from "@/hooks/useNavigate";
+//import { useNavigate } from "@/hooks/useNavigate";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export default function HomePage() {
     //--------------------------------------------------------------------------
     const { factories } = useContext(FactoriesContext);
-    const navigate = useNavigate();
+    //const navigate = useNavigate();
 
     //--------------------------------------------------------------------------
     // Render
@@ -28,7 +28,7 @@ export default function HomePage() {
                         <h1 className="text-xl font-bold mb-2">PPL Industry</h1>
                         {/* <p className="text-sm text-subtle/80">[Client Description]</p> */}
                     </div>
-                    <button
+                    {/* <button
                         onClick={() => navigate("/dataset")}
                         className="text-xs text-subtle hover:text-default transition-colors flex items-center gap-1.5 mt-1"
                     >
@@ -41,7 +41,7 @@ export default function HomePage() {
                             />
                         </svg>
                         Datasets
-                    </button>
+                    </button> */}
                 </header>
 
                 <ul className="grid grid-cols-1 gap-6">
