@@ -21,7 +21,7 @@ import { useSpanProjection } from "@/hooks/useSpanProjection";
 import { useCorrelation } from "@/hooks/useCorrelation";
 import { fmtDuration } from "@/components/timeline/timeUtils";
 import type { CellNode } from "@/content/type";
-const reportFile = "/assets/interventionReport.pptx";
+import { generateIncidentReport } from "@/utils/generateIncidentReport";
 
 //------------------------------------------------------------------------------
 const URL = "https://explorer-test.productys.com/?zoom_level=20&dashboard_id=168";
@@ -49,15 +49,12 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
         return { focusedOperation: lastCompleted, isLastOperation: lastCompleted !== null };
     }, [projection, cell.hash]);
 
-    console.log("fo", focusedOperation);
-
     // Step 2: build a correlated set from the focused operation.
     const focused = useMemo(
         () => (focusedOperation ? { type: "operation" as const, id: focusedOperation.id } : null),
         [focusedOperation],
     );
     const correlated = useCorrelation(projection, focused);
-    console.log("corr", correlated);
 
     // Step 3: resolve production order from the correlated set.
     const { productionOrder, isLastProductionOrder } = useMemo(() => {
@@ -75,10 +72,12 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
     }, [projection, correlated]);
 
     // Incidents: any correlated downtime that is currently ongoing.
-    const hasIncident = useMemo(() => {
-        if (!projection || !correlated || correlated.downtimeEvents.size === 0) return false;
-        return projection.downtimeEvents.filter((d) => correlated.downtimeEvents.has(d.id)).some((d) => d.isOngoing);
+    const incidentDowntimes = useMemo(() => {
+        if (!projection || !correlated || correlated.downtimeEvents.size === 0) return [];
+        return projection.downtimeEvents.filter((d) => correlated.downtimeEvents.has(d.id) && d.isOngoing);
     }, [projection, correlated]);
+
+    const hasIncident = incidentDowntimes.length > 0;
 
     //--------------------------------------------------------------------------
     const { orderNumber, itemCode } = productionOrder ?? { orderNumber: "", itemCode: "" };
@@ -96,8 +95,6 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
     }, [focusedOperation, goodQuantity, scrapQuantity]);
 
     //--------------------------------------------------------------------------
-    console.log("OP", focusedOperation);
-    console.log("FO2");
     if (!productionOrder) return null;
     return (
         <BoundingBoxFaceProjection
@@ -113,16 +110,23 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
                                 <Icon icon={faExclamationTriangle} className="mr-2 text-sm text-warning-100" />
                                 Incident reported
                             </PanelTitle>
-                            <a target="_blank" href={reportFile} rel="noopener noreferrer" style={{ display: "block" }}>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="button mt-2 w-full border-warning-400 text-warning-100 hover:bg-warning-400 hover:text-warning-100"
-                                >
-                                    <Icon icon={faFilePdf} className="mr-2 text-sm text-warning-100" />
-                                    Read the report
-                                </Button>
-                            </a>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="button mt-2 w-full border-warning-400 text-warning-100 hover:bg-warning-400 hover:text-warning-100"
+                                onClick={() =>
+                                    generateIncidentReport({
+                                        downtime: incidentDowntimes[0],
+                                        machineName: machineDetails.name,
+                                        workCenterId: cell.hash,
+                                        productionOrder: productionOrder,
+                                        operation: focusedOperation,
+                                    })
+                                }
+                            >
+                                <Icon icon={faFilePdf} className="mr-2 text-sm text-warning-100" />
+                                Read the report
+                            </Button>
                         </PanelWrapper>
                     </ViewerPanel>
                 </>

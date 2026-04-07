@@ -58,6 +58,7 @@
     "express": "^5.2.1",
     "express-openapi-validator": "^5.6.2",
     "http-proxy-middleware": "^3.0.5",
+    "jspdf": "^4.2.1",
     "openapi-backend": "^5.16.1",
     "react-qrcode-logo": "^4.0.0",
     "swagger-ui-express": "^5.0.1",
