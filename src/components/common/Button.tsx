@@ -14,7 +14,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ({ variant = "primary", size = "md", isLoading = false, disabled, className = "", children, ...props }, ref) => {
         //--------------------------------------------------------------------------
         const baseClasses =
-            "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 cursor-pointer focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
+            "inline-flex items-center justify-center font-medium transition-all duration-200 cursor-pointer focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
 
         //--------------------------------------------------------------------------
         const variantClasses = {
@@ -23,16 +23,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             outline: "border-2 border-default bg-transparent hover:bg-ground text-default focus:ring-brand",
             ghost: "bg-transparent hover:bg-ground text-subtle hover:text-default focus:ring-brand",
             danger: "bg-negative-600 hover:bg-negative-700 text-white focus:ring-negative",
-            guidance: "bg-guidance-600 hover:bg-guidance-700 text-white focus:ring-guidance",
+            guidance: "bg-guidance-600 hover:bg-guidance-500 text-guidance-50 focus:ring-guidance",
         };
 
         //--------------------------------------------------------------------------
         const sizeClasses = {
             "2xs": "px-1 py-[2px] text-2xs font-normal rounded-sm",
             xs: "px-2 py-1 text-xs font-normal rounded-sm",
-            sm: "px-3 py-1.5 text-sm",
-            md: "px-4 py-2 text-base",
-            lg: "px-6 py-3 text-lg",
+            sm: "px-4 py-1.5 text-sm rounded-sm",
+            md: "px-5 py-2 text-base rounded-sm",
+            lg: "px-6 py-3 text-lg rounded-lg",
         };
 
         //--------------------------------------------------------------------------

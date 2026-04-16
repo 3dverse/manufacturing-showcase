@@ -25,6 +25,7 @@ import { formatSlug } from "@/core/Slug";
 import HomePage from "@/pages/HomePage";
 import FactoryPage from "@/pages/FactoryPage";
 import DatasetPage from "@/pages/DatasetPage";
+import MainGuidance from "./components/guidance/MainGuidance";
 
 //------------------------------------------------------------------------------
 import type { Factory } from "@/content/type";
@@ -148,6 +149,7 @@ function AppLayout() {
     return (
         <FactoriesContext.Provider value={{ factories }}>
             {renderContent()}
+            <MainGuidance />
             <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
         </FactoriesContext.Provider>
     );

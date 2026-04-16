@@ -7,6 +7,7 @@ export const METADATA = {
     seo_description: "A 3dverse powered manufacturing showcase",
 
     app_name: "Manufacturing 5.0",
+    app_description: "Lorem ipsum dolor sit amet consectetur adipisicing.",
 
     contact_email: "info@3dverse.com",
 

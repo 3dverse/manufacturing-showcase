@@ -1,0 +1,22 @@
+.stripes {
+    --default-color: var(--color-positive);
+    background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 4px,
+        var(--color, var(--default-color)) 4px,
+        var(--color, var(--default-color)) 5px
+    );
+    animation: progress 4s linear infinite;
+    background-size: 200% 100%;
+}
+
+@keyframes progress {
+    0% {
+        background-position: -70px 0px;
+    }
+
+    100% {
+        background-position: 0px 0px;
+    }
+}

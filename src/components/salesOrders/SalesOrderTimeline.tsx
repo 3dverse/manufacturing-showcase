@@ -3,6 +3,8 @@ import { useMemo, useEffect, useRef, useState } from "react";
 
 //------------------------------------------------------------------------------
 import Tooltip from "@/components/common/Tooltip/Tooltip";
+import { Icon } from "@/components/common/Icon";
+import { faCheck } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -104,7 +106,7 @@ export const SalesOrderTimeline = () => {
 
                             const barColor =
                                 order.status.name === orderStatus.completed.name
-                                    ? "bg-positive-500/70 text-positive-900"
+                                    ? "bg-positive-500/70 text-positive-50"
                                     : order.status.name === orderStatus.inProgress.name
                                       ? "bg-accent-500/70 text-accent-50"
                                       : order.status.name === orderStatus.cancelled.name
@@ -115,7 +117,7 @@ export const SalesOrderTimeline = () => {
                                 order.status.name === orderStatus.completed.name
                                     ? "bg-positive-500/70"
                                     : order.status.name === orderStatus.inProgress.name
-                                      ? "bg-accent-600"
+                                      ? "bg-accent-600 stripes [--color:var(--color-accent-400)]"
                                       : "bg-neutral-500";
 
                             return (
@@ -183,7 +185,13 @@ export const SalesOrderTimeline = () => {
                                                     className="text-2xs opacity-80 font-medium px-1 pointer-events-none"
                                                     style={{ left: `${leftPct}%` }}
                                                 >
-                                                    {progress > 0 ? `${progress}%` : ""}
+                                                    {progress === 100 ? (
+                                                        <Icon icon={faCheck} className="text-2xs" />
+                                                    ) : progress > 0 ? (
+                                                        `${progress}%`
+                                                    ) : (
+                                                        ""
+                                                    )}
                                                 </span>
                                             </div>
                                         </div>

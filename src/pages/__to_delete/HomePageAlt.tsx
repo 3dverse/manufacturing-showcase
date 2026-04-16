@@ -203,7 +203,6 @@ const FactoryItem = ({
                     >
                         <FactoryProviders factory={factory}>
                             <FactoryLayout thumbnailMode={!isOpen} onBack={deselectHandler} />
-
                             {isOpen && <MainGuidance />}
                         </FactoryProviders>
                     </Livelink>
