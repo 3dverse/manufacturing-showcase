@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
 import { ProductionAreaSummary } from "@/components/nodes/areas/production/ProductionAreaSummary";
-import { PlanningPanel } from "@/components/orders/PlanningPanel";
+import { SalesOrderPlanning } from "@/components/salesOrders/SalesOrderPlanning";
 
 //------------------------------------------------------------------------------
 export const FactoryPanel = () => {
@@ -20,7 +20,7 @@ export const FactoryPanel = () => {
 
             {SHOW_PLANNING_PANEL && (
                 <article className="p-2 pt-0">
-                    <PlanningPanel />
+                    <SalesOrderPlanning />
                 </article>
             )}
         </ViewerPanel>

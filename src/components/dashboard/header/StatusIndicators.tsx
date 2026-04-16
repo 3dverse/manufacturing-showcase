@@ -74,14 +74,9 @@ interface KeyStatusIndicatorsProps {
 }
 
 //------------------------------------------------------------------------------
-export const KeyStatusIndicators: React.FC<KeyStatusIndicatorsProps> = ({ keyStatus, className }) => {
+export const KeyStatusIndicators: React.FC<KeyStatusIndicatorsProps> = ({ keyStatus }) => {
     return (
-        <div
-            className={cn(
-                "flex w-full justify-around pt-2 pb-1 px-2 bg-slate-0/90 backdrop-blur-sm border border-muted rounded overflow-hidden -z-10 starting:-translate-y-3 -translate-y-1 starting:opacity-0 opacity-100 transition-all duration-200 delay-1000",
-                className,
-            )}
-        >
+        <>
             <StatusIndicator
                 index={1}
                 label="Efficiency"
@@ -106,6 +101,6 @@ export const KeyStatusIndicators: React.FC<KeyStatusIndicatorsProps> = ({ keySta
                 score={keyStatus.maintenance}
                 icon={<FontAwesomeIcon icon={faHardHat} />}
             />
-        </div>
+        </>
     );
 };

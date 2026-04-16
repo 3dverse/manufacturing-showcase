@@ -9,7 +9,7 @@ import RefreshNotifier from "@/components/common/RefreshNotifier";
 import { Header } from "./header/Header";
 import OEEPanel from "./OEE/OEEPanel";
 import { ProductionAreaSummary } from "@/components/nodes/areas/production/ProductionAreaSummary";
-import { PlanningPanel } from "../orders/PlanningPanel";
+import { SalesOrderPlanning } from "../salesOrders/SalesOrderPlanning";
 import { ProductionPanel } from "./production/ProductionPanel";
 
 //------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ export const LiveDashboard: React.FC = () => {
                     <ProductionAreaSummary />
                 </article>
                 <article className={cn("py-4 pr-4", paddingLeftClassName)}>
-                    <PlanningPanel />
+                    <SalesOrderPlanning />
                 </article>
                 <article className="flex flex-col gap-5 py-4 pl-15 pr-4">
                     <ProductionPanel

@@ -9,6 +9,7 @@ export const factories: Factory[] = [
         location: "Paris, France",
         scene_id: "3e23233c-0c97-43d7-ab5e-9eb8caa2f42b",
         enabled: false,
+        video: undefined,
     },
     {
         slug: "y-factory",
@@ -17,5 +18,6 @@ export const factories: Factory[] = [
         location: "Tokyo, Japan",
         scene_id: "3e23233c-0c97-43d7-ab5e-9eb8caa2f42b",
         enabled: true,
+        video: "/assets/factory/factory_tokyo.webm",
     },
 ];

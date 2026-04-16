@@ -131,101 +131,103 @@ export default function DatasetPage() {
 
     //--------------------------------------------------------------------------
     return (
-        <div className="min-h-dvh bg-linear-to-br from-slate-50 to-slate-100">
-            <div className="container mx-auto max-w-4xl px-4 py-10">
+        <div className="flex flex-col min-h-dvh bg-linear-to-br from-slate-50 to-slate-100">
+            <div className="flex flex-col container mx-auto max-w-4xl grow">
                 {/* Header */}
-                <div className="flex items-center gap-3 mb-8">
-                    <button
-                        onClick={() => navigate("/")}
-                        className="text-subtle hover:text-default transition-colors text-sm flex items-center gap-1"
+                <div className="flex items-center gap-3 my-8 px-4 lg:px-0">
+                    <a
+                        href="/"
+                        className="text-muted hover:text-default transition-colors text-sm flex items-center gap-1 cursor-pointer"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                         Back
-                    </button>
+                    </a>
                     <span className="text-muted">/</span>
-                    <h1 className="text-xl font-bold">Dataset Management</h1>
+                    <h1 className="text-lg font-bold">Dataset Management</h1>
                 </div>
 
-                {/* Actions bar */}
-                <div className="flex items-center justify-between mb-6">
-                    <p className="text-sm text-subtle">
-                        {loading
-                            ? "Loading…"
-                            : `${loadedCount} of ${factories.length} factor${factories.length !== 1 ? "ies" : "y"} have a dataset`}
-                    </p>
-                    <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={fetchSites} disabled={loading}>
-                            Refresh
-                        </Button>
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            isLoading={regeneratingAll}
-                            onClick={regenerateAll}
-                            disabled={regeneratingAll}
+                <div className="bg-slate-100 px-10 py-9 rounded-t-3xl grow">
+                    {/* Actions bar */}
+                    <div className="flex items-center justify-between mb-6">
+                        <p className="text-sm text-subtle">
+                            {loading
+                                ? "Loading…"
+                                : `${loadedCount} of ${factories.length} factor${factories.length !== 1 ? "ies" : "y"} have a dataset`}
+                        </p>
+                        <div className="flex gap-2">
+                            <Button variant="ghost" size="sm" onClick={fetchSites} disabled={loading}>
+                                Refresh
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                isLoading={regeneratingAll}
+                                onClick={regenerateAll}
+                                disabled={regeneratingAll}
+                            >
+                                Regenerate All
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Global result banner */}
+                    {lastResult && (
+                        <div
+                            className={`mb-6 rounded-xl px-4 py-3 text-sm ${
+                                lastResult.errors.length > 0
+                                    ? "bg-negative-50 text-negative-700 border border-negative-200"
+                                    : "bg-positive-50 text-positive-700 border border-positive-200"
+                            }`}
                         >
-                            Regenerate All
-                        </Button>
-                    </div>
+                            {lastResult.errors.length > 0 ? (
+                                <>
+                                    <span className="font-semibold">
+                                        Regeneration failed for {lastResult.errors.length} site(s):
+                                    </span>{" "}
+                                    {lastResult.errors.map((e) => e.message).join(", ")}
+                                </>
+                            ) : (
+                                <>
+                                    <span className="font-semibold">
+                                        Regenerated {lastResult.regenerated.length} site(s)
+                                    </span>
+                                    {" — reference timestamp updated."}
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Fetch error */}
+                    {fetchError && (
+                        <div className="rounded-xl bg-negative-50 border border-negative-200 text-negative-700 px-4 py-3 text-sm mb-6">
+                            {fetchError}
+                        </div>
+                    )}
+
+                    {/* Factory list */}
+                    {factories.length === 0 ? (
+                        <div className="rounded-2xl bg-slate-50 border border-slate-200 text-center py-16 text-subtle text-sm">
+                            No factories found. Check the 3dverse folder configuration.
+                        </div>
+                    ) : (
+                        <ul className="space-y-3">
+                            {factories.map((factory) => (
+                                <FactoryDatasetRow
+                                    key={factory.scene_id}
+                                    factory={factory}
+                                    dataset={datasetsBySite.get(factory.scene_id) ?? null}
+                                    status={siteStatuses[factory.scene_id] ?? "idle"}
+                                    error={siteErrors[factory.scene_id]}
+                                    loadingMeta={loading}
+                                    onRegenerate={() => regenerateSite(factory.scene_id)}
+                                    onOpen={() => navigate(`/${factory.slug}`)}
+                                />
+                            ))}
+                        </ul>
+                    )}
                 </div>
-
-                {/* Global result banner */}
-                {lastResult && (
-                    <div
-                        className={`mb-6 rounded-xl px-4 py-3 text-sm ${
-                            lastResult.errors.length > 0
-                                ? "bg-negative-50 text-negative-700 border border-negative-200"
-                                : "bg-positive-50 text-positive-700 border border-positive-200"
-                        }`}
-                    >
-                        {lastResult.errors.length > 0 ? (
-                            <>
-                                <span className="font-semibold">
-                                    Regeneration failed for {lastResult.errors.length} site(s):
-                                </span>{" "}
-                                {lastResult.errors.map((e) => e.message).join(", ")}
-                            </>
-                        ) : (
-                            <>
-                                <span className="font-semibold">
-                                    Regenerated {lastResult.regenerated.length} site(s)
-                                </span>
-                                {" — reference timestamp updated."}
-                            </>
-                        )}
-                    </div>
-                )}
-
-                {/* Fetch error */}
-                {fetchError && (
-                    <div className="rounded-xl bg-negative-50 border border-negative-200 text-negative-700 px-4 py-3 text-sm mb-6">
-                        {fetchError}
-                    </div>
-                )}
-
-                {/* Factory list */}
-                {factories.length === 0 ? (
-                    <div className="rounded-2xl bg-slate-50 border border-slate-200 text-center py-16 text-subtle text-sm">
-                        No factories found. Check the 3dverse folder configuration.
-                    </div>
-                ) : (
-                    <ul className="space-y-3">
-                        {factories.map((factory) => (
-                            <FactoryDatasetRow
-                                key={factory.scene_id}
-                                factory={factory}
-                                dataset={datasetsBySite.get(factory.scene_id) ?? null}
-                                status={siteStatuses[factory.scene_id] ?? "idle"}
-                                error={siteErrors[factory.scene_id]}
-                                loadingMeta={loading}
-                                onRegenerate={() => regenerateSite(factory.scene_id)}
-                                onOpen={() => navigate(`/${factory.slug}`)}
-                            />
-                        ))}
-                    </ul>
-                )}
             </div>
         </div>
     );
@@ -252,11 +254,11 @@ function FactoryDatasetRow({
     const hasDataset = dataset !== null;
 
     return (
-        <li className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="px-6 py-4 flex items-center gap-4">
+        <li className="bg-white rounded-md border border-slate-100 overflow-hidden">
+            <div className="px-6 py-4 flex items-start gap-4">
                 {/* Status dot */}
                 <span
-                    className={`shrink-0 w-2.5 h-2.5 rounded-full ${
+                    className={`shrink-0 w-2.5 h-2.5 rounded-full mt-2 ${
                         status === "loading"
                             ? "bg-warning-400 animate-pulse"
                             : status === "done"

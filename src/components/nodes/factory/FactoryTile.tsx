@@ -6,21 +6,15 @@ import { LoadingOverlay } from "@3dverse/livelink-react-ui";
 import { Triangle } from "@/components/common/icons/Triangle";
 
 //------------------------------------------------------------------------------
-import { useNavigate } from "@/hooks/useNavigate";
-
-//------------------------------------------------------------------------------
 import type { Factory } from "@/content/type";
 import { TOKEN_3DVERSE } from "@/content/3dverse";
 
 //------------------------------------------------------------------------------
 export const FactoryTile = ({ factoryItem }: { factoryItem: Factory }) => {
     //--------------------------------------------------------------------------
-    const navigate = useNavigate();
-
-    //--------------------------------------------------------------------------
     return (
-        <button
-            onClick={() => navigate(`/${factoryItem.slug}`)}
+        <a
+            href={`/${factoryItem.slug}`}
             className="relative w-full h-full text-left bg-slate-50 rounded-3xl shadow-2xl hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group"
         >
             <div className="flex">
@@ -72,7 +66,7 @@ export const FactoryTile = ({ factoryItem }: { factoryItem: Factory }) => {
 
             {/* Bottom accent line */}
             <div className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-blue-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left z-10" />
-        </button>
+        </a>
     );
 };
 

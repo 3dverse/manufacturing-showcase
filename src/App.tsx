@@ -88,13 +88,15 @@ function AppLayout() {
                     resp.data.scenes
                         ?.map((d, index) => {
                             const slug = formatSlug(d.name);
+                            const location = index % 2 === 0 ? "Paris, France" : "Tokyo, Japan";
                             const factory: Factory = {
                                 slug,
                                 name: d.name,
-                                location: index % 2 === 0 ? "Paris, France" : "Tokyo, Japan",
+                                location,
                                 description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
                                 scene_id: d.asset_id,
                                 enabled: DevMode.active || SCENE_WHITELIST.includes(d.asset_id),
+                                video: location === "Tokyo, Japan" ? "/assets/factory/factory_tokyo.webm" : undefined,
                             };
                             return factory;
                         })

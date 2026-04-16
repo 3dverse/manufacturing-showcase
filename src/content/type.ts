@@ -14,6 +14,7 @@ export type Avatar = {
 
 //------------------------------------------------------------------------------
 export type Factory = {
+    video: string | undefined;
     name: string;
     slug: string;
     location: string;
