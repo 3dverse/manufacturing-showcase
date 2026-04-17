@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
 import { faCheck } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
@@ -7,6 +7,8 @@ import { Triangle } from "@/components/common/icons/Triangle";
 import { KeyStatusIndicators } from "@/components/dashboard/header/StatusIndicators";
 
 //------------------------------------------------------------------------------
+import { FactoriesContext } from "@/contexts/FactoriesContext";
+import { UseCaseContext } from "@/contexts/UseCaseContext";
 import { useFactoryItemOEE } from "@/hooks/useFactoryItemOEE";
 import { cn } from "@/utils/cn";
 
@@ -19,9 +21,24 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const oee = useFactoryItemOEE(factoryItem.scene_id);
+    const { factories } = useContext(FactoriesContext);
+    const { useCases, activeUseCaseId } = useContext(UseCaseContext);
 
     //--------------------------------------------------------------------------
     // Memos
+    const activeUseCase = useMemo(
+        () => (activeUseCaseId ? useCases[activeUseCaseId] : undefined),
+        [activeUseCaseId, useCases],
+    );
+    const guidanceStep = activeUseCase?.homeStep;
+    const firstEnabledFactory = useMemo(
+        () => factories.find((factory) => factory.enabled) || factories[0],
+        [factories],
+    );
+    const isGuidanceEmphasized = Boolean(
+        guidanceStep && factoryItem.enabled && firstEnabledFactory && firstEnabledFactory.slug === factoryItem.slug,
+    );
+
     const className = useMemo(() => {
         return factoryItem.enabled ? "rounded-b-none!" : "grayscale pointer-events-none opacity-50";
     }, [factoryItem.enabled]);
@@ -45,6 +62,12 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                 className,
             )}
         >
+            {isGuidanceEmphasized && (
+                <span
+                    aria-hidden
+                    className="fixed left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-96 h-96 rounded-full border border-guidance z-20 shadow-[0_0_30px_-4px_color-mix(in_oklch,var(--color-guidance)_70%,transparent)]"
+                />
+            )}
             <div className="flex flex-col md:flex-row grow">
                 {factoryItem.video && (
                     <video

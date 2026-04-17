@@ -14,6 +14,7 @@ import IntroductionModal from "@/components/guidance/IntroductionModal";
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { useNavigationStore } from "@/store/useNavigationStore";
 import { FactoriesContext } from "@/contexts/FactoriesContext";
+import { UseCaseContextProvider } from "@/contexts/UseCaseContext";
 
 //------------------------------------------------------------------------------
 import { LOCAL_STORAGE_KEYS, useLocalStorage } from "@/hooks/useLocalStorage";
@@ -25,7 +26,7 @@ import { formatSlug } from "@/core/Slug";
 import HomePage from "@/pages/HomePage";
 import FactoryPage from "@/pages/FactoryPage";
 import DatasetPage from "@/pages/DatasetPage";
-import MainGuidance from "./components/guidance/MainGuidance";
+import { MainGuidance } from "@/components/guidance/MainGuidance";
 
 //------------------------------------------------------------------------------
 import type { Factory } from "@/content/type";
@@ -148,9 +149,11 @@ function AppLayout() {
     //--------------------------------------------------------------------------
     return (
         <FactoriesContext.Provider value={{ factories }}>
-            {renderContent()}
-            <MainGuidance />
-            <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
+            <UseCaseContextProvider>
+                {renderContent()}
+                <MainGuidance />
+                <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
+            </UseCaseContextProvider>
         </FactoriesContext.Provider>
     );
 }

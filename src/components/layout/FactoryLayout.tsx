@@ -46,12 +46,12 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                     thumbnailMode ? "p-0" : "p-0",
                 )}
             >
-                <div className="flex flex-col md:flex-row justify-between gap-2 p-2">
+                <div className="flex flex-col md:flex-row justify-between gap-2 md:p-2">
                     <div className={thumbnailMode ? "" : "flex flex-col items-start w-full max-w-96 2xl:max-w-120"}>
                         <MainHeader thumbnailMode={thumbnailMode} onBack={onBack} />
                         <div
                             className={cn(
-                                "flex w-full justify-around pt-2 pb-1 px-2 bg-slate-0/90 backdrop-blur-sm border border-muted rounded overflow-hidden",
+                                "hidden md:flex w-full justify-around pt-2 pb-1 px-2 bg-slate-0/90 backdrop-blur-sm border border-muted rounded overflow-hidden",
                                 "starting:-translate-y-3 -translate-y-1 starting:opacity-0 opacity-100 transition-all duration-200 delay-1000",
                             )}
                         >

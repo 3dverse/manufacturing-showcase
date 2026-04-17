@@ -6,7 +6,7 @@ import { Livelink } from "@3dverse/livelink-react";
 //------------------------------------------------------------------------------
 import { FactoryProviders } from "@/components/layout/FactoryProviders";
 import FactoryLayout from "@/components/layout/FactoryLayout";
-import MainGuidance from "@/components/guidance/MainGuidance";
+import { MainGuidance } from "@/components/guidance/MainGuidance";
 
 //------------------------------------------------------------------------------
 import { Router, type RouteChangeEvent } from "@/core/Router";

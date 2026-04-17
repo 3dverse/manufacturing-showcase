@@ -24,11 +24,8 @@ export const SalesOrderPlanning = () => {
     //--------------------------------------------------------------------------
     return (
         <div className="@container flex flex-col gap-1">
-            <header className="flex items-center gap-2">
-                <PanelLabel className="text-xs text-default">Sales Order Planning</PanelLabel>
-                <a href="#" className="text-2xs text-accent mr-auto">
-                    All orders
-                </a>
+            <header className="flex justify-between items-center gap-2 mb-1">
+                <PanelLabel className="text-sm text-default font-medium">Sales Order Planning</PanelLabel>
                 <div className="flex items-center rounded-sm border border-muted p-px">
                     <Button
                         title="Timeline view"
@@ -62,6 +59,15 @@ export const SalesOrderPlanning = () => {
             </header>
 
             {mode === "list" ? <SalesOrderList /> : <SalesOrderTimeline />}
+            <footer className="w-full flex justify-between items-center mt-1 px-px">
+                <p className="flex items-center gap-1 text-2xs text-muted/80">
+                    <img src="/logo/sap.svg" alt="SAP" className="h-3" />
+                    Updated 10s ago
+                </p>
+                <a href="#" className="text-2xs text-accent">
+                    All orders
+                </a>
+            </footer>
         </div>
     );
 };

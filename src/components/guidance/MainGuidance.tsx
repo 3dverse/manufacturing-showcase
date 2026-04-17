@@ -1,27 +1,29 @@
 //------------------------------------------------------------------------------
-import { useRef, useState } from "react";
+import { useContext, useRef } from "react";
 
 //------------------------------------------------------------------------------
 import Button from "@/components/common/Button";
 
 //------------------------------------------------------------------------------
-import { CONTACT_URL } from "@/content/routes";
+import { CONTACT_URL, LANDING_3DVERSE_URL } from "@/content/routes";
 import { METADATA } from "@/content/metadata";
+import { FIRST_USE_CASE_ID } from "@/content/useCases";
+import { UseCaseContext } from "@/contexts/UseCaseContext";
 
 //------------------------------------------------------------------------------
-const MainGuidance = () => {
+export const MainGuidance = () => {
     //--------------------------------------------------------------------------
     const ref = useRef<HTMLDivElement>(null);
-    const [hasCurrentUseCase, setHasCurrentUseCase] = useState(false);
-
-    //--------------------------------------------------------------------------
-    const handleContact = () => {
-        window.open(CONTACT_URL, "_blank", "noopener,noreferrer");
-    };
+    const { useCases, activeUseCaseId, activateUseCase, clearActiveUseCase } = useContext(UseCaseContext);
+    const activeUseCase = activeUseCaseId ? useCases[activeUseCaseId] : undefined;
 
     const openFirstUseCase = () => {
-        // Todo
-        setHasCurrentUseCase((prev) => !prev);
+        if (activeUseCaseId === FIRST_USE_CASE_ID) {
+            clearActiveUseCase();
+        } else {
+            activateUseCase(FIRST_USE_CASE_ID);
+        }
+
         if (ref.current) {
             ref.current.classList.add("pointer-events-none");
             setTimeout(() => {
@@ -41,7 +43,7 @@ const MainGuidance = () => {
                 group translate-y-full hover:translate-y-0 transition-transform duration-200
                 fixed bottom-0 shadow-[0_-4px_32px_-1px_color-mix(in_oklch,var(--color-accent-200)_20%,transparent)] z-100
             `}
-            {...(hasCurrentUseCase && { "data-current-use-case": true })}
+            {...(activeUseCase && { "data-current-use-case": true })}
             ref={ref}
         >
             <div className="relative h-18 w-screen">
@@ -55,20 +57,32 @@ const MainGuidance = () => {
                     `}
                 >
                     <img src="/logo/3dverse_rocket.svg" alt="3dverse" className="w-6 h-6" />
-                    {hasCurrentUseCase && (
+                    {activeUseCase && (
                         <div className="flex flex-col pr-2">
                             <p className="text-2xs text-subtle">Simulation</p>
-                            <p className="text-xs text-guidance">Maintenance urgency</p>
+                            <p className="text-xs text-guidance">{activeUseCase.label}</p>
                         </div>
                     )}
                 </header>
-                <div className="grid grid-cols-3 items-center h-full px-6 bg-slate-0 text-default">
+                <div className="grid grid-cols-3 items-center h-full px-4 bg-slate-0 text-default">
                     <div className="flex flex-col">
-                        <p>{METADATA.app_name}</p>
-                        <p className="text-xs text-muted">{METADATA.app_description}</p>
+                        <a
+                            href={LANDING_3DVERSE_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 w-fit pl-2 pr-4 py-1 rounded-lg hover:bg-slate-100 transition-colors duration-200"
+                        >
+                            <img src="/logo/3dverse_rocket.svg" alt="3dverse" className="w-8 h-8" />
+                            <div className="flex flex-col">
+                                <span>{METADATA.app_name}</span>
+                                <span className="text-xs text-muted">
+                                    Powered by <span className="font-family-heading text-guidance">3dverse</span>
+                                </span>
+                            </div>
+                        </a>
                     </div>
                     <div className="flex justify-center mt-1">
-                        {hasCurrentUseCase ? (
+                        {activeUseCase ? (
                             <Button onClick={openFirstUseCase} variant="ghost" size="sm" className="rounded-full">
                                 Quit use case
                             </Button>
@@ -79,14 +93,17 @@ const MainGuidance = () => {
                         )}
                     </div>
                     <div className="flex justify-end">
-                        <Button onClick={handleContact} variant="ghost" size="xs">
-                            Powered by <span className="font-family-heading text-guidance pl-1">3dverse</span>
-                        </Button>
+                        <a
+                            href={CONTACT_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 w-fit px-3 py-2 text-xs text-guidance rounded border border-guidance/50 hover:border-guidance/80 transition-colors duration-200"
+                        >
+                            Create your own Digital Twin
+                        </a>
                     </div>
                 </div>
             </div>
         </aside>
     );
 };
-
-export default MainGuidance;

@@ -1,4 +1,4 @@
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { StorageAreaSummary } from "@/components/nodes/areas/storage/StorageAreaSummary";
@@ -23,6 +23,7 @@ import { UnitOutPanel } from "./DOM3D/UnitOutPanel";
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
+import { UseCaseContext } from "@/contexts/UseCaseContext";
 
 //------------------------------------------------------------------------------
 import { isFactory, isArea, isLine, isCell } from "@/core/NavGraph";
@@ -32,6 +33,7 @@ import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
 //------------------------------------------------------------------------------
 import type { AreaNode, CellNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
+import type { UseCaseCellMatcher } from "@/content/useCases";
 import { useNavNode } from "../navigation/hooks";
 import { BadgeOEE } from "../common/BadgeOEE";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
@@ -42,11 +44,33 @@ const SHOW_FLOW_LINES = false;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+const normalizedIncludes = (value: string, terms?: string[]) => {
+    if (!terms?.length) return true;
+    const normalizedValue = value.toLowerCase();
+    return terms.some((term) => normalizedValue.includes(term.toLowerCase()));
+};
+
+const matchesCellMatcher = (cell: CellNode, matcher: UseCaseCellMatcher) => {
+    const parentLineName = isLine(cell.parent) ? cell.parent.name : "";
+    const machineNames = cell.machines.map((machine) => machine.name);
+
+    return (
+        normalizedIncludes(parentLineName, matcher.lineNameIncludes) &&
+        normalizedIncludes(cell.name, matcher.cellNameIncludes) &&
+        (!matcher.machineNameIncludes?.length ||
+            machineNames.some((machineName) => normalizedIncludes(machineName, matcher.machineNameIncludes)))
+    );
+};
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 const FactoryBuilder = () => {
     //--------------------------------------------------------------------------
     // Context
     const { nodeGraph, nodeList } = useContext(FactoryContext);
-    const { selectedNode } = useContext(SelectionContext);
+    const { selectedNode, setSelectedNode } = useContext(SelectionContext);
+    const { activeUseCaseId, useCases, pendingIncidentFocusUseCaseId, clearIncidentFocusRequest } =
+        useContext(UseCaseContext);
 
     //--------------------------------------------------------------------------
     const span = useTimelineStore((s) => s.span);
@@ -110,6 +134,39 @@ const FactoryBuilder = () => {
         return nodeList.filter(isCell).filter((n) => currentlyDownCellIds.includes(n.hash));
     }, [span, asOf, nodeList]);
 
+    const simulatedIncidentCells: CellNode[] = useMemo(() => {
+        if (!activeUseCaseId) return [];
+        const useCase = useCases[activeUseCaseId];
+        if (!useCase) return [];
+        return nodeList
+            .filter(isCell)
+            .filter((cell) =>
+                useCase.simulatedDowntimeCellMatchers.some((matcher) => matchesCellMatcher(cell, matcher)),
+            );
+    }, [activeUseCaseId, useCases, nodeList]);
+
+    const incidentCells: CellNode[] = useMemo(() => {
+        return [...downtimeCells, ...simulatedIncidentCells].reduce((acc: CellNode[], cell) => {
+            if (acc.some((item) => item.hash === cell.hash)) return acc;
+            acc.push(cell);
+            return acc;
+        }, []);
+    }, [downtimeCells, simulatedIncidentCells]);
+
+    useEffect(() => {
+        if (!activeUseCaseId || pendingIncidentFocusUseCaseId !== activeUseCaseId) return;
+        if (!simulatedIncidentCells.length) return;
+
+        setSelectedNode(simulatedIncidentCells[0]);
+        clearIncidentFocusRequest();
+    }, [
+        activeUseCaseId,
+        pendingIncidentFocusUseCaseId,
+        simulatedIncidentCells,
+        setSelectedNode,
+        clearIncidentFocusRequest,
+    ]);
+
     //--------------------------------------------------------------------------
     // Render
     // Note: Always render Area and its children (Line/Cell) + flows
@@ -141,8 +198,9 @@ const FactoryBuilder = () => {
                     ))}
                 </>
             )}
-            {(!selectedNode || !isCell(selectedNode)) &&
-                downtimeCells.map((cell) => <IncidentInfoPanel key={cell.hash} cell={cell} />)}
+            {incidentCells.map((cell) => (
+                <IncidentInfoPanel key={cell.hash} cell={cell} />
+            ))}
         </>
     );
 };
@@ -235,7 +293,7 @@ const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
             case "delivery":
                 return <DeliveryAreaSummary areaNode={area} />;
         }
-    }, [area.name, isSelected]);
+    }, [area, isSelected]);
 
     //--------------------------------------------------------------------------
     const areaAddOn = useMemo(() => {
