@@ -19,6 +19,7 @@ import { getMachineDocumentation } from "@/content/machine";
 //------------------------------------------------------------------------------
 import { useSpanProjection } from "@/hooks/useSpanProjection";
 import { useCorrelation } from "@/hooks/useCorrelation";
+import { useIsIncidentCell } from "@/hooks/useIsIncidentCell";
 import { fmtDuration } from "@/components/timeline/timeUtils";
 import type { CellNode } from "@/content/type";
 import { generateIncidentReport } from "@/utils/generateIncidentReport";
@@ -77,7 +78,8 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
         return projection.downtimeEvents.filter((d) => correlated.downtimeEvents.has(d.id) && d.isOngoing);
     }, [projection, correlated]);
 
-    const hasIncident = incidentDowntimes.length > 0;
+    const isSimulatedIncidentCell = useIsIncidentCell(cell);
+    const hasIncident = incidentDowntimes.length > 0 || isSimulatedIncidentCell;
 
     //--------------------------------------------------------------------------
     const { orderNumber, itemCode } = productionOrder ?? { orderNumber: "", itemCode: "" };
@@ -104,29 +106,31 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
         >
             {hasIncident && (
                 <>
-                    <ViewerPanel className="transform-[translateZ(-.1px)] relative min-w-80 bg-warning-500 shadow-[0_-4px_56px_-1px_var(--color-warning-500)] [corner-shape:bevel] starting:opacity-0 starting:translate-y-8 opacity-100 translate-y-0 translate-x-[80%] transition-all duration-400 delay-500">
-                        <PanelWrapper className="py-2">
-                            <PanelTitle className="capitalize text-warning-100 text-sm">
+                    <ViewerPanel className="transform-[translateZ(-.1px)] relative min-w-80 bg-warning-500 shadow-[0_-4px_56px_-1px_var(--color-warning-500)] [corner-shape:bevel] starting:opacity-0 starting:translate-y-8 opacity-100 translate-y-0 translate-x-[80%] transition-all duration-400 delay-500 transform-3d">
+                        <PanelWrapper className="py-2 flex justify-between items-center transform-3d">
+                            <PanelTitle className="capitalize text-warning-100 text-sm transform-3d">
                                 <Icon icon={faExclamationTriangle} className="mr-2 text-sm text-warning-100" />
                                 Incident reported
                             </PanelTitle>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="button mt-2 w-full border-warning-400 text-warning-100 hover:bg-warning-400 hover:text-warning-100"
-                                onClick={() =>
-                                    generateIncidentReport({
-                                        downtime: incidentDowntimes[0],
-                                        machineName: machineDetails.name,
-                                        workCenterId: cell.hash,
-                                        productionOrder: productionOrder,
-                                        operation: focusedOperation,
-                                    })
-                                }
-                            >
-                                <Icon icon={faFilePdf} className="mr-2 text-sm text-warning-100" />
-                                Read the report
-                            </Button>
+                            <div className="transform-3d bg-warning-800 rounded-md">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="button bg-warning-100 text-warning-600 hover:bg-warning-50 border-0 -translate-z-[.1px] hover:translate-z-0"
+                                    onClick={() =>
+                                        generateIncidentReport({
+                                            downtime: incidentDowntimes[0],
+                                            machineName: machineDetails.name,
+                                            workCenterId: cell.hash,
+                                            productionOrder: productionOrder,
+                                            operation: focusedOperation,
+                                        })
+                                    }
+                                >
+                                    <Icon icon={faFilePdf} className="mr-2 text-sm" />
+                                    Read the report
+                                </Button>
+                            </div>
                         </PanelWrapper>
                     </ViewerPanel>
                 </>
