@@ -59,7 +59,7 @@ export const MainGuidance = () => {
                     <img src="/logo/3dverse_rocket.svg" alt="3dverse" className="w-6 h-6" />
                     {activeUseCase && (
                         <div className="flex flex-col pr-2">
-                            <p className="text-2xs text-subtle">Simulation</p>
+                            <p className="text-2xs text-subtle">Scenario</p>
                             <p className="text-xs text-guidance">{activeUseCase.label}</p>
                         </div>
                     )}
@@ -84,11 +84,11 @@ export const MainGuidance = () => {
                     <div className="flex justify-center mt-1">
                         {activeUseCase ? (
                             <Button onClick={openFirstUseCase} variant="ghost" size="sm" className="rounded-full">
-                                Quit use case
+                                Quit scenario
                             </Button>
                         ) : (
                             <Button onClick={openFirstUseCase} variant="guidance" size="sm" className="rounded-full">
-                                Simulate maintenance urgency
+                                Simulate incident scenario
                             </Button>
                         )}
                     </div>
@@ -99,7 +99,7 @@ export const MainGuidance = () => {
                             rel="noopener noreferrer"
                             className="flex items-center gap-3 w-fit px-3 py-2 text-xs text-guidance rounded border border-guidance/50 hover:border-guidance/80 transition-colors duration-200"
                         >
-                            Create your own Digital Twin
+                            Contact 3dverse
                         </a>
                     </div>
                 </div>

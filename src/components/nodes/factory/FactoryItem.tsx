@@ -105,7 +105,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                                 </div>
                                 <div className="self-end flex items-center gap-1 bg-positive-500 border border-positive-500/20 text-neutral-600 rounded-full">
                                     <Icon icon={faCheck} className="text-2xs pl-1.5 pr-5 text-positive-50" />
-                                    {["SAP", "MES", "WMS", "Process"].map((system) => (
+                                    {["SAP", "MES", "WMS", "PSS"].map((system) => (
                                         <span
                                             key={system}
                                             className="bg-slate-0 h-full rounded-full px-1 py-px text-2xs -ml-5 pl-2 pr-5 last:pr-2 outline outline-positive-500/50"

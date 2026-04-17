@@ -33,9 +33,10 @@ export type UseCaseDefinition = {
 };
 
 export const USE_CASES: Record<string, UseCaseDefinition> = {
+    // TODO: rename to "incidentScenario",
     maintenanceUrgency: {
-        id: "maintenanceUrgency",
-        label: "Maintenance urgency",
+        id: "incidentScenario",
+        label: "Incident",
         description: "Simulate an urgent maintenance incident on Product A drilling operations.",
         homeStep: {
             title: "Maintenance incident",
