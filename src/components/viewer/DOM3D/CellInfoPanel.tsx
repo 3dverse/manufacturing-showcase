@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 import { faChartLine, faCheckToSlot, faFilePdf } from "@fortawesome/sharp-regular-svg-icons";
 import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
@@ -23,6 +23,7 @@ import { useIsIncidentCell } from "@/hooks/useIsIncidentCell";
 import { fmtDuration } from "@/components/timeline/timeUtils";
 import type { CellNode } from "@/content/type";
 import { generateIncidentReport } from "@/utils/generateIncidentReport";
+import { UseCaseContext } from "@/contexts/UseCaseContext";
 
 //------------------------------------------------------------------------------
 const URL = "https://explorer-test.productys.com/?zoom_level=20&dashboard_id=168";
@@ -31,6 +32,7 @@ const URL = "https://explorer-test.productys.com/?zoom_level=20&dashboard_id=168
 export function CellInfoPanel({ cell }: { cell: CellNode }) {
     //--------------------------------------------------------------------------
     const [isMESDashboardVisible, setIsMESDashboardVisible] = useState(false);
+    const { activeUseCaseId, useCases } = useContext(UseCaseContext);
 
     //--------------------------------------------------------------------------
     const projection = useSpanProjection();
@@ -80,6 +82,9 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
 
     const isSimulatedIncidentCell = useIsIncidentCell(cell);
     const hasIncident = incidentDowntimes.length > 0 || isSimulatedIncidentCell;
+    const incidentMessage =
+        (activeUseCaseId ? useCases[activeUseCaseId]?.salesOrderIncident?.warningMessage : undefined) ??
+        "Drill machine in Production Line: Drill bit becomes worn, causing imprecise holes.";
 
     //--------------------------------------------------------------------------
     const { orderNumber, itemCode } = productionOrder ?? { orderNumber: "", itemCode: "" };
@@ -107,12 +112,17 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
             {hasIncident && (
                 <>
                     <ViewerPanel className="transform-[translateZ(-.1px)] relative min-w-80 bg-warning-500 shadow-[0_-4px_56px_-1px_var(--color-warning-500)] [corner-shape:bevel] starting:opacity-0 starting:translate-y-8 opacity-100 translate-y-0 translate-x-[80%] transition-all duration-400 delay-500 transform-3d">
-                        <PanelWrapper className="py-2 flex justify-between items-center transform-3d">
-                            <PanelTitle className="capitalize text-warning-100 text-sm transform-3d">
-                                <Icon icon={faExclamationTriangle} className="mr-2 text-sm text-warning-100" />
-                                Incident reported
+                        <PanelWrapper className="py-2 flex justify-between items-center gap-8 transform-3d">
+                            <PanelTitle className="capitalize text-warning-100">
+                                <p>
+                                    <Icon icon={faExclamationTriangle} className="mr-2 text-sm text-warning-100" />
+                                    <span className="font-semibold">Incident reported</span>
+                                </p>
+                                <p className="text-sm mt-1">
+                                    {incidentMessage}
+                                </p>
                             </PanelTitle>
-                            <div className="transform-3d bg-warning-800 rounded-md">
+                            <div className="transform-3d shrink-0 bg-warning-800 rounded-md">
                                 <Button
                                     size="sm"
                                     variant="outline"
