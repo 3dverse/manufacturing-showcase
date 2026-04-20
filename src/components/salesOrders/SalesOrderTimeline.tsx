@@ -1,14 +1,12 @@
 //------------------------------------------------------------------------------
 import { useMemo, useEffect, useRef, useState, useContext } from "react";
+import { faAngleRight } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import Tooltip from "@/components/common/Tooltip/Tooltip";
 import { Icon } from "@/components/common/Icon";
-import { faAngleRight, faCheck } from "@fortawesome/sharp-solid-svg-icons";
 import Button from "@/components/common/Button";
-
-//------------------------------------------------------------------------------
-import { cn } from "@/utils/cn";
+import { SalesOrderProgressBar } from "./SalesOrderProgressBar";
 
 //------------------------------------------------------------------------------
 import { useTimelineStore } from "@/store/useTimelineStore";
@@ -168,26 +166,6 @@ export const SalesOrderTimeline = () => {
                         {clientOrders.map((order) => {
                             const leftPct = ((order.startDate.getTime() - minTime) / totalSpan) * 100;
                             const widthPct = ((order.endDate.getTime() - order.startDate.getTime()) / totalSpan) * 100;
-                            const progress =
-                                order.unitsPlanned > 0
-                                    ? Math.round((order.unitsCompleted / order.unitsPlanned) * 100)
-                                    : 0;
-
-                            const barColor =
-                                order.status.name === orderStatus.completed.name
-                                    ? "bg-positive-500/70 text-positive-50"
-                                    : order.status.name === orderStatus.inProgress.name
-                                      ? "bg-accent-500/70 text-accent-50"
-                                      : order.status.name === orderStatus.cancelled.name
-                                        ? "bg-negative-500/50 text-negative-800"
-                                        : "bg-neutral-400/40 text-neutral-900";
-
-                            const progressColor =
-                                order.status.name === orderStatus.completed.name
-                                    ? "bg-positive-500/70"
-                                    : order.status.name === orderStatus.inProgress.name
-                                      ? "bg-accent-600 stripes [--color:var(--color-accent-400)]"
-                                      : "bg-neutral-500";
 
                             const isIncidentOrder = Boolean(
                                 incidentConfig &&
@@ -224,9 +202,7 @@ export const SalesOrderTimeline = () => {
                                                 left: `${leftPct}%`,
                                                 width: `${Math.max(widthPct, 2)}%`,
                                             }}
-                                            progress={progress}
-                                            progressColor={progressColor}
-                                            className={barColor}
+                                            className="absolute top-0 h-full"
                                             onClick={() => openOrderAtStart(order)}
                                         />
                                     </div>
@@ -272,19 +248,10 @@ type SalesOrderTimelineNodeProps = {
     order: (typeof orders)[number];
     style: React.CSSProperties;
     onClick: () => void;
-    progress: number;
     className: string;
-    progressColor: string;
 };
 
-const SalesOrderTimelineNode = ({
-    order,
-    style,
-    onClick,
-    progress,
-    className,
-    progressColor,
-}: SalesOrderTimelineNodeProps) => {
+const SalesOrderTimelineNode = ({ order, style, onClick, className }: SalesOrderTimelineNodeProps) => {
     return (
         <Tooltip
             content={
@@ -310,31 +277,7 @@ const SalesOrderTimelineNode = ({
             showArrow={false}
             offset={4}
         >
-            <div
-                className={cn(
-                    "absolute top-0 flex items-center justify-between h-full rounded-sm overflow-hidden cursor-pointer",
-                    className,
-                    order.status.name === orderStatus.planned.name ? "opacity-50 group-hover:opacity-80" : "",
-                )}
-                style={style}
-                onClick={onClick}
-            >
-                {progress > 0 && (
-                    <div className={cn("absolute top-0 h-full", progressColor)} style={{ width: `${progress}%` }} />
-                )}
-                <span className="relative z-1 text-2xs font-medium px-1 pointer-events-none whitespace-nowrap">
-                    {order.ref}
-                </span>
-                <span className="text-2xs opacity-80 font-medium px-1 pointer-events-none">
-                    {progress === 100 ? (
-                        <Icon icon={faCheck} className="text-2xs" />
-                    ) : progress > 0 ? (
-                        `${progress}%`
-                    ) : (
-                        ""
-                    )}
-                </span>
-            </div>
+            <SalesOrderProgressBar order={order} className={className} style={style} onClick={onClick} />
         </Tooltip>
     );
 };

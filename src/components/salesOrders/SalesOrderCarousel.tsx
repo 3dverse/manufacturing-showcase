@@ -7,6 +7,7 @@ import { cn } from "@/utils/cn";
 //------------------------------------------------------------------------------
 import { orders, orderStatus } from "@/content/orders";
 import type { Order } from "@/content/type";
+import { SalesOrderProgressBar } from "./SalesOrderProgressBar";
 
 //------------------------------------------------------------------------------
 type SalesOrderCarouselProps = {
@@ -131,7 +132,6 @@ export const SalesOrderCarousel = ({ onOrderSelect }: SalesOrderCarouselProps) =
 
 //------------------------------------------------------------------------------
 const SalesOrderCarouselItem = ({ order, now }: { order: Order; now: number }) => {
-    const progress = order.unitsPlanned > 0 ? Math.round((order.unitsCompleted / order.unitsPlanned) * 100) : 0;
     const statusTone =
         order.status.name === orderStatus.completed.name
             ? "text-positive-700"
@@ -141,14 +141,14 @@ const SalesOrderCarouselItem = ({ order, now }: { order: Order; now: number }) =
                 ? "text-negative-900"
                 : "text-neutral/50";
 
-    const progressColor =
-        order.status.name === orderStatus.completed.name
-            ? "bg-positive-600"
-            : order.status.name === orderStatus.inProgress.name
-              ? "bg-accent-600 stripes [--color:var(--color-accent-400)]"
-              : order.status.name === orderStatus.cancelled.name
-                ? "bg-negative-500"
-                : "bg-neutral-500";
+    // const progressColor =
+    //     order.status.name === orderStatus.completed.name
+    //         ? "bg-positive-600"
+    //         : order.status.name === orderStatus.inProgress.name
+    //             ? "bg-accent-600 stripes [--color:var(--color-accent-400)]"
+    //             : order.status.name === orderStatus.cancelled.name
+    //                 ? "bg-negative-500"
+    //                 : "bg-neutral-500";
 
     return (
         <div
@@ -156,7 +156,7 @@ const SalesOrderCarouselItem = ({ order, now }: { order: Order; now: number }) =
             className={cn("pointer-events-auto snap-center shrink-0 w-[min(42rem,92%)] overflow-hidden", statusTone)}
         >
             <div className="flex flex-col mb-2">
-                <p className="text-6xl font-bold tracking-tight leading-none">
+                <p className="text-6xl font-bold tracking-tight leading-none -translate-x-px">
                     {order.unitsCompleted}
                     <span className="pl-1 text-2xl font-semibold tracking-normal">/{order.unitsPlanned}</span>
                 </p>
@@ -165,14 +165,15 @@ const SalesOrderCarouselItem = ({ order, now }: { order: Order; now: number }) =
                     <p className="text-xs md:text-sm font-medium">{formatEndInLabel(order.endDate, now)}</p>
                 </div>
             </div>
-            <div className="relative bg-accent-900/75 text-accent-50 rounded overflow-hidden">
+            <SalesOrderProgressBar order={order} size="lg" showClientName />
+            {/* <div className="relative bg-accent-900/75 text-accent-50 rounded overflow-hidden">
                 <div className={cn("absolute inset-y-0 left-0", progressColor)} style={{ width: `${progress}%` }} />
-                <div className="relative z-1 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2 text-xs md:text-sm">
+                <div className="relative z-1 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-1.5 text-sm">
                     <p className="font-semibold whitespace-nowrap">{order.ref}</p>
                     <p className="opacity-80 truncate">{order.client}</p>
                     <p className="font-semibold whitespace-nowrap">{progress}%</p>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 };
