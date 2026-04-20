@@ -11,6 +11,7 @@ import { InvitePanel } from "@/components/clients/InvitePanel";
 import { KeyStatusIndicators } from "@/components/dashboard/header/StatusIndicators";
 import { BOMPanel } from "@/components/bom/BOMPanel";
 import { MobileMainHeader } from "@/components/layout/MobileMainHeader";
+import { SalesOrderCarousel } from "@/components/salesOrders/SalesOrderCarousel";
 
 //------------------------------------------------------------------------------
 import { FooterTabsContext, type FooterTab } from "@/contexts/FooterTabsContext";
@@ -47,9 +48,13 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
             <div className="absolute bottom-0 left-0 flex flex-col w-full h-full pointer-events-none z-50">
                 {isMobile ? (
                     <>
+                        <div className="flex flex-col justify-end items-end p-2 md:p-3">
+                            <InvitePanel />
+                        </div>
                         <span className="grow" />
+                        <SalesOrderCarousel />
                         <MobileMainHeader onBack={onBack}>
-                            <Navigation className="col-span-2 md:col-span-1" />
+                            <Navigation />
                         </MobileMainHeader>
                     </>
                 ) : (

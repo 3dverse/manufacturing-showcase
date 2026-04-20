@@ -97,7 +97,7 @@ export const Navigation = ({ className }: { className?: string }) => {
     //--------------------------------------------------------------------------
     // Render
     return (
-        <div className="flex gap-2">
+        <nav className="flex gap-2">
             <ViewerPanel
                 className={cn(
                     "hidden md:flex h-auto border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto select-none",
@@ -106,10 +106,7 @@ export const Navigation = ({ className }: { className?: string }) => {
             >
                 <FactoryNav />
             </ViewerPanel>
-            <ViewerPanel
-                as="nav"
-                className="md:max-w-[90vw] overflow-x-auto p-1 bg-transparent md:bg-slate-0/97 border-none md:border border-muted/50 shadow-none md:shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto select-none"
-            >
+            <ViewerPanel className="md:max-w-[90vw] p-1 overflow-x-auto bg-transparent md:bg-slate-0/97 border-none md:border border-muted/50 shadow-none md:shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto select-none">
                 <ul className="list-none flex gap-1">
                     {nodeGraph.areas.map((area, index) => (
                         <AreaNav
@@ -122,7 +119,7 @@ export const Navigation = ({ className }: { className?: string }) => {
                     ))}
                 </ul>
             </ViewerPanel>
-        </div>
+        </nav>
     );
 };
 

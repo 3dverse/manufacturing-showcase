@@ -11,12 +11,14 @@ import Button from "@/components/common/Button";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import { orders, orderStatus } from "@/content/orders";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { useNavigationStore } from "@/store/useNavigationStore";
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { FactoriesContext } from "@/contexts/FactoriesContext";
 import { UseCaseContext } from "@/contexts/UseCaseContext";
+
+//------------------------------------------------------------------------------
+import { orders, orderStatus } from "@/content/orders";
 
 //------------------------------------------------------------------------------
 export const SalesOrderTimeline = () => {
