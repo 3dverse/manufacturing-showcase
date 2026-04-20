@@ -1,14 +1,16 @@
 //------------------------------------------------------------------------------
 import { useState, useEffect } from "react";
-
-//------------------------------------------------------------------------------
-import Theme from "@/pages/Theme";
-
-//------------------------------------------------------------------------------
 import { getFolderAssets, setUserToken } from "@3dverse/api";
 
 //------------------------------------------------------------------------------
 import IntroductionModal from "@/components/guidance/IntroductionModal";
+import { MainGuidance } from "@/components/guidance/MainGuidance";
+
+//------------------------------------------------------------------------------
+import Theme from "@/pages/Theme";
+import HomePage from "@/pages/HomePage";
+import FactoryPage from "@/pages/FactoryPage";
+import DatasetPage from "@/pages/DatasetPage";
 
 //------------------------------------------------------------------------------
 import { useFactoryStore } from "@/store/useFactoryStore";
@@ -19,21 +21,11 @@ import { UseCaseContextProvider } from "@/contexts/UseCaseContext";
 //------------------------------------------------------------------------------
 import { LOCAL_STORAGE_KEYS, useLocalStorage } from "@/hooks/useLocalStorage";
 import { formatSlug } from "@/core/Slug";
-
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-import HomePage from "@/pages/HomePage";
-import FactoryPage from "@/pages/FactoryPage";
-import DatasetPage from "@/pages/DatasetPage";
-import { MainGuidance } from "@/components/guidance/MainGuidance";
+import { MEDIA_QUERIES, useMediaQuery } from "@/utils/useMediaQuery";
 
 //------------------------------------------------------------------------------
 import type { Factory } from "@/content/type";
 import { DevMode, PUBLIC_FOLDER_ID, SCENE_WHITELIST, USER_TOKEN } from "./content/3dverse";
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 setUserToken(USER_TOKEN);
@@ -49,6 +41,7 @@ function AppLayout() {
     //--------------------------------------------------------------------------
     // State
     const [factories, setFactories] = useState<Factory[]>([]);
+    const isMobile = useMediaQuery(MEDIA_QUERIES.MOBILE);
 
     //--------------------------------------------------------------------------
     const [currentRoute, setCurrentRoute] = useState(() => window.location.pathname);
@@ -151,7 +144,7 @@ function AppLayout() {
         <FactoriesContext.Provider value={{ factories }}>
             <UseCaseContextProvider>
                 {renderContent()}
-                <MainGuidance />
+                {!isMobile && <MainGuidance />}
                 <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
             </UseCaseContextProvider>
         </FactoriesContext.Provider>

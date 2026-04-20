@@ -1,0 +1,53 @@
+.scrollable-area {
+    --scrollable-area-bg: var(--token-bg-ground);
+    --scrollable-area-shadow-color: color-mix(in oklch, var(--token-text-default) 20%, transparent);
+    --scrollable-area-cover-size: 1.25rem;
+    --scrollable-area-shadow-size: 0.7rem;
+
+    min-width: 0;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+    background-repeat: no-repeat;
+}
+
+.scrollable-area--vertical {
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-image:
+        linear-gradient(var(--scrollable-area-bg) 30%, transparent),
+        linear-gradient(transparent, var(--scrollable-area-bg) 70%),
+        radial-gradient(farthest-side at 50% 0, var(--scrollable-area-shadow-color), transparent),
+        radial-gradient(farthest-side at 50% 100%, var(--scrollable-area-shadow-color), transparent);
+    background-size:
+        100% var(--scrollable-area-cover-size),
+        100% var(--scrollable-area-cover-size),
+        100% var(--scrollable-area-shadow-size),
+        100% var(--scrollable-area-shadow-size);
+    background-position:
+        center top,
+        center bottom,
+        center top,
+        center bottom;
+    background-attachment: local, local, scroll, scroll;
+}
+
+.scrollable-area--horizontal {
+    overflow-x: auto;
+    overflow-y: hidden;
+    background-image:
+        linear-gradient(to right, var(--scrollable-area-bg) 30%, transparent),
+        linear-gradient(to left, var(--scrollable-area-bg) 30%, transparent),
+        radial-gradient(farthest-side at 0 50%, var(--scrollable-area-shadow-color), transparent),
+        radial-gradient(farthest-side at 100% 50%, var(--scrollable-area-shadow-color), transparent);
+    background-size:
+        var(--scrollable-area-cover-size) 100%,
+        var(--scrollable-area-cover-size) 100%,
+        var(--scrollable-area-shadow-size) 100%,
+        var(--scrollable-area-shadow-size) 100%;
+    background-position:
+        left center,
+        right center,
+        left center,
+        right center;
+    background-attachment: local, local, scroll, scroll;
+}

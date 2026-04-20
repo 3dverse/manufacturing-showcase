@@ -10,6 +10,7 @@
 @import "./components/typography.css";
 @import "./components/animation.css";
 @import "./components/scrollbar.css";
+@import "./components/scrollable-area.css";
 @import "./components/stripes.css";
 @import "../components/common/Tooltip/tooltip.css";
 @import "../components/common/modal/modal.css";

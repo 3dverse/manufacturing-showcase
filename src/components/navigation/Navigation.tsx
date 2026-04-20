@@ -100,7 +100,7 @@ export const Navigation = ({ className }: { className?: string }) => {
         <div className="flex gap-2">
             <ViewerPanel
                 className={cn(
-                    "flex h-auto border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto select-none",
+                    "hidden md:flex h-auto border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto select-none",
                     className,
                 )}
             >
@@ -108,7 +108,7 @@ export const Navigation = ({ className }: { className?: string }) => {
             </ViewerPanel>
             <ViewerPanel
                 as="nav"
-                className="max-w-[90vw] overflow-x-auto p-1 border border-muted/50 shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto select-none"
+                className="md:max-w-[90vw] overflow-x-auto p-1 bg-transparent md:bg-slate-0/97 border-none md:border border-muted/50 shadow-none md:shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto select-none"
             >
                 <ul className="list-none flex gap-1">
                     {nodeGraph.areas.map((area, index) => (
@@ -141,7 +141,7 @@ const FactoryNav = ({ className }: { className?: string }) => {
     // Memos
     const stateClassName = useMemo(() => {
         if (isSelected) {
-            return "text-accent-100 bg-accent-500 border-accent-600";
+            return "text-accent-100 bg-accent border-accent-600";
         }
         if (isHovered) {
             return "border-accent-400";
@@ -196,13 +196,16 @@ const AreaNav = ({
 
     //--------------------------------------------------------------------------
     const stateClassName = useMemo(() => {
-        if (isSelected || isChildSelected) {
-            return "bg-accent-500 border-accent-600 text-accent-100";
+        if (isSelected) {
+            return "bg-accent border-accent-600 text-accent-100";
+        }
+        if (isChildSelected) {
+            return "bg-accent/80 border-accent-600 text-accent-100";
         }
         if (isHovered) {
             return "bg-muted/5 border-accent-400";
         }
-        return "bg-muted/5 border-muted/50";
+        return "bg-slate/50 border-transparent md:bg-muted/5 md:border-muted/50";
     }, [isSelected, isChildSelected, isHovered]);
 
     const SHOW_FLOW_BUTTON = false;
@@ -281,19 +284,19 @@ const ChildNode = ({
             if (isHovered) {
                 return "bg-slate-100 border-slate-100 text-accent";
             }
-            return "bg-slate-0 border-slate-0 text-accent";
+            return "bg-accent md:bg-slate-0 border-slate-0 md:text-accent z-10";
         }
         if (isParentActive) {
             if (isHovered) {
                 return "bg-accent-700 text-slate-0";
             } else {
-                return "bg-accent-500 border-accent-400";
+                return "bg-accent border-accent-400";
             }
         }
         if (isHovered) {
             return "bg-accent-700 text-slate-0";
         }
-        return "bg-slate-0 border-slate-0";
+        return "bg-slate-900 md:bg-slate-0 border-subtle/50 md:border-slate-0";
     }, [isActive, isParentActive, isHovered]);
 
     //--------------------------------------------------------------------------

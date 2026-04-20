@@ -54,7 +54,7 @@ export const MainHeader = ({
     const panelStateClassName = useMemo(() => {
         return thumbnailMode
             ? "text-base bg-slate-50 group-hover:bg-accent-600 group-hover:text-slate-0"
-            : "text-slate-0 bg-accent-600";
+            : "text-slate-0 bg-accent-900";
     }, [thumbnailMode]);
 
     //--------------------------------------------------------------------------
@@ -68,19 +68,12 @@ export const MainHeader = ({
     }, [thumbnailMode]);
 
     //--------------------------------------------------------------------------
-    const widgetStateClassName = useMemo(() => {
-        return thumbnailMode
-            ? "border-b border-b-slate-100 group-hover:border-b-accent-600"
-            : "border border-accent-600 rounded-e-[5px]";
-    }, [thumbnailMode]);
-
-    //--------------------------------------------------------------------------
     return (
         <header className={cn("flex w-full h-fit pointer-events-auto", className)}>
             {!thumbnailMode && (
                 <ViewerPanel
                     className={cn(
-                        "flex items-start p-2 shadow-none rounded-none rounded-s-md border-0 border-r border-slate-100 z-10 transition-all duration-200",
+                        "flex items-start p-2 shadow-none rounded-none rounded-s-md border-0 border-r border-slate-100/20 z-10 transition-all duration-200",
                         panelStateClassName,
                     )}
                 >
@@ -119,10 +112,7 @@ export const MainHeader = ({
                         </span>
                     </div>
                 </div>
-
-                <div className={cn("flex bg-slate-0/90 h-full", widgetStateClassName)}>
-                    {oee !== null && <BadgeOEE oee={oee} className="text-3xl px-4 py-2" />}
-                </div>
+                {oee !== null && <BadgeOEE oee={oee} className="text-xl m-1 px-3 py-2" />}
             </ViewerPanel>
         </header>
     );

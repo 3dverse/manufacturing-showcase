@@ -11,11 +11,11 @@ export const BadgeOEE = ({
     hideLabel?: boolean;
 }) => {
     return (
-        <Badge variant="positive" className={cn("flex flex-col items-start", className)}>
-            {!hideLabel && <span className="text-[50%] leading-tight">OEE</span>}
-            <p>
+        <Badge variant="positive" className={cn("flex flex-col justify-center items-start", className)}>
+            {!hideLabel && <span className="text-[50%] leading-tight text-neutral-0">OEE</span>}
+            <p className="font-semibold leading-none">
                 {oee}
-                <span className=" font-semibold text-[50%] leading-tight opacity-80 ml-1">%</span>
+                <span className="text-[50%] leading-tight text-neutral-0 ml-[.5ex]">%</span>
             </p>
         </Badge>
     );
