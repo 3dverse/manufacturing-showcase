@@ -1,6 +1,7 @@
 //------------------------------------------------------------------------------
 import { useRef, useEffect, useContext, useMemo, useState, useCallback } from "react";
-import { faLink, faShare, faQrcode, faCheck, faUserPlus } from "@fortawesome/pro-light-svg-icons";
+import { faLink, faShare, faQrcode } from "@fortawesome/pro-light-svg-icons";
+import { faCheck, faUserPlus } from "@fortawesome/pro-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-common-types";
 import { LivelinkContext } from "@3dverse/livelink-react";
 
@@ -12,7 +13,7 @@ import { InviteModal } from "@/components/clients/InviteModal";
 import { AvatarList } from "@/components/clients/AvatarList";
 
 //------------------------------------------------------------------------------
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 const makeGuestLink = ({ sessionId }: { sessionId: string }) => {
@@ -86,7 +87,6 @@ export const InvitePanel = () => {
     ] as { label: string; onClick: () => void; icon: IconDefinition }[];
 
     //--------------------------------------------------------------------------
-    const [isLargerThan800] = useMediaQuery("(min-width: 800px)");
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -107,42 +107,33 @@ export const InvitePanel = () => {
     }
     return (
         <>
-            <ViewerPanel className="flex gap-x-1 items-center rounded-full pointer-events-auto p-1">
+            <ViewerPanel className="flex gap-x-1 p-[2px] items-center rounded-full bg-slate-0/80 border-0 backdrop-blur-3xl pointer-events-auto">
                 <AvatarList />
                 <div className="relative" ref={menuRef}>
                     <Button
                         variant="primary"
-                        size="md"
-                        className="rounded-full"
+                        size="sm"
+                        className={cn(
+                            "md:min-w-24 p-2 gap-2 rounded-full md:rounded-3xl aspect-square md:aspect-auto font-normal",
+                            isTextCopied && "bg-positive-800",
+                        )}
                         onClick={() => setMenuOpen((v) => !v)}
                         aria-haspopup="menu"
                         aria-expanded={menuOpen}
                     >
-                        {!isLargerThan800 ? (
-                            <Icon size="lg" icon={faUserPlus} className={isTextCopied ? "hidden" : undefined} />
-                        ) : (
-                            <>
-                                <span className={isTextCopied ? "hidden" : undefined}>Invite</span>
-                                {isTextCopied && (
-                                    <span
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                        }}
-                                        className="animate-appear-top"
-                                    >
-                                        <Icon icon={faCheck} size={"lg"} className="mr-1 text-green-500" />
-                                        <span style={{ fontSize: "sm" }}>Copied</span>
-                                    </span>
-                                )}
-                            </>
+                        <Icon icon={faUserPlus} className={cn("text-sm md:text-xs", isTextCopied && "hidden!")} />
+                        <span className={cn("hidden md:block", isTextCopied ? "hidden!" : undefined)}>Invite</span>
+                        {isTextCopied && (
+                            <span className="starting:translate-y-2 starting:opacity-0 translate-y-0 opacity-100 transition-all duration-200">
+                                <Icon icon={faCheck} className="text-sm mr-1 text-positive -translate-y-px" />
+                                Copied
+                            </span>
                         )}
                     </Button>
 
                     {menuOpen && (
                         <div
-                            className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-50"
+                            className="absolute right-0 mt-px w-40 bg-white border border-gray-200 rounded shadow-lg z-50"
                             role="menu"
                         >
                             {actions.map(({ label, onClick, icon }, index) => (
@@ -152,7 +143,7 @@ export const InvitePanel = () => {
                                         onClick();
                                         setMenuOpen(false);
                                     }}
-                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    className="flex items-center w-full px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100 cursor-pointer"
                                     role="menuitem"
                                     type="button"
                                 >

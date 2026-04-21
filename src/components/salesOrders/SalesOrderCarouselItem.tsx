@@ -51,6 +51,7 @@ export const SalesOrderCarouselItem = ({ order, now }: SalesOrderCarouselItemPro
         return order.unitsPlanned;
     }, [order.status.name, order.unitsCompleted, order.unitsPlanned]);
 
+    //--------------------------------------------------------------------------
     const unitsLabel = useMemo(() => {
         if (order.status.name === orderStatus.completed.name) {
             return "Units shipped";

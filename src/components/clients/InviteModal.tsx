@@ -35,7 +35,7 @@ export const InviteModal = ({
     }
     return (
         <aside
-            className="fixed inset-0 flex flex-col items-center justify-center pointer-events-auto z-50 bg-white/50 backdrop-blur-xl starting:opacity-0 opacity-100 transition-opacity duration-300"
+            className="fixed inset-0 flex flex-col items-center justify-center pointer-events-auto z-50 bg-white/90 backdrop-blur-xl starting:opacity-0 opacity-100 transition-opacity duration-300"
             onClick={onClose}
         >
             <QRCode value={guestLink} size={200} bgColor="transparent" />

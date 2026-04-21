@@ -253,31 +253,34 @@ type SalesOrderTimelineNodeProps = {
 
 const SalesOrderTimelineNode = ({ order, style, onClick, className }: SalesOrderTimelineNodeProps) => {
     return (
-        <Tooltip
-            content={
-                <div className="flex flex-col gap-0.5 text-2xs">
-                    <p className="font-medium">{order.ref}</p>
-                    <p className="text-muted">{order.client}</p>
-                    <p>
-                        {order.startDate.toLocaleTimeString(undefined, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        })}{" "}
-                        →{" "}
-                        {order.endDate.toLocaleTimeString(undefined, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        })}
-                    </p>
-                    <p>
-                        {order.unitsCompleted}/{order.unitsPlanned} units shipped
-                    </p>
-                </div>
-            }
-            showArrow={false}
-            offset={4}
-        >
-            <SalesOrderProgressBar order={order} className={className} style={style} onClick={onClick} />
-        </Tooltip>
+        <div className={className} style={style}>
+            <Tooltip
+                content={
+                    <div className="flex flex-col gap-0.5 text-2xs">
+                        <p className="font-medium">{order.ref}</p>
+                        <p className="text-muted">{order.client}</p>
+                        <p>
+                            {order.startDate.toLocaleTimeString(undefined, {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            })}{" "}
+                            →{" "}
+                            {order.endDate.toLocaleTimeString(undefined, {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            })}
+                        </p>
+                        <p>
+                            {order.unitsCompleted}/{order.unitsPlanned} units shipped
+                        </p>
+                    </div>
+                }
+                showArrow={false}
+                offset={4}
+                containerClassName="block h-full w-full"
+            >
+                <SalesOrderProgressBar order={order} className="h-full w-full" onClick={onClick} />
+            </Tooltip>
+        </div>
     );
 };

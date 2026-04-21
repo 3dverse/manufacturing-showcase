@@ -57,7 +57,7 @@ export const MobileMainHeader = ({
                     href="/"
                     onClick={homeClickHandler}
                 >
-                    <Icon icon={faGrid} size="2xl" />
+                    <Icon icon={faGrid} size="xl" />
                 </a>
                 <div className="grow flex flex-wrap items-center" onClick={factoryClickHandler}>
                     <div className="flex items-baseline flex-wrap gap-x-2">

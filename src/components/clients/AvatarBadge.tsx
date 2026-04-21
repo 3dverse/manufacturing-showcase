@@ -14,12 +14,13 @@ export const AvatarBadge = ({ avatar }: { avatar: Avatar }) => {
     return (
         <Button
             key={avatar.client.id}
+            size="2xs"
             onClick={() => setWatchedAvatar(avatar.client !== watchedAvatar?.client ? avatar : null)}
             className={`
-        w-8 h-8 border-2 rounded-full bg-neutral-200/60 border-transparent
-        ${avatar.client === watchedAvatar?.client ? " border-accent" : "border-transparent"}
-        flex items-center justify-center font-bold text-xs select-none
-      `}
+                w-8 h-8 rounded-full bg-neutral-200/60
+                flex items-center justify-center text-xs select-none
+                ${avatar.client === watchedAvatar?.client ? " border-accent" : "border-transparent"}
+            `}
             style={{
                 backgroundColor: avatar.color,
                 color: avatar.textColor,

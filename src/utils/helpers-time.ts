@@ -65,24 +65,24 @@ export const timeAgo = (date: Date | string, now: Date = new Date(), options?: I
     const differenceInHours = Math.floor(differenceInSeconds / HOUR_IN_SECONDS);
 
     if (differenceInMinutes < 2) {
-        return isPast ? "just now" : "in a moment";
+        return isPast ? "Just now" : "In a moment";
     } else if (differenceInHours < 10) {
         if (differenceInHours >= 1) {
-            return isPast ? `${differenceInHours} h ago` : `in ${differenceInHours} h`;
+            return isPast ? `${differenceInHours}h ago` : `In ${differenceInHours}h`;
         } else if (differenceInMinutes >= 1) {
-            return isPast ? `${differenceInMinutes} min ago` : `in ${differenceInMinutes} min`;
+            return isPast ? `${differenceInMinutes}min ago` : `In ${differenceInMinutes}min`;
         } else {
-            return isPast ? `${differenceInSeconds} s ago` : `in ${differenceInSeconds} s`;
+            return isPast ? `${differenceInSeconds}s ago` : `In ${differenceInSeconds}s`;
         }
     } else {
         if (isToday(targetDate, now)) {
-            return "today " + formatTime(targetDate, options); // today 5:39 PM
+            return "Today " + formatTime(targetDate, options); // today 5:39 PM
         }
         if (isPast && isYesterday(targetDate, now)) {
-            return "yesterday " + formatTime(targetDate, options); // yesterday 5:39 PM
+            return "Yesterday " + formatTime(targetDate, options); // yesterday 5:39 PM
         }
         if (!isPast && isTomorrow(targetDate, now)) {
-            return "tomorrow " + formatTime(targetDate, options); // tomorrow 5:39 PM
+            return "Tomorrow " + formatTime(targetDate, options); // tomorrow 5:39 PM
         }
 
         if (differenceInSeconds < 365 * DAY_IN_SECONDS) {
