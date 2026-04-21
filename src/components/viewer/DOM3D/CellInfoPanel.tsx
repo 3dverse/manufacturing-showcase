@@ -5,7 +5,6 @@ import { faChartLine, faCheckToSlot, faFilePdf } from "@fortawesome/sharp-regula
 import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
-import { cn } from "@/utils/cn";
 import { Icon } from "@/components/common/Icon";
 import Button from "@/components/common/Button";
 import { ViewerPanel } from "@/components/common/ViewerPanel";
@@ -14,16 +13,19 @@ import { DataContainer, DataLabel, DataValue } from "@/components/common/panel/D
 import { Triangle } from "@/components/common/icons/Triangle";
 
 //------------------------------------------------------------------------------
-import { getMachineDocumentation } from "@/content/machine";
-
-//------------------------------------------------------------------------------
 import { useSpanProjection } from "@/hooks/useSpanProjection";
 import { useCorrelation } from "@/hooks/useCorrelation";
 import { useIsIncidentCell } from "@/hooks/useIsIncidentCell";
-import { fmtDuration } from "@/components/timeline/timeUtils";
-import type { CellNode } from "@/content/type";
-import { generateIncidentReport } from "@/utils/generateIncidentReport";
 import { UseCaseContext } from "@/contexts/UseCaseContext";
+
+//------------------------------------------------------------------------------
+import { cn } from "@/utils/cn";
+import { fmtDuration } from "@/utils/helpers-time";
+import { generateIncidentReport } from "@/utils/generateIncidentReport";
+
+//------------------------------------------------------------------------------
+import { getMachineDocumentation } from "@/content/machine";
+import type { CellNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 const URL = "https://explorer-test.productys.com/?zoom_level=20&dashboard_id=168";
@@ -83,8 +85,7 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
     const isSimulatedIncidentCell = useIsIncidentCell(cell);
     const hasIncident = incidentDowntimes.length > 0 || isSimulatedIncidentCell;
     const incidentMessage =
-        (activeUseCaseId ? useCases[activeUseCaseId]?.salesOrderIncident?.warningMessage : undefined) ??
-        "Drill machine in Production Line: Drill bit becomes worn, causing imprecise holes.";
+        (activeUseCaseId && useCases[activeUseCaseId]?.salesOrderIncident?.warningMessage) || undefined;
 
     //--------------------------------------------------------------------------
     const { orderNumber, itemCode } = productionOrder ?? { orderNumber: "", itemCode: "" };
@@ -118,9 +119,7 @@ export function CellInfoPanel({ cell }: { cell: CellNode }) {
                                     <Icon icon={faExclamationTriangle} className="mr-2 text-sm text-warning-100" />
                                     <span className="font-semibold">Incident reported</span>
                                 </p>
-                                <p className="text-sm mt-1">
-                                    {incidentMessage}
-                                </p>
+                                <p className="text-sm mt-1">{incidentMessage}</p>
                             </PanelTitle>
                             <div className="transform-3d shrink-0 bg-warning-800 rounded-md">
                                 <Button

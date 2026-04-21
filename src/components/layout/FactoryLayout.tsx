@@ -12,6 +12,7 @@ import { KeyStatusIndicators } from "@/components/dashboard/header/StatusIndicat
 import { BOMPanel } from "@/components/bom/BOMPanel";
 import { MobileMainHeader } from "@/components/layout/MobileMainHeader";
 import { SalesOrderCarousel } from "@/components/salesOrders/SalesOrderCarousel";
+import { Daytime } from "@/components/common/Daytime";
 
 //------------------------------------------------------------------------------
 import { FooterTabsContext, type FooterTab } from "@/contexts/FooterTabsContext";
@@ -59,7 +60,7 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                     </>
                 ) : (
                     <>
-                        <div className="flex flex-col md:flex-row justify-between gap-2 md:p-2">
+                        <div className="flex flex-col md:flex-row items-start justify-between gap-2 md:p-2">
                             <div
                                 className={
                                     thumbnailMode ? "" : "flex flex-col items-start gap-2 w-full max-w-96 2xl:max-w-120"
@@ -76,6 +77,7 @@ const FactoryLayout = ({ thumbnailMode, onBack }: { thumbnailMode?: boolean; onB
                                 </div>
                                 <GlobalOrderPanel />
                             </div>
+                            <Daytime />
                             <div className="w-full max-w-96 flex flex-col items-end gap-3">
                                 <InvitePanel />
                             </div>

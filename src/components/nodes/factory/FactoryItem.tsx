@@ -5,11 +5,14 @@ import { faCheck } from "@fortawesome/sharp-solid-svg-icons";
 import { Icon } from "@/components/common/Icon";
 import { Triangle } from "@/components/common/icons/Triangle";
 import { KeyStatusIndicators } from "@/components/dashboard/header/StatusIndicators";
+import { BadgeOEE } from "@/components/common/BadgeOEE";
 
 //------------------------------------------------------------------------------
 import { FactoriesContext } from "@/contexts/FactoriesContext";
 import { UseCaseContext } from "@/contexts/UseCaseContext";
 import { useFactoryItemOEE } from "@/hooks/useFactoryItemOEE";
+
+//------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -55,9 +58,9 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
             href={`/${factoryItem.slug}`}
             {...(!factoryItem.enabled ? { "data-disabled": true } : {})}
             className={cn(
-                "relative flex w-full h-full text-left bg-slate-50 rounded-md border border-slate-200/50 md:rounded-xl transition-all duration-300 cursor-pointer overflow-hidden group",
+                "relative flex w-full h-full text-left bg-slate-50 rounded-md border-b border-slate-200/50 md:rounded-xl transition-all duration-300 cursor-pointer overflow-hidden group",
                 "data-disabled:grayscale data-disabled:pointer-events-none data-disabled:opacity-40 data-disabled:border-slate-200",
-                "[&:not([data-disabled])]:shadow-md [&:not([data-disabled])]:shadow-accent/8",
+                "shadow-none md:[&:not([data-disabled])]:shadow-md md:[&:not([data-disabled])]:shadow-accent/8 ",
                 "hover:[&:not([data-disabled])]:shadow-lg hover:[&:not([data-disabled])]:shadow-accent/10",
                 className,
             )}
@@ -79,10 +82,15 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                         playsInline
                     />
                 )}
+
+                <div className="block md:hidden group-data-disabled:hidden absolute top-0 right-0 bg-slate-800 m-1 rounded">
+                    <BadgeOEE oee={oee ?? 0} className="text-2xl p-2" />
+                </div>
+
                 <div className="grow flex pl-4 md:pl-7 pr-4 md:pr-3 pt-2 md:pt-5 pb-3">
                     <div className="grow flex items-start justify-between">
                         <div className="grow flex flex-col gap-y-1 h-full">
-                            <h2 className="text-xl md:text-2xl font-semibold mb-1 group-hover:text-accent transition-colors">
+                            <h2 className="text-xl md:text-2xl font-semibold group-hover:text-accent transition-colors">
                                 {factoryItem.name}
                             </h2>
                             <div className="grow flex flex-col lg:flex-row items-start lg:items-baseline justify-between gap-x-3 gap-y-2">
@@ -118,7 +126,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                         </div>
                     </div>
                 </div>
-                <div className="flex border-t md:border-t-0 border-slate-100">
+                <div className="flex">
                     {showKeyStatusIndicators && (
                         <div className="grid grid-cols-4 md:grid-cols-2 scale-85 grow">
                             <KeyStatusIndicators
@@ -131,11 +139,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                             />
                         </div>
                     )}
-                    <div className="relative flex flex-col items-center w-full justify-center border-l border-slate-100 overflow-hidden">
-                        <span
-                            className="stripes [--color:var(--color-positive-300)] absolute h-full w-full shrink-0 z-0"
-                            aria-hidden
-                        />
+                    <div className="hidden md:flex stripes [--color:var(--color-positive-300)] flex-col items-center justify-center w-full border-l border-slate-100 overflow-hidden">
                         <div className="relative z-10 flex flex-col text-left px-6 py-3">
                             <p className="text-3xl font-semibold text-positive-800">
                                 {oee ?? "—"}

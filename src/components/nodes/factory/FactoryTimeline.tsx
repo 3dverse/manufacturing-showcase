@@ -6,6 +6,7 @@ import Tooltip from "@/components/common/Tooltip/Tooltip";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
+import { formatDuration } from "@/utils/helpers-time";
 
 //------------------------------------------------------------------------------
 import { orders } from "@/content/orders";
@@ -45,13 +46,6 @@ function formatDate(d: Date): string {
 
 function durationMinutes(start: Date, end: Date): number {
     return Math.round((end.getTime() - start.getTime()) / (60 * 1000));
-}
-
-function formatDuration(min: number): string {
-    if (min < 60) return `${min} min`;
-    const h = Math.floor(min / 60);
-    const m = min % 60;
-    return m ? `${h}h ${m}min` : `${h}h`;
 }
 
 function isWeekend(d: Date): boolean {

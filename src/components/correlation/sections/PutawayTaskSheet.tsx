@@ -1,6 +1,6 @@
 import { SectionWrapper, Field, PhaseBadge, Divider } from "@/components/correlation/SectionWrapper";
 import { NodeLink } from "@/components/correlation/NodeLink";
-import { fmtTs } from "@/components/timeline/timeUtils";
+import { fmtTs } from "@/utils/helpers-time";
 import type { ProjectedPutawayTask } from "@/core/Projection";
 
 type Props = {

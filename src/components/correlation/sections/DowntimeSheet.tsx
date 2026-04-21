@@ -1,7 +1,13 @@
+//------------------------------------------------------------------------------
 import { SectionWrapper, Field, OngoingBadge, Divider } from "@/components/correlation/SectionWrapper";
-import { fmtTs, fmtDuration } from "@/components/timeline/timeUtils";
+
+//------------------------------------------------------------------------------
+import { fmtTs, fmtDuration } from "@/utils/helpers-time";
+
+//------------------------------------------------------------------------------
 import type { ProjectedDowntime } from "@/core/Projection";
 
+//------------------------------------------------------------------------------
 type Props = {
     items: ProjectedDowntime[];
     focusedId: string | null;

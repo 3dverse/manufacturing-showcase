@@ -1,5 +1,6 @@
 import { cn } from "@/utils/cn";
 
+//------------------------------------------------------------------------------
 export const Badge = ({
     children,
     className,

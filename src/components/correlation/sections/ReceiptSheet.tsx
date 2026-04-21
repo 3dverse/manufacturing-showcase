@@ -1,5 +1,5 @@
 import { SectionWrapper, Field, PhaseBadge, Divider } from "@/components/correlation/SectionWrapper";
-import { fmtTs } from "@/components/timeline/timeUtils";
+import { fmtTs } from "@/utils/helpers-time";
 import type { ProjectedReceipt } from "@/core/Projection";
 
 type Props = {

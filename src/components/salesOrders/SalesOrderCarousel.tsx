@@ -2,12 +2,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 //------------------------------------------------------------------------------
-import { cn } from "@/utils/cn";
+import { SalesOrderCarouselItem } from "./SalesOrderCarouselItem";
 
 //------------------------------------------------------------------------------
 import { orders, orderStatus } from "@/content/orders";
 import type { Order } from "@/content/type";
-import { SalesOrderProgressBar } from "./SalesOrderProgressBar";
 
 //------------------------------------------------------------------------------
 type SalesOrderCarouselProps = {
@@ -128,67 +127,4 @@ export const SalesOrderCarousel = ({ onOrderSelect }: SalesOrderCarouselProps) =
             </div>
         </div>
     );
-};
-
-//------------------------------------------------------------------------------
-const SalesOrderCarouselItem = ({ order, now }: { order: Order; now: number }) => {
-    const statusTone =
-        order.status.name === orderStatus.completed.name
-            ? "text-positive-700"
-            : order.status.name === orderStatus.inProgress.name
-              ? "text-accent"
-              : order.status.name === orderStatus.cancelled.name
-                ? "text-negative-900"
-                : "text-neutral/50";
-
-    // const progressColor =
-    //     order.status.name === orderStatus.completed.name
-    //         ? "bg-positive-600"
-    //         : order.status.name === orderStatus.inProgress.name
-    //             ? "bg-accent-600 stripes [--color:var(--color-accent-400)]"
-    //             : order.status.name === orderStatus.cancelled.name
-    //                 ? "bg-negative-500"
-    //                 : "bg-neutral-500";
-
-    return (
-        <div
-            data-order-ref={order.ref}
-            className={cn("pointer-events-auto snap-center shrink-0 w-[min(42rem,92%)] overflow-hidden", statusTone)}
-        >
-            <div className="flex flex-col mb-2">
-                <p className="text-6xl font-bold tracking-tight leading-none -translate-x-px">
-                    {order.unitsCompleted}
-                    <span className="pl-1 text-2xl font-semibold tracking-normal">/{order.unitsPlanned}</span>
-                </p>
-                <div className="flex justify-between">
-                    <p className="text-xs md:text-sm font-medium">Units ready to ship</p>
-                    <p className="text-xs md:text-sm font-medium">{formatEndInLabel(order.endDate, now)}</p>
-                </div>
-            </div>
-            <SalesOrderProgressBar order={order} size="lg" showClientName />
-            {/* <div className="relative bg-accent-900/75 text-accent-50 rounded overflow-hidden">
-                <div className={cn("absolute inset-y-0 left-0", progressColor)} style={{ width: `${progress}%` }} />
-                <div className="relative z-1 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-1.5 text-sm">
-                    <p className="font-semibold whitespace-nowrap">{order.ref}</p>
-                    <p className="opacity-80 truncate">{order.client}</p>
-                    <p className="font-semibold whitespace-nowrap">{progress}%</p>
-                </div>
-            </div> */}
-        </div>
-    );
-};
-
-//------------------------------------------------------------------------------
-const formatEndInLabel = (endDate: Date, now: number) => {
-    const remainingMs = endDate.getTime() - now;
-    if (remainingMs <= 0) return "Ended";
-
-    const totalMinutes = Math.ceil(remainingMs / (1000 * 60));
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    if (hours <= 0) {
-        return `End in ${minutes}min`;
-    }
-    return `End in ${hours}h ${minutes}min`;
 };

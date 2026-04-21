@@ -4,7 +4,7 @@ import { jsPDF } from "jspdf";
 //------------------------------------------------------------------------------
 import type { ProjectedDowntime } from "@/core/Projection";
 import type { ProjectedProductionOrder, ProjectedOperation } from "@/core/Projection";
-import { fmtTs, fmtDuration } from "@/components/timeline/timeUtils";
+import { fmtTs, fmtDuration } from "@/utils/helpers-time";
 
 //------------------------------------------------------------------------------
 export type IncidentReportData = {

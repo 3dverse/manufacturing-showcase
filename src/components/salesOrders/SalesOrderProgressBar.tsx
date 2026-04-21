@@ -4,6 +4,7 @@ import { faCheck } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
+import { formatDuration } from "@/utils/helpers-time";
 
 //------------------------------------------------------------------------------
 import { orderStatus } from "@/content/orders";
@@ -13,6 +14,7 @@ type SalesOrderProgressBarProps = {
     order: Order;
     size?: "md" | "lg";
     showClientName?: boolean;
+    showDuration?: boolean;
     className?: string;
     style?: React.CSSProperties;
     onClick?: () => void;
@@ -23,11 +25,12 @@ export const SalesOrderProgressBar = ({
     order,
     size = "md",
     showClientName = false,
+    showDuration = false,
     className,
     style,
     onClick,
 }: SalesOrderProgressBarProps) => {
-    const progress = order.unitsPlanned > 0 ? Math.round((order.unitsCompleted / order.unitsPlanned) * 100) : 0;
+    const progress_prct = order.unitsPlanned > 0 ? Math.round((order.unitsCompleted / order.unitsPlanned) * 100) : 0;
 
     //--------------------------------------------------------------------------
     const barColor =
@@ -46,13 +49,26 @@ export const SalesOrderProgressBar = ({
               ? "bg-accent-600 stripes [--color:var(--color-accent-900)]"
               : "bg-neutral-500";
 
+    const nowTs = Date.now();
+    const plannedDurationMin = Math.max(0, Math.round((order.endDate.getTime() - order.startDate.getTime()) / 60000));
+    const effectiveDurationMin = plannedDurationMin;
+    const currentDurationMin = Math.max(0, Math.round((nowTs - order.startDate.getTime()) / 60000));
+    const durationMin =
+        order.status.name === orderStatus.planned.name
+            ? plannedDurationMin
+            : order.status.name === orderStatus.completed.name
+              ? effectiveDurationMin
+              : order.status.name === orderStatus.inProgress.name
+                ? currentDurationMin
+                : currentDurationMin;
+    const durationLabel = formatDuration(durationMin);
+
     //--------------------------------------------------------------------------
     return (
         <div
             className={cn(
-                "relative flex items-center text-slate-0 rounded-sm overflow-hidden",
+                "relative flex items-center text-slate-0 rounded-sm overflow-hidden backdrop-blur-lg",
                 barColor,
-                order.status.name === orderStatus.planned.name && "opacity-50 group-hover:opacity-80",
                 size === "lg" ? "text-sm pl-3 pr-2 py-1.5" : "text-2xs px-1.5",
                 onClick && "cursor-pointer",
                 className,
@@ -60,16 +76,24 @@ export const SalesOrderProgressBar = ({
             style={style}
             onClick={onClick}
         >
-            {progress > 0 && (
-                <div className={cn("absolute left-0 top-0 h-full", progressColor)} style={{ width: `${progress}%` }} />
+            {progress_prct > 0 && (
+                <div
+                    className={cn("absolute left-0 top-0 h-full", progressColor)}
+                    style={{ width: `${progress_prct}%` }}
+                />
             )}
-            <div className="grow relative flex gap-2">
-                <span className="font-medium pointer-events-none whitespace-nowrap">{order.ref}</span>
+            <div className="grow relative flex items-baseline gap-2">
+                <span className="font-medium whitespace-nowrap">{order.ref}</span>
                 {showClientName && <span className="opacity-80">{order.client}</span>}
                 <span className="grow" />
-                <span className="font-medium pointer-events-none">
-                    {progress === 100 ? <Icon icon={faCheck} /> : progress > 0 ? `${progress}%` : ""}
-                </span>
+                {showDuration && <span className="mr-1 text-xs opacity-90 tabular-nums">{durationLabel}</span>}
+                {progress_prct === 100 ? (
+                    <Icon icon={faCheck} />
+                ) : progress_prct > 0 ? (
+                    <span className="font-medium tabular-nums">{progress_prct}%</span>
+                ) : (
+                    ""
+                )}
             </div>
         </div>
     );

@@ -3,12 +3,20 @@ import { useEffect, useMemo, useState } from "react";
 
 //------------------------------------------------------------------------------
 import { PanelLabel } from "@/components/common/panel";
+
+//------------------------------------------------------------------------------
 import { useDeliverySummary } from "@/hooks/useDeliverySummary";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { useFactoryStore } from "@/store/useFactoryStore";
-import { fmtDuration } from "@/components/timeline/timeUtils";
-import { getBinOccupancy, type BinOccupancy } from "@/core/occupancy";
+
+//------------------------------------------------------------------------------
+import { fmtDuration } from "@/utils/helpers-time";
 import { cn } from "@/utils/cn";
+
+//------------------------------------------------------------------------------
+import { getBinOccupancy, type BinOccupancy } from "@/core/occupancy";
+
+//------------------------------------------------------------------------------
 import type { AreaNode } from "@/content/type";
 
 //------------------------------------------------------------------------------

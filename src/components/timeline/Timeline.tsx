@@ -2,9 +2,13 @@ import { useContext, useMemo, useRef, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 
 //------------------------------------------------------------------------------
-import { SelectionContext } from "@/contexts/SelectionContext";
+import { CorrelationModal } from "@/components/correlation/CorrelationModal";
 
 //------------------------------------------------------------------------------
+import { useScope } from "@/hooks/useScope";
+import { useProjection } from "@/hooks/useProjection";
+import { useCorrelation } from "@/hooks/useCorrelation";
+import { SelectionContext } from "@/contexts/SelectionContext";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { useFocusStore } from "@/store/useFocusStore";
 
@@ -12,20 +16,6 @@ import { useFocusStore } from "@/store/useFocusStore";
 import { highlightStateForBar, type EntityType, type HighlightState } from "@/core/Correlation";
 import { isArea } from "@/core/NavGraph";
 import type { TimelineLevel } from "@/core/Scope";
-
-import { cn } from "@/utils/cn";
-
-//------------------------------------------------------------------------------
-import { useScope } from "@/hooks/useScope";
-import { useProjection } from "@/hooks/useProjection";
-import { useCorrelation } from "@/hooks/useCorrelation";
-import { CorrelationModal } from "@/components/correlation/CorrelationModal";
-
-//------------------------------------------------------------------------------
-import { fmtDuration, fmtTs, fromPct, toPct } from "./timeUtils";
-
-//------------------------------------------------------------------------------
-import { PERFORMANCE_MODE, FULL_TIMELINE } from "@/content/3dverse";
 import type {
     AsOfProjection,
     ProjectedSalesOrder,
@@ -39,6 +29,14 @@ import type {
     ProjectedPutawayTask,
     ProjectedPurchaseOrder,
 } from "@/core/Projection";
+
+//------------------------------------------------------------------------------
+import { cn } from "@/utils/cn";
+import { fromPct, toPct } from "./timeUtils";
+import { fmtDuration, fmtTs } from "@/utils/helpers-time";
+
+//------------------------------------------------------------------------------
+import { PERFORMANCE_MODE, FULL_TIMELINE } from "@/content/3dverse";
 import { FooterTabs } from "../common/FooterTabs";
 
 //------------------------------------------------------------------------------
