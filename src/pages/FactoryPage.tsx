@@ -39,38 +39,36 @@ function PageContent({ factory }: { factory: Factory }) {
     //--------------------------------------------------------------------------
     // Contexts
     const { reconnector } = useContext(GhettoReconnectContext);
+
+    //--------------------------------------------------------------------------
     const params = new URLSearchParams(location.search);
     const sessionId = params.get("sessionId");
 
     //--------------------------------------------------------------------------
     // Render
-    return (
-        <>
-            {sessionId ? (
-                <Livelink
-                    sessionId={sessionId}
-                    token={TOKEN_3DVERSE}
-                    LoadingPanel={LoadingOverlay}
-                    ConnectionErrorPanel={DisconnectedOverlay}
-                >
-                    <FactoryProviders factory={factory}>
-                        <FactoryLayout />
-                    </FactoryProviders>
-                </Livelink>
-            ) : (
-                <Livelink
-                    sceneId={factory.scene_id}
-                    token={TOKEN_3DVERSE}
-                    isTransient={reconnector}
-                    LoadingPanel={LoadingOverlay}
-                    ConnectionErrorPanel={DisconnectedOverlay}
-                    autoJoinExisting={false}
-                >
-                    <FactoryProviders factory={factory}>
-                        <FactoryLayout />
-                    </FactoryProviders>
-                </Livelink>
-            )}
-        </>
+    return sessionId ? (
+        <Livelink
+            sessionId={sessionId}
+            token={TOKEN_3DVERSE}
+            LoadingPanel={LoadingOverlay}
+            ConnectionErrorPanel={DisconnectedOverlay}
+        >
+            <FactoryProviders factory={factory}>
+                <FactoryLayout />
+            </FactoryProviders>
+        </Livelink>
+    ) : (
+        <Livelink
+            sceneId={factory.scene_id}
+            token={TOKEN_3DVERSE}
+            isTransient={reconnector}
+            LoadingPanel={LoadingOverlay}
+            ConnectionErrorPanel={DisconnectedOverlay}
+            autoJoinExisting={false}
+        >
+            <FactoryProviders factory={factory}>
+                <FactoryLayout />
+            </FactoryProviders>
+        </Livelink>
     );
 }

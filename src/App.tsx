@@ -1,5 +1,6 @@
+"use strict";
 //------------------------------------------------------------------------------
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getFolderAssets, setUserToken } from "@3dverse/api";
 
 //------------------------------------------------------------------------------
@@ -34,6 +35,8 @@ setUserToken(USER_TOKEN);
 export function App() {
     return <AppLayout />;
 }
+
+let factoriesPromise: Promise<unknown>;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -77,28 +80,32 @@ function AppLayout() {
 
     //--------------------------------------------------------------------------
     useEffect(() => {
-        getFolderAssets({ folder_id: PUBLIC_FOLDER_ID, offset: 0, limit: 10, filter: { asset_type: "scene" } }).then(
-            (resp) => {
-                setFactories(
-                    resp.data.scenes
-                        ?.map((d, index) => {
-                            const slug = formatSlug(d.name);
-                            const location = index % 2 === 0 ? "Paris, France" : "Tokyo, Japan";
-                            const factory: Factory = {
-                                slug,
-                                name: d.name,
-                                location,
-                                description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
-                                scene_id: d.asset_id,
-                                enabled: DevMode.active || SCENE_WHITELIST.includes(d.asset_id),
-                                video: location === "Tokyo, Japan" ? "/assets/factory/factory_tokyo.webm" : undefined,
-                            };
-                            return factory;
-                        })
-                        .sort((f) => (f.enabled ? -1 : 1)) || [],
-                );
-            },
-        );
+        if (factoriesPromise !== undefined) return;
+        factoriesPromise = getFolderAssets({
+            folder_id: PUBLIC_FOLDER_ID,
+            offset: 0,
+            limit: 10,
+            filter: { asset_type: "scene" },
+        }).then((resp) => {
+            setFactories(
+                resp.data.scenes
+                    ?.map((d, index) => {
+                        const slug = formatSlug(d.name);
+                        const location = index % 2 === 0 ? "Paris, France" : "Tokyo, Japan";
+                        const factory: Factory = {
+                            slug,
+                            name: d.name,
+                            location,
+                            description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
+                            scene_id: d.asset_id,
+                            enabled: DevMode.active || SCENE_WHITELIST.includes(d.asset_id),
+                            video: location === "Tokyo, Japan" ? "/assets/factory/factory_tokyo.webm" : undefined,
+                        };
+                        return factory;
+                    })
+                    .sort((f) => (f.enabled ? -1 : 1)) || [],
+            );
+        });
     }, []);
 
     //--------------------------------------------------------------------------
@@ -119,10 +126,11 @@ function AppLayout() {
     }, [factories, currentRoute, setCurrentFactory, clearCurrentFactory]);
 
     //--------------------------------------------------------------------------
-    const renderContent = () => {
+    const renderContent = useMemo(() => {
         if (currentRoute === "/theme") {
             return <Theme onBack={() => navigate("/")} />;
         }
+        if (!factories || factories.length == 0) return;
         if (currentRoute === "/dataset") {
             return <DatasetPage />;
         }
@@ -137,13 +145,13 @@ function AppLayout() {
             }
         }
         return <HomePage />;
-    };
+    }, [currentRoute, factories]);
 
     //--------------------------------------------------------------------------
     return (
         <FactoriesContext.Provider value={{ factories }}>
             <UseCaseContextProvider>
-                {renderContent()}
+                {renderContent}
                 {!isMobile && <MainGuidance />}
                 <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
             </UseCaseContextProvider>
