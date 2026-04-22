@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo } from "react";
+import { Fragment, useContext, useEffect, useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { StorageAreaSummary } from "@/components/nodes/areas/storage/StorageAreaSummary";
@@ -191,10 +191,10 @@ const FactoryBuilder = () => {
                     <CellInfoPanel cell={selectedNode} />
 
                     {selectedNode.machines.map((machine) => (
-                        <>
+                        <Fragment key={machine.hash}>
                             <MachineOutline machine={machine} />
                             <MachineLabel machine={machine} />
-                        </>
+                        </Fragment>
                     ))}
                 </>
             )}
