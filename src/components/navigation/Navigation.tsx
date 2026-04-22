@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useContext, useEffect, useMemo, useRef } from "react";
 import { faArrowTurnDownRight, faHome } from "@fortawesome/sharp-light-svg-icons";
 import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
 
@@ -14,7 +14,7 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-import { isFactory, isLine, sortNode } from "@/core/NavGraph";
+import { isArea, isFactory, isLine, sortNode } from "@/core/NavGraph";
 import { useNavNode } from "./hooks";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
 import { cn } from "@/utils/cn";
@@ -31,6 +31,7 @@ export const Navigation = ({ className }: { className?: string }) => {
     // Context
     const { nodeGraph } = useContext(FactoryContext);
     const { selectedNode, setSelectedNode } = useContext(SelectionContext);
+    const areaNavListRef = useRef<HTMLUListElement>(null);
 
     //--------------------------------------------------------------------------
     const span = useTimelineStore((s) => s.span);
@@ -43,6 +44,18 @@ export const Navigation = ({ className }: { className?: string }) => {
             [...span.downtimeEvents.values()].filter((e) => downtimeAtAsOf(e, asOf)).map((e) => e.workCenterId),
         );
     }, [span, asOf]);
+
+    const selectedAreaHash = useMemo(() => {
+        if (!selectedNode || isFactory(selectedNode)) return undefined;
+
+        let currentNode: NavGraphNode | undefined = selectedNode;
+        while (currentNode && !isArea(currentNode) && !isFactory(currentNode)) {
+            if (!("parent" in currentNode)) return undefined;
+            currentNode = currentNode.parent;
+        }
+
+        return currentNode && isArea(currentNode) ? currentNode.hash : undefined;
+    }, [selectedNode]);
 
     //--------------------------------------------------------------------------
     // Flat ordered list: factory → for each area: area → sorted children (lines
@@ -95,6 +108,30 @@ export const Navigation = ({ className }: { className?: string }) => {
     }, [flatNavList, selectedNode, setSelectedNode]);
 
     //--------------------------------------------------------------------------
+    // Keep selected area centered on mobile horizontal navigation.
+    useEffect(() => {
+        if (!selectedAreaHash) return;
+        if (!window.matchMedia("(max-width: 767px)").matches) return;
+
+        const scrollContainer = areaNavListRef.current?.parentElement;
+        if (!scrollContainer) return;
+
+        const selectedAreaElement = areaNavListRef.current?.querySelector<HTMLElement>(
+            `[data-area-hash="${selectedAreaHash}"]`,
+        );
+        if (!selectedAreaElement) return;
+
+        const nextScrollLeft =
+            selectedAreaElement.offsetLeft - (scrollContainer.clientWidth - selectedAreaElement.offsetWidth) / 2;
+        const maxScrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+
+        scrollContainer.scrollTo({
+            left: Math.max(0, Math.min(nextScrollLeft, maxScrollLeft)),
+            behavior: "smooth",
+        });
+    }, [selectedAreaHash]);
+
+    //--------------------------------------------------------------------------
     // Render
     return (
         <nav className="flex gap-2">
@@ -107,7 +144,10 @@ export const Navigation = ({ className }: { className?: string }) => {
                 <FactoryNav />
             </ViewerPanel>
             <ViewerPanel className="md:max-w-[90vw] p-1 overflow-x-auto bg-transparent md:bg-slate-0/97 border-none md:border border-muted/50 shadow-none md:shadow-[-10px_10px_100px_-15px_var(--color-slate-200)] pointer-events-auto select-none">
-                <ul className="list-none flex gap-1">
+                <ul ref={areaNavListRef} className="list-none flex gap-1">
+                    <li className="block md:hidden">
+                        <FactoryNavMobile />
+                    </li>
                     {nodeGraph.areas.map((area, index) => (
                         <AreaNav
                             key={area.hash}
@@ -163,6 +203,40 @@ const FactoryNav = ({ className }: { className?: string }) => {
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+const FactoryNavMobile = () => {
+    //--------------------------------------------------------------------------
+    // Contexts
+    const { nodeGraph } = useContext(FactoryContext);
+
+    //--------------------------------------------------------------------------
+    // Hooks
+    const { clickHandler, isSelected, isChildSelected, isHovered } = useNavNode(nodeGraph, "nav");
+
+    //--------------------------------------------------------------------------
+    const stateClassName = useMemo(() => {
+        if (isSelected) {
+            return "bg-accent border-accent-600 text-accent-100";
+        }
+        if (isHovered) {
+            return "bg-muted/5 border-accent-400";
+        }
+        return "bg-slate/50 border-transparent md:bg-muted/5 md:border-muted/50";
+    }, [isSelected, isChildSelected, isHovered]);
+
+    //--------------------------------------------------------------------------
+    return (
+        <Button
+            size="xs"
+            onClick={clickHandler}
+            className={cn("[writing-mode:sideways-lr]", stateClassName)}
+        >
+            Factory
+        </Button>
+    );
+};
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 const AreaNav = ({
     area,
     isFirst,
@@ -211,16 +285,17 @@ const AreaNav = ({
     // Render
     return (
         <li
+            data-area-hash={area.hash}
             className={cn("relative flex flex-col gap-1 p-1 border rounded-lg cursor-pointer", stateClassName)}
             style={
                 SHOW_FLOW_BUTTON
                     ? ({
-                          cornerShape: "squircle",
-                          borderEndEndRadius: isFirst ? "1.5rem" : undefined,
-                          cornerEndEndShape: isFirst ? "scoop" : undefined,
-                          borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
-                          cornerEndStartShape: index === 1 ? "scoop" : undefined,
-                      } as React.CSSProperties)
+                        cornerShape: "squircle",
+                        borderEndEndRadius: isFirst ? "1.5rem" : undefined,
+                        cornerEndEndShape: isFirst ? "scoop" : undefined,
+                        borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
+                        cornerEndStartShape: index === 1 ? "scoop" : undefined,
+                    } as React.CSSProperties)
                     : undefined
             }
             onClick={clickHandler}
