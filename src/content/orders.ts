@@ -14,12 +14,15 @@ export const orderStatus = {
 };
 
 //------------------------------------------------------------------------------
+const hoursFromNow = (hours: number) => new Date(Date.now() + hours * 60 * 60 * 1000);
+
+//------------------------------------------------------------------------------
 export const orders: Order[] = [
     {
         ref: "SO 000020",
         client: "Client A Inc.",
-        startDate: new Date("2026-04-16T08:30:00"),
-        endDate: new Date("2026-04-18T10:00:00"),
+        startDate: hoursFromNow(-120),
+        endDate: hoursFromNow(-72),
         unitsPlanned: 1034,
         unitsCompleted: 1034,
         status: orderStatus.completed,
@@ -27,8 +30,8 @@ export const orders: Order[] = [
     {
         ref: "SO 000021",
         client: "Client A Inc.",
-        startDate: new Date("2026-04-18T12:30:00"),
-        endDate: new Date("2026-04-19T18:30:00"),
+        startDate: hoursFromNow(-68),
+        endDate: hoursFromNow(-22),
         unitsPlanned: 143,
         unitsCompleted: 143,
         status: orderStatus.completed,
@@ -36,8 +39,8 @@ export const orders: Order[] = [
     {
         ref: "SO 000022",
         client: "Client A Inc.",
-        startDate: new Date("2026-04-19T10:30:00"),
-        endDate: new Date("2026-04-21T16:00:00"),
+        startDate: hoursFromNow(-8),
+        endDate: hoursFromNow(30),
         unitsPlanned: 152,
         unitsCompleted: 100,
         status: orderStatus.inProgress,
@@ -45,8 +48,8 @@ export const orders: Order[] = [
     {
         ref: "SO 000023",
         client: "Client B Inc.",
-        startDate: new Date("2026-04-21T08:30:00"),
-        endDate: new Date("2026-04-22T16:00:00"),
+        startDate: hoursFromNow(20),
+        endDate: hoursFromNow(52),
         unitsPlanned: 161,
         unitsCompleted: 0,
         status: orderStatus.planned,
@@ -54,8 +57,8 @@ export const orders: Order[] = [
     {
         ref: "SO 000024",
         client: "Client B Inc.",
-        startDate: new Date("2026-04-23T10:30:00"),
-        endDate: new Date("2026-04-25T16:00:00"),
+        startDate: hoursFromNow(56),
+        endDate: hoursFromNow(104),
         unitsPlanned: 170,
         unitsCompleted: 0,
         status: orderStatus.planned,
@@ -63,8 +66,8 @@ export const orders: Order[] = [
     {
         ref: "SO 000025",
         client: "Client A Inc.",
-        startDate: new Date("2026-04-23T08:30:00"),
-        endDate: new Date("2026-04-24T16:00:00"),
+        startDate: hoursFromNow(50),
+        endDate: hoursFromNow(82),
         unitsPlanned: 179,
         unitsCompleted: 0,
         status: orderStatus.planned,
