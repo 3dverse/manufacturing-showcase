@@ -13,17 +13,8 @@ import { dashboardApi } from "@/services/dashboardApi";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-const SYSTEMS = ["SAP", "MES", "WMS", "Process"] as const;
-type SystemId = (typeof SYSTEMS)[number];
-
-type ConnectionState = Record<SystemId, boolean>;
-
-const DEFAULT_CONNECTIONS: ConnectionState = {
-    SAP: true,
-    MES: true,
-    WMS: true,
-    Process: false,
-};
+import { CONNECTED_SYSTEMS, DEFAULT_CONNECTIONS } from "./content";
+import type { ConnectionState, SystemId } from "./content";
 
 //------------------------------------------------------------------------------
 export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ className }) => {
@@ -33,14 +24,14 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
     //--------------------------------------------------------------------------
     // Sync API with Process state (Process disconnected by default)
     useEffect(() => {
-        dashboardApi.setProductionRunning(connections.Process);
-    }, [connections.Process]);
+        dashboardApi.setProductionRunning(connections.PSS);
+    }, [connections.PSS]);
 
     //--------------------------------------------------------------------------
     const toggle = (id: SystemId) => {
         setConnections((prev) => {
             const next = { ...prev, [id]: !prev[id] };
-            if (id === "Process") dashboardApi.setProductionRunning(next.Process);
+            if (id === "PSS") dashboardApi.setProductionRunning(next.PSS);
             return next;
         });
     };
@@ -58,7 +49,7 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
         >
             <p className="px-px pb-px text-2xs text-muted mb-px">Connected systems</p>
             <ul className="flex flex-col">
-                {SYSTEMS.map((id) => {
+                {CONNECTED_SYSTEMS.map((id) => {
                     const connected = isConnected(id);
                     return (
                         <li key={id}>

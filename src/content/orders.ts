@@ -1,5 +1,11 @@
+//------------------------------------------------------------------------------
 import { faCalendarDays, faCheckCircle, faClockRotateLeft, faXmarkCircle } from "@fortawesome/pro-light-svg-icons";
+
+//------------------------------------------------------------------------------
 import type { Order } from "@/content/type";
+
+//------------------------------------------------------------------------------
+import { hoursFromNow } from "@/utils/helpers-time";
 
 //------------------------------------------------------------------------------
 export const orderStatus = {
@@ -12,9 +18,6 @@ export const orderStatus = {
     completed: { name: "Completed", color: "text-positive-700", icon: faCheckCircle },
     cancelled: { name: "Cancelled", color: "text-negative", icon: faXmarkCircle },
 };
-
-//------------------------------------------------------------------------------
-const hoursFromNow = (hours: number) => new Date(Date.now() + hours * 60 * 60 * 1000);
 
 //------------------------------------------------------------------------------
 export const orders: Order[] = [

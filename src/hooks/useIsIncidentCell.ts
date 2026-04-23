@@ -32,6 +32,6 @@ export const useIsIncidentCell = (cell: CellNode): boolean => {
         if (!activeUseCaseId) return false;
         const useCase = useCases[activeUseCaseId];
         if (!useCase) return false;
-        return useCase.simulatedDowntimeCellMatchers.some((matcher) => matchesCellMatcher(cell, matcher));
+        return useCase?.simulatedDowntimeCellMatchers?.some((matcher) => matchesCellMatcher(cell, matcher)) ?? false;
     }, [activeUseCaseId, useCases, cell]);
 };

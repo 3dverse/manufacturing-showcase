@@ -2,32 +2,88 @@ import React from "react";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
+type ButtonSize = "2xs" | "xs" | "sm" | "md" | "lg";
+type ResponsiveBreakpoint = "base" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+type ResponsiveButtonSize = Partial<Record<ResponsiveBreakpoint, ButtonSize>>;
+type ButtonVariant = "plain" | "outline" | "ghost" | "soft";
+type ButtonColorScheme = "accent" | "neutral" | "positive" | "negative" | "guidance" | "warning";
+
+//------------------------------------------------------------------------------
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "guidance";
-    size?: "2xs" | "xs" | "sm" | "md" | "lg";
+    variant?: ButtonVariant;
+    colorScheme?: ButtonColorScheme;
+    size?: ButtonSize | ResponsiveButtonSize;
+    mobileSize?: ButtonSize;
     isLoading?: boolean;
     children: React.ReactNode;
 }
 
 //------------------------------------------------------------------------------
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ variant = "primary", size = "md", isLoading = false, disabled, className = "", children, ...props }, ref) => {
+    (
+        {
+            variant = "plain",
+            colorScheme,
+            size = "md",
+            mobileSize,
+            isLoading = false,
+            disabled,
+            className = "",
+            children,
+            ...props
+        },
+        ref,
+    ) => {
         //--------------------------------------------------------------------------
         const baseClasses =
             "inline-flex items-center justify-center font-medium transition-all duration-200 cursor-pointer focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
 
         //--------------------------------------------------------------------------
-        const variantClasses = {
-            primary: "bg-accent-600 hover:bg-accent-700 text-white focus:ring-accent",
-            secondary: "bg-neutral-600 hover:bg-neutral-700 text-white focus:ring-neutral",
-            outline: "border-2 border-default bg-transparent hover:bg-ground text-default focus:ring-brand",
-            ghost: "bg-transparent hover:bg-ground text-subtle hover:text-default focus:ring-brand",
-            danger: "bg-negative-600 hover:bg-negative-700 text-white focus:ring-negative",
-            guidance: "bg-guidance-600 hover:bg-guidance-500 text-guidance-50 focus:ring-guidance",
+        const resolvedVariant: ButtonVariant = variant;
+        const resolvedColorScheme: ButtonColorScheme = colorScheme ?? "accent";
+
+        const variantClasses: Record<ButtonVariant, Record<ButtonColorScheme, string>> = {
+            plain: {
+                accent: "bg-accent-600 hover:bg-accent-700 text-white focus:ring-accent",
+                neutral: "bg-neutral-600 hover:bg-neutral-700 text-white focus:ring-neutral",
+                positive: "bg-positive-600 hover:bg-positive-700 text-white focus:ring-positive",
+                negative: "bg-negative-600 hover:bg-negative-700 text-white focus:ring-negative",
+                guidance: "bg-guidance-600 hover:bg-guidance-500 text-guidance-50 focus:ring-guidance",
+                warning: "bg-warning-600 hover:bg-warning-700 text-warning-50 focus:ring-warning",
+            },
+            outline: {
+                accent: "border-2 border-accent-600 bg-transparent hover:bg-accent-50 text-accent-700 focus:ring-accent",
+                neutral:
+                    "border-2 border-neutral-500 bg-transparent hover:bg-neutral-100 text-neutral-700 focus:ring-neutral",
+                positive:
+                    "border-2 border-positive-500 bg-transparent hover:bg-positive-50 text-positive-700 focus:ring-positive",
+                negative:
+                    "border-2 border-negative-500 bg-transparent hover:bg-negative-50 text-negative-700 focus:ring-negative",
+                guidance:
+                    "border-2 border-guidance-500 bg-transparent hover:bg-guidance-50 text-guidance-700 focus:ring-guidance",
+                warning:
+                    "border-2 border-warning-500 bg-transparent hover:bg-warning-50 text-warning-700 focus:ring-warning",
+            },
+            ghost: {
+                accent: "bg-transparent hover:bg-accent-50 text-accent-700 focus:ring-accent",
+                neutral: "bg-transparent hover:bg-neutral-100 text-neutral-700 focus:ring-neutral",
+                positive: "bg-transparent hover:bg-positive-50 text-positive-700 focus:ring-positive",
+                negative: "bg-transparent hover:bg-negative-50 text-negative-700 focus:ring-negative",
+                guidance: "bg-transparent hover:bg-guidance-50 text-guidance-700 focus:ring-guidance",
+                warning: "bg-transparent hover:bg-warning-50 text-warning-700 focus:ring-warning",
+            },
+            soft: {
+                accent: "bg-accent-100 hover:bg-accent-200 text-accent-800 focus:ring-accent",
+                neutral: "bg-neutral-200 hover:bg-neutral-300 text-neutral-800 focus:ring-neutral",
+                positive: "bg-positive-100 hover:bg-positive-200 text-positive-800 focus:ring-positive",
+                negative: "bg-negative-100 hover:bg-negative-200 text-negative-800 focus:ring-negative",
+                guidance: "bg-guidance-100 hover:bg-guidance-200 text-guidance-800 focus:ring-guidance",
+                warning: "bg-warning-100 hover:bg-warning-200 text-warning-800 focus:ring-warning",
+            },
         };
 
         //--------------------------------------------------------------------------
-        const sizeClasses = {
+        const sizeClasses: Record<ButtonSize, string> = {
             "2xs": "px-1 py-[2px] text-2xs font-normal rounded-sm",
             xs: "px-2 py-1 text-xs font-normal rounded-sm",
             sm: "px-4 py-1.5 text-sm rounded-sm",
@@ -36,7 +92,40 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         };
 
         //--------------------------------------------------------------------------
-        const combinedClasses = cn(baseClasses, variantClasses[variant], sizeClasses[size], className);
+        const getResponsiveClasses = (classes: string, breakpoint: Exclude<ResponsiveBreakpoint, "base">) =>
+            classes
+                .split(" ")
+                .filter(Boolean)
+                .map((className) => `${breakpoint}:${className}`)
+                .join(" ");
+
+        const breakpointOrder: ResponsiveBreakpoint[] = ["base", "xs", "sm", "md", "lg", "xl", "2xl"];
+        const sizeMap: ResponsiveButtonSize =
+            typeof size === "string" ? (mobileSize ? { base: mobileSize, md: size } : { base: size }) : size;
+
+        const resolvedSizeClasses =
+            Object.entries(sizeMap)
+                .sort(
+                    ([a], [b]) =>
+                        breakpointOrder.indexOf(a as ResponsiveBreakpoint) -
+                        breakpointOrder.indexOf(b as ResponsiveBreakpoint),
+                )
+                .map(([breakpoint, breakpointSize]) =>
+                    breakpoint === "base"
+                        ? sizeClasses[breakpointSize as ButtonSize]
+                        : getResponsiveClasses(
+                              sizeClasses[breakpointSize as ButtonSize],
+                              breakpoint as Exclude<ResponsiveBreakpoint, "base">,
+                          ),
+                )
+                .join(" ") || sizeClasses.md;
+
+        const combinedClasses = cn(
+            baseClasses,
+            variantClasses[resolvedVariant][resolvedColorScheme],
+            resolvedSizeClasses,
+            className,
+        );
 
         //--------------------------------------------------------------------------
         return (

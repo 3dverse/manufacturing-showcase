@@ -135,7 +135,7 @@ export const LiveDashboard: React.FC = () => {
                         </div>
                     </div>
                     {handleAddProduct && (
-                        <Button variant="primary" size="sm" onClick={handleAddProduct}>
+                        <Button colorScheme="accent" size="sm" onClick={handleAddProduct}>
                             Create new unit
                         </Button>
                     )}

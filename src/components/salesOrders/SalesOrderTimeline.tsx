@@ -1,11 +1,8 @@
 //------------------------------------------------------------------------------
 import { useMemo, useEffect, useRef, useState, useContext } from "react";
-import { faAngleRight } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import Tooltip from "@/components/common/Tooltip/Tooltip";
-import { Icon } from "@/components/common/Icon";
-import Button from "@/components/common/Button";
 import { SalesOrderProgressBar } from "./SalesOrderProgressBar";
 
 //------------------------------------------------------------------------------
@@ -13,15 +10,29 @@ import { useTimelineStore } from "@/store/useTimelineStore";
 import { useNavigationStore } from "@/store/useNavigationStore";
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { FactoriesContext } from "@/contexts/FactoriesContext";
-import { UseCaseContext } from "@/contexts/UseCaseContext";
 
 //------------------------------------------------------------------------------
-import { orders, orderStatus } from "@/content/orders";
+import { orders } from "@/content/orders";
+import { machineTimelineEvents } from "@/content/events";
+
+//------------------------------------------------------------------------------
+type TimelineEventColumn = {
+    id: string;
+    type: "stop" | "maintenance";
+    machine: string;
+    details: string;
+    startMs: number;
+    endMs: number;
+    leftPct: number;
+    widthPct: number;
+};
 
 //------------------------------------------------------------------------------
 export const SalesOrderTimeline = () => {
+    //--------------------------------------------------------------------------
     const sorted = useMemo(() => [...orders].sort((a, b) => a.startDate.getTime() - b.startDate.getTime()), []);
 
+    //--------------------------------------------------------------------------
     const minTime = useMemo(() => Math.min(...sorted.map((o) => o.startDate.getTime())), [sorted]);
     const maxTime = useMemo(() => Math.max(...sorted.map((o) => o.endDate.getTime())), [sorted]);
     const totalSpan = maxTime - minTime || 1;
@@ -36,6 +47,8 @@ export const SalesOrderTimeline = () => {
     }, [sorted]);
 
     const [now, setNow] = useState(() => Date.now());
+
+    //--------------------------------------------------------------------------
     useEffect(() => {
         const id = setInterval(() => setNow(Date.now()), 60_000);
         return () => clearInterval(id);
@@ -49,14 +62,31 @@ export const SalesOrderTimeline = () => {
     const navigate = useNavigationStore((state) => state.navigate);
     const currentFactory = useFactoryStore((state) => state.currentFactory);
     const { factories } = useContext(FactoriesContext);
-    const { useCases, activeUseCaseId, useCaseActivatedAt, requestIncidentFocus } = useContext(UseCaseContext);
-    const activeUseCase = activeUseCaseId ? useCases[activeUseCaseId] : undefined;
-    const incidentConfig = activeUseCase?.salesOrderIncident;
 
-    const incidentStartMs = useCaseActivatedAt ?? null;
-    const incidentStartPct = incidentStartMs !== null ? ((incidentStartMs - minTime) / totalSpan) * 100 : null;
-    const showIncidentMarker =
-        activeUseCaseId && incidentStartPct !== null && incidentStartPct >= 0 && incidentStartPct <= 100;
+    //--------------------------------------------------------------------------
+    const timelineEventColumns = useMemo(() => {
+        return machineTimelineEvents
+            .map((event) => {
+                const startMs = event.date.getTime();
+                const endMs = startMs + event.durationHours * 60 * 60 * 1000;
+                const clippedStartMs = Math.max(startMs, minTime);
+                const clippedEndMs = Math.min(endMs, maxTime);
+                if (clippedEndMs <= clippedStartMs) return null;
+
+                return {
+                    id: event.id,
+                    type: event.type,
+                    machine: event.machine,
+                    details: event.details,
+                    startMs,
+                    endMs,
+                    leftPct: ((clippedStartMs - minTime) / totalSpan) * 100,
+                    widthPct: Math.max(((clippedEndMs - clippedStartMs) / totalSpan) * 100, 0.5),
+                } satisfies TimelineEventColumn;
+            })
+            .filter((event): event is TimelineEventColumn => event !== null)
+            .sort((a, b) => a.startMs - b.startMs);
+    }, [minTime, maxTime, totalSpan]);
 
     const timeLabels = useMemo(() => {
         const labels: { label: string; pct: number }[] = [];
@@ -82,6 +112,7 @@ export const SalesOrderTimeline = () => {
         [factories],
     );
 
+    //--------------------------------------------------------------------------
     const openOrderAtStart = (order: (typeof orders)[number]) => {
         setAsOf(Math.floor(order.startDate.getTime() / 1000));
 
@@ -94,21 +125,7 @@ export const SalesOrderTimeline = () => {
         }
     };
 
-    const openActiveIncident = () => {
-        if (!activeUseCaseId || !incidentConfig) return;
-
-        requestIncidentFocus(activeUseCaseId);
-        setAsOf(Math.floor(new Date(incidentConfig.startDateIso).getTime() / 1000));
-
-        const targetFactory = currentFactory ?? firstEnabledFactory;
-        if (!targetFactory) return;
-
-        const targetRoute = `/${targetFactory.slug}`;
-        if (window.location.pathname !== targetRoute) {
-            navigate(targetRoute);
-        }
-    };
-
+    //--------------------------------------------------------------------------
     return (
         <div className="flex flex-col gap-0.5 overflow-x-auto">
             {/* Time axis */}
@@ -130,17 +147,6 @@ export const SalesOrderTimeline = () => {
                         {new Date(now).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
                     </span>
                 )}
-                {showIncidentMarker && incidentStartMs !== null && (
-                    <span
-                        className="absolute -bottom-5 px-1 text-2xs text-warning-700 -translate-x-1/2 whitespace-nowrap bg-slate-0 rounded-md z-10"
-                        style={{ left: `${incidentStartPct}%` }}
-                    >
-                        {new Date(incidentStartMs).toLocaleTimeString(undefined, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        })}
-                    </span>
-                )}
             </div>
 
             {/* Rows */}
@@ -154,91 +160,97 @@ export const SalesOrderTimeline = () => {
                         style={{ left: `${nowPct}%` }}
                     />
                 )}
-                {showIncidentMarker && (
-                    <div
-                        className="absolute top-0 bottom-0 w-px bg-warning-500 z-0 pointer-events-none"
-                        style={{ left: `${incidentStartPct}%` }}
-                    />
-                )}
+                {timelineEventColumns.map((eventColumn) => (
+                    <TimelineEventOverlay key={eventColumn.id} eventColumn={eventColumn} />
+                ))}
                 {[...clientGroups.entries()].map(([client, clientOrders]) => (
                     <div key={client}>
-                        <div className="px-2 py-0.5 text-2xs font-medium text-muted bg-underground/60">{client}</div>
+                        <div className="px-2 py-0.5 text-2xs font-medium text-muted bg-underground/80 backdrop-blur-xl relative z-1">
+                            {client}
+                        </div>
                         {clientOrders.map((order) => {
                             const leftPct = ((order.startDate.getTime() - minTime) / totalSpan) * 100;
                             const widthPct = ((order.endDate.getTime() - order.startDate.getTime()) / totalSpan) * 100;
 
-                            const isIncidentOrder = Boolean(
-                                incidentConfig &&
-                                activeUseCaseId &&
-                                order.ref === incidentConfig.orderRef &&
-                                order.status.name === orderStatus.inProgress.name,
-                            );
-                            const incidentLeftPct = (((useCaseActivatedAt ?? 0) - minTime) / totalSpan) * 100;
-                            const incidentWidthPct =
-                                ((Math.min(now, maxTime) - (useCaseActivatedAt ?? 0)) / totalSpan) * 100;
-                            const hasIncidentBar = isIncidentOrder && incidentWidthPct > 0;
-                            const stopAction = incidentConfig?.actions.find((action) => action.role === "stopMachine");
-                            const goToAction = incidentConfig?.actions.find((action) => action.role === "goToIncident");
-
                             return (
                                 <div
                                     key={order.ref}
-                                    className="flex items-center gap-2 px-1 py-px hover:bg-underground/30 transition-colors duration-150 group"
+                                    className="flex items-center gap-2 px-1 py-px hover:bg-underground/30 transition-colors duration-150 group pointer-events-none"
                                 >
                                     <div className="relative flex-1 h-5">
-                                        {hasIncidentBar && (
-                                            <div
-                                                className="absolute top-0 h-full rounded-sm bg-warning-500/70 stripes [--color:var(--color-warning-300)] pointer-events-none z-2"
-                                                style={{
-                                                    left: `${Math.max(incidentLeftPct, 0)}%`,
-                                                    width: `${Math.min(incidentWidthPct, 100)}%`,
-                                                    minWidth: "5px",
-                                                }}
-                                            />
-                                        )}
                                         <SalesOrderTimelineNode
                                             order={order}
                                             style={{
                                                 left: `${leftPct}%`,
                                                 width: `${Math.max(widthPct, 2)}%`,
                                             }}
-                                            className="absolute top-0 h-full"
+                                            className="absolute top-0 h-full pointer-events-auto"
                                             onClick={() => openOrderAtStart(order)}
                                         />
                                     </div>
-                                    {isIncidentOrder && incidentConfig && (
-                                        <div className="relative z-10 w-72 shrink-0 rounded-md border border-warning-400/70 bg-slate-0/95 px-3 py-2 shadow-lg starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400">
-                                            <p className="text-xs font-semibold text-muted">{incidentConfig.title}</p>
-                                            <p className="mt-1 text-xs text-warning-700">
-                                                {incidentConfig.warningMessage}
-                                            </p>
-                                            <div className="mt-2 flex items-center justify-between gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="xs"
-                                                    disabled={Boolean(stopAction?.disabled)}
-                                                    className="border border-warning-300/60 text-warning-700 pointer-events-none"
-                                                >
-                                                    {stopAction?.label}
-                                                </Button>
-                                                <Button
-                                                    variant="guidance"
-                                                    className="text-warning-50 bg-warning-700 hover:bg-warning-600"
-                                                    size="xs"
-                                                    onClick={openActiveIncident}
-                                                >
-                                                    <Icon icon={faAngleRight} size="xs" className="mr-1" />
-                                                    {goToAction?.label}
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             );
                         })}
                     </div>
                 ))}
             </div>
+        </div>
+    );
+};
+
+//------------------------------------------------------------------------------
+type TimelineEventOverlayProps = {
+    eventColumn: TimelineEventColumn;
+};
+
+//------------------------------------------------------------------------------
+const TimelineEventOverlay = ({ eventColumn }: TimelineEventOverlayProps) => {
+    const colorClass =
+        eventColumn.type === "stop" ? "bg-negative/25 hover:bg-negative/45" : "bg-warning/25 hover:bg-warning/45";
+
+    const formattedStart = new Date(eventColumn.startMs).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+    const formattedEnd = new Date(eventColumn.endMs).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+    const durationMinutes = Math.max(Math.round((eventColumn.endMs - eventColumn.startMs) / 60000), 1);
+    const durationText =
+        durationMinutes >= 60 ? `${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m` : `${durationMinutes}m`;
+    const eventTypeText = eventColumn.type === "stop" ? "Machine stop" : "Maintenance";
+
+    return (
+        <div
+            className="absolute top-0 bottom-0 z-0"
+            style={{
+                left: `${eventColumn.leftPct}%`,
+                width: `${eventColumn.widthPct}%`,
+                minWidth: "4px",
+            }}
+        >
+            <Tooltip
+                content={
+                    <div className="flex flex-col gap-1 px-1.5 py-1">
+                        <p className="text-xs text-muted">{eventTypeText}</p>
+                        <p className="text-sm font-medium">{eventColumn.machine}</p>
+                        <p className="text-sm ">{eventColumn.details}</p>
+                        <p className="text-xs text-muted">
+                            {formattedStart} → {formattedEnd} ({durationText})
+                        </p>
+                    </div>
+                }
+                showArrow={true}
+                offset={4}
+                containerClassName="block h-full w-full"
+            >
+                <div className={`h-full w-full transition-colors duration-150 ${colorClass}`} />
+            </Tooltip>
         </div>
     );
 };
@@ -251,6 +263,7 @@ type SalesOrderTimelineNodeProps = {
     className: string;
 };
 
+//------------------------------------------------------------------------------
 const SalesOrderTimelineNode = ({ order, style, onClick, className }: SalesOrderTimelineNodeProps) => {
     return (
         <div className={className} style={style}>

@@ -1,5 +1,5 @@
 import { useContext, useMemo } from "react";
-import { faCheck } from "@fortawesome/sharp-solid-svg-icons";
+import { faAngleRight, faMapMarkerAlt } from "@fortawesome/sharp-regular-svg-icons";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -8,7 +8,6 @@ import { KeyStatusIndicators } from "@/components/dashboard/header/StatusIndicat
 import { BadgeOEE } from "@/components/common/BadgeOEE";
 
 //------------------------------------------------------------------------------
-import { FactoriesContext } from "@/contexts/FactoriesContext";
 import { UseCaseContext } from "@/contexts/UseCaseContext";
 import { useFactoryItemOEE } from "@/hooks/useFactoryItemOEE";
 
@@ -17,6 +16,9 @@ import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import type { Factory } from "@/content/type";
+import { ConnectedSystemsBadge } from "@/components/connectedSystems/ConnectedSystemsBadge";
+import Button from "@/components/common/Button";
+import { useNavigationStore } from "@/store/useNavigationStore";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -24,8 +26,8 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const oee = useFactoryItemOEE(factoryItem.scene_id);
-    const { factories } = useContext(FactoriesContext);
-    const { useCases, activeUseCaseId } = useContext(UseCaseContext);
+    const navigate = useNavigationStore((state) => state.navigate);
+    const { useCases, activeUseCaseId, requestIncidentFocus } = useContext(UseCaseContext);
 
     //--------------------------------------------------------------------------
     // Memos
@@ -33,18 +35,29 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
         () => (activeUseCaseId ? useCases[activeUseCaseId] : undefined),
         [activeUseCaseId, useCases],
     );
-    const guidanceStep = activeUseCase?.homeStep;
-    const firstEnabledFactory = useMemo(
-        () => factories.find((factory) => factory.enabled) || factories[0],
-        [factories],
-    );
-    const isGuidanceEmphasized = Boolean(
-        guidanceStep && factoryItem.enabled && firstEnabledFactory && firstEnabledFactory.slug === factoryItem.slug,
-    );
-
+    const incidentConfig = activeUseCase?.salesOrderIncident;
     const className = useMemo(() => {
         return factoryItem.enabled ? "rounded-b-none!" : "grayscale pointer-events-none opacity-50";
     }, [factoryItem.enabled]);
+
+    //--------------------------------------------------------------------------
+    const openActiveIncident = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!activeUseCaseId || !incidentConfig) return;
+
+        requestIncidentFocus(activeUseCaseId);
+        // setAsOf(Math.floor(new Date(incidentConfig.startDateIso).getTime() / 1000));
+
+        const targetFactory = factoryItem;
+        if (!targetFactory) return;
+
+        const targetRoute = `/${targetFactory.slug}`;
+        if (window.location.pathname !== targetRoute) {
+            navigate(targetRoute);
+        }
+    };
 
     //--------------------------------------------------------------------------
     const As = factoryItem.enabled ? "a" : "span";
@@ -65,12 +78,12 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                 className,
             )}
         >
-            {isGuidanceEmphasized && (
+            {/* {isGuidanceEmphasized && (
                 <span
                     aria-hidden
                     className="fixed left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-96 h-96 rounded-full border border-guidance z-20 shadow-[0_0_30px_-4px_color-mix(in_oklch,var(--color-guidance)_70%,transparent)]"
                 />
-            )}
+            )} */}
             <div className="flex flex-col md:flex-row grow">
                 {factoryItem.video && (
                     <video
@@ -94,36 +107,39 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                                 {factoryItem.name}
                             </h2>
                             <div className="grow flex flex-col lg:flex-row items-start lg:items-baseline justify-between gap-x-3 gap-y-2">
-                                <div className="flex items-center text-sm text-accent">
-                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                        />
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                        />
-                                    </svg>
+                                <div className="flex items-center mt-2 text-sm text-accent">
+                                    <ConnectedSystemsBadge className="mr-3" />
+                                    <Icon icon={faMapMarkerAlt} size="sm" className="mr-1" />
                                     <span className="text-xs">{factoryItem.location}</span>
-                                </div>
-                                <div className="self-end flex items-center gap-1 bg-positive-500 border border-positive-500/20 text-neutral-600 rounded-full">
-                                    <Icon icon={faCheck} className="text-2xs pl-1.5 pr-5 text-positive-50" />
-                                    {["SAP", "MES", "WMS", "PSS"].map((system) => (
-                                        <span
-                                            key={system}
-                                            className="bg-slate-0 h-full rounded-full px-1 py-px text-2xs -ml-5 pl-2 pr-5 last:pr-2 outline outline-positive-500/50"
-                                        >
-                                            {system}
-                                        </span>
-                                    ))}
                                 </div>
                             </div>
                         </div>
+
+                        {incidentConfig && (
+                            <div className="relative rounded-md border border-warning-400/70 bg-slate-0/95 px-3 py-2 shadow-lg starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400">
+                                <p className="text-xs font-semibold text-muted">{incidentConfig.title}</p>
+                                <p className="mt-1 text-xs text-warning-700">{incidentConfig.warningMessage}</p>
+                                <div className="mt-2 flex items-center justify-between gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="xs"
+                                        disabled={Boolean(incidentConfig.actions[0]?.disabled)}
+                                        className="border border-warning-300/60 text-warning-700 pointer-events-none"
+                                    >
+                                        {incidentConfig.actions[0]?.label}
+                                    </Button>
+                                    <Button
+                                        colorScheme="guidance"
+                                        className="text-warning-50 bg-warning-700 hover:bg-warning-600"
+                                        size="xs"
+                                        onClick={openActiveIncident}
+                                    >
+                                        <Icon icon={faAngleRight} size="xs" className="mr-1" />
+                                        {incidentConfig.actions[1]?.label}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="flex">

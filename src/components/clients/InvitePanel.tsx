@@ -111,7 +111,7 @@ export const InvitePanel = () => {
                 <AvatarList />
                 <div className="relative" ref={menuRef}>
                     <Button
-                        variant="primary"
+                        colorScheme="accent"
                         size="sm"
                         className={cn(
                             "md:min-w-24 p-2 gap-2 rounded-full md:rounded-3xl aspect-square md:aspect-auto font-normal",

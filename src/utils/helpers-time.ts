@@ -130,3 +130,6 @@ export function formatDuration(min: number): string {
     const m = min % 60;
     return m ? `${h}h ${m}min` : `${h}h`;
 }
+
+//------------------------------------------------------------------------------
+export const hoursFromNow = (hours: number) => new Date(Date.now() + hours * 60 * 60 * 1000);

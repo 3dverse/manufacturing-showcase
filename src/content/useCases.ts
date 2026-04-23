@@ -27,17 +27,19 @@ export type UseCaseDefinition = {
     id: string;
     label: string;
     description: string;
-    simulatedDowntimeCellMatchers: UseCaseCellMatcher[];
+    image?: string;
+    simulatedDowntimeCellMatchers?: UseCaseCellMatcher[];
     homeStep?: UseCaseHomeStep;
     salesOrderIncident?: UseCaseSalesOrderIncident;
 };
 
+// TODO: rename use cases to scenarios
 export const USE_CASES: Record<string, UseCaseDefinition> = {
-    // TODO: rename to "incidentScenario",
-    maintenanceUrgency: {
+    maintenance_urgency: {
         id: "incidentScenario",
         label: "Incident",
         description: "Simulate an urgent maintenance incident on Product A drilling operations.",
+        image: "/scenarios/scenario_1.png",
         homeStep: {
             title: "Maintenance incident",
             description: "Drill machine downtime detected on Product A. Open incident details to investigate.",
@@ -59,6 +61,26 @@ export const USE_CASES: Record<string, UseCaseDefinition> = {
                 machineNameIncludes: ["drilling"],
             },
         ],
+    },
+    predicitve_maintenance: {
+        id: "predicitve_maintenance",
+        label: "Predictive maintenance",
+        description: "Simulate a predictive maintenance on Product A drilling operations.",
+        image: "/scenarios/scenario_2.png",
+        homeStep: {
+            title: "Predictive maintenance",
+            description: "Drill machine downtime detected on Product A. Open incident details to investigate.",
+        },
+    },
+    planned_maintenance: {
+        id: "planned_maintenance",
+        label: "Planned maintenance",
+        description: "Simulate a planned maintenance on Product A drilling operations.",
+        image: "/scenarios/scenario_3.png",
+        homeStep: {
+            title: "Planned maintenance",
+            description: "Drill machine downtime detected on Product A. Open incident details to investigate.",
+        },
     },
 };
 

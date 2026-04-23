@@ -161,7 +161,8 @@ export default function DatasetPage() {
                                 Refresh
                             </Button>
                             <Button
-                                variant="primary"
+                                variant="plain"
+                                colorScheme="accent"
                                 size="sm"
                                 isLoading={regeneratingAll}
                                 onClick={regenerateAll}

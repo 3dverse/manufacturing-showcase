@@ -1,16 +1,19 @@
 //------------------------------------------------------------------------------
 import { useMemo } from "react";
+import { faCheck, faListCheck } from "@fortawesome/sharp-light-svg-icons";
+
+//------------------------------------------------------------------------------
+import { Icon } from "@/components/common/Icon";
+import { SalesOrderProgressBar } from "./SalesOrderProgressBar";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
 import { timeAgo } from "@/utils/helpers-time";
 
 //------------------------------------------------------------------------------
-import { SalesOrderProgressBar } from "./SalesOrderProgressBar";
-
-//------------------------------------------------------------------------------
 import { orderStatus } from "@/content/orders";
 import type { Order } from "@/content/type";
+import Button from "../common/Button";
 
 //------------------------------------------------------------------------------
 type SalesOrderCarouselItemProps = {
@@ -65,12 +68,27 @@ export const SalesOrderCarouselItem = ({ order, now }: SalesOrderCarouselItemPro
     //--------------------------------------------------------------------------
     const delayLabel = useMemo(() => {
         if (order.status.name === orderStatus.completed.name) {
-            return <p className="text-xs text-positive-700">No delay</p>;
+            return (
+                <Button variant="soft" colorScheme="positive" size="2xs">
+                    <Icon icon={faCheck} className="w-3 mr-1 text-positive-700" />
+                    No delay
+                </Button>
+            );
         }
         if (order.status.name === orderStatus.inProgress.name) {
-            return <p className="text-xs">On time</p>;
+            return (
+                <p className="text-xs">
+                    <Icon icon={faCheck} className="w-3 mr-1 text-positive-700" />
+                    On time
+                </p>
+            );
         }
-        return <p className="text-xs text-slate-700">Ready</p>;
+        return (
+            <p className="text-xs text-slate-700">
+                <Icon icon={faListCheck} className="w-3 mr-1 text-slate-700" />
+                Ready
+            </p>
+        );
     }, [order.status.name]);
 
     //--------------------------------------------------------------------------

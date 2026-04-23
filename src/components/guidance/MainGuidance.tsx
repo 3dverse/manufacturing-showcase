@@ -40,7 +40,8 @@ export const MainGuidance = () => {
         <aside
             data-theme="dark"
             className={`
-                group translate-y-full hover:translate-y-0 transition-transform duration-200
+                group
+                starting:translate-y-[calc(100%+2rem)] translate-y-full hover:translate-y-0 transition-transform duration-200
                 fixed bottom-0 shadow-[0_-4px_32px_-1px_color-mix(in_oklch,var(--color-accent-200)_20%,transparent)] z-100
             `}
             {...(activeUseCase && { "data-current-use-case": true })}
@@ -87,7 +88,12 @@ export const MainGuidance = () => {
                                 Quit scenario
                             </Button>
                         ) : (
-                            <Button onClick={openFirstUseCase} variant="guidance" size="sm" className="rounded-full">
+                            <Button
+                                onClick={openFirstUseCase}
+                                colorScheme="guidance"
+                                size="sm"
+                                className="rounded-full"
+                            >
                                 Simulate incident scenario
                             </Button>
                         )}

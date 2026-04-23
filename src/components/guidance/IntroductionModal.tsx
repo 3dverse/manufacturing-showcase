@@ -73,7 +73,7 @@ const IntroductionModal = ({ isOpen, onClose }: IntroductionModalProps) => {
                         </div>
                     </div>
 
-                    <Button variant="guidance" className="w-fit min-w-56" onClick={handleContinue}>
+                    <Button variant="plain" colorScheme="guidance" className="w-fit min-w-56" onClick={handleContinue}>
                         Continue
                     </Button>
                 </div>

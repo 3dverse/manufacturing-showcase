@@ -140,8 +140,10 @@ const FactoryBuilder = () => {
         if (!useCase) return [];
         return nodeList
             .filter(isCell)
-            .filter((cell) =>
-                useCase.simulatedDowntimeCellMatchers.some((matcher) => matchesCellMatcher(cell, matcher)),
+            .filter(
+                (cell) =>
+                    useCase?.simulatedDowntimeCellMatchers?.some((matcher) => matchesCellMatcher(cell, matcher)) ??
+                    false,
             );
     }, [activeUseCaseId, useCases, nodeList]);
 

@@ -71,7 +71,7 @@ export const DisconnectedOverlay = ({ error }: { error: string }) => {
             <div className="relative flex flex-col items-center justify-center text-center max-w-md p-12">
                 <span className="absolute bottom-0 left-0 scale-200 w-full h-full bg-white blur-3xl -z-10" />
                 <p className="text-sm">{description}</p>
-                <Button variant="primary" size="sm" className="mt-6" onClick={reconnect}>
+                <Button colorScheme="accent" size="sm" className="mt-6" onClick={reconnect}>
                     Reconnect
                 </Button>
             </div>

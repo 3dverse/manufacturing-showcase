@@ -169,7 +169,7 @@ export const AvatarList = () => {
                                 }
                                 {!fullScreenWatchedAvatar && (
                                     <Button
-                                        variant="primary"
+                                        colorScheme="accent"
                                         size="2xs"
                                         className="absolute top-1 right-1 flex items-center justify-center rounded-full p-1 hover:bg-accent-300"
                                         onClick={() => setWatchedAvatar(null)}
