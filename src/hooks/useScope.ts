@@ -1,11 +1,16 @@
 import { useEffect, useMemo } from "react";
+//------------------------------------------------------------------------------
 
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { scopeFromNode, levelFromNode, type TimelineScope, type TimelineLevel } from "@/core/Scope";
-import type { NavGraphNode } from "@/content/type";
 
-export function useScope(node: NavGraphNode | null): {
+//------------------------------------------------------------------------------
+import type { SceneGraphNode } from "@/content/type";
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+export function useScope(node: SceneGraphNode | null): {
     scope: TimelineScope | null;
     level: TimelineLevel | null;
     isLoading: boolean;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 //------------------------------------------------------------------------------
 import { DOMEntity } from "@3dverse/livelink-react";
@@ -6,7 +6,6 @@ import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 import type { AreaNode } from "@/content/type";
-import { useInteractiveDom3DItem } from "@/hooks/useInteractiveDom3DItem";
 import { getBinOccupancy, type BinOccupancy } from "@/core/occupancy";
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { useTimelineStore } from "@/store/useTimelineStore";
@@ -21,6 +20,8 @@ export function StorageOverlay({ areaNode }: { areaNode: AreaNode }) {
     // Store
     const siteId = useFactoryStore((s) => s.currentFactory?.scene_id ?? "");
     const asOf = useTimelineStore((s) => s.asOf);
+    const home = useTimelineStore((s) => s.home);
+    const targetAsOf = asOf || home;
 
     //--------------------------------------------------------------------------
     // Derive display nodes and WMS bin IDs.
@@ -43,12 +44,10 @@ export function StorageOverlay({ areaNode }: { areaNode: AreaNode }) {
 
     useEffect(() => {
         if (!siteId || !queryBinIds.length) return;
-        getBinOccupancy({ siteId, warehouseId: areaNode.hash, binIds: queryBinIds, asOf }).then(setOccupancy);
-    }, [siteId, areaNode.hash, queryBinIds, asOf]);
-
-    useEffect(() => {
-        console.log("occupancy", occupancy);
-    }, [occupancy]);
+        getBinOccupancy({ siteId, warehouseId: areaNode.hash, binIds: queryBinIds, asOf: targetAsOf }).then(
+            setOccupancy,
+        );
+    }, [siteId, areaNode.hash, queryBinIds, targetAsOf]);
 
     //--------------------------------------------------------------------------
     // Map display nodes to their occupancy.
@@ -70,37 +69,33 @@ export function StorageOverlay({ areaNode }: { areaNode: AreaNode }) {
 
     //--------------------------------------------------------------------------
     // Render
-    return displayNodes.map((node, i) => (
-        <StorageOverlayItem key={node.hash} node={node} occupancy={nodeOccupancy[i]} />
-    ));
+    return useMemo(() => {
+        return displayNodes.map((node, i) => (
+            <StorageOverlayItem key={node.hash} node={node} occupancy={nodeOccupancy[i]} />
+        ));
+    }, [displayNodes, nodeOccupancy]);
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 function StorageOverlayItem({ node, occupancy }: { node: OverlayNode; occupancy: BinOccupancy[] }) {
     //--------------------------------------------------------------------------
-    // Hooks
-    const setRef = useInteractiveDom3DItem();
+    // Memos
+    const primary = useMemo(() => occupancy[0] ?? null, [occupancy]);
 
     //--------------------------------------------------------------------------
-    // Handler
-    const clickHandler = useCallback(() => {
-        console.log("click");
-    }, []);
+    const totalQty = useMemo(() => occupancy.reduce((s, o) => s + o.quantity, 0), [occupancy]);
 
     //--------------------------------------------------------------------------
     // Render
-    const primary = occupancy[0] ?? null;
-    const totalQty = occupancy.reduce((s, o) => s + o.quantity, 0);
     if (!totalQty) return null;
 
+    //--------------------------------------------------------------------------
     return (
         <DOMEntity entity={node.entity}>
             <div
                 className="h-6 min-w-6 px-1 pointer-events-auto cursor-pointer rounded-full flex items-center justify-center text-[10px] font-bold text-black/70 leading-none"
                 style={{ backgroundColor: primary ? itemColor(primary.itemId) : "rgba(100,116,139,0.5)" }}
-                ref={setRef}
-                onClick={clickHandler}
             >
                 {totalQty}
             </div>

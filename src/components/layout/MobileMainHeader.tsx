@@ -11,19 +11,14 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-import { cn } from "@/utils/cn";
 import { useFactoryOEE } from "@/hooks/useFactoryOEE";
 
 //------------------------------------------------------------------------------
-export const MobileMainHeader = ({
-    onBack,
-    className,
-    children,
-}: {
-    onBack?: () => void;
-    className?: string;
-    children?: React.ReactNode;
-}) => {
+import { cn } from "@/utils/cn";
+import { useNavigationStore } from "@/store/useNavigationStore";
+
+//------------------------------------------------------------------------------
+export const MobileMainHeader = ({ className, children }: { className?: string; children?: React.ReactNode }) => {
     //--------------------------------------------------------------------------
     // Contexts
     const { setSelectedNode } = useContext(SelectionContext);
@@ -31,16 +26,18 @@ export const MobileMainHeader = ({
     const oee = useFactoryOEE();
 
     //--------------------------------------------------------------------------
+    // Hooks
+    const { navigate } = useNavigationStore();
+
+    //--------------------------------------------------------------------------
     // Handlers
     const homeClickHandler = useCallback(
         (e: MouseEvent) => {
-            if (onBack) {
-                e.preventDefault();
-                e.stopPropagation();
-                onBack();
-            }
+            e.preventDefault();
+            e.stopPropagation();
+            navigate("/");
         },
-        [onBack],
+        [navigate],
     );
 
     //--------------------------------------------------------------------------

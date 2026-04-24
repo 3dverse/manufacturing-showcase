@@ -7,7 +7,8 @@ import type {
     FactoryNode,
     AreaNode,
     CellNode,
-    NavGraphNode,
+    OutNode,
+    SceneGraphNode,
     LineNode,
     MachineNode,
     FlowNode,
@@ -17,11 +18,11 @@ import type {
 } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export const buildNavGraph = async (params: {
+export const buildSceneGraph = async (params: {
     entities: Entity[];
 }): Promise<{
     graph: FactoryNode;
-    list: NavGraphNode[];
+    list: SceneGraphNode[];
 }> => {
     const { entities } = params;
     const factories: Entity[] = [];
@@ -33,7 +34,7 @@ export const buildNavGraph = async (params: {
     const racks: Entity[] = [];
     const bins: Entity[] = [];
     const flows: Entity[] = [];
-    const out: Entity[] = [];
+    const outputs: Entity[] = [];
 
     for (const e of entities) {
         const name = e.name.toLowerCase();
@@ -71,7 +72,7 @@ export const buildNavGraph = async (params: {
                 flows.push(e);
                 break;
             case "out":
-                out.push(e);
+                outputs.push(e);
                 break;
         }
     }
@@ -101,7 +102,7 @@ export const buildNavGraph = async (params: {
         }),
     );
 
-    const list: NavGraphNode[] = [];
+    const list: SceneGraphNode[] = [];
 
     //--------------------------------------------------------------------------
     const mapFactoryEntity = (factoryEntity: Entity) => {
@@ -195,15 +196,28 @@ export const buildNavGraph = async (params: {
             id: parseId(cellEntity),
             parent,
             machines: [],
-            out: [],
+            outputs: [],
         };
         cell.machines = machines
             .filter((m) => inLineage(m, cellEntity.euid.value))
             .map((e) => mapMachineEntity(e, cell))
             .sort(sortNode);
-        cell.out = out.filter((o) => inLineage(o, cellEntity.euid.value));
+        cell.outputs = outputs.filter((o) => inLineage(o, cellEntity.euid.value)).map((e) => mapOutEntity(e, cell));
         list.push(cell);
         return cell;
+    };
+
+    //--------------------------------------------------------------------------
+    const mapOutEntity = (outEntity: Entity, parent: CellNode) => {
+        const out: OutNode = {
+            hash: hashEntity(outEntity),
+            entity: outEntity,
+            type: NodeTypes.out,
+            parent,
+            name: parseName(outEntity),
+            id: parseId(outEntity),
+        };
+        return out;
     };
 
     //--------------------------------------------------------------------------
@@ -359,48 +373,48 @@ function hashEntity(entity: Entity): string {
 }
 
 //------------------------------------------------------------------------------
-export const sortNode = (a: NavGraphNode, b: NavGraphNode) => {
+export const sortNode = (a: SceneGraphNode, b: SceneGraphNode) => {
     if (!a.entity.lineage) return -1;
     if (!b.entity.lineage) return 1;
     return a.entity.lineage.ordinal - b.entity.lineage.ordinal;
 };
 
 //------------------------------------------------------------------------------
-export const isFactory = (node: NavGraphNode): node is FactoryNode => {
+export const isFactory = (node: SceneGraphNode): node is FactoryNode => {
     return node.type === NodeTypes.factory;
 };
 
 //------------------------------------------------------------------------------
-export const isArea = (node: NavGraphNode): node is AreaNode => {
+export const isArea = (node: SceneGraphNode): node is AreaNode => {
     return node.type === NodeTypes.area;
 };
 
 //------------------------------------------------------------------------------
-export const isLine = (node: NavGraphNode): node is LineNode => {
+export const isLine = (node: SceneGraphNode): node is LineNode => {
     return node.type === NodeTypes.line;
 };
 
 //------------------------------------------------------------------------------
-export const isCell = (node: NavGraphNode): node is CellNode => {
+export const isCell = (node: SceneGraphNode): node is CellNode => {
     return node.type === NodeTypes.cell;
 };
 
 //------------------------------------------------------------------------------
-export const isMachine = (node: NavGraphNode): node is MachineNode => {
+export const isMachine = (node: SceneGraphNode): node is MachineNode => {
     return node.type === NodeTypes.machine;
 };
 
 //------------------------------------------------------------------------------
-export const isAisle = (node: NavGraphNode): node is AisleNode => {
+export const isAisle = (node: SceneGraphNode): node is AisleNode => {
     return node.type === NodeTypes.aisle;
 };
 
 //------------------------------------------------------------------------------
-export const isRack = (node: NavGraphNode): node is RackNode => {
+export const isRack = (node: SceneGraphNode): node is RackNode => {
     return node.type === NodeTypes.rack;
 };
 
 //------------------------------------------------------------------------------
-export const isBin = (node: NavGraphNode): node is BinNode => {
+export const isBin = (node: SceneGraphNode): node is BinNode => {
     return node.type === NodeTypes.bin;
 };

@@ -3,12 +3,12 @@ import { createContext } from "react";
 import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
-import type { NavGraphNode } from "@/content/type";
+import type { SceneGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 type SelectionContextType = {
-    selectedNode?: NavGraphNode;
-    setSelectedNode: (node: NavGraphNode | undefined) => void;
+    selectedNode?: SceneGraphNode;
+    setSelectedNode: (node: SceneGraphNode | undefined) => void;
     setSelectedNodeByEntity: (entity: Entity | undefined) => void;
 };
 
@@ -16,7 +16,7 @@ type SelectionContextType = {
 export const SelectionContext = createContext<SelectionContextType>(
     new Proxy({} as SelectionContextType, {
         get() {
-            throw new Error("FactoryContext must be used within a FactoryContextProvider");
+            throw new Error("SelectionContext must be used within a SelectionContextProvider");
         },
     }),
 );

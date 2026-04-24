@@ -4,7 +4,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { HoverContext } from "@/contexts/HoverContext";
 
 //------------------------------------------------------------------------------
-import { isFactory, isArea, isLine } from "@/core/NavGraph";
+import { isFactory, isArea, isLine } from "@/core/SceneGraph";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------

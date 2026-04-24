@@ -7,17 +7,17 @@ import { Counter } from "@/components/common/Counter";
 
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";
-import type { Entity } from "@3dverse/livelink";
+import type { OutNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 export function UnitOutPanel({
-    outEntity,
+    outNode,
     delay,
     unitCompleted,
     unitTotal,
     children,
 }: {
-    outEntity: Entity;
+    outNode: OutNode;
     delay: number;
     unitCompleted: number;
     unitTotal: number;
@@ -65,7 +65,7 @@ export function UnitOutPanel({
     return (
         <>
             <BoundingBoxFaceProjection
-                entity={outEntity}
+                entity={outNode.entity}
                 face="right"
                 className="transform-3d flex items-end pointer-events-none!"
             >
@@ -80,7 +80,7 @@ export function UnitOutPanel({
                 </div>
             </BoundingBoxFaceProjection>
             <BoundingBoxFaceProjection
-                entity={outEntity}
+                entity={outNode.entity}
                 face="bottom"
                 className="transform-3d flex items-center justify-center text-8xl z-10 pointer-events-none!"
             >

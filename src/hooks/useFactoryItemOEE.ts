@@ -14,7 +14,7 @@ export function useFactoryItemOEE(siteId: string): number | null {
 
     useEffect(() => {
         if (!siteId) return;
-        const { from, to } = spanWindow();
+        const { from, to } = spanWindow(Math.floor(Date.now() / 1000));
         MES.getPerformance({ siteId, from, to })
             .then((r) => setOee(Math.round(r.data.data.oeePercent)))
             .catch(() => {});

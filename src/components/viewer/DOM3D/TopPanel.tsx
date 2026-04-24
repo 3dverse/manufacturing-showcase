@@ -9,7 +9,7 @@ import { useAreaOEE } from "@/hooks/useAreaOEE";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import type { NavGraphNode } from "@/content/type";
+import type { SceneGraphNode } from "@/content/type";
 import type { ReactNode } from "react";
 
 //------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ export const TopPanel = ({
     className,
     children,
 }: {
-    node: NavGraphNode;
+    node: SceneGraphNode;
     className?: string;
     children?: ReactNode;
 }) => {
@@ -31,6 +31,7 @@ export const TopPanel = ({
         <BoundingBoxFaceProjection
             entity={node.entity}
             face="top"
+            scale={48}
             className={cn("pointer-events-none! transform-3d", className)}
         >
             <div className="p-8 relative w-full h-full border-8 border-accent rounded-3xl pointer-events-none transform-3d">

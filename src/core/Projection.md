@@ -169,7 +169,7 @@ playhead moves — which is cheap given the arrays are already small.
 With this layer in place, `Timeline.tsx` no longer needs to:
 
 - Import `classifyPhase` from `@/core/Scope` — phase is on the entry
-- Import NavGraph helpers (`isFactory`, etc.) for `levelFromNode` — level
+- Import SceneGraph helpers (`isFactory`, etc.) for `levelFromNode` — level
   comes from the projection
 - Compute `actualStart ?? scheduledStart` inline in story builders — effective
   start/end are pre-computed in the projection

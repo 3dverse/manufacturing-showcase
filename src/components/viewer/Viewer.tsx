@@ -1,6 +1,5 @@
 //------------------------------------------------------------------------------
-import { useCallback, useContext, useEffect, useState } from "react";
-import type { Entity } from "@3dverse/livelink";
+import { useCallback, useContext, useEffect, useMemo } from "react";
 import {
     Canvas,
     Viewport,
@@ -13,7 +12,6 @@ import {
 } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
-import { ViewerController } from "@/components/viewer/ViewerController";
 import { ViewerToolTips } from "@/components/viewer/ViewerToolTips";
 import FactoryBuilder from "@/components/viewer/FactoryBuilder";
 import { AvatarOverlay } from "@/components/clients/AvatarOverlay";
@@ -25,25 +23,24 @@ import { ON_DRAG_THRESHOLD_DISTANCE_IN_PX } from "@/hooks/useDragGuard";
 
 //------------------------------------------------------------------------------
 import { useAvatarsStore } from "@/store/useAvatarsStore";
+import { SelectionContext } from "@/contexts/SelectionContext";
+import { NodeDetailsOverlay } from "./NodeDetailsOverlay";
+import { NodeChildrensOverlay } from "./NodeChildrenOverlay";
 
 //------------------------------------------------------------------------------
 // Camera constraints
 const MIN_DOLLY_DISTANCE = 3;
-const MAX_DOLLY_DISTANCE = 50;
+const MAX_DOLLY_DISTANCE = 85;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
+export const Viewer = () => {
     //--------------------------------------------------------------------------
     // Contexts
     const { isConnecting } = useContext(LivelinkContext);
     const { connectionPOV } = useContext(GhettoReconnectContext);
     const { viewportRef, cameraControllerRef, setCameraEntity } = useContext(LivelinkExfilContext);
-
-    //--------------------------------------------------------------------------
-    // State
-    const [hoveredEntity, setHoveredEntity] = useState<{ entity: Entity } | null>(null);
-    const [pickedEntity, setPickedEntity] = useState<{ entity: Entity } | null>(null);
+    const { selectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
     // Hooks
@@ -52,7 +49,6 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     //--------------------------------------------------------------------------
     // Store
     const { fullScreenWatchedAvatar, watchedAvatar } = useAvatarsStore();
-    const isFullScreenClientWatched = watchedAvatar?.client && fullScreenWatchedAvatar;
 
     //--------------------------------------------------------------------------
     // Effects
@@ -101,18 +97,20 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
     );
 
     //--------------------------------------------------------------------------
-    const viewportProps = isFullScreenClientWatched ? { client: watchedAvatar.client } : { cameraEntity };
+    // Memos
+    const isFullScreenClientWatched = useMemo(() => {
+        return watchedAvatar?.client && fullScreenWatchedAvatar;
+    }, [watchedAvatar?.client, fullScreenWatchedAvatar]);
+
+    //--------------------------------------------------------------------------
+    const viewportProps = useMemo(() => {
+        return watchedAvatar?.client && fullScreenWatchedAvatar ? { client: watchedAvatar.client } : { cameraEntity };
+    }, [watchedAvatar?.client, fullScreenWatchedAvatar, cameraEntity]);
 
     //--------------------------------------------------------------------------
     return (
         <Canvas className="w-full h-full">
-            <Viewport
-                ref={viewportRef}
-                className="w-full h-full"
-                setHoveredEntity={setHoveredEntity}
-                setPickedEntity={setPickedEntity}
-                {...viewportProps}
-            >
+            <Viewport ref={viewportRef} className="w-full h-full" {...viewportProps}>
                 {!isConnecting && (
                     <div className="absolute top-3 right-1/2 -translate-x-1/2 bg-green-500 text-xs text-white rounded-full py-1 px-3 pointer-events-none animate-[fade-out_.5s_2s_forwards]">
                         Connected
@@ -121,16 +119,12 @@ export const Viewer = ({ thumbnailMode }: { thumbnailMode?: boolean }) => {
                 <Exfil />
                 <AvatarOverlay />
                 {!isFullScreenClientWatched && <CameraController ref={bindCameraController} />}
-                {!thumbnailMode && (
-                    <>
-                        {/* eslint-disable-next-line no-constant-binary-expression */}
-                        {false && <ViewerController hoveredEntity={hoveredEntity} pickedEntity={pickedEntity} />}
-                        <ViewerToolTips />
-                        <DOM3DOverlay>
-                            <FactoryBuilder />
-                        </DOM3DOverlay>
-                    </>
-                )}
+                <ViewerToolTips />
+                <DOM3DOverlay>
+                    <FactoryBuilder />
+                    {selectedNode && <NodeDetailsOverlay node={selectedNode} />}
+                    {selectedNode && <NodeChildrensOverlay node={selectedNode} />}
+                </DOM3DOverlay>
             </Viewport>
             {/* Light overlay */}
             {/* <span className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-accent to-transparent mix-blend-multiply pointer-events-none opacity-80" /> */}

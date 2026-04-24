@@ -48,6 +48,8 @@ export type CurrentProductionOrder = {
 export function useCurrentProductionOrder(): CurrentProductionOrder | null {
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
+    const home = useTimelineStore((s) => s.home);
+    const targetAsOf = asOf || home;
 
     return useMemo(() => {
         if (!span) return null;
@@ -57,7 +59,7 @@ export function useCurrentProductionOrder(): CurrentProductionOrder | null {
         // Prefer active first, then the earliest future PO
         const activeFuture = allPOs
             .filter((po) => {
-                const p = classifyPhase(po, asOf);
+                const p = classifyPhase(po, targetAsOf);
                 return p === "active" || p === "future";
             })
             .sort((a, b) => effectiveStartOf(a) - effectiveStartOf(b));
@@ -66,13 +68,13 @@ export function useCurrentProductionOrder(): CurrentProductionOrder | null {
         const target =
             activeFuture[0] ??
             allPOs
-                .filter((po) => classifyPhase(po, asOf) === "completed")
+                .filter((po) => classifyPhase(po, targetAsOf) === "completed")
                 .sort((a, b) => effectiveEndOf(b) - effectiveEndOf(a))[0] ??
             null;
 
         if (!target) return null;
 
-        const phase = classifyPhase(target, asOf);
+        const phase = classifyPhase(target, targetAsOf);
         const effectiveStart = effectiveStartOf(target);
         const effectiveEnd = effectiveEndOf(target);
 
@@ -83,7 +85,7 @@ export function useCurrentProductionOrder(): CurrentProductionOrder | null {
             estimatedProgress = 0;
         } else {
             const dur = effectiveEnd - effectiveStart;
-            estimatedProgress = dur > 0 ? Math.min(1, Math.max(0, (asOf - effectiveStart) / dur)) : 1;
+            estimatedProgress = dur > 0 ? Math.min(1, Math.max(0, (targetAsOf - effectiveStart) / dur)) : 1;
         }
 
         const salesOrder = target.erpSalesOrderId ? span.salesOrders.get(target.erpSalesOrderId) : null;
@@ -91,11 +93,11 @@ export function useCurrentProductionOrder(): CurrentProductionOrder | null {
         // Downtime events linked to this PO
         const poDowntimes = Array.from(span.downtimeEvents.values()).filter((dt) => dt.productionOrderId === target.id);
         const activeDowntimes = poDowntimes.filter(
-            (dt) => dt.startedAt <= asOf && (dt.endedAt === undefined || dt.endedAt > asOf),
+            (dt) => dt.startedAt <= targetAsOf && (dt.endedAt === undefined || dt.endedAt > targetAsOf),
         );
         const totalDowntimeMinutes = poDowntimes.reduce((sum, dt) => {
-            const end = dt.endedAt !== undefined ? Math.min(dt.endedAt, asOf) : asOf;
-            const start = Math.min(dt.startedAt, asOf);
+            const end = dt.endedAt !== undefined ? Math.min(dt.endedAt, targetAsOf) : targetAsOf;
+            const start = Math.min(dt.startedAt, targetAsOf);
             return sum + Math.max(0, end - start) / 60;
         }, 0);
 
@@ -112,5 +114,5 @@ export function useCurrentProductionOrder(): CurrentProductionOrder | null {
             activeDowntimeCount: activeDowntimes.length,
             totalDowntimeMinutes: Math.round(totalDowntimeMinutes),
         };
-    }, [span, asOf]);
+    }, [span, targetAsOf]);
 }

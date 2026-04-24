@@ -14,7 +14,7 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-import { isArea, isFactory, isLine, sortNode } from "@/core/NavGraph";
+import { isArea, isFactory, isLine, sortNode } from "@/core/SceneGraph";
 import { useNavNode } from "./hooks";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
 import { cn } from "@/utils/cn";
@@ -22,7 +22,7 @@ import { useTimelineStore } from "@/store/useTimelineStore";
 import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
-import type { NavGraphNode, AreaNode, CellNode, LineNode, AisleNode, RackNode } from "@/content/type";
+import type { SceneGraphNode, AreaNode, CellNode, LineNode, AisleNode, RackNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -36,19 +36,20 @@ export const Navigation = ({ className }: { className?: string }) => {
     //--------------------------------------------------------------------------
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
+    const home = useTimelineStore((s) => s.home);
 
     //--------------------------------------------------------------------------
     const downtimeCellIds = useMemo(() => {
         if (!span) return new Set<string>();
         return new Set(
-            [...span.downtimeEvents.values()].filter((e) => downtimeAtAsOf(e, asOf)).map((e) => e.workCenterId),
+            [...span.downtimeEvents.values()].filter((e) => downtimeAtAsOf(e, asOf || home)).map((e) => e.workCenterId),
         );
-    }, [span, asOf]);
+    }, [span, asOf, home]);
 
     const selectedAreaHash = useMemo(() => {
         if (!selectedNode || isFactory(selectedNode)) return undefined;
 
-        let currentNode: NavGraphNode | undefined = selectedNode;
+        let currentNode: SceneGraphNode | undefined = selectedNode;
         while (currentNode && !isArea(currentNode) && !isFactory(currentNode)) {
             if (!("parent" in currentNode)) return undefined;
             currentNode = currentNode.parent;
@@ -60,8 +61,8 @@ export const Navigation = ({ className }: { className?: string }) => {
     //--------------------------------------------------------------------------
     // Flat ordered list: factory → for each area: area → sorted children (lines
     // first if sorted that way, then cells) → for each line its cells
-    const flatNavList = useMemo<NavGraphNode[]>(() => {
-        const result: NavGraphNode[] = [nodeGraph];
+    const flatNavList = useMemo<SceneGraphNode[]>(() => {
+        const result: SceneGraphNode[] = [nodeGraph];
         for (const area of nodeGraph.areas) {
             result.push(area);
             const children = [...area.lines, ...area.cells].sort(sortNode);
@@ -210,7 +211,7 @@ const FactoryNavMobile = () => {
 
     //--------------------------------------------------------------------------
     // Hooks
-    const { clickHandler, isSelected, isChildSelected, isHovered } = useNavNode(nodeGraph, "nav");
+    const { clickHandler, isSelected, isHovered } = useNavNode(nodeGraph, "nav");
 
     //--------------------------------------------------------------------------
     const stateClassName = useMemo(() => {
@@ -221,15 +222,11 @@ const FactoryNavMobile = () => {
             return "bg-muted/5 border-accent-400";
         }
         return "bg-slate/50 border-transparent md:bg-muted/5 md:border-muted/50";
-    }, [isSelected, isChildSelected, isHovered]);
+    }, [isSelected, isHovered]);
 
     //--------------------------------------------------------------------------
     return (
-        <Button
-            size="xs"
-            onClick={clickHandler}
-            className={cn("[writing-mode:sideways-lr]", stateClassName)}
-        >
+        <Button size="xs" onClick={clickHandler} className={cn("[writing-mode:sideways-lr]", stateClassName)}>
             Factory
         </Button>
     );
@@ -290,12 +287,12 @@ const AreaNav = ({
             style={
                 SHOW_FLOW_BUTTON
                     ? ({
-                        cornerShape: "squircle",
-                        borderEndEndRadius: isFirst ? "1.5rem" : undefined,
-                        cornerEndEndShape: isFirst ? "scoop" : undefined,
-                        borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
-                        cornerEndStartShape: index === 1 ? "scoop" : undefined,
-                    } as React.CSSProperties)
+                          cornerShape: "squircle",
+                          borderEndEndRadius: isFirst ? "1.5rem" : undefined,
+                          cornerEndEndShape: isFirst ? "scoop" : undefined,
+                          borderEndStartRadius: index === 1 ? "1.5rem" : undefined,
+                          cornerEndStartShape: index === 1 ? "scoop" : undefined,
+                      } as React.CSSProperties)
                     : undefined
             }
             onClick={clickHandler}

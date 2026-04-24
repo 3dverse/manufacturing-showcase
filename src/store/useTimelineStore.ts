@@ -1,35 +1,37 @@
 import { create } from "zustand";
 
+//------------------------------------------------------------------------------
 import { fetchSpan, spanWindow } from "@/core/Span";
-import { scopeKey, workCenterIdsFromNode, mergeSpan, type TimelineSpan } from "@/core/Scope";
-import { isArea, isLine, isCell, isMachine } from "@/core/NavGraph";
-import type { NavGraphNode } from "@/content/type";
+import { scopeKey, workCenterIdsFromNode, mergeSpan, type TimelineSpan, type Window } from "@/core/Scope";
+import { isArea, isLine, isCell, isMachine } from "@/core/SceneGraph";
 
-// ---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+import type { SceneGraphNode } from "@/content/type";
+
+//------------------------------------------------------------------------------
 // Types
-// ---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 interface TimelineStore {
-    // Span — accumulated across visited areas, invalidated on timespan change
     span: TimelineSpan | null;
     loadedKeys: Set<string>;
     isLoading: boolean;
-    loadSpan: (node: NavGraphNode, siteId: string) => Promise<void>;
-
-    // Playhead — pure UI, never triggers a fetch
-    asOf: number;
-    setAsOf: (t: number) => void;
+    loadSpan: (node: SceneGraphNode, siteId: string) => Promise<void>;
+    window: Window; // Time window of the data set
+    home: number; // Time the user is set at by default
+    setHome: (t: number) => void;
+    asOf: number | undefined; // Time the user has seeked to
+    setAsOf: (t: number | undefined) => void;
 }
 
-// ---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // In-flight guard — one entry per concurrent fetch, no re-render needed
-// ---------------------------------------------------------------------------
-
+//------------------------------------------------------------------------------
 const _activeKeys = new Set<string>();
 
 // Always fetch at area level or above so navigating between cells/machines
 // within the same area reuses the cached span.
-function toAreaOrAbove(node: NavGraphNode): NavGraphNode {
+function toAreaOrAbove(node: SceneGraphNode): SceneGraphNode {
     if (isLine(node)) return node.parent;
     if (isCell(node)) return isLine(node.parent) ? node.parent.parent : node.parent;
     if (isMachine(node)) {
@@ -39,22 +41,24 @@ function toAreaOrAbove(node: NavGraphNode): NavGraphNode {
     return node; // factory or area — already at the right level
 }
 
-// ---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Store
-// ---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+const defaultWindow = spanWindow(Math.floor(Date.now() / 1000));
 
+//------------------------------------------------------------------------------
 export const useTimelineStore = create<TimelineStore>((set, get) => ({
     span: null,
     loadedKeys: new Set<string>(),
     isLoading: false,
-
     loadSpan: async (node, siteId) => {
-        const { from, to } = spanWindow();
+        const window = get().window;
+
         const fetchNode = toAreaOrAbove(node);
         const wcKey = scopeKey(workCenterIdsFromNode(fetchNode));
         // WMS zone areas have no work centers — include the node hash to differentiate zones
         const nodeKey = wcKey === "" && isArea(fetchNode) ? fetchNode.hash : wcKey;
-        const key = `${siteId}:${nodeKey}:${from}:${to}`;
+        const key = `${siteId}:${nodeKey}:${window.from}:${window.to}`;
 
         if (get().loadedKeys.has(key)) return; // already loaded, stays loaded
         if (_activeKeys.has(key)) return; // already in flight
@@ -63,7 +67,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
         set({ isLoading: true });
 
         try {
-            const incoming = await fetchSpan(fetchNode, siteId, from, to);
+            const incoming = await fetchSpan(fetchNode, siteId, window);
             if (!_activeKeys.has(key)) return; // cancelled
 
             const existing = get().span;
@@ -78,7 +82,9 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
             set({ isLoading: _activeKeys.size > 0 });
         }
     },
-
-    asOf: Math.floor(Date.now() / 1000),
+    window: defaultWindow,
+    home: defaultWindow.origin,
+    setHome: (t) => set({ home: t }),
+    asOf: undefined,
     setAsOf: (t) => set({ asOf: t }),
 }));

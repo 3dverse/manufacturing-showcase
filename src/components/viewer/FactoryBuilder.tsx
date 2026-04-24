@@ -1,24 +1,13 @@
 import { Fragment, useContext, useEffect, useMemo } from "react";
 
 //------------------------------------------------------------------------------
-import { StorageAreaSummary } from "@/components/nodes/areas/storage/StorageAreaSummary";
-import { StorageAreaOverlay } from "@/components/nodes/areas/storage/StorageAreaOverlay";
-import { ProductionAreaSummary } from "@/components/nodes/areas/production/ProductionAreaSummary";
-import { ReceptionAreaSummary } from "@/components/nodes/areas/reception/ReceptionAreaSummary";
-import { DeliveryAreaSummary } from "@/components/nodes/areas/delivery/DeliveryAreaSummary";
-
-//------------------------------------------------------------------------------
 import { FloatingLabel } from "./DOM3D/FloatingLabel";
-import { AnchoredPanel } from "./DOM3D/AnchoredPanel";
-import { FloorOutline } from "./DOM3D/FloorOutline";
 import { FloorRegion } from "./DOM3D/FloorRegion";
-import { NodeSummary } from "./DOM3D/NodeSummary";
+import { FloorOutline } from "./DOM3D/FloorOutline";
 import { FlowSpline } from "./DOM3D/FlowSpline";
 import { MachineOutline } from "./DOM3D/MachineOutline";
 import { MachineLabel } from "./DOM3D/MachineLabel";
-import { TopPanel } from "./DOM3D/TopPanel";
 import { IncidentInfoPanel } from "./DOM3D/IncidentInfoPanel";
-import { UnitOutPanel } from "./DOM3D/UnitOutPanel";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
@@ -26,19 +15,14 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 import { UseCaseContext } from "@/contexts/UseCaseContext";
 
 //------------------------------------------------------------------------------
-import { isFactory, isArea, isLine, isCell } from "@/core/NavGraph";
+import { isFactory, isArea, isLine, isCell } from "@/core/SceneGraph";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
-import type { AreaNode, CellNode, LineNode } from "@/content/type";
+import type { CellNode, LineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 import type { UseCaseCellMatcher } from "@/content/useCases";
-import { useNavNode } from "../navigation/hooks";
-import { BadgeOEE } from "../common/BadgeOEE";
-import { useAreaOEE } from "@/hooks/useAreaOEE";
-import { CellInfoPanel } from "./DOM3D/CellInfoPanel";
-import { StorageOverlay } from "./overlays/StorageOverlay";
 
 const SHOW_FLOW_LINES = false;
 
@@ -75,6 +59,7 @@ const FactoryBuilder = () => {
     //--------------------------------------------------------------------------
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
+    const home = useTimelineStore((s) => s.home);
 
     //--------------------------------------------------------------------------
     const shownLines = useMemo(() => {
@@ -129,10 +114,10 @@ const FactoryBuilder = () => {
         if (!span) return [];
         const currentlyDownCellIds = [...span.downtimeEvents.values()]
 
-            .filter((e) => downtimeAtAsOf(e, asOf))
+            .filter((e) => downtimeAtAsOf(e, asOf || home))
             .map((e) => e.workCenterId);
         return nodeList.filter(isCell).filter((n) => currentlyDownCellIds.includes(n.hash));
-    }, [span, asOf, nodeList]);
+    }, [span, asOf, home, nodeList]);
 
     const simulatedIncidentCells: CellNode[] = useMemo(() => {
         if (!activeUseCaseId) return [];
@@ -179,19 +164,18 @@ const FactoryBuilder = () => {
                 selectedNode &&
                 isFactory(selectedNode) &&
                 nodeGraph?.flows.map((flow) => <FlowSpline key={flow.hash} flow={flow} />)}
-            {nodeGraph?.areas.map((area) => (
-                <AreaBuilderItem key={area.hash} area={area} />
+            {nodeGraph.areas.map((area) => (
+                <FloorOutline key={area.hash} node={area} />
             ))}
             {shownLines.map((line) => (
-                <LineBuilderItem key={line.hash} line={line} />
+                <FloorRegion key={line.hash} node={line} />
             ))}
-            {shownCells.map((cell, index) => (
-                <CellBuilderItem key={cell.hash} cell={cell} index={index} />
+
+            {shownCells.map((cell) => (
+                <CellBuilderItem key={cell.hash} cell={cell} />
             ))}
             {selectedNode && isCell(selectedNode) && selectedNode.machines.length > 0 && (
                 <>
-                    <CellInfoPanel cell={selectedNode} />
-
                     {selectedNode.machines.map((machine) => (
                         <Fragment key={machine.hash}>
                             <MachineOutline machine={machine} />
@@ -209,127 +193,10 @@ const FactoryBuilder = () => {
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const LineBuilderItem = ({ line }: { line: LineNode }) => {
-    //--------------------------------------------------------------------------
-    // Context
-    const { selectedNode } = useContext(SelectionContext);
-
+const CellBuilderItem = ({ cell }: { cell: CellNode }) => {
     //--------------------------------------------------------------------------
     // Render
-    return (
-        <>
-            <FloorRegion node={line} />
-            {selectedNode && isArea(selectedNode) && <NodeSummary node={line} />}
-        </>
-    );
-};
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-const CellBuilderItem = ({ cell, index }: { cell: CellNode; index: number }) => {
-    //--------------------------------------------------------------------------
-    // Context
-    const { selectedNode } = useContext(SelectionContext);
-
-    //--------------------------------------------------------------------------
-    // Render
-    return (
-        <>
-            {cell.out.map((out) => (
-                <UnitOutPanel key={out.euid.value} outEntity={out} unitCompleted={96} unitTotal={952} delay={index} />
-            ))}
-            {isArea(cell.parent) ? (
-                <>
-                    <FloorRegion node={cell} />
-                    {selectedNode && isArea(selectedNode) && <NodeSummary node={cell} />}
-                </>
-            ) : (
-                <FloatingLabel node={cell} />
-            )}
-        </>
-    );
-};
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-const AreaBuilderItem = ({ area }: { area: AreaNode }) => {
-    //--------------------------------------------------------------------------
-    // Hooks
-    const { isSelected } = useNavNode(area, "dom3d");
-
-    //--------------------------------------------------------------------------
-    // Context
-    const { selectedNode } = useContext(SelectionContext);
-
-    //--------------------------------------------------------------------------
-    // Hooks
-    const oee = useAreaOEE(area);
-
-    //--------------------------------------------------------------------------
-    const kpi = useMemo(() => {
-        if (oee === undefined) return;
-        return (
-            <div className="starting:opacity-0 starting:translate-y-4 opacity-100 translate-y-0 transition-all duration-300 delay-1700 transform-3d">
-                <BadgeOEE
-                    oee={oee}
-                    className="text-2xl -translate-y-8 px-3 py-2 shadow-xl transform-3d backdrop-blur-3xl"
-                />
-            </div>
-        );
-    }, [oee]);
-
-    //--------------------------------------------------------------------------
-    const areaSummary = useMemo(() => {
-        if (!isSelected) return;
-        switch (area.name) {
-            case "reception":
-                return <ReceptionAreaSummary />;
-            case "storage":
-                return <StorageAreaSummary areaNode={area} />;
-            case "supply":
-                return; // TODO
-            case "production":
-                return <ProductionAreaSummary className="min-w-80" />;
-            case "control":
-                return; //TODO
-            case "delivery":
-                return <DeliveryAreaSummary areaNode={area} />;
-        }
-    }, [area, isSelected]);
-
-    //--------------------------------------------------------------------------
-    const areaAddOn = useMemo(() => {
-        switch (area.name) {
-            case "storage":
-                return;
-                return (
-                    <div className="pointer-events-none">
-                        <StorageAreaOverlay area={area} />
-                    </div>
-                );
-        }
-    }, [area]);
-
-    //--------------------------------------------------------------------------
-    // Render
-    return (
-        <>
-            <FloorOutline node={area} />
-            {selectedNode && isFactory(selectedNode) && <TopPanel node={area} />}
-            {isSelected &&
-                selectedNode &&
-                isArea(selectedNode) &&
-                ["storage", "delivery"].includes(selectedNode.name) && <StorageOverlay areaNode={selectedNode} />}
-            {isSelected && (
-                <>
-                    <AnchoredPanel node={area} className="pointer-events-none!" kpi={kpi}>
-                        {areaSummary}
-                    </AnchoredPanel>
-                    {areaAddOn}
-                </>
-            )}
-        </>
-    );
+    return <>{isArea(cell.parent) ? <FloorRegion node={cell} /> : <FloatingLabel node={cell} />}</>;
 };
 
 export default FactoryBuilder;

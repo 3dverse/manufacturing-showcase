@@ -7,5 +7,6 @@ export enum NodeTypes {
     aisle = "AISLE",
     rack = "RACK",
     bin = "BIN",
+    out = "OUT",
     flow = "FLOW",
 }

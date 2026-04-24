@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import { useTimelineStore } from "@/store/useTimelineStore";
-import type { NavGraphNode } from "@/content/type";
+import type { SceneGraphNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 
 /**
@@ -13,10 +13,15 @@ import { NodeTypes } from "@/content/enums";
  *
  * Returns null while the span is loading or if no completed operations exist.
  */
-export function useAreaOEE(node: NavGraphNode): number | undefined {
+export function useAreaOEE(node: SceneGraphNode): number | undefined {
+    //--------------------------------------------------------------------------
+    // Store
     const asOf = useTimelineStore((s) => s.asOf);
+    const home = useTimelineStore((s) => s.home);
     const span = useTimelineStore((s) => s.span);
 
+    //--------------------------------------------------------------------------
+    // Memos
     return useMemo(() => {
         if (node.type !== NodeTypes.area || node.name !== "production") return undefined;
         if (!span) return undefined;
@@ -29,7 +34,7 @@ export function useAreaOEE(node: NavGraphNode): number | undefined {
             return op ? [op] : [];
         });
 
-        const completed = ops.filter((op) => op.actualEnd !== undefined && op.actualEnd <= asOf);
+        const completed = ops.filter((op) => op.actualEnd !== undefined && op.actualEnd <= (asOf || home));
         if (completed.length === 0) return;
 
         const totalGood = completed.reduce((s, op) => s + (op.quantities.goodQuantity ?? 0), 0);
@@ -41,5 +46,5 @@ export function useAreaOEE(node: NavGraphNode): number | undefined {
         const availability = totalPlanned > 0 ? Math.min(1, totalActual / totalPlanned) : 1;
 
         return Math.round(availability * quality * 100);
-    }, [span, asOf, node]);
+    }, [span, asOf, home, node]);
 }

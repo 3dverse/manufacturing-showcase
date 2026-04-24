@@ -7,7 +7,7 @@ import { HoverContext } from "@/contexts/HoverContext";
 import { FactoryContext } from "@/contexts/FactoryContext";
 
 //------------------------------------------------------------------------------
-import { isCell } from "@/core/NavGraph";
+import { isCell } from "@/core/SceneGraph";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -16,6 +16,7 @@ import { findNodeByWorkCenter } from "./utils";
 import { BOMFlow } from "./BomFlow";
 import { BOMDetails } from "./BOMDetails";
 import { FooterTabs } from "../common/FooterTabs";
+import { PERFORMANCE_MODE } from "@/content/3dverse";
 
 //------------------------------------------------------------------------------
 const API = "/-/api/dataset";
@@ -157,7 +158,13 @@ export function BOMPanel({ className }: { className?: string }) {
     //--------------------------------------------------------------------------
     // Render
     return (
-        <div className={cn("pointer-events-auto", className)}>
+        <div
+            className={cn(
+                "pointer-events-auto border-t border-slate-200/15",
+                PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
+                className,
+            )}
+        >
             {loading ? (
                 <p className="px-6 py-4 text-xs text-subtle animate-pulse">Loading…</p>
             ) : error ? (

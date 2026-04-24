@@ -1,4 +1,4 @@
-type Machine = {
+export type MachineDetails = {
     id: string;
     name: string;
     description: string;
@@ -12,7 +12,7 @@ type Machine = {
 };
 
 //------------------------------------------------------------------------------
-export const machinesDocumentation: Machine[] = [
+export const machinesDocumentation: MachineDetails[] = [
     {
         id: "fanuc",
         name: "Fanuc M-950iA/500",
@@ -66,7 +66,7 @@ export const machinesDocumentation: Machine[] = [
 ];
 
 //------------------------------------------------------------------------------
-export function getMachineDocumentation(machineName: string): Machine {
+export function getMachineDocumentation(machineName: string): MachineDetails {
     const doc = machinesDocumentation.find((m) => m.id.toLowerCase() === machineName.toLowerCase());
     return doc || machinesDocumentation[0];
 }

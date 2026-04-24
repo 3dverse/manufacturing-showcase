@@ -4,6 +4,7 @@ import {
     buildSpanIndexes,
     locationIdsFromNode,
     workCenterIdsFromNode,
+    type Window,
     type TimelineSpan,
     type ProductionOrderEntry,
     type OperationEntry,
@@ -16,8 +17,8 @@ import {
     type PurchaseOrderEntry,
     type AllocationEntry,
 } from "@/core/Scope";
-import { isArea } from "@/core/NavGraph";
-import type { NavGraphNode } from "@/content/type";
+import { isArea } from "@/core/SceneGraph";
+import type { SceneGraphNode } from "@/content/type";
 import type { WorkOrder } from "_prebuild/api-libs/eam";
 import type { PurchaseOrder, SalesOrder } from "_prebuild/api-libs/erp";
 import type { DowntimeEvent, OperationDetail, ProductionOrder } from "_prebuild/api-libs/mes";
@@ -35,9 +36,8 @@ const PAGE_SIZE = 1000;
 const WINDOW_BACK_SECS = 3 * 30 * 86400;
 const WINDOW_FWD_SECS = 2 * 30 * 86400;
 
-export function spanWindow(): { from: number; to: number } {
-    const refNow = Math.floor(Date.now() / 3_600_000) * 3600;
-    return { from: refNow - WINDOW_BACK_SECS, to: refNow + WINDOW_FWD_SECS };
+export function spanWindow(origin: number): Window {
+    return { origin, from: origin - WINDOW_BACK_SECS, to: origin + WINDOW_FWD_SECS };
 }
 
 // ---------------------------------------------------------------------------
@@ -272,9 +272,8 @@ function mapPurchaseOrder(po: PurchaseOrder): PurchaseOrderEntry {
 // Fetch
 // ---------------------------------------------------------------------------
 
-export async function fetchSpan(node: NavGraphNode, siteId: string, from: number, to: number): Promise<TimelineSpan> {
-    const span = emptySpan();
-
+export async function fetchSpan(node: SceneGraphNode, siteId: string, window: Window): Promise<TimelineSpan> {
+    const span = emptySpan(window.origin);
     const locationIds = locationIdsFromNode(node);
     const workCenterIds = workCenterIdsFromNode(node);
 
@@ -284,8 +283,8 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
             MES.listProductionOrders({
                 siteId,
                 locationId: locId,
-                scheduledFrom: from,
-                scheduledTo: to,
+                scheduledFrom: window.from,
+                scheduledTo: window.to,
                 pageSize: PAGE_SIZE,
             }).then((r) => r.data.data),
         ),
@@ -298,8 +297,8 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
             MES.listOperations({
                 siteId,
                 workCenterId: wcId,
-                scheduledFrom: from,
-                scheduledTo: to,
+                scheduledFrom: window.from,
+                scheduledTo: window.to,
                 pageSize: PAGE_SIZE,
             }).then((r) => r.data.data),
         ),
@@ -312,8 +311,8 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
             MES.listDowntimeEvents({
                 siteId,
                 workCenterId: wcId,
-                startedFrom: from,
-                startedTo: to,
+                startedFrom: window.from,
+                startedTo: window.to,
                 pageSize: PAGE_SIZE,
             }).then((r) => r.data.data),
         ),
@@ -330,8 +329,8 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
             EAM.getWorkOrders({
                 siteId,
                 locationId: locId,
-                scheduledFrom: from,
-                scheduledTo: to,
+                scheduledFrom: window.from,
+                scheduledTo: window.to,
                 pageSize: PAGE_SIZE,
             }).then((r) => r.data.data ?? []),
         ),
@@ -341,7 +340,7 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
     // Pick tasks + FG allocations — only fetched when navigating to a Delivery area node
     if (isArea(node) && node.name.toLowerCase() === "delivery") {
         const [ptResp, allocResp] = await Promise.all([
-            WMS.getPickTasks({ siteId, fromDate: from, toDate: to }),
+            WMS.getPickTasks({ siteId, fromDate: window.from, toDate: window.to }),
             WMSInventory.getAllocations({ siteId, warehouseId: node.hash }),
         ]);
         for (const pt of ptResp.data.data) span.pickTasks.set(pt.id, mapPickTask(pt));
@@ -351,9 +350,9 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
     // Receipts + putaway tasks + purchase orders — only fetched when navigating to a Reception area node
     if (isArea(node) && node.name.toLowerCase() === "reception") {
         const [rcptResp, putResp, poResp] = await Promise.all([
-            WMSInbound.getReceipts({ siteId, fromDate: from, toDate: to }),
-            WMSInbound.getPutawayTasks({ siteId, fromDate: from, toDate: to }),
-            ERP.getPurchaseOrders({ siteId, orderDateFrom: from, orderDateTo: to, pageSize: PAGE_SIZE }),
+            WMSInbound.getReceipts({ siteId, fromDate: window.from, toDate: window.to }),
+            WMSInbound.getPutawayTasks({ siteId, fromDate: window.from, toDate: window.to }),
+            ERP.getPurchaseOrders({ siteId, orderDateFrom: window.from, orderDateTo: window.to, pageSize: PAGE_SIZE }),
         ]);
         for (const r of rcptResp.data.data) span.receipts.set(r.id, mapReceipt(r));
         for (const pt of putResp.data.data) span.putawayTasks.set(pt.id, mapPutawayTask(pt));
@@ -363,7 +362,7 @@ export async function fetchSpan(node: NavGraphNode, siteId: string, from: number
     // Storage area: putaway tasks (inbound) + stock allocations (RM + FG pre-QC)
     if (isArea(node) && node.name.toLowerCase() === "storage") {
         const [putResp, allocResp] = await Promise.all([
-            WMSInbound.getPutawayTasks({ siteId, fromDate: from, toDate: to }),
+            WMSInbound.getPutawayTasks({ siteId, fromDate: window.from, toDate: window.to }),
             WMSInventory.getAllocations({ siteId, warehouseId: node.hash }),
         ]);
         for (const put of putResp.data.data) span.putawayTasks.set(put.id, mapPutawayTask(put));

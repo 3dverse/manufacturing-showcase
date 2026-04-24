@@ -8,10 +8,10 @@ import IntroductionModal from "@/components/guidance/IntroductionModal";
 import { MainGuidance } from "@/components/guidance/MainGuidance";
 
 //------------------------------------------------------------------------------
-import Theme from "@/pages/Theme";
 import HomePage from "@/pages/HomePage";
 import FactoryPage from "@/pages/FactoryPage";
 import DatasetPage from "@/pages/DatasetPage";
+import ThemePage from "@/pages/ThemePage";
 
 //------------------------------------------------------------------------------
 import { useFactoryStore } from "@/store/useFactoryStore";
@@ -126,22 +126,23 @@ function AppLayout() {
     }, [factories, currentRoute, setCurrentFactory, clearCurrentFactory]);
 
     //--------------------------------------------------------------------------
-    const renderContent = useMemo(() => {
-        if (currentRoute === "/theme") {
-            return <Theme onBack={() => navigate("/")} />;
-        }
+    // Memos
+    const content = useMemo(() => {
         if (!factories || factories.length == 0) return;
-        if (currentRoute === "/dataset") {
-            return <DatasetPage />;
-        }
         const parts = currentRoute.split("/");
         if (parts.length >= 2 && parts[1] !== "") {
             const factorySlug = parts[1];
             const factory = factories.find((f) => f.slug === factorySlug);
             if (factory) {
                 return <FactoryPage factory={factory} />;
-            } else {
-                return <></>;
+            }
+        }
+        if (parts.length > 1) {
+            switch (parts[1]) {
+                case "theme":
+                    return <ThemePage />;
+                case "dataset":
+                    return <DatasetPage />;
             }
         }
         return <HomePage />;
@@ -151,7 +152,7 @@ function AppLayout() {
     return (
         <FactoriesContext.Provider value={{ factories }}>
             <UseCaseContextProvider>
-                {renderContent}
+                {content}
                 {!isMobile && <MainGuidance />}
                 <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
             </UseCaseContextProvider>

@@ -17,6 +17,8 @@ export function useSnapshot(scope: TimelineScope | null): {
     isLoading: boolean;
 } {
     const asOf = useTimelineStore((s) => s.asOf);
+    const home = useTimelineStore((s) => s.home);
+    const targetAsOf = asOf || home;
     const siteId = useFactoryStore((s) => s.currentFactory?.scene_id ?? "");
     const poCache = useDetailStore((s) => s.poCache);
     const opCache = useDetailStore((s) => s.opCache);
@@ -28,18 +30,18 @@ export function useSnapshot(scope: TimelineScope | null): {
         if (!scope) return null;
         return {
             level: scope.level,
-            salesOrders: scope.salesOrders.filter((e) => salesOrderAtAsOf(e, asOf)),
-            productionOrders: scope.productionOrders.filter((e) => productionOrderAtAsOf(e, asOf)),
-            operations: scope.operations.filter((e) => operationAtAsOf(e, asOf)),
-            downtimeEvents: scope.downtimeEvents.filter((e) => downtimeAtAsOf(e, asOf)),
-            eamWorkOrders: scope.eamWorkOrders.filter((e) => workOrderAtAsOf(e, asOf)),
+            salesOrders: scope.salesOrders.filter((e) => salesOrderAtAsOf(e, targetAsOf)),
+            productionOrders: scope.productionOrders.filter((e) => productionOrderAtAsOf(e, targetAsOf)),
+            operations: scope.operations.filter((e) => operationAtAsOf(e, targetAsOf)),
+            downtimeEvents: scope.downtimeEvents.filter((e) => downtimeAtAsOf(e, targetAsOf)),
+            eamWorkOrders: scope.eamWorkOrders.filter((e) => workOrderAtAsOf(e, targetAsOf)),
             pickTasks: scope.pickTasks,
             receipts: scope.receipts,
             putawayTasks: scope.putawayTasks,
             purchaseOrders: scope.purchaseOrders,
             allocations: scope.allocations,
         };
-    }, [scope, asOf]);
+    }, [scope, targetAsOf]);
 
     // Trigger detail fetches when filtered snapshot changes
     useEffect(() => {

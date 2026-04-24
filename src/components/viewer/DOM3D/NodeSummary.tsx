@@ -8,11 +8,11 @@ import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
-import type { NavGraphNode } from "@/content/type";
+import type { SceneGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const NodeSummary = ({ node }: { node: NavGraphNode }) => {
+export const NodeSummary = ({ node }: { node: SceneGraphNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const { pointerDownHandler, clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } =

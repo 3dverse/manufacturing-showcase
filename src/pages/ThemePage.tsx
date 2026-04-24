@@ -1,5 +1,7 @@
 import { cn } from "@/utils/cn";
 import Button from "@/components/common/Button";
+import { useNavigationStore } from "@/store/useNavigationStore";
+import { useCallback } from "react";
 
 //------------------------------------------------------------------------------
 type ColorScheme =
@@ -176,7 +178,19 @@ const ThemeColumn = ({ theme }: { theme: "light" | "dark" }) => {
 };
 
 //------------------------------------------------------------------------------
-const Theme = ({ onBack }: { onBack: () => void }) => {
+const ThemePage = () => {
+    //--------------------------------------------------------------------------
+    // Hooks
+    const { navigate } = useNavigationStore();
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    const homeHandler = useCallback(() => {
+        navigate("/");
+    }, [navigate]);
+
+    //--------------------------------------------------------------------------
+    // Render
     return (
         <div className="absolute inset-0 overflow-auto bg-ground">
             <div className="mx-auto">
@@ -187,7 +201,7 @@ const Theme = ({ onBack }: { onBack: () => void }) => {
                             Compare light and dark themes with all color schemes and semantic tokens
                         </p>
                     </div>
-                    <Button onClick={onBack} variant="ghost" size="sm">
+                    <Button onClick={homeHandler} variant="ghost" size="sm">
                         Back
                     </Button>
                 </div>
@@ -201,4 +215,4 @@ const Theme = ({ onBack }: { onBack: () => void }) => {
     );
 };
 
-export default Theme;
+export default ThemePage;

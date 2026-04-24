@@ -3,13 +3,13 @@ import { createContext } from "react";
 import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
-import type { NavGraphNode } from "@/content/type";
+import type { SceneGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 type HoverContextType = {
-    hoveredNode?: NavGraphNode;
+    hoveredNode?: SceneGraphNode;
     hoverSource?: "nav" | "dom3d";
-    setHoveredNode: (node: NavGraphNode | undefined, source: "nav" | "dom3d") => void;
+    setHoveredNode: (node: SceneGraphNode | undefined, source: "nav" | "dom3d") => void;
     setHoveredNodeByEntity: (entity: Entity | undefined, source: "nav" | "dom3d") => void;
 };
 
@@ -17,7 +17,7 @@ type HoverContextType = {
 export const HoverContext = createContext<HoverContextType>(
     new Proxy({} as HoverContextType, {
         get() {
-            throw new Error("FactoryContext must be used within a FactoryContextProvider");
+            throw new Error("HoverContext must be used within a HoverContextProvider");
         },
     }),
 );

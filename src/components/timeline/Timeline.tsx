@@ -1,4 +1,12 @@
-import { useContext, useMemo, useRef, useCallback, useState } from "react";
+import {
+    useContext,
+    useMemo,
+    useRef,
+    useCallback,
+    useState,
+    type MouseEvent as ReactMouseEvent,
+    type CSSProperties,
+} from "react";
 import { createPortal } from "react-dom";
 
 //------------------------------------------------------------------------------
@@ -14,7 +22,7 @@ import { useFocusStore } from "@/store/useFocusStore";
 
 //------------------------------------------------------------------------------
 import { highlightStateForBar, type EntityType, type HighlightState } from "@/core/Correlation";
-import { isArea } from "@/core/NavGraph";
+import { isArea } from "@/core/SceneGraph";
 import type { TimelineLevel } from "@/core/Scope";
 import type {
     AsOfProjection,
@@ -333,12 +341,12 @@ function buildOperationsStory(ops: ProjectedOperation[]): Story {
     };
 }
 
-function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedWorkOrder[]): Story {
+function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedWorkOrder[], home: number): Story {
     const dtBars: BarItem[] = events.map((dt) => ({
         id: dt.id,
         entityType: "downtime" as EntityType,
         start: dt.startedAt,
-        end: dt.endedAt ?? Math.floor(Date.now() / 1000),
+        end: dt.endedAt ?? home,
         className: cn(
             "border border-red-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-red-500/50",
             dt.isOngoing ? "bg-red-500/70" : "bg-red-500/55",
@@ -407,9 +415,9 @@ function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedW
     };
 }
 
-function buildReceiptsStory(receipts: ProjectedReceipt[]): Story {
+function buildReceiptsStory(receipts: ProjectedReceipt[], home: number): Story {
     const bars: BarItem[] = receipts.map((r) => {
-        const end = r.putawayDate ?? Math.floor(Date.now() / 1000);
+        const end = r.putawayDate ?? home;
         return {
             id: r.id,
             entityType: "receipt" as EntityType,
@@ -459,15 +467,18 @@ function buildReceiptsStory(receipts: ProjectedReceipt[]): Story {
     };
 }
 
-function buildAllocationsStory(allocs: ProjectedAllocation[], demandType: "production_order" | "sales_order"): Story {
-    const now = Math.floor(Date.now() / 1000);
+function buildAllocationsStory(
+    allocs: ProjectedAllocation[],
+    demandType: "production_order" | "sales_order",
+    home: number,
+): Story {
     const filtered = allocs.filter((a) => a.demandType === demandType);
     const isRM = demandType === "production_order";
     const bars: BarItem[] = filtered.map((a) => ({
         id: a.id,
         entityType: "allocation" as EntityType,
         start: a.allocatedAt,
-        end: a.clearedAt ?? now,
+        end: a.clearedAt ?? home,
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50",
             a.status === "partial"
@@ -504,13 +515,12 @@ function buildAllocationsStory(allocs: ProjectedAllocation[], demandType: "produ
     };
 }
 
-function buildPickTasksStory(tasks: ProjectedPickTask[]): Story {
-    const now = Math.floor(Date.now() / 1000);
+function buildPickTasksStory(tasks: ProjectedPickTask[], home: number): Story {
     const bars: BarItem[] = tasks.map((t) => ({
         id: t.id,
         entityType: "pickTask" as EntityType,
         start: t.createdAt,
-        end: t.pickedDate ?? now,
+        end: t.pickedDate ?? home,
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-amber-400/50",
             t.phase === "completed"
@@ -550,13 +560,12 @@ function buildPickTasksStory(tasks: ProjectedPickTask[]): Story {
     };
 }
 
-function buildPutawayTasksStory(tasks: ProjectedPutawayTask[]): Story {
-    const now = Math.floor(Date.now() / 1000);
+function buildPutawayTasksStory(tasks: ProjectedPutawayTask[], home: number): Story {
     const bars: BarItem[] = tasks.map((t) => ({
         id: t.id,
         entityType: "putawayTask" as EntityType,
         start: t.createdAt,
-        end: t.putawayDate ?? now,
+        end: t.putawayDate ?? home,
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-emerald-400/50",
             t.phase === "completed"
@@ -596,9 +605,9 @@ function buildPutawayTasksStory(tasks: ProjectedPutawayTask[]): Story {
     };
 }
 
-function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[]): Story {
+function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[], home: number): Story {
     const bars: BarItem[] = pos.map((po) => {
-        const end = po.receivedAt ?? po.expectedDeliveryDate ?? Math.floor(Date.now() / 1000);
+        const end = po.receivedAt ?? po.expectedDeliveryDate ?? home;
         return {
             id: po.id,
             entityType: "purchaseOrder" as EntityType,
@@ -661,6 +670,7 @@ function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[]): Story {
 function buildStories(
     level: TimelineLevel,
     projection: AsOfProjection | null,
+    home: number,
     areatype?: AreaType,
     nodeHash?: string,
 ): Story[] {
@@ -696,27 +706,30 @@ function buildStories(
                 case "delivery":
                     return [
                         buildSalesOrdersStory(so),
-                        buildAllocationsStory(alloc, "sales_order"),
-                        ...(FULL_TIMELINE ? [buildPickTasksStory(picks)] : []),
+                        buildAllocationsStory(alloc, "sales_order", home),
+                        ...(FULL_TIMELINE ? [buildPickTasksStory(picks, home)] : []),
                     ];
                 case "reception":
                     return [
-                        buildPurchaseOrdersStory(purchaseOrders),
-                        buildReceiptsStory(rcp),
-                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways)] : []),
+                        buildPurchaseOrdersStory(purchaseOrders, home),
+                        buildReceiptsStory(rcp, home),
+                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, home)] : []),
                     ];
                 case "storage":
-                    return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order")];
+                    return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order", home)];
                 case "quality":
-                    return [buildSalesOrdersStory(so), ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways)] : [])];
+                    return [
+                        buildSalesOrdersStory(so),
+                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, home)] : []),
+                    ];
                 default:
                     return [buildSalesOrdersStory(so)];
             }
         case "line":
         case "cell":
-            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo)];
+            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo, home)];
         case "machine":
-            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo)];
+            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo, home)];
     }
 }
 
@@ -735,9 +748,6 @@ function Bar({
     highlightState,
     onEnter,
     onLeave,
-    onFocusEnter,
-    onFocusLeave,
-    onClick,
 }: {
     bar: BarItem;
     winStart: number;
@@ -745,22 +755,74 @@ function Bar({
     laneIndex: number;
     barStyle: BarStyle;
     highlightState: HighlightState;
-    onEnter: (content: React.ReactNode, e: React.MouseEvent) => void;
+    onEnter: (content: React.ReactNode, e: ReactMouseEvent) => void;
     onLeave: () => void;
-    onFocusEnter: () => void;
-    onFocusLeave: () => void;
-    onClick: () => void;
 }) {
-    const left = toPct(bar.start, winStart, winEnd);
-    const right = toPct(bar.end, winStart, winEnd);
-    if (right < 0 || left > 100) return null;
+    //--------------------------------------------------------------------------
+    // Store
+    const { setHovered, setSelected } = useFocusStore();
 
-    const clampedLeft = Math.max(0, left);
-    const clampedRight = Math.min(100, right);
-    const widthPct = Math.max(0.25, clampedRight - clampedLeft);
-    const h = barStyle === "line" ? LINE_H : BAR_H;
-    const rowHeight = barStyle === "bar" ? ROW_H : ROW_H_LINE;
+    //--------------------------------------------------------------------------
+    // Memos
+    const style: CSSProperties | undefined = useMemo(() => {
+        const left = toPct(bar.start, winStart, winEnd);
+        const right = toPct(bar.end, winStart, winEnd);
+        const clampedLeft = Math.max(0, left);
+        const clampedRight = Math.min(100, right);
+        const widthPct = Math.max(0.25, clampedRight - clampedLeft);
+        const h = barStyle === "line" ? LINE_H : BAR_H;
+        const rowHeight = barStyle === "bar" ? ROW_H : ROW_H_LINE;
+        if (right < 0 || left > 100) {
+            return;
+        }
 
+        return {
+            left: `${clampedLeft}%`,
+            width: `${widthPct}%`,
+            top: laneIndex * rowHeight + (rowHeight - h) / 2,
+            height: h,
+        };
+    }, [bar, barStyle, winStart, winEnd, laneIndex]);
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    const mouseEnterHandler = useCallback(
+        (e: ReactMouseEvent) => {
+            e.stopPropagation();
+            onEnter(bar.tooltip, e);
+            setHovered({ type: bar.entityType, id: bar.id });
+        },
+        [onEnter, bar, setHovered],
+    );
+
+    //--------------------------------------------------------------------------
+    const mouseLeaveHandler = useCallback(
+        (e: ReactMouseEvent) => {
+            e.stopPropagation();
+            onLeave();
+            setHovered(null);
+        },
+        [onLeave, setHovered],
+    );
+
+    //--------------------------------------------------------------------------
+    const mouseDownHandler = useCallback((e: ReactMouseEvent) => {
+        e.stopPropagation();
+    }, []);
+
+    //--------------------------------------------------------------------------
+    const mouseClickHandler = useCallback(
+        (e: ReactMouseEvent) => {
+            e.stopPropagation();
+            setSelected({ type: bar.entityType, id: bar.id });
+        },
+        [bar, setSelected],
+    );
+
+    //--------------------------------------------------------------------------
+    if (!style) return null;
+
+    //--------------------------------------------------------------------------
     return (
         <div
             className={cn(
@@ -769,27 +831,11 @@ function Bar({
                 highlightState === "dimmed" && "opacity-20",
                 bar.className,
             )}
-            style={{
-                left: `${clampedLeft}%`,
-                width: `${widthPct}%`,
-                top: laneIndex * rowHeight + (rowHeight - h) / 2,
-                height: h,
-            }}
-            onMouseEnter={(e) => {
-                e.stopPropagation();
-                onEnter(bar.tooltip, e);
-                onFocusEnter();
-            }}
-            onMouseLeave={(e) => {
-                e.stopPropagation();
-                onLeave();
-                onFocusLeave();
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-                e.stopPropagation();
-                onClick();
-            }}
+            style={style}
+            onMouseEnter={mouseEnterHandler}
+            onMouseLeave={mouseLeaveHandler}
+            onMouseDown={mouseDownHandler}
+            onClick={mouseClickHandler}
         />
     );
 }
@@ -797,14 +843,19 @@ function Bar({
 //------------------------------------------------------------------------------
 // Main component
 //------------------------------------------------------------------------------
-
 export function Timeline({ className }: { className?: string }) {
+    //--------------------------------------------------------------------------
+    // Context
     const { selectedNode } = useContext(SelectionContext);
-    const { asOf, setAsOf } = useTimelineStore();
+
+    //--------------------------------------------------------------------------
+    const { hovered } = useFocusStore();
+    const { asOf, setAsOf, home } = useTimelineStore();
     const { scope, level, isLoading } = useScope(selectedNode ?? null);
     const projection = useProjection(scope);
-    const { hovered, setHovered, setSelected } = useFocusStore();
-    const areaType: AreaType | undefined = (() => {
+
+    //--------------------------------------------------------------------------
+    const areaType: AreaType | undefined = useMemo(() => {
         if (level !== "area" || !selectedNode || !isArea(selectedNode)) return undefined;
         if ((scope?.productionOrders.length ?? 0) > 0) return "production";
         const name = selectedNode.name.toLowerCase();
@@ -812,7 +863,9 @@ export function Timeline({ className }: { className?: string }) {
         if (name === "reception") return "reception";
         if (name === "storage") return "storage";
         return undefined;
-    })();
+    }, [selectedNode, scope, level]);
+
+    //--------------------------------------------------------------------------
     const correlationEnabled = !(
         level === "area" &&
         areaType !== "reception" &&
@@ -820,6 +873,8 @@ export function Timeline({ className }: { className?: string }) {
         areaType !== "production" &&
         areaType !== "delivery"
     );
+
+    //--------------------------------------------------------------------------
     const activeFocus = correlationEnabled ? hovered : null;
     const correlated = useCorrelation(projection, activeFocus);
 
@@ -830,20 +885,19 @@ export function Timeline({ className }: { className?: string }) {
     const isDragging = useRef(false);
 
     //--------------------------------------------------------------------------
-    const refNow = Math.floor(Date.now() / 1000);
     const zoomDef = ZOOMS.find((z) => z.key === zoom)!;
     const halfSecs = (zoomDef.days * 86400) / 2;
-    const winStart = refNow - zoomDef.days * 86400;
-    const winEnd = refNow + halfSecs;
+    const winStart = home - zoomDef.days * 86400;
+    const winEnd = home + halfSecs;
 
     //--------------------------------------------------------------------------
     const stories = useMemo(
-        () => (level ? buildStories(level, projection, areaType, selectedNode?.hash) : []),
-        [level, projection, areaType, selectedNode],
+        () => (level ? buildStories(level, projection, home, areaType, selectedNode?.hash) : []),
+        [level, home, projection, areaType, selectedNode],
     );
     const ticks = useMemo(() => buildTicks(winStart, winEnd, zoomDef.days), [winStart, winEnd, zoomDef.days]);
-    const nowPct = toPct(refNow, winStart, winEnd);
-    const playheadPct = Math.max(0, Math.min(100, toPct(asOf, winStart, winEnd)));
+    const homePct = toPct(home, winStart, winEnd);
+    const playheadPct = Math.max(0, Math.min(100, toPct(asOf || home, winStart, winEnd)));
     const totalH =
         AXIS_H +
         ROW_GAP +
@@ -866,7 +920,7 @@ export function Timeline({ className }: { className?: string }) {
 
     //--------------------------------------------------------------------------
     const handleTrackMouseDown = useCallback(
-        (e: React.MouseEvent) => {
+        (e: ReactMouseEvent) => {
             if (e.button !== 0) return;
             e.preventDefault();
             isDragging.current = true;
@@ -886,20 +940,48 @@ export function Timeline({ className }: { className?: string }) {
 
     //--------------------------------------------------------------------------
     // Tooltip
-    const showTooltip = useCallback((content: React.ReactNode, e: React.MouseEvent) => {
+    const showTooltip = useCallback((content: React.ReactNode, e: ReactMouseEvent) => {
         if (!isDragging.current) setTooltip({ content, x: e.clientX, y: e.clientY });
     }, []);
+
+    //--------------------------------------------------------------------------
     const hideTooltip = useCallback(() => setTooltip(null), []);
-    const trackMouseMove = useCallback((e: React.MouseEvent) => {
+
+    //--------------------------------------------------------------------------
+    const trackMouseMove = useCallback((e: ReactMouseEvent) => {
         if (!isDragging.current) setTooltip((t) => (t ? { ...t, x: e.clientX, y: e.clientY } : null));
     }, []);
+
+    //--------------------------------------------------------------------------
+    const tooltipContent = useMemo(() => {
+        if (tooltip) {
+            return createPortal(
+                <div
+                    className="fixed z-[9999] pointer-events-none"
+                    style={{
+                        ...(tooltip.x > window.innerWidth * 0.6
+                            ? { right: window.innerWidth - tooltip.x + 14 }
+                            : { left: tooltip.x + 14 }),
+                        ...(tooltip.y > window.innerHeight * 0.65
+                            ? { bottom: window.innerHeight - tooltip.y + 8 }
+                            : { top: tooltip.y - 8 }),
+                    }}
+                >
+                    <div className="bg-slate-900/95 border border-slate-700/60 rounded-lg px-3 py-2.5 shadow-xl text-slate-300 text-xs max-w-64">
+                        {tooltip.content}
+                    </div>
+                </div>,
+                document.body,
+            );
+        }
+    }, [tooltip]);
 
     //--------------------------------------------------------------------------
     return (
         <>
             <aside
                 className={cn(
-                    "flex flex-col pointer-events-auto border-t border-slate-200/15 select-none",
+                    "flex flex-col pointer-events-auto min-h-40 border-t border-slate-200/15 select-none",
                     PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
                     className,
                 )}
@@ -998,9 +1080,6 @@ export function Timeline({ className }: { className?: string }) {
                                             )}
                                             onEnter={showTooltip}
                                             onLeave={hideTooltip}
-                                            onFocusEnter={() => setHovered({ type: bar.entityType, id: bar.id })}
-                                            onFocusLeave={() => setHovered(null)}
-                                            onClick={() => setSelected({ type: bar.entityType, id: bar.id })}
                                         />
                                     )),
                                 )}
@@ -1008,18 +1087,18 @@ export function Timeline({ className }: { className?: string }) {
                         ))}
 
                         {/* Future zone tint */}
-                        {nowPct >= 0 && nowPct <= 100 && (
+                        {homePct >= 0 && homePct <= 100 && (
                             <div
                                 className="absolute top-0 bottom-0 bg-white/[0.025] pointer-events-none"
-                                style={{ left: `${nowPct}%`, right: 0 }}
+                                style={{ left: `${homePct}%`, right: 0 }}
                             />
                         )}
 
                         {/* Now marker */}
-                        {nowPct >= 0 && nowPct <= 100 && (
+                        {homePct >= 0 && homePct <= 100 && (
                             <div
                                 className="absolute top-0 bottom-0 w-px bg-accent/50 pointer-events-none"
-                                style={{ left: `${nowPct}%` }}
+                                style={{ left: `${homePct}%` }}
                             >
                                 <span className="absolute top-1 left-1 text-[9px] font-bold text-accent whitespace-nowrap">
                                     NOW
@@ -1067,40 +1146,29 @@ export function Timeline({ className }: { className?: string }) {
                     </div>
                     <div className="flex-grow" />
                     <div className="flex items-center gap-1.5">
-                        {asOf !== refNow && (
+                        {asOf && (
                             <button
-                                onClick={() => setAsOf(refNow)}
+                                onClick={() => setAsOf(undefined)}
                                 className="text-[9px] font-semibold uppercase tracking-wide text-accent/80 hover:text-accent transition-colors"
                                 title="Reset to now"
                             >
                                 ↺ now
                             </button>
                         )}
-                        <span className="text-[10px] font-mono text-slate-300 tabular-nums">{fmtTs(asOf)}</span>
+                        <span className="text-[10px] font-mono text-slate-300 tabular-nums">
+                            {fmtTs(asOf || home, {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                            })}
+                        </span>
                     </div>
                 </div>
-                {/* Tooltip portal */}
             </aside>
             <CorrelationModal />
-            {tooltip &&
-                createPortal(
-                    <div
-                        className="fixed z-[9999] pointer-events-none"
-                        style={{
-                            ...(tooltip.x > window.innerWidth * 0.6
-                                ? { right: window.innerWidth - tooltip.x + 14 }
-                                : { left: tooltip.x + 14 }),
-                            ...(tooltip.y > window.innerHeight * 0.65
-                                ? { bottom: window.innerHeight - tooltip.y + 8 }
-                                : { top: tooltip.y - 8 }),
-                        }}
-                    >
-                        <div className="bg-slate-900/95 border border-slate-700/60 rounded-lg px-3 py-2.5 shadow-xl text-slate-300 text-xs max-w-64">
-                            {tooltip.content}
-                        </div>
-                    </div>,
-                    document.body,
-                )}
+            {tooltipContent}
         </>
     );
 }

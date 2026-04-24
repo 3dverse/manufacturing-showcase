@@ -38,6 +38,8 @@ const EMPTY: DeliverySummary = {
 export function useDeliverySummary(): DeliverySummary {
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
+    const home = useTimelineStore((s) => s.home);
+    const targetAsOf = asOf || home;
     const isLoading = useTimelineStore((s) => s.isLoading);
 
     return useMemo(() => {
@@ -48,20 +50,24 @@ export function useDeliverySummary(): DeliverySummary {
         const allocations = [...span.allocations.values()].filter((a) => a.demandType === "sales_order");
 
         // Sales order phases
-        const activeSOs = salesOrders.filter((so) => so.orderDate <= asOf && so.requestedDeliveryDate >= asOf);
-        const overdueOrders = salesOrders.filter((so) => so.requestedDeliveryDate < asOf && so.status !== "shipped");
+        const activeSOs = salesOrders.filter(
+            (so) => so.orderDate <= targetAsOf && so.requestedDeliveryDate >= targetAsOf,
+        );
+        const overdueOrders = salesOrders.filter(
+            (so) => so.requestedDeliveryDate < targetAsOf && so.status !== "shipped",
+        );
         const nextDue = [...activeSOs].sort((a, b) => a.requestedDeliveryDate - b.requestedDeliveryDate)[0] ?? null;
 
         // Pick task phases
-        const completedPicks = pickTasks.filter((pt) => pt.pickedDate != null && pt.pickedDate <= asOf);
-        const pendingPicks = pickTasks.filter((pt) => pt.pickedDate == null || pt.pickedDate > asOf);
+        const completedPicks = pickTasks.filter((pt) => pt.pickedDate != null && pt.pickedDate <= targetAsOf);
+        const pendingPicks = pickTasks.filter((pt) => pt.pickedDate == null || pt.pickedDate > targetAsOf);
         const pendingPickUnits = pendingPicks.reduce((s, pt) => s + pt.quantity, 0);
 
         // Allocations
         const partialAllocs = allocations.filter((a) => a.status === "partial");
         const stockedSoIds = new Set(
             allocations
-                .filter((a) => a.allocatedAt <= asOf && (a.clearedAt === null || a.clearedAt > asOf))
+                .filter((a) => a.allocatedAt <= targetAsOf && (a.clearedAt === null || a.clearedAt > targetAsOf))
                 .map((a) => a.erpSalesOrderId)
                 .filter(Boolean),
         );
@@ -78,5 +84,5 @@ export function useDeliverySummary(): DeliverySummary {
             partialAllocCount: partialAllocs.length,
             stockedOrderCount: stockedSoIds.size,
         };
-    }, [span, asOf, isLoading]);
+    }, [span, targetAsOf, isLoading]);
 }

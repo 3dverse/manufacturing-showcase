@@ -14,6 +14,7 @@ import type { AsOfSnapshot } from "@/core/Scope";
 export function useSpanProjection(): AsOfProjection | null {
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
+    const home = useTimelineStore((s) => s.home);
 
     return useMemo(() => {
         if (!span) return null;
@@ -32,6 +33,6 @@ export function useSpanProjection(): AsOfProjection | null {
             allocations: [...span.allocations.values()],
         };
 
-        return projectSnapshot(snapshot, asOf);
-    }, [span, asOf]);
+        return projectSnapshot(snapshot, asOf || home);
+    }, [span, asOf, home]);
 }

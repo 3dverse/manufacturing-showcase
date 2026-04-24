@@ -149,17 +149,17 @@ export type Action = {
 };
 
 //------------------------------------------------------------------------------
-type _NavGraphNode = {
+type _SceneGraphNode = {
     entity: Entity;
     hash: string;
     name: string;
     id: string | undefined;
 };
-export type FactoryNode = _NavGraphNode & { type: NodeTypes.factory; areas: AreaNode[]; flows: FlowNode[] };
+export type FactoryNode = _SceneGraphNode & { type: NodeTypes.factory; areas: AreaNode[]; flows: FlowNode[] };
 /** One 3D point [x, y, z] on a flow spline. */
 export type FlowSplinePoint = [number, number, number];
 
-export type AreaNode = _NavGraphNode & {
+export type AreaNode = _SceneGraphNode & {
     type: NodeTypes.area;
     parent: FactoryNode;
     lines: LineNode[];
@@ -168,26 +168,29 @@ export type AreaNode = _NavGraphNode & {
     racks: RackNode[];
 };
 
-export type LineNode = _NavGraphNode & { type: NodeTypes.line; parent: AreaNode; cells: CellNode[] };
+export type LineNode = _SceneGraphNode & { type: NodeTypes.line; parent: AreaNode; cells: CellNode[] };
 
-export type CellNode = _NavGraphNode & {
+export type CellNode = _SceneGraphNode & {
     type: NodeTypes.cell;
     parent: AreaNode | LineNode;
     machines: MachineNode[];
-    out: Entity[];
+    outputs: OutNode[];
 };
-export type MachineNode = _NavGraphNode & { type: NodeTypes.machine; parent: CellNode };
 
-export type AisleNode = _NavGraphNode & { type: NodeTypes.aisle; parent: AreaNode; racks: RackNode[] };
+export type OutNode = _SceneGraphNode & { type: NodeTypes.out; parent: CellNode };
 
-export type RackNode = _NavGraphNode & {
+export type MachineNode = _SceneGraphNode & { type: NodeTypes.machine; parent: CellNode };
+
+export type AisleNode = _SceneGraphNode & { type: NodeTypes.aisle; parent: AreaNode; racks: RackNode[] };
+
+export type RackNode = _SceneGraphNode & {
     type: NodeTypes.rack;
     parent: AreaNode | AisleNode;
     bins: BinNode[];
 };
-export type BinNode = _NavGraphNode & { type: NodeTypes.bin; parent: RackNode };
+export type BinNode = _SceneGraphNode & { type: NodeTypes.bin; parent: RackNode };
 
-export type FlowNode = _NavGraphNode & {
+export type FlowNode = _SceneGraphNode & {
     type: NodeTypes.flow;
     entityInEUID: string;
     entityOutEUID: string;
@@ -196,7 +199,15 @@ export type FlowNode = _NavGraphNode & {
 };
 
 //------------------------------------------------------------------------------
-export type NavGraphNode = FactoryNode | AreaNode | LineNode | CellNode | MachineNode | AisleNode | RackNode | BinNode;
+export type SceneGraphNode =
+    | FactoryNode
+    | AreaNode
+    | LineNode
+    | CellNode
+    | MachineNode
+    | AisleNode
+    | RackNode
+    | BinNode;
 
 //------------------------------------------------------------------------------
 // TODO delete VVV

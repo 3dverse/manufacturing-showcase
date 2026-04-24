@@ -8,33 +8,37 @@ import { ViewerPanel } from "@/components/common/ViewerPanel";
 
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";
-import type { NavGraphNode } from "@/content/type";
+import type { SceneGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 export function AnchoredPanel({
     node,
-    className,
-    kpi,
+    interactive,
+    badge,
     children,
 }: {
-    node: NavGraphNode;
-    className?: string;
-    kpi?: ReactNode;
+    node: SceneGraphNode;
+    interactive?: boolean;
+    badge?: ReactNode;
     children?: ReactNode;
 }) {
     return (
         <BoundingBoxFaceProjection
             entity={node.entity}
             face="right"
-            className={cn("flex items-end p-8 transform-3d", className)}
+            className={cn("flex items-end p-8 transform-3d", interactive ? "" : "pointer-events-none!")}
         >
-            <ViewerPanel className="h-fit w-fit bg-slate-0/80 rounded-xl [corner-shape:bevel] [outline:2px_solid_#ffffff90] outline-offset-3 transform-3d appear-in-from-bottom opacity-0 [--animation-delay:1s]">
+            <ViewerPanel
+                className={cn(
+                    "h-fit w-fit rounded-xl [corner-shape:bevel] [outline:2px_solid_#ffffff90] outline-offset-3 transform-3d appear-in-from-bottom opacity-0 [--animation-delay:1s]",
+                )}
+            >
                 <PanelWrapper className="py-4">
                     <div className="flex items-start justify-between gap-4 mb-0">
                         <PanelTitle>
                             {node.name} {node.type}
                         </PanelTitle>
-                        {kpi}
+                        {badge}
                     </div>
                     {children}
                 </PanelWrapper>
@@ -44,7 +48,7 @@ export function AnchoredPanel({
 }
 
 //------------------------------------------------------------------------------
-export function AnchoredPanel2({ node, children }: { node: NavGraphNode; children?: ReactNode }) {
+export function AnchoredPanel2({ node, children }: { node: SceneGraphNode; children?: ReactNode }) {
     //--------------------------------------------------------------------------
     return (
         <BoundingBoxFaceProjection

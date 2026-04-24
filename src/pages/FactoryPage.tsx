@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { Livelink } from "@3dverse/livelink-react";
@@ -18,7 +18,9 @@ import { DisconnectedOverlay } from "@/components/viewer/overlays/DisconnectedOv
 import { FactoryProviders } from "@/components/layout/FactoryProviders";
 
 //------------------------------------------------------------------------------
-import FactoryLayout from "@/components/layout/FactoryLayout";
+import { MEDIA_QUERIES, useMediaQuery } from "@/utils/useMediaQuery";
+import { MobileLayout } from "@/components/layout/MobileLayout";
+import { DesktopLayout } from "@/components/layout/DesktopLayout";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -43,32 +45,31 @@ function PageContent({ factory }: { factory: Factory }) {
     //--------------------------------------------------------------------------
     const params = new URLSearchParams(location.search);
     const sessionId = params.get("sessionId");
+    const isMobile = useMediaQuery(MEDIA_QUERIES.MOBILE);
 
     //--------------------------------------------------------------------------
     // Render
-    return sessionId ? (
-        <Livelink
-            sessionId={sessionId}
-            token={TOKEN_3DVERSE}
-            LoadingPanel={LoadingOverlay}
-            ConnectionErrorPanel={DisconnectedOverlay}
-        >
-            <FactoryProviders factory={factory}>
-                <FactoryLayout />
-            </FactoryProviders>
-        </Livelink>
-    ) : (
-        <Livelink
-            sceneId={factory.scene_id}
-            token={TOKEN_3DVERSE}
-            isTransient={reconnector}
-            LoadingPanel={LoadingOverlay}
-            ConnectionErrorPanel={DisconnectedOverlay}
-            autoJoinExisting={false}
-        >
-            <FactoryProviders factory={factory}>
-                <FactoryLayout />
-            </FactoryProviders>
-        </Livelink>
-    );
+    return useMemo(() => {
+        return sessionId ? (
+            <Livelink
+                sessionId={sessionId}
+                token={TOKEN_3DVERSE}
+                LoadingPanel={LoadingOverlay}
+                ConnectionErrorPanel={DisconnectedOverlay}
+            >
+                <FactoryProviders factory={factory}>{isMobile ? <MobileLayout /> : <DesktopLayout />}</FactoryProviders>
+            </Livelink>
+        ) : (
+            <Livelink
+                sceneId={factory.scene_id}
+                token={TOKEN_3DVERSE}
+                isTransient={reconnector}
+                LoadingPanel={LoadingOverlay}
+                ConnectionErrorPanel={DisconnectedOverlay}
+                autoJoinExisting={false}
+            >
+                <FactoryProviders factory={factory}>{isMobile ? <MobileLayout /> : <DesktopLayout />}</FactoryProviders>
+            </Livelink>
+        );
+    }, [sessionId, isMobile, factory, reconnector]);
 }

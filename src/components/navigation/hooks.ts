@@ -8,16 +8,16 @@ import { useDragGuard } from "@/hooks/useDragGuard";
 
 //------------------------------------------------------------------------------
 import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2";
-import { isFactory } from "@/core/NavGraph";
+import { isFactory } from "@/core/SceneGraph";
 
 //------------------------------------------------------------------------------
-import type { NavGraphNode } from "@/content/type";
+import type { SceneGraphNode } from "@/content/type";
 import { HoverContext } from "@/contexts/HoverContext";
 import { NodeTypes } from "@/content/enums";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const useNavNode = (node: NavGraphNode, source: "nav" | "dom3d") => {
+export const useNavNode = (node: SceneGraphNode, source: "nav" | "dom3d") => {
     //--------------------------------------------------------------------------
     // Contexts
     const { selectedNode, setSelectedNode } = useContext(SelectionContext);
@@ -132,8 +132,8 @@ export const useNavNode = (node: NavGraphNode, source: "nav" | "dom3d") => {
 };
 
 //------------------------------------------------------------------------------
-export const getParentNodes = (node: NavGraphNode) => {
-    function addParent(parents: NavGraphNode[], node: NavGraphNode) {
+export const getParentNodes = (node: SceneGraphNode) => {
+    function addParent(parents: SceneGraphNode[], node: SceneGraphNode) {
         if (isFactory(node)) return parents;
         return addParent([...parents, node], node.parent);
     }
@@ -141,8 +141,8 @@ export const getParentNodes = (node: NavGraphNode) => {
 };
 
 //------------------------------------------------------------------------------
-export const getChildNodes = (node: NavGraphNode) => {
-    function flatten(node: NavGraphNode): NavGraphNode[] {
+export const getChildNodes = (node: SceneGraphNode) => {
+    function flatten(node: SceneGraphNode): SceneGraphNode[] {
         switch (node.type) {
             case NodeTypes.factory:
                 return [node, ...node.areas.flatMap(flatten)];

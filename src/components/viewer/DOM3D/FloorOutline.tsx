@@ -8,10 +8,10 @@ import { useNavNode } from "@/components/navigation/hooks";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import type { NavGraphNode } from "@/content/type";
+import type { SceneGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export const FloorOutline = ({ node }: { node: NavGraphNode }) => {
+export const FloorOutline = ({ node }: { node: SceneGraphNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const { pointerDownHandler, clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } =
@@ -29,10 +29,10 @@ export const FloorOutline = ({ node }: { node: NavGraphNode }) => {
     //--------------------------------------------------------------------------
     const stateStyle = useMemo(() => {
         if (isSelected) {
-            return { boxShadow: "inset 0 0 0 2px rgba(56, 189, 248, 0.95)" };
+            return { boxShadow: "inset 0 0 0 2px var(--color-accent-300)" };
         }
         if (isHovered) {
-            return { boxShadow: "inset 0 0 0 1px rgba(56, 189, 248, 0.65)" };
+            return { boxShadow: "inset 0 0 0 8px var(--color-accent-300)" };
         }
         return undefined;
     }, [isSelected, isHovered]);
@@ -40,7 +40,7 @@ export const FloorOutline = ({ node }: { node: NavGraphNode }) => {
     //--------------------------------------------------------------------------
     // Render
     return (
-        <BoundingBoxFaceProjection entity={node.entity} face="bottom">
+        <BoundingBoxFaceProjection entity={node.entity} face="bottom" scale={48}>
             <div
                 className={cn("w-full h-full transition-colors duration-200 pointer-events-auto", stateClassName)}
                 style={stateStyle}

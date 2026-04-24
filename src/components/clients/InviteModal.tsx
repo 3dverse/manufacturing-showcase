@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { QRCode } from "react-qrcode-logo";
 
 //------------------------------------------------------------------------------
@@ -16,11 +16,14 @@ export const InviteModal = ({
     onClose: () => void;
 }) => {
     //--------------------------------------------------------------------------
-    const handleEscapeClose = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-            onClose();
-        }
-    };
+    const handleEscapeClose = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onClose();
+            }
+        },
+        [onClose],
+    );
 
     //--------------------------------------------------------------------------
     useEffect(() => {

@@ -24,7 +24,7 @@ type GhettoReconnectContextType = {
 export const GhettoReconnectContext = createContext<GhettoReconnectContextType>(
     new Proxy({} as GhettoReconnectContextType, {
         get() {
-            throw new Error("FactoryContext must be used within a FactoryContextProvider");
+            throw new Error("GhettoReconnectContext must be used within a GhettoReconnectContextProvider");
         },
     }),
 );

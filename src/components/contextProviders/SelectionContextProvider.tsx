@@ -8,12 +8,12 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 
 //------------------------------------------------------------------------------
 import { Router } from "@/core/Router";
-import { isFactory } from "@/core/NavGraph";
+import { isFactory } from "@/core/SceneGraph";
 import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2";
 
 //------------------------------------------------------------------------------
 import type { Entity } from "@3dverse/livelink";
-import type { NavGraphNode } from "@/content/type";
+import type { SceneGraphNode } from "@/content/type";
 import type { RouteChangeEvent } from "@/core/Router";
 
 //------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
 
     //--------------------------------------------------------------------------
     // State
-    const [selectedNode, _setSelectedNode] = useState<NavGraphNode>();
+    const [selectedNode, _setSelectedNode] = useState<SceneGraphNode>();
 
     //--------------------------------------------------------------------------
     // Refs
@@ -36,7 +36,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
     //--------------------------------------------------------------------------
     // Handlers
     const cameraHandler = useCallback(
-        (node: NavGraphNode) => {
+        (node: SceneGraphNode) => {
             if (node && cameraControllerRef.current && viewportRef.current && cameraEntity) {
                 moveCamera(
                     node.entity,
@@ -52,7 +52,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
 
     //--------------------------------------------------------------------------
     const setSelectedNode = useCallback(
-        (node: NavGraphNode | undefined) => {
+        (node: SceneGraphNode | undefined) => {
             const factorySlug = factory.slug;
             const nodeSlug = node && !isFactory(node) ? Router.uuidToSlug(node?.hash) : undefined;
 
@@ -110,7 +110,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
                 cameraEntity
             ) {
                 viewerInitialized.current = true;
-                let node: NavGraphNode = nodeGraph;
+                let node: SceneGraphNode = nodeGraph;
                 if (initialNodeSlug.current) {
                     const nodeSlug = initialNodeSlug.current;
                     node = nodeList.find((n) => n.hash.startsWith(nodeSlug)) || nodeGraph;

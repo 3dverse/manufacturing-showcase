@@ -1,40 +1,42 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+//------------------------------------------------------------------------------
 import { useEntities } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
 
 //------------------------------------------------------------------------------
-import { buildNavGraph } from "@/core/NavGraph";
+import { buildSceneGraph } from "@/core/SceneGraph";
 import { useTimelineStore } from "@/store/useTimelineStore";
 
 //------------------------------------------------------------------------------
 import type { ReactNode } from "react";
 import type { Factory } from "@/content/type";
-import type { NavGraphNode, FactoryNode } from "@/content/type";
+import type { SceneGraphNode, FactoryNode } from "@/content/type";
+import type { Entity } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const FactoryContextProvider = ({ factory, children }: { factory: Factory; children: ReactNode }) => {
+    //--------------------------------------------------------------------------
+    // State
+    const [nodeGraph, setNodeGraph] = useState<FactoryNode | undefined>(undefined);
+    const [nodeList, setNodeList] = useState<SceneGraphNode[] | undefined>(undefined);
+
     //--------------------------------------------------------------------------
     // Hooks
     const { entities: sceneRefEntities } = useEntities({ mandatory_components: ["scene_ref"] });
     const { entities: tagEntities } = useEntities({ mandatory_components: ["tags"] });
 
     //--------------------------------------------------------------------------
-    // State
-    const [nodeGraph, setNodeGraph] = useState<FactoryNode | undefined>(undefined);
-    const [nodeList, setNodeList] = useState<NavGraphNode[] | undefined>(undefined);
-
-    //--------------------------------------------------------------------------
     // Store
     const loadSpan = useTimelineStore((s) => s.loadSpan);
 
     //--------------------------------------------------------------------------
-    // Effects
-    useEffect(() => {
-        const entities = [...sceneRefEntities, ...tagEntities.filter((e) => !e.scene_ref)];
-        buildNavGraph({ entities })
+    // Handlers
+    const loadEntities = useCallback((entities: Entity[]) => {
+        buildSceneGraph({ entities })
             .then(({ graph, list }) => {
                 setNodeGraph(graph);
                 setNodeList(list);
@@ -42,13 +44,21 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
             .catch(() => {
                 console.warn("error loading entities");
             });
-    }, [sceneRefEntities, tagEntities]);
+    }, []);
 
+    //--------------------------------------------------------------------------
+    // Effects
     useEffect(() => {
         if (!nodeGraph) return;
         const productionArea = nodeGraph.areas.find((a) => a.name.toLowerCase() === "production");
         if (productionArea) loadSpan(productionArea, factory.scene_id);
     }, [nodeGraph, factory.scene_id, loadSpan]);
+
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        if (sceneRefEntities.length === 0 || tagEntities.length === 0) return;
+        loadEntities([...sceneRefEntities, ...tagEntities.filter((e) => !e.scene_ref)]);
+    }, [loadEntities, sceneRefEntities, tagEntities]);
 
     //--------------------------------------------------------------------------
     // Memos
@@ -59,6 +69,6 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
 
     //--------------------------------------------------------------------------
     // Render
-    if (!value) return <></>;
+    if (!value) return;
     return <FactoryContext.Provider value={value}>{children}</FactoryContext.Provider>;
 };

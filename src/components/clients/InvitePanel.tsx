@@ -102,6 +102,12 @@ export const InvitePanel = () => {
         return () => document.removeEventListener("mousedown", handleClick);
     }, [menuOpen]);
 
+    //--------------------------------------------------------------------------
+    // Handlers
+    const closeModalHandler = useCallback(() => setIsInviteModalOpen(false), []);
+
+    //--------------------------------------------------------------------------
+    // Render
     if (!instance) {
         return null;
     }
@@ -155,13 +161,7 @@ export const InvitePanel = () => {
                     )}
                 </div>
             </ViewerPanel>
-            {guestLink && (
-                <InviteModal
-                    isOpen={isInviteModalOpen}
-                    guestLink={guestLink}
-                    onClose={() => setIsInviteModalOpen(false)}
-                />
-            )}
+            {guestLink && <InviteModal isOpen={isInviteModalOpen} guestLink={guestLink} onClose={closeModalHandler} />}
         </>
     );
 };

@@ -7,11 +7,11 @@ import { useNavNode } from "@/components/navigation/hooks";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import type { NavGraphNode } from "@/content/type";
+import type { SceneGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const FloorRegion = ({ node }: { node: NavGraphNode }) => {
+export const FloorRegion = ({ node }: { node: SceneGraphNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const { pointerDownHandler, clickHandler, mouseEnterHandler, mouseLeaveHandler, isSelected, isHovered } =

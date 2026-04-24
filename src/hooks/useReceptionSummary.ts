@@ -39,10 +39,16 @@ const EMPTY: ReceptionSummary = {
 };
 
 export function useReceptionSummary(): ReceptionSummary {
+    //--------------------------------------------------------------------------
+    // Store
+    const isLoading = useTimelineStore((s) => s.isLoading);
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
-    const isLoading = useTimelineStore((s) => s.isLoading);
+    const home = useTimelineStore((s) => s.home);
+    const targetAsOf = asOf || home;
 
+    //--------------------------------------------------------------------------
+    // Memos
     return useMemo(() => {
         if (!span) return EMPTY;
 
@@ -51,7 +57,9 @@ export function useReceptionSummary(): ReceptionSummary {
         const putawayTasks = [...span.putawayTasks.values()];
 
         // Active POs: already placed but not yet received
-        const activePOs = pos.filter((po) => po.orderDate <= asOf && (po.receivedAt == null || po.receivedAt > asOf));
+        const activePOs = pos.filter(
+            (po) => po.orderDate <= targetAsOf && (po.receivedAt == null || po.receivedAt > targetAsOf),
+        );
 
         // Build receipt → putaway task lookup for progress calculation
         const putawayByReceipt = new Map<string, (typeof putawayTasks)[number]>();
@@ -65,9 +73,9 @@ export function useReceptionSummary(): ReceptionSummary {
         // Receipts currently being processed: arrived but putaway not complete
         const processingReceipts: ProcessingReceipt[] = receipts
             .filter((r) => {
-                if (r.receivedDate > asOf) return false;
+                if (r.receivedDate > targetAsOf) return false;
                 const pt = putawayByReceipt.get(r.id);
-                return pt != null && (pt.putawayDate == null || pt.putawayDate > asOf);
+                return pt != null && (pt.putawayDate == null || pt.putawayDate > targetAsOf);
             })
             .map((r) => {
                 const pt = putawayByReceipt.get(r.id)!;
@@ -75,7 +83,7 @@ export function useReceptionSummary(): ReceptionSummary {
                 let progress = 0;
                 if (pt.putawayDate != null) {
                     const span = pt.putawayDate - pt.createdAt;
-                    progress = span > 0 ? Math.min(1, Math.max(0, (asOf - pt.createdAt) / span)) : 0;
+                    progress = span > 0 ? Math.min(1, Math.max(0, (targetAsOf - pt.createdAt) / span)) : 0;
                 }
                 return {
                     receiptId: r.id,
@@ -86,13 +94,13 @@ export function useReceptionSummary(): ReceptionSummary {
                 };
             });
 
-        // Receipts in the 24h window ending at asOf
-        const dayAgo = asOf - 86400;
-        const recentReceipts = receipts.filter((r) => r.receivedDate > dayAgo && r.receivedDate <= asOf);
+        // Receipts in the 24h window ending at targetAsOf
+        const dayAgo = targetAsOf - 86400;
+        const recentReceipts = receipts.filter((r) => r.receivedDate > dayAgo && r.receivedDate <= targetAsOf);
         const recentUnitCount = recentReceipts.reduce((s, r) => s + r.quantity, 0);
 
         // Putaway tasks not yet completed
-        const pendingPutaways = putawayTasks.filter((pt) => pt.putawayDate == null || pt.putawayDate > asOf);
+        const pendingPutaways = putawayTasks.filter((pt) => pt.putawayDate == null || pt.putawayDate > targetAsOf);
         const pendingPutawayUnits = pendingPutaways.reduce((s, pt) => s + pt.quantity, 0);
 
         return {
@@ -104,5 +112,5 @@ export function useReceptionSummary(): ReceptionSummary {
             pendingPutawayCount: pendingPutaways.length,
             pendingPutawayUnits,
         };
-    }, [span, asOf, isLoading]);
+    }, [span, targetAsOf, isLoading]);
 }

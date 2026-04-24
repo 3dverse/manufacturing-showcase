@@ -1,10 +1,10 @@
-import type { NavGraphNode, FactoryNode, AreaNode, LineNode, CellNode, MachineNode } from "@/content/type";
-import { isArea, isCell, isFactory, isLine, isMachine } from "./NavGraph";
+import type { SceneGraphNode, FactoryNode, AreaNode, LineNode, CellNode, MachineNode } from "@/content/type";
+import { isArea, isCell, isFactory, isLine, isMachine } from "@/core/SceneGraph";
+import { spanWindow } from "@/core/Span";
 
-// ---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Entry types
-// ---------------------------------------------------------------------------
-
+//------------------------------------------------------------------------------
 export type SalesOrderEntry = {
     id: string;
     orderNumber: string;
@@ -153,6 +153,12 @@ export type AllocationEntry = {
 // Span — timespan-scoped cache
 // ---------------------------------------------------------------------------
 
+export type Window = {
+    origin: number;
+    from: number;
+    to: number;
+};
+
 export type TimelineSpan = {
     // Layer 1 — site-wide bulk (invalidated on timespan change)
     salesOrders: Map<string, SalesOrderEntry>;
@@ -174,9 +180,10 @@ export type TimelineSpan = {
     workOrdersByAsset: Map<string, string[]>;
     pickTasksBySalesOrder: Map<string, string[]>;
     putawayTasksByReceipt: Map<string, string[]>;
+    window: Window;
 };
 
-export function emptySpan(): TimelineSpan {
+export function emptySpan(origin: number): TimelineSpan {
     return {
         salesOrders: new Map(),
         productionOrders: new Map(),
@@ -196,6 +203,7 @@ export function emptySpan(): TimelineSpan {
         workOrdersByAsset: new Map(),
         pickTasksBySalesOrder: new Map(),
         putawayTasksByReceipt: new Map(),
+        window: spanWindow(origin),
     };
 }
 
@@ -243,7 +251,7 @@ export function buildSpanIndexes(span: TimelineSpan): void {
 }
 
 export function mergeSpan(a: TimelineSpan, b: TimelineSpan): TimelineSpan {
-    const result = emptySpan();
+    const result = emptySpan(a.window.origin);
     const merge = <V>(r: Map<string, V>, ma: Map<string, V>, mb: Map<string, V>) => {
         for (const [k, v] of ma) r.set(k, v);
         for (const [k, v] of mb) r.set(k, v);
@@ -313,7 +321,7 @@ export type RichSnapshot = Omit<AsOfSnapshot, "productionOrders" | "operations">
 // Scoping — pure function of (node, span), no async, no side effects
 // ---------------------------------------------------------------------------
 
-export function scopeFromNode(node: NavGraphNode, span: TimelineSpan): TimelineScope {
+export function scopeFromNode(node: SceneGraphNode, span: TimelineSpan): TimelineScope {
     if (isFactory(node)) return scopeFactory(node, span);
     if (isArea(node)) return scopeArea(node, span);
     if (isLine(node)) return scopeLine(node, span);
@@ -512,7 +520,7 @@ function resolveUnique<T>(ids: string[], map: Map<string, T>): T[] {
 // Navigation helpers — used by the fetch layer to determine what to request
 // ---------------------------------------------------------------------------
 
-export function workCenterIdsFromNode(node: NavGraphNode): string[] {
+export function workCenterIdsFromNode(node: SceneGraphNode): string[] {
     if (isFactory(node))
         return node.areas.flatMap((a) => [
             ...a.lines.flatMap((l) => l.cells.map((c) => c.hash)),
@@ -526,7 +534,7 @@ export function workCenterIdsFromNode(node: NavGraphNode): string[] {
     return [];
 }
 
-export function locationIdsFromNode(node: NavGraphNode): string[] {
+export function locationIdsFromNode(node: SceneGraphNode): string[] {
     if (isFactory(node)) return node.areas.map((a) => a.hash);
     if (isArea(node)) return [node.hash];
     if (isLine(node)) return [node.parent.hash];
@@ -541,7 +549,7 @@ export function locationIdsFromNode(node: NavGraphNode): string[] {
     return [];
 }
 
-export function machineHashesFromNode(node: NavGraphNode): string[] {
+export function machineHashesFromNode(node: SceneGraphNode): string[] {
     if (isFactory(node))
         return node.areas.flatMap((a) => [
             ...a.lines.flatMap((l) => l.cells.flatMap((c) => c.machines.map((m) => m.hash))),
@@ -563,7 +571,7 @@ export function scopeKey(workCenterIds: string[]): string {
     return [...workCenterIds].sort().join(",");
 }
 
-export function levelFromNode(node: NavGraphNode): TimelineLevel {
+export function levelFromNode(node: SceneGraphNode): TimelineLevel {
     if (isFactory(node)) return "factory";
     if (isArea(node)) return "area";
     if (isLine(node)) return "line";

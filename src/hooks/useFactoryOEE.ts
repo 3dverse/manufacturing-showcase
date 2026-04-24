@@ -14,12 +14,14 @@ import { useTimelineStore } from "@/store/useTimelineStore";
 export function useFactoryOEE(): number | null {
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
+    const home = useTimelineStore((s) => s.home);
+    const targetAsOf = asOf || home;
 
     return useMemo(() => {
         if (!span) return null;
 
         const completed = [...span.operations.values()].filter(
-            (op) => op.actualEnd !== undefined && op.actualEnd <= asOf,
+            (op) => op.actualEnd !== undefined && op.actualEnd <= targetAsOf,
         );
         if (completed.length === 0) return null;
 
@@ -32,5 +34,5 @@ export function useFactoryOEE(): number | null {
         const availability = totalPlanned > 0 ? Math.min(1, totalActual / totalPlanned) : 1;
 
         return Math.round(availability * quality * 100);
-    }, [span, asOf]);
+    }, [span, targetAsOf]);
 }

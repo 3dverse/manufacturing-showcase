@@ -1,14 +1,14 @@
 import { createContext } from "react";
 
 //------------------------------------------------------------------------------
-import type { NavGraphNode, FactoryNode } from "@/content/type";
+import type { SceneGraphNode, FactoryNode } from "@/content/type";
 import type { Factory } from "@/content/type";
 
 //------------------------------------------------------------------------------
 type FactoryContextType = {
     factory: Factory;
     nodeGraph: FactoryNode;
-    nodeList: NavGraphNode[];
+    nodeList: SceneGraphNode[];
 };
 
 //------------------------------------------------------------------------------

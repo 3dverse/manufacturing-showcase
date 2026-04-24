@@ -2,7 +2,7 @@ import { useContext, useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { UseCaseContext } from "@/contexts/UseCaseContext";
-import { isLine } from "@/core/NavGraph";
+import { isLine } from "@/core/SceneGraph";
 import type { CellNode } from "@/content/type";
 import type { UseCaseCellMatcher } from "@/content/useCases";
 
