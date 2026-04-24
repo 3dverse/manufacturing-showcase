@@ -70,7 +70,7 @@
     "@3dverse/livelink": "^0.8.61",
     "@3dverse/livelink-react": "^0.2.63",
     "@3dverse/livelink-react-ui": "^0.3.20",
-    "@chromatic-com/storybook": "^5.0.1",
+    "@chromatic-com/storybook": "^5.1.2",
     "@dagrejs/dagre": "^3.0.0",
     "@eslint/js": "^9.25.0",
     "@fortawesome/fontawesome-common-types": "^7.1.0",
@@ -84,10 +84,10 @@
     "@fortawesome/sharp-regular-svg-icons": "^7.1.0",
     "@fortawesome/sharp-solid-svg-icons": "^7.1.0",
     "@openapitools/openapi-generator-cli": "^2.30.2",
-    "@storybook/addon-a11y": "^10.2.8",
-    "@storybook/addon-docs": "^10.2.8",
-    "@storybook/addon-vitest": "^10.2.8",
-    "@storybook/react-vite": "^10.2.8",
+    "@storybook/addon-a11y": "^10.3.5",
+    "@storybook/addon-docs": "^10.3.5",
+    "@storybook/addon-vitest": "^10.3.5",
+    "@storybook/react-vite": "^10.3.5",
     "@tailwindcss/vite": "^4.1.5",
     "@types/compression": "^1.8.1",
     "@types/node": "^25.2.0",
@@ -129,7 +129,7 @@
     "react-gauge-component": "^2.0.26",
     "react-icons": "^5.5.0",
     "slugify": "^1.6.8",
-    "storybook": "^10.2.8",
+    "storybook": "^10.3.5",
     "tailwind-merge": "^3.4.0",
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
@@ -137,6 +137,7 @@
     "unique-names-generator": "^4.7.1",
     "vite": "^6.3.5",
     "vitest": "^4.0.18",
-    "zustand": "^5.0.11"
+    "zustand": "^5.0.11",
+    "eslint-plugin-storybook": "10.3.5"
   }
 }
