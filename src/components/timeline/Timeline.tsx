@@ -16,6 +16,7 @@ import { CorrelationModal } from "@/components/correlation/CorrelationModal";
 //------------------------------------------------------------------------------
 import { useScope } from "@/hooks/useScope";
 import { useProjection } from "@/hooks/useProjection";
+import { useSpanProjection } from "@/hooks/useSpanProjection";
 import { useCorrelation } from "@/hooks/useCorrelation";
 import { SelectionContext } from "@/contexts/SelectionContext";
 import { useTimelineStore } from "@/store/useTimelineStore";
@@ -30,8 +31,6 @@ import type {
     ProjectedSalesOrder,
     ProjectedProductionOrder,
     ProjectedOperation,
-    ProjectedDowntime,
-    ProjectedWorkOrder,
     ProjectedReceipt,
     ProjectedAllocation,
     ProjectedPickTask,
@@ -43,6 +42,7 @@ import type {
 import { cn } from "@/utils/cn";
 import { fromPct, toPct } from "./timeUtils";
 import { fmtDuration, fmtTs } from "@/utils/helpers-time";
+import { buildClosedIntervals } from "@/core/Calendar";
 
 //------------------------------------------------------------------------------
 import { PERFORMANCE_MODE, FULL_TIMELINE } from "@/content/3dverse";
@@ -207,7 +207,7 @@ function buildSalesOrdersStory(orders: ProjectedSalesOrder[]): Story {
         end: so.requestedDeliveryDate,
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-accent/50",
-            so.phase === "active" ? "bg-accent" : so.phase === "completed" ? "bg-accent/70" : "bg-accent/40",
+            so.phase === "active" ? "bg-accent" : so.phase === "completed" ? "bg-accent" : "bg-accent",
         ),
         tooltip: (
             <div className="space-y-1.5">
@@ -251,10 +251,10 @@ function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
             end: po.effectiveEnd,
             className:
                 po.phase === "completed"
-                    ? "bg-emerald-500/40 border border-emerald-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50"
+                    ? "bg-emerald-500 border border-emerald-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50"
                     : po.phase === "future"
-                      ? "bg-blue-400/25 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
-                      : "bg-emerald-500/60 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
+                      ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
+                      : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
             tooltip: (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{po.orderNumber}</div>
@@ -306,10 +306,10 @@ function buildOperationsStory(ops: ProjectedOperation[]): Story {
             end: op.effectiveEnd,
             className:
                 op.phase === "completed"
-                    ? "bg-slate-400/50 border border-slate-300/40 hover:ring-2 hover:ring-offset-0 hover:ring-slate-400/50"
+                    ? "bg-slate-400 border border-slate-300/40 hover:ring-2 hover:ring-offset-0 hover:ring-slate-400/50"
                     : op.phase === "future"
-                      ? "bg-blue-400/25 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
-                      : "bg-emerald-500/60 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
+                      ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
+                      : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
             tooltip: (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{op.operationCode}</div>
@@ -343,81 +343,7 @@ function buildOperationsStory(ops: ProjectedOperation[]): Story {
         id: "operations",
         title: "Operations",
         label: "OP",
-        lanes: buildLanes(bars, "overlap"),
-        barStyle: "bar",
-        stackingStyle: "overlap",
-    };
-}
-
-function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedWorkOrder[], present: number): Story {
-    const dtBars: BarItem[] = events.map((dt) => ({
-        id: dt.id,
-        entityType: "downtime" as EntityType,
-        start: dt.startedAt,
-        end: dt.endedAt ?? present,
-        className: cn(
-            "border border-red-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-red-500/50",
-            dt.isOngoing ? "bg-red-500/70" : "bg-red-500/55",
-        ),
-        tooltip: (
-            <div className="space-y-1.5">
-                <div className="font-semibold text-red-300">
-                    {dt.reasonCode}
-                    {dt.isOngoing && <span className="ml-1.5 text-[10px] text-red-400/80">ongoing</span>}
-                </div>
-                {dt.reasonDescription && <div className="text-slate-400 text-[11px]">{dt.reasonDescription}</div>}
-                <div>
-                    <span className="text-slate-500">Start </span>
-                    {fmtTs(dt.startedAt)}
-                </div>
-                <div>
-                    <span className="text-slate-500">Duration </span>
-                    {fmtDuration(dt.durationAtAsOf)}
-                </div>
-            </div>
-        ),
-    }));
-
-    const woBars: BarItem[] = workOrders.map((wo) => ({
-        id: wo.id,
-        entityType: "workOrder" as EntityType,
-        start: wo.effectiveStart,
-        end: wo.effectiveEnd,
-        className:
-            wo.phase === "completed"
-                ? "bg-amber-500/50 border border-amber-400/50 hover:ring-2 hover:ring-offset-0 hover:ring-amber-500/50"
-                : wo.isOverdue
-                  ? "bg-amber-500/70 border border-amber-400/80 hover:ring-2 hover:ring-offset-0 hover:ring-amber-500/50"
-                  : "bg-amber-500/50 border border-amber-400/50 hover:ring-2 hover:ring-offset-0 hover:ring-amber-500/50",
-        tooltip: (
-            <div className="space-y-1.5">
-                <div className="font-semibold text-white">{wo.workOrderNumber}</div>
-                <div className="text-slate-400 text-[11px] capitalize">{wo.workType}</div>
-                <div>
-                    <span className="text-slate-500">Status </span>
-                    <span className="capitalize">{wo.status.replace("_", " ")}</span>
-                    {wo.isOverdue && <span className="ml-1.5 text-red-400">overdue</span>}
-                </div>
-                <div>
-                    <span className="text-slate-500">Planned </span>
-                    {fmtTs(wo.scheduledStart)} → {fmtTs(wo.scheduledEnd)}
-                </div>
-                {wo.actualStart && (
-                    <div>
-                        <span className="text-slate-500">Actual </span>
-                        {fmtTs(wo.actualStart)}
-                        {wo.actualEnd ? ` → ${fmtTs(wo.actualEnd)}` : " (ongoing)"}
-                    </div>
-                )}
-            </div>
-        ),
-    }));
-
-    return {
-        id: "stoppages",
-        label: "Stops",
-        title: "Work Orders and Downtime Events",
-        lanes: buildLanes([...dtBars, ...woBars], "overlap"),
+        lanes: buildLanes(bars, "swimlane"),
         barStyle: "bar",
         stackingStyle: "swimlane",
     };
@@ -434,10 +360,10 @@ function buildReceiptsStory(receipts: ProjectedReceipt[], present: number): Stor
             className: cn(
                 "hover:ring-2 hover:ring-offset-0 hover:ring-sky-500/50",
                 r.phase === "completed"
-                    ? "bg-sky-500/50 border border-sky-400/50"
+                    ? "bg-sky-500 border border-sky-400/50"
                     : r.phase === "future"
-                      ? "bg-slate-400/30 border border-slate-400/40 border-dashed"
-                      : "bg-amber-400/60 border border-amber-300/60",
+                      ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                      : "bg-amber-400 border border-amber-300/60",
             ),
             tooltip: (
                 <div className="space-y-1.5">
@@ -490,8 +416,8 @@ function buildAllocationsStory(
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50",
             a.status === "partial"
-                ? "bg-blue-400/35 border border-blue-400/50 border-dashed"
-                : "bg-blue-400/60 border border-blue-400/60",
+                ? "bg-blue-400 border border-blue-400/50 border-dashed"
+                : "bg-blue-400 border border-blue-400/60",
         ),
         tooltip: (
             <div className="space-y-1.5">
@@ -532,10 +458,10 @@ function buildPickTasksStory(tasks: ProjectedPickTask[], present: number): Story
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-amber-400/50",
             t.phase === "completed"
-                ? "bg-amber-400/50 border border-amber-300/50"
+                ? "bg-amber-400 border border-amber-300/50"
                 : t.phase === "future"
-                  ? "bg-slate-400/30 border border-slate-400/40 border-dashed"
-                  : "bg-amber-300/40 border border-amber-300/50",
+                  ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                  : "bg-amber-300 border border-amber-300/50",
         ),
         tooltip: (
             <div className="space-y-1.5">
@@ -577,10 +503,10 @@ function buildPutawayTasksStory(tasks: ProjectedPutawayTask[], present: number):
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-emerald-400/50",
             t.phase === "completed"
-                ? "bg-emerald-500/50 border border-emerald-400/50"
+                ? "bg-emerald-500 border border-emerald-400/50"
                 : t.phase === "future"
-                  ? "bg-slate-400/30 border border-slate-400/40 border-dashed"
-                  : "bg-emerald-400/40 border border-emerald-300/50",
+                  ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                  : "bg-emerald-400 border border-emerald-300/50",
         ),
         tooltip: (
             <div className="space-y-1.5">
@@ -624,10 +550,10 @@ function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[], present: number
             className: cn(
                 "hover:ring-2 hover:ring-offset-0 hover:ring-violet-500/50",
                 po.phase === "completed"
-                    ? "bg-violet-500/50 border border-violet-400/50"
+                    ? "bg-violet-500 border border-violet-400/50"
                     : po.phase === "future"
-                      ? "bg-slate-400/30 border border-slate-400/40 border-dashed"
-                      : "bg-violet-400/40 border border-violet-300/50",
+                      ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                      : "bg-violet-400 border border-violet-300/50",
             ),
             tooltip: (
                 <div className="space-y-1.5">
@@ -678,15 +604,13 @@ function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[], present: number
 function buildStories(
     level: TimelineLevel,
     projection: AsOfProjection | null,
-    present: number,
+    effectiveNow: number,
     areatype?: AreaType,
     nodeHash?: string,
 ): Story[] {
     const so = projection?.salesOrders ?? [];
     const po = projection?.productionOrders ?? [];
     const ops = projection?.operations ?? [];
-    const dt = projection?.downtimeEvents ?? [];
-    const wo = projection?.eamWorkOrders ?? [];
 
     const rcp = projection?.receipts ?? [];
     const alloc = projection?.allocations ?? [];
@@ -714,30 +638,29 @@ function buildStories(
                 case "delivery":
                     return [
                         buildSalesOrdersStory(so),
-                        buildAllocationsStory(alloc, "sales_order", present),
-                        ...(FULL_TIMELINE ? [buildPickTasksStory(picks, present)] : []),
+                        buildAllocationsStory(alloc, "sales_order", effectiveNow),
+                        ...(FULL_TIMELINE ? [buildPickTasksStory(picks, effectiveNow)] : []),
                     ];
                 case "reception":
                     return [
-                        buildPurchaseOrdersStory(purchaseOrders, present),
-                        buildReceiptsStory(rcp, present),
-                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, present)] : []),
+                        buildPurchaseOrdersStory(purchaseOrders, effectiveNow),
+                        buildReceiptsStory(rcp, effectiveNow),
+                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, effectiveNow)] : []),
                     ];
                 case "storage":
-                    return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order", present)];
+                    return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order", effectiveNow)];
                 case "quality":
                     return [
                         buildSalesOrdersStory(so),
-                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, present)] : []),
+                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, effectiveNow)] : []),
                     ];
                 default:
                     return [buildSalesOrdersStory(so)];
             }
         case "line":
         case "cell":
-            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo, present)];
         case "machine":
-            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo, present)];
+            return [buildProductionOrdersStory(po), buildOperationsStory(ops)];
     }
 }
 
@@ -834,7 +757,7 @@ function Bar({
     return (
         <div
             className={cn(
-                "absolute cursor-pointer transition-[shadow,opacity]",
+                "absolute cursor-pointer pointer-events-auto transition-[shadow,opacity]",
                 barStyle === "line" ? "rounded-full" : "rounded-sm",
                 highlightState === "dimmed" && "opacity-20",
                 bar.className,
@@ -857,10 +780,11 @@ export function Timeline({ className }: { className?: string }) {
     const { selectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
-    const { hovered } = useFocusStore();
+    const { hovered, setHovered, setSelected } = useFocusStore();
     const { asOf, setAsOf, present, isPlaying, play, pause, playbackSpeed, setPlaybackSpeed } = useTimelineStore();
     const { scope, level, isLoading } = useScope(selectedNode ?? null);
     const projection = useProjection(scope);
+    const spanProjection = useSpanProjection();
 
     //--------------------------------------------------------------------------
     const areaType: AreaType | undefined = useMemo(() => {
@@ -902,7 +826,7 @@ export function Timeline({ className }: { className?: string }) {
         return () => clearTimeout(timeoutId);
     }, []);
 
-    const [zoom, setZoom] = useState<ZoomKey>("2W");
+    const [zoom, setZoom] = useState<ZoomKey>("1W");
     const [tooltip, setTooltip] = useState<{ content: React.ReactNode; x: number; y: number } | null>(null);
 
     const trackRef = useRef<HTMLDivElement>(null);
@@ -913,13 +837,36 @@ export function Timeline({ className }: { className?: string }) {
     const halfSecs = (zoomDef.days * 86400) / 2;
     const winStart = present - zoomDef.days * 86400;
     const winEnd = present + halfSecs;
+    const effectiveNow = asOf ?? present;
 
     //--------------------------------------------------------------------------
     const stories = useMemo(
-        () => (level ? buildStories(level, projection, present, areaType, selectedNode?.hash) : []),
-        [level, present, projection, areaType, selectedNode],
+        () => (level ? buildStories(level, projection, effectiveNow, areaType, selectedNode?.hash) : []),
+        [level, projection, effectiveNow, areaType, selectedNode],
     );
+
+    const downtimeBands = useMemo(() => {
+        if (!spanProjection) return [];
+        return spanProjection.downtimeEvents
+            .map((dt) => ({
+                dt,
+                start: Math.max(dt.startedAt, winStart),
+                end: Math.min(dt.endedAt ?? effectiveNow, winEnd),
+            }))
+            .filter(({ start, end }) => start < end);
+    }, [spanProjection, winStart, winEnd, effectiveNow]);
+
+    const workOrderBands = useMemo(() => {
+        if (!spanProjection) return [];
+        return spanProjection.eamWorkOrders
+            .map((wo) => ({ wo, start: Math.max(wo.effectiveStart, winStart), end: Math.min(wo.effectiveEnd, winEnd) }))
+            .filter(({ start, end }) => start < end);
+    }, [spanProjection, winStart, winEnd]);
+
+    const scopedDowntimeIds = useMemo(() => new Set(projection?.downtimeEvents.map((dt) => dt.id) ?? []), [projection]);
+    const scopedWorkOrderIds = useMemo(() => new Set(projection?.eamWorkOrders.map((wo) => wo.id) ?? []), [projection]);
     const ticks = useMemo(() => buildTicks(winStart, winEnd, zoomDef.days), [winStart, winEnd, zoomDef.days]);
+    const closedIntervals = useMemo(() => buildClosedIntervals(winStart, winEnd), [winStart, winEnd]);
     const presentPct = toPct(present, winStart, winEnd);
     const playheadPct = Math.max(0, Math.min(100, toPct(asOf || present, winStart, winEnd)));
     const totalH =
@@ -1044,6 +991,124 @@ export function Timeline({ className }: { className?: string }) {
                         onMouseMove={trackMouseMove}
                         onMouseLeave={hideTooltip}
                     >
+                        {/* Bands — wrapped in mx-1 to align with swimlane margins; top offset skips the axis row */}
+                        <div className="absolute inset-x-0 bottom-0 mx-1" style={{ top: AXIS_H }}>
+                            {/* Closed-period bands (nighttime + weekends) */}
+                            {closedIntervals.map(({ start, end }) => {
+                                const left = toPct(start, winStart, winEnd);
+                                const width = toPct(end, winStart, winEnd) - left;
+                                return (
+                                    <div
+                                        key={start}
+                                        className="absolute top-0 bottom-0 bg-slate-100 pointer-events-none"
+                                        style={{ left: `${left}%`, width: `${width}%` }}
+                                    />
+                                );
+                            })}
+
+                            {/* Work order bands */}
+                            {workOrderBands.map(({ wo, start, end }) => {
+                                const left = toPct(start, winStart, winEnd);
+                                const width = toPct(end, winStart, winEnd) - left;
+                                const tooltip = (
+                                    <div className="space-y-1.5">
+                                        <div className="font-semibold text-white">{wo.workOrderNumber}</div>
+                                        <div className="text-slate-400 text-[11px] capitalize">{wo.workType}</div>
+                                        <div>
+                                            <span className="text-slate-500">Status </span>
+                                            <span className="capitalize">{wo.status.replace("_", " ")}</span>
+                                            {wo.isOverdue && <span className="ml-1.5 text-red-400">overdue</span>}
+                                        </div>
+                                        <div>
+                                            <span className="text-slate-500">Planned </span>
+                                            {fmtTs(wo.scheduledStart)} → {fmtTs(wo.scheduledEnd)}
+                                        </div>
+                                        {wo.actualStart && (
+                                            <div>
+                                                <span className="text-slate-500">Actual </span>
+                                                {fmtTs(wo.actualStart)}
+                                                {wo.actualEnd ? ` → ${fmtTs(wo.actualEnd)}` : " (ongoing)"}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                                return (
+                                    <div
+                                        key={wo.id}
+                                        className={cn(
+                                            "absolute top-0 bottom-0 cursor-pointer",
+                                            scopedWorkOrderIds.has(wo.id) ? "bg-amber-200" : "bg-amber-200",
+                                        )}
+                                        style={{ left: `${left}%`, width: `${width}%`, minWidth: "2px" }}
+                                        onMouseEnter={(e) => {
+                                            showTooltip(tooltip, e);
+                                            setHovered({ type: "workOrder", id: wo.id });
+                                        }}
+                                        onMouseLeave={() => {
+                                            hideTooltip();
+                                            setHovered(null);
+                                        }}
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelected({ type: "workOrder", id: wo.id });
+                                        }}
+                                    />
+                                );
+                            })}
+
+                            {/* Downtime bands */}
+                            {downtimeBands.map(({ dt, start, end }) => {
+                                const left = toPct(start, winStart, winEnd);
+                                const width = toPct(end, winStart, winEnd) - left;
+                                const tooltip = (
+                                    <div className="space-y-1.5">
+                                        <div className="font-semibold text-red-300">
+                                            {dt.reasonCode}
+                                            {dt.isOngoing && (
+                                                <span className="ml-1.5 text-[10px] text-red-400/80">ongoing</span>
+                                            )}
+                                        </div>
+                                        {dt.reasonDescription && (
+                                            <div className="text-slate-400 text-[11px]">{dt.reasonDescription}</div>
+                                        )}
+                                        <div>
+                                            <span className="text-slate-500">Start </span>
+                                            {fmtTs(dt.startedAt)}
+                                        </div>
+                                        <div>
+                                            <span className="text-slate-500">Duration </span>
+                                            {fmtDuration(dt.durationAtAsOf)}
+                                        </div>
+                                    </div>
+                                );
+                                return (
+                                    <div
+                                        key={dt.id}
+                                        className={cn(
+                                            "absolute top-0 bottom-0 cursor-pointer",
+                                            scopedDowntimeIds.has(dt.id) ? "bg-red-300" : "bg-red-600",
+                                        )}
+                                        style={{ left: `${left}%`, width: `${width}%`, minWidth: "2px" }}
+                                        onMouseEnter={(e) => {
+                                            showTooltip(tooltip, e);
+                                            setHovered({ type: "downtime", id: dt.id });
+                                        }}
+                                        onMouseLeave={() => {
+                                            hideTooltip();
+                                            setHovered(null);
+                                        }}
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelected({ type: "downtime", id: dt.id });
+                                        }}
+                                    />
+                                );
+                            })}
+                        </div>
+                        {/* end bands wrapper */}
+
                         {/* Axis */}
                         <div className="relative pointer-events-none" style={{ height: AXIS_H }}>
                             {ticks.map((tick) => {
@@ -1081,7 +1146,7 @@ export function Timeline({ className }: { className?: string }) {
                         {stories.map((story) => (
                             <div
                                 key={story.id}
-                                className="relative mx-1 bg-white/[0.035] rounded-sm"
+                                className="relative mx-1 bg-white/[0.035] rounded-sm pointer-events-none"
                                 style={{
                                     height: story.lanes.length * (story.barStyle === "bar" ? ROW_H : ROW_H_LINE),
                                     marginBottom: ROW_GAP,
@@ -1183,7 +1248,10 @@ export function Timeline({ className }: { className?: string }) {
                             {PLAYBACK_SPEEDS.map((speed) => (
                                 <button
                                     key={speed}
-                                    onClick={() => setPlaybackSpeed(speed as PlaybackSpeed)}
+                                    onClick={() => {
+                                        if (asOf === undefined) setAsOf(present);
+                                        setPlaybackSpeed(speed as PlaybackSpeed);
+                                    }}
                                     className={cn(
                                         "px-1 py-0.5 rounded text-[9px] font-semibold transition-colors",
                                         playbackSpeed === speed
@@ -1199,7 +1267,10 @@ export function Timeline({ className }: { className?: string }) {
                         {/* Reset to live */}
                         {asOf !== undefined && (
                             <button
-                                onClick={() => setAsOf(undefined)}
+                                onClick={() => {
+                                    setAsOf(undefined);
+                                    setPlaybackSpeed(1);
+                                }}
                                 className="text-[9px] font-semibold uppercase tracking-wide text-accent/80 hover:text-accent transition-colors"
                                 title="Reset to now"
                             >
