@@ -12,14 +12,26 @@ by panel KPIs and 3D highlights, not by the timeline itself.
 
 ---
 
+## Time values in `useTimelineStore`
+
+Three unix timestamps (seconds) represent "now" in different ways:
+
+| Name | Type | Description |
+|---|---|---|
+| `window.origin` | `number` | The moment the page was first loaded. Fixed for the session. Used as the anchor for the data window. |
+| `present` | `number` | Real-time "now", incrementing as wall-clock time passes. Centers the visible window on the timeline. |
+| `asOf` | `number \| undefined` | The user's chosen vantage point in time. `undefined` when the user has not seeked — in which case `present` is used as the effective time for all derived state. |
+
+The effective time used by snapshots, panel KPIs, and 3D highlights is always `asOf ?? present`.
+
+---
+
 ## asOf — the playhead
 
-`asOf` is a unix timestamp (seconds) stored in `useTimelineStore`.
+`asOf` is stored in `useTimelineStore` and starts as `undefined` (meaning "track present time").
 
-- On load it is initialised to `Date.now()` (the system clock).
 - The user can drag the playhead or click anywhere on the track to scrub to any time.
-- A **↺ now** reset button appears in the header whenever `asOf` differs from the
-  current system clock.
+- A **↺ now** reset button appears in the header whenever `asOf` is set, resetting it to `undefined`.
 - All derived state (snapshot, panel KPIs, 3D highlights) reacts to `asOf` changes.
 
 ---

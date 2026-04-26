@@ -18,10 +18,15 @@ interface TimelineStore {
     isLoading: boolean;
     loadSpan: (node: SceneGraphNode, siteId: string) => Promise<void>;
     window: Window; // Time window of the data set
-    home: number; // Time the user is set at by default
-    setHome: (t: number) => void;
+    present: number; // Real-time "now", advancing with the wall clock
+    setPresent: (t: number) => void;
     asOf: number | undefined; // Time the user has seeked to
     setAsOf: (t: number | undefined) => void;
+    isPlaying: boolean;
+    playbackSpeed: number; // virtual seconds advanced per real second (only affects asOf)
+    play: () => void; // snaps present to actual now, then resumes ticking
+    pause: () => void;
+    setPlaybackSpeed: (speed: number) => void;
 }
 
 //------------------------------------------------------------------------------
@@ -83,8 +88,13 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
         }
     },
     window: defaultWindow,
-    home: defaultWindow.origin,
-    setHome: (t) => set({ home: t }),
+    present: defaultWindow.origin,
+    setPresent: (t) => set({ present: t }),
     asOf: undefined,
     setAsOf: (t) => set({ asOf: t }),
+    isPlaying: true,
+    playbackSpeed: 1,
+    play: () => set({ isPlaying: true, present: Math.floor(Date.now() / 1000) }),
+    pause: () => set({ isPlaying: false }),
+    setPlaybackSpeed: (speed) => set({ playbackSpeed: speed }),
 }));

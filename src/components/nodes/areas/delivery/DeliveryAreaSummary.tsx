@@ -23,11 +23,11 @@ import type { AreaNode } from "@/content/type";
 export function DeliveryAreaSummary({ areaNode, className }: { areaNode: AreaNode; className?: string }) {
     const summary = useDeliverySummary();
     const asOf = useTimelineStore((s) => s.asOf);
-    const home = useTimelineStore((s) => s.home);
+    const present = useTimelineStore((s) => s.present);
     const siteId = useFactoryStore((s) => s.currentFactory?.scene_id ?? "");
 
     const { nextDue, isLoading } = summary;
-    const timeToNextDue = nextDue ? nextDue.requestedDeliveryDate - (asOf || home) : null;
+    const timeToNextDue = nextDue ? nextDue.requestedDeliveryDate - (asOf || present) : null;
 
     // Bin IDs — real bins from aisles if present, otherwise single zone fallback
     const { binIds, totalBins } = useMemo(() => {
@@ -39,8 +39,8 @@ export function DeliveryAreaSummary({ areaNode, className }: { areaNode: AreaNod
     const [occupancy, setOccupancy] = useState<Map<string, BinOccupancy[]>>(new Map());
     useEffect(() => {
         if (!siteId) return;
-        getBinOccupancy({ siteId, warehouseId: areaNode.hash, binIds, asOf: asOf || home }).then(setOccupancy);
-    }, [siteId, areaNode.hash, binIds, asOf, home]);
+        getBinOccupancy({ siteId, warehouseId: areaNode.hash, binIds, asOf: asOf || present }).then(setOccupancy);
+    }, [siteId, areaNode.hash, binIds, asOf, present]);
 
     const { occupiedBins, totalUnits } = useMemo(() => {
         let occupied = 0;

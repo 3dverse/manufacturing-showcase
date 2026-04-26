@@ -38,8 +38,8 @@ const EMPTY: DeliverySummary = {
 export function useDeliverySummary(): DeliverySummary {
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
-    const home = useTimelineStore((s) => s.home);
-    const targetAsOf = asOf || home;
+    const present = useTimelineStore((s) => s.present);
+    const targetAsOf = asOf || present;
     const isLoading = useTimelineStore((s) => s.isLoading);
 
     return useMemo(() => {

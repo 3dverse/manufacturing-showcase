@@ -59,7 +59,7 @@ const FactoryBuilder = () => {
     //--------------------------------------------------------------------------
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
-    const home = useTimelineStore((s) => s.home);
+    const present = useTimelineStore((s) => s.present);
 
     //--------------------------------------------------------------------------
     const shownLines = useMemo(() => {
@@ -114,10 +114,10 @@ const FactoryBuilder = () => {
         if (!span) return [];
         const currentlyDownCellIds = [...span.downtimeEvents.values()]
 
-            .filter((e) => downtimeAtAsOf(e, asOf || home))
+            .filter((e) => downtimeAtAsOf(e, asOf || present))
             .map((e) => e.workCenterId);
         return nodeList.filter(isCell).filter((n) => currentlyDownCellIds.includes(n.hash));
-    }, [span, asOf, home, nodeList]);
+    }, [span, asOf, present, nodeList]);
 
     const simulatedIncidentCells: CellNode[] = useMemo(() => {
         if (!activeUseCaseId) return [];

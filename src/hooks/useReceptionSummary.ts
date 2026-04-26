@@ -44,8 +44,8 @@ export function useReceptionSummary(): ReceptionSummary {
     const isLoading = useTimelineStore((s) => s.isLoading);
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
-    const home = useTimelineStore((s) => s.home);
-    const targetAsOf = asOf || home;
+    const present = useTimelineStore((s) => s.present);
+    const targetAsOf = asOf || present;
 
     //--------------------------------------------------------------------------
     // Memos

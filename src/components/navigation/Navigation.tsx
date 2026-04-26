@@ -36,15 +36,17 @@ export const Navigation = ({ className }: { className?: string }) => {
     //--------------------------------------------------------------------------
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
-    const home = useTimelineStore((s) => s.home);
+    const present = useTimelineStore((s) => s.present);
 
     //--------------------------------------------------------------------------
     const downtimeCellIds = useMemo(() => {
         if (!span) return new Set<string>();
         return new Set(
-            [...span.downtimeEvents.values()].filter((e) => downtimeAtAsOf(e, asOf || home)).map((e) => e.workCenterId),
+            [...span.downtimeEvents.values()]
+                .filter((e) => downtimeAtAsOf(e, asOf || present))
+                .map((e) => e.workCenterId),
         );
-    }, [span, asOf, home]);
+    }, [span, asOf, present]);
 
     const selectedAreaHash = useMemo(() => {
         if (!selectedNode || isFactory(selectedNode)) return undefined;

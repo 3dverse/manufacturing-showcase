@@ -1,5 +1,6 @@
 import {
     useContext,
+    useEffect,
     useMemo,
     useRef,
     useCallback,
@@ -63,6 +64,13 @@ const ZOOMS: { key: ZoomKey; label: string; days: number }[] = [
     { key: "3M", label: "3M", days: 90 },
     //{ key: "6M", label: "6M", days: 180 },
 ];
+
+//------------------------------------------------------------------------------
+// Playback speeds
+//------------------------------------------------------------------------------
+
+const PLAYBACK_SPEEDS = [1, 60, 300] as const;
+type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number];
 
 //------------------------------------------------------------------------------
 // Layout constants
@@ -341,12 +349,12 @@ function buildOperationsStory(ops: ProjectedOperation[]): Story {
     };
 }
 
-function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedWorkOrder[], home: number): Story {
+function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedWorkOrder[], present: number): Story {
     const dtBars: BarItem[] = events.map((dt) => ({
         id: dt.id,
         entityType: "downtime" as EntityType,
         start: dt.startedAt,
-        end: dt.endedAt ?? home,
+        end: dt.endedAt ?? present,
         className: cn(
             "border border-red-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-red-500/50",
             dt.isOngoing ? "bg-red-500/70" : "bg-red-500/55",
@@ -415,9 +423,9 @@ function buildStoppagesStory(events: ProjectedDowntime[], workOrders: ProjectedW
     };
 }
 
-function buildReceiptsStory(receipts: ProjectedReceipt[], home: number): Story {
+function buildReceiptsStory(receipts: ProjectedReceipt[], present: number): Story {
     const bars: BarItem[] = receipts.map((r) => {
-        const end = r.putawayDate ?? home;
+        const end = r.putawayDate ?? present;
         return {
             id: r.id,
             entityType: "receipt" as EntityType,
@@ -470,7 +478,7 @@ function buildReceiptsStory(receipts: ProjectedReceipt[], home: number): Story {
 function buildAllocationsStory(
     allocs: ProjectedAllocation[],
     demandType: "production_order" | "sales_order",
-    home: number,
+    present: number,
 ): Story {
     const filtered = allocs.filter((a) => a.demandType === demandType);
     const isRM = demandType === "production_order";
@@ -478,7 +486,7 @@ function buildAllocationsStory(
         id: a.id,
         entityType: "allocation" as EntityType,
         start: a.allocatedAt,
-        end: a.clearedAt ?? home,
+        end: a.clearedAt ?? present,
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50",
             a.status === "partial"
@@ -515,12 +523,12 @@ function buildAllocationsStory(
     };
 }
 
-function buildPickTasksStory(tasks: ProjectedPickTask[], home: number): Story {
+function buildPickTasksStory(tasks: ProjectedPickTask[], present: number): Story {
     const bars: BarItem[] = tasks.map((t) => ({
         id: t.id,
         entityType: "pickTask" as EntityType,
         start: t.createdAt,
-        end: t.pickedDate ?? home,
+        end: t.pickedDate ?? present,
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-amber-400/50",
             t.phase === "completed"
@@ -560,12 +568,12 @@ function buildPickTasksStory(tasks: ProjectedPickTask[], home: number): Story {
     };
 }
 
-function buildPutawayTasksStory(tasks: ProjectedPutawayTask[], home: number): Story {
+function buildPutawayTasksStory(tasks: ProjectedPutawayTask[], present: number): Story {
     const bars: BarItem[] = tasks.map((t) => ({
         id: t.id,
         entityType: "putawayTask" as EntityType,
         start: t.createdAt,
-        end: t.putawayDate ?? home,
+        end: t.putawayDate ?? present,
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-emerald-400/50",
             t.phase === "completed"
@@ -605,9 +613,9 @@ function buildPutawayTasksStory(tasks: ProjectedPutawayTask[], home: number): St
     };
 }
 
-function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[], home: number): Story {
+function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[], present: number): Story {
     const bars: BarItem[] = pos.map((po) => {
-        const end = po.receivedAt ?? po.expectedDeliveryDate ?? home;
+        const end = po.receivedAt ?? po.expectedDeliveryDate ?? present;
         return {
             id: po.id,
             entityType: "purchaseOrder" as EntityType,
@@ -670,7 +678,7 @@ function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[], home: number): 
 function buildStories(
     level: TimelineLevel,
     projection: AsOfProjection | null,
-    home: number,
+    present: number,
     areatype?: AreaType,
     nodeHash?: string,
 ): Story[] {
@@ -706,30 +714,30 @@ function buildStories(
                 case "delivery":
                     return [
                         buildSalesOrdersStory(so),
-                        buildAllocationsStory(alloc, "sales_order", home),
-                        ...(FULL_TIMELINE ? [buildPickTasksStory(picks, home)] : []),
+                        buildAllocationsStory(alloc, "sales_order", present),
+                        ...(FULL_TIMELINE ? [buildPickTasksStory(picks, present)] : []),
                     ];
                 case "reception":
                     return [
-                        buildPurchaseOrdersStory(purchaseOrders, home),
-                        buildReceiptsStory(rcp, home),
-                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, home)] : []),
+                        buildPurchaseOrdersStory(purchaseOrders, present),
+                        buildReceiptsStory(rcp, present),
+                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, present)] : []),
                     ];
                 case "storage":
-                    return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order", home)];
+                    return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order", present)];
                 case "quality":
                     return [
                         buildSalesOrdersStory(so),
-                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, home)] : []),
+                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, present)] : []),
                     ];
                 default:
                     return [buildSalesOrdersStory(so)];
             }
         case "line":
         case "cell":
-            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo, home)];
+            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo, present)];
         case "machine":
-            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo, home)];
+            return [buildProductionOrdersStory(po), buildOperationsStory(ops), buildStoppagesStory(dt, wo, present)];
     }
 }
 
@@ -850,7 +858,7 @@ export function Timeline({ className }: { className?: string }) {
 
     //--------------------------------------------------------------------------
     const { hovered } = useFocusStore();
-    const { asOf, setAsOf, home } = useTimelineStore();
+    const { asOf, setAsOf, present, isPlaying, play, pause, playbackSpeed, setPlaybackSpeed } = useTimelineStore();
     const { scope, level, isLoading } = useScope(selectedNode ?? null);
     const projection = useProjection(scope);
 
@@ -878,6 +886,22 @@ export function Timeline({ className }: { className?: string }) {
     const activeFocus = correlationEnabled ? hovered : null;
     const correlated = useCorrelation(projection, activeFocus);
 
+    // Tick at each second boundary on the wall clock.
+    // Uses getState() to avoid stale closure — no deps needed.
+    useEffect(() => {
+        let timeoutId: ReturnType<typeof setTimeout>;
+        const tick = () => {
+            const s = useTimelineStore.getState();
+            if (s.isPlaying) {
+                s.setPresent(Math.floor(Date.now() / 1000));
+                if (s.asOf !== undefined) s.setAsOf(s.asOf + s.playbackSpeed);
+            }
+            timeoutId = setTimeout(tick, 1000 - (Date.now() % 1000));
+        };
+        timeoutId = setTimeout(tick, 1000 - (Date.now() % 1000));
+        return () => clearTimeout(timeoutId);
+    }, []);
+
     const [zoom, setZoom] = useState<ZoomKey>("2W");
     const [tooltip, setTooltip] = useState<{ content: React.ReactNode; x: number; y: number } | null>(null);
 
@@ -887,17 +911,17 @@ export function Timeline({ className }: { className?: string }) {
     //--------------------------------------------------------------------------
     const zoomDef = ZOOMS.find((z) => z.key === zoom)!;
     const halfSecs = (zoomDef.days * 86400) / 2;
-    const winStart = home - zoomDef.days * 86400;
-    const winEnd = home + halfSecs;
+    const winStart = present - zoomDef.days * 86400;
+    const winEnd = present + halfSecs;
 
     //--------------------------------------------------------------------------
     const stories = useMemo(
-        () => (level ? buildStories(level, projection, home, areaType, selectedNode?.hash) : []),
-        [level, home, projection, areaType, selectedNode],
+        () => (level ? buildStories(level, projection, present, areaType, selectedNode?.hash) : []),
+        [level, present, projection, areaType, selectedNode],
     );
     const ticks = useMemo(() => buildTicks(winStart, winEnd, zoomDef.days), [winStart, winEnd, zoomDef.days]);
-    const homePct = toPct(home, winStart, winEnd);
-    const playheadPct = Math.max(0, Math.min(100, toPct(asOf || home, winStart, winEnd)));
+    const presentPct = toPct(present, winStart, winEnd);
+    const playheadPct = Math.max(0, Math.min(100, toPct(asOf || present, winStart, winEnd)));
     const totalH =
         AXIS_H +
         ROW_GAP +
@@ -1087,18 +1111,18 @@ export function Timeline({ className }: { className?: string }) {
                         ))}
 
                         {/* Future zone tint */}
-                        {homePct >= 0 && homePct <= 100 && (
+                        {presentPct >= 0 && presentPct <= 100 && (
                             <div
                                 className="absolute top-0 bottom-0 bg-white/[0.025] pointer-events-none"
-                                style={{ left: `${homePct}%`, right: 0 }}
+                                style={{ left: `${presentPct}%`, right: 0 }}
                             />
                         )}
 
                         {/* Now marker */}
-                        {homePct >= 0 && homePct <= 100 && (
+                        {presentPct >= 0 && presentPct <= 100 && (
                             <div
                                 className="absolute top-0 bottom-0 w-px bg-accent/50 pointer-events-none"
-                                style={{ left: `${homePct}%` }}
+                                style={{ left: `${presentPct}%` }}
                             >
                                 <span className="absolute top-1 left-1 text-[9px] font-bold text-accent whitespace-nowrap">
                                     NOW
@@ -1145,8 +1169,35 @@ export function Timeline({ className }: { className?: string }) {
                         ))}
                     </div>
                     <div className="flex-grow" />
-                    <div className="flex items-center gap-1.5">
-                        {asOf && (
+                    <div className="flex items-center gap-2">
+                        {/* Play / pause */}
+                        <button
+                            onClick={isPlaying ? pause : play}
+                            className="text-[11px] w-3.5 text-center text-slate-400 hover:text-slate-200 transition-colors"
+                            title={isPlaying ? "Pause" : "Play"}
+                        >
+                            {isPlaying ? "⏸" : "▶"}
+                        </button>
+
+                        <div className="flex items-center gap-0.5">
+                            {PLAYBACK_SPEEDS.map((speed) => (
+                                <button
+                                    key={speed}
+                                    onClick={() => setPlaybackSpeed(speed as PlaybackSpeed)}
+                                    className={cn(
+                                        "px-1 py-0.5 rounded text-[9px] font-semibold transition-colors",
+                                        playbackSpeed === speed
+                                            ? "bg-accent/20 text-accent"
+                                            : "text-slate-500 hover:text-slate-300",
+                                    )}
+                                >
+                                    {speed}×
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Reset to live */}
+                        {asOf !== undefined && (
                             <button
                                 onClick={() => setAsOf(undefined)}
                                 className="text-[9px] font-semibold uppercase tracking-wide text-accent/80 hover:text-accent transition-colors"
@@ -1155,8 +1206,9 @@ export function Timeline({ className }: { className?: string }) {
                                 ↺ now
                             </button>
                         )}
+
                         <span className="text-[10px] font-mono text-slate-300 tabular-nums">
-                            {fmtTs(asOf || home, {
+                            {fmtTs(asOf || present, {
                                 month: "short",
                                 day: "numeric",
                                 hour: "2-digit",

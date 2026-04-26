@@ -20,8 +20,8 @@ export function StorageOverlay({ areaNode }: { areaNode: AreaNode }) {
     // Store
     const siteId = useFactoryStore((s) => s.currentFactory?.scene_id ?? "");
     const asOf = useTimelineStore((s) => s.asOf);
-    const home = useTimelineStore((s) => s.home);
-    const targetAsOf = asOf || home;
+    const present = useTimelineStore((s) => s.present);
+    const targetAsOf = asOf || present;
 
     //--------------------------------------------------------------------------
     // Derive display nodes and WMS bin IDs.

@@ -34,7 +34,7 @@ export const GlobalOrderPanel = ({ className }: { className?: string }) => {
 
     //--------------------------------------------------------------------------
     const asOf = useTimelineStore((s) => s.asOf);
-    const home = useTimelineStore((s) => s.home);
+    const present = useTimelineStore((s) => s.present);
     const order = projection?.productionOrders[0] ?? null;
     const operation =
         projection?.operations.find((o) => o.id === snapshot?.productionOrders[0]?.currentOperationId) ?? null;
@@ -99,7 +99,7 @@ export const GlobalOrderPanel = ({ className }: { className?: string }) => {
                     </div>
                 </div>
             </div>
-            <GlobalOrderPanelHeader order={order} operation={operation} className="pb-4" asOf={asOf || home} />
+            <GlobalOrderPanelHeader order={order} operation={operation} className="pb-4" asOf={asOf || present} />
         </ViewerPanel>
     );
 };

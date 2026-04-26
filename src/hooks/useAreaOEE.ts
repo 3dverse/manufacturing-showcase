@@ -17,7 +17,7 @@ export function useAreaOEE(node: SceneGraphNode): number | undefined {
     //--------------------------------------------------------------------------
     // Store
     const asOf = useTimelineStore((s) => s.asOf);
-    const home = useTimelineStore((s) => s.home);
+    const present = useTimelineStore((s) => s.present);
     const span = useTimelineStore((s) => s.span);
 
     //--------------------------------------------------------------------------
@@ -34,7 +34,7 @@ export function useAreaOEE(node: SceneGraphNode): number | undefined {
             return op ? [op] : [];
         });
 
-        const completed = ops.filter((op) => op.actualEnd !== undefined && op.actualEnd <= (asOf || home));
+        const completed = ops.filter((op) => op.actualEnd !== undefined && op.actualEnd <= (asOf || present));
         if (completed.length === 0) return;
 
         const totalGood = completed.reduce((s, op) => s + (op.quantities.goodQuantity ?? 0), 0);
@@ -46,5 +46,5 @@ export function useAreaOEE(node: SceneGraphNode): number | undefined {
         const availability = totalPlanned > 0 ? Math.min(1, totalActual / totalPlanned) : 1;
 
         return Math.round(availability * quality * 100);
-    }, [span, asOf, home, node]);
+    }, [span, asOf, present, node]);
 }

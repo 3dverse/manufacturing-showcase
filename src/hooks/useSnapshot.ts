@@ -17,8 +17,8 @@ export function useSnapshot(scope: TimelineScope | null): {
     isLoading: boolean;
 } {
     const asOf = useTimelineStore((s) => s.asOf);
-    const home = useTimelineStore((s) => s.home);
-    const targetAsOf = asOf || home;
+    const present = useTimelineStore((s) => s.present);
+    const targetAsOf = asOf || present;
     const siteId = useFactoryStore((s) => s.currentFactory?.scene_id ?? "");
     const poCache = useDetailStore((s) => s.poCache);
     const opCache = useDetailStore((s) => s.opCache);

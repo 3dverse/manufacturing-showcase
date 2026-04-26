@@ -12,13 +12,13 @@ import { useCallback, useMemo } from "react";
 export const Daytime = () => {
     //--------------------------------------------------------------------------
     // Store
-    const { asOf, setAsOf, home } = useTimelineStore();
+    const { asOf, setAsOf, present } = useTimelineStore();
 
     //--------------------------------------------------------------------------
     // Memos
     const asOfDate = useMemo(() => {
-        return timeAgo(new Date((asOf || home) * 1000), undefined, { hour: "2-digit" });
-    }, [asOf, home]);
+        return timeAgo(new Date((asOf || present) * 1000), undefined, { hour: "2-digit" });
+    }, [asOf, present]);
 
     //--------------------------------------------------------------------------
     // Handlers

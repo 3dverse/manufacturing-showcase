@@ -126,8 +126,8 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
 
     //--------------------------------------------------------------------------
     const asOf = useTimelineStore((t) => t.asOf);
-    const home = useTimelineStore((t) => t.home);
-    const targetAsOf = asOf || home;
+    const present = useTimelineStore((t) => t.present);
+    const targetAsOf = asOf || present;
     const projection = useSpanProjection();
     const operation = useMemo(() => {
         return projection?.operations

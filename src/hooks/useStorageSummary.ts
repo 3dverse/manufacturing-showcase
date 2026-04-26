@@ -25,8 +25,8 @@ const EMPTY: StorageSummary = {
 export function useStorageSummary(): StorageSummary {
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
-    const home = useTimelineStore((s) => s.home);
-    const targetTime = asOf || home;
+    const present = useTimelineStore((s) => s.present);
+    const targetTime = asOf || present;
     const isLoading = useTimelineStore((s) => s.isLoading);
 
     return useMemo(() => {
