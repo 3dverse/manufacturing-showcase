@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { faAngleLeft } from "@fortawesome/pro-light-svg-icons";
+import { faAngleLeft } from "@fortawesome/pro-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import Button from "@/components/common/Button";
@@ -9,6 +9,8 @@ import { Icon } from "@/components/common/Icon";
 //------------------------------------------------------------------------------
 import { ScenarioContext } from "@/contexts/ScenariosContext";
 import { useNavigate } from "@/hooks/useNavigate";
+
+//------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -39,6 +41,7 @@ export const ScenarioStepper = () => {
         setScenarioAutoplaying,
         prevStep,
         nextStep,
+        clearActiveScenario,
     } = useContext(ScenarioContext);
     const navigate = useNavigate();
     const overlayRef = useRef<HTMLDivElement>(null);
@@ -55,7 +58,7 @@ export const ScenarioStepper = () => {
     const isFirstStep = activeStepIndex <= 0;
     const nextScenario = scenarioEntries[activeScenarioIndex + 1]?.[1];
     const isLastStep = Boolean(activeScenario?.steps.length && activeStepIndex === activeScenario.steps.length - 1);
-    const nextButtonLabel = isLastStep ? (nextScenario ? `Next Scenario: ${nextScenario.title}` : "Close") : "Next";
+    const nextButtonLabel = isLastStep ? (nextScenario ? nextScenario.title : "Close") : "Next";
 
     //--------------------------------------------------------------------------
     const popoverPosition = targetPosition
@@ -210,7 +213,7 @@ export const ScenarioStepper = () => {
                 }
             >
                 <div className="flex justify-between items-center mb-2">
-                    <p className="text-2xs uppercase tracking-wide text-guidance-600">
+                    <p className="grow text-2xs uppercase tracking-wide text-guidance-600">
                         {activeScenario?.title}. Step {activeStepIndex + 1}
                     </p>
                     <Button
@@ -226,12 +229,15 @@ export const ScenarioStepper = () => {
                     >
                         Autoplay
                     </Button>
+                    <Button variant="ghost" colorScheme="neutral" size="2xs" onClick={clearActiveScenario}>
+                        Close
+                    </Button>
                 </div>
                 <h2 className="text-lg font-semibold mb-1">{activeStep.title}</h2>
                 <div className="text-sm text-muted mb-7">{activeStep.description}</div>
                 <div className="flex gap-2">
                     {!isFirstStep && (
-                        <Button variant="ghost" colorScheme="guidance" size="sm" className="px-2" onClick={prevStep}>
+                        <Button variant="soft" colorScheme="guidance" size="sm" className="px-2" onClick={prevStep}>
                             <Icon icon={faAngleLeft} size="sm" />
                         </Button>
                     )}
@@ -239,15 +245,18 @@ export const ScenarioStepper = () => {
                         type="button"
                         colorScheme="guidance"
                         size="sm"
-                        className="relative w-full overflow-hidden"
+                        className={cn("relative w-full overflow-hidden text-left", isLastStep && "justify-start")}
                         onClick={nextStep}
                     >
                         <span
                             aria-hidden
-                            className="absolute inset-y-0 left-0 bg-guidance"
+                            className="absolute inset-y-0 left-0 bg-guidance-600"
                             style={{ width: `${autoplayProgress}%` }}
                         />
-                        <span className="relative">{nextButtonLabel}</span>
+                        <span className="relative">
+                            {isLastStep && <span className="text-xs block font-semibold">Next scenario</span>}
+                            <span>{nextButtonLabel}</span>
+                        </span>
                     </Button>
                 </div>
             </section>

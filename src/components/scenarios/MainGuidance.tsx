@@ -1,22 +1,31 @@
 //------------------------------------------------------------------------------
-import { useContext, useRef } from "react";
+import { useContext, useEffect, useState } from "react";
 
 //------------------------------------------------------------------------------
+import { ScenariosWheel } from "./ScenariosWheel";
 import { ScenarioContext } from "@/contexts/ScenariosContext";
 
 //------------------------------------------------------------------------------
 import { CONTACT_URL, LANDING_3DVERSE_URL } from "@/content/routes";
 import { METADATA } from "@/content/metadata";
-import { ScenariosWheel } from "./ScenariosWheel";
 
 //------------------------------------------------------------------------------
 export const MainGuidance = () => {
     //--------------------------------------------------------------------------
-    const ref = useRef<HTMLDivElement>(null);
-    const { scenarios, activeScenarioId } = useContext(ScenarioContext);
+    const { scenarios, activeScenarioId, scenarioActivatedAt } = useContext(ScenarioContext);
+    const [isRetracting, setIsRetracting] = useState(false);
     const activeScenario = activeScenarioId ? scenarios[activeScenarioId] : undefined;
 
-    // starting:translate-y-[calc(100%+2rem)] translate-y-full hover:translate-y-0 transition-transform duration-200
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        if (!scenarioActivatedAt) return;
+
+        setIsRetracting(true);
+        const timeout = window.setTimeout(() => setIsRetracting(false), 1000);
+
+        return () => window.clearTimeout(timeout);
+    }, [scenarioActivatedAt]);
+
     //--------------------------------------------------------------------------
     return (
         <aside
@@ -24,9 +33,9 @@ export const MainGuidance = () => {
             className={`
                 group fixed bottom-0
                 shadow-[0_-4px_32px_-1px_color-mix(in_oklch,var(--color-accent-200)_20%,transparent)] z-100
+                ${isRetracting ? "pointer-events-none" : ""}
             `}
             {...(activeScenario && { "data-current-scenario": true })}
-            ref={ref}
         >
             <div
                 className={`
