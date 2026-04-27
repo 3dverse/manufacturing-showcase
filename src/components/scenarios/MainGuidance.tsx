@@ -2,20 +2,18 @@
 import { useContext, useRef } from "react";
 
 //------------------------------------------------------------------------------
-import Button from "@/components/common/Button";
-
-//------------------------------------------------------------------------------
 import { ScenarioContext } from "@/contexts/ScenariosContext";
 
 //------------------------------------------------------------------------------
 import { CONTACT_URL, LANDING_3DVERSE_URL } from "@/content/routes";
 import { METADATA } from "@/content/metadata";
+import { ScenariosWheel } from "./ScenariosWheel";
 
 //------------------------------------------------------------------------------
 export const MainGuidance = () => {
     //--------------------------------------------------------------------------
     const ref = useRef<HTMLDivElement>(null);
-    const { scenarios, activeScenarioId, requestIncidentFocus, clearActiveScenario } = useContext(ScenarioContext);
+    const { scenarios, activeScenarioId } = useContext(ScenarioContext);
     const activeScenario = activeScenarioId ? scenarios[activeScenarioId] : undefined;
 
     // starting:translate-y-[calc(100%+2rem)] translate-y-full hover:translate-y-0 transition-transform duration-200
@@ -33,7 +31,7 @@ export const MainGuidance = () => {
             <div
                 className={`
                     absolute bottom-0 left-0 h-18 w-screen grid grid-cols-3 items-center px-4 bg-slate-0 text-default
-                    translate-y-0 group-hover:translate-y-0 transition-transform duration-200
+                    translate-y-full group-hover:translate-y-0 transition-transform duration-200
                 `}
             >
                 <div className="flex flex-col">
@@ -52,27 +50,9 @@ export const MainGuidance = () => {
                         </div>
                     </a>
                 </div>
-                {/* <div className="relative flex justify-center items-end h-full">
-                    <div className="absolute bottom-0 w-full max-w-150 translate-y-5">
-                        <ScenariosWheel />
-                    </div>
-                </div> */}
-                <div className="flex justify-start mt-1">
-                    {activeScenario ? (
-                        <Button onClick={clearActiveScenario} variant="ghost" size="sm" className="rounded-full">
-                            Quit scenario
-                        </Button>
-                    ) : (
-                        <Button
-                            onClick={() => requestIncidentFocus()}
-                            colorScheme="guidance"
-                            size="sm"
-                            className="rounded-full"
-                        >
-                            Simulate incident scenario
-                        </Button>
-                    )}
-                </div>
+
+                <ScenariosWheel />
+
                 <div className="flex justify-end">
                     <a
                         href={CONTACT_URL}
