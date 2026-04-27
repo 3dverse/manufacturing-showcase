@@ -40,16 +40,20 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                 id: "step_1",
                 title: "Hypervison",
                 circleSize: 500,
+                offsetX: 50,
+                offsetY: 100,
                 description: <p>Follow in real time your order planning...</p>,
                 route: "/",
-                selector: "[data-scenario=maintenance-step-1]",
+                selector: "[data-scenario=incident-step-1]",
             },
             {
                 id: "step_2",
                 title: "Incident reported",
                 circleSize: 300,
                 incident: {
-                    message: "Incident lorem ipsum dolor sit amet...",
+                    message: "The drilling machine is not working.",
+                    title: "The drilling machine is not working.",
+                    warningMessage: "Incident lorem ipsum dolor sit amet...",
                     actions: [
                         {
                             label: "Stop machine",
@@ -66,14 +70,14 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                 description: <p>Incident details...</p>,
                 route: "/",
                 // beforeStep: showIncident({ id: "incident_1", orderRef: "SO 000022", startDateIso: "2026-04-17T09:30:00" }),
-                selector: "[data-scenario=maintenance-step-2]",
+                selector: "[data-scenario=incident-step-2]",
             },
             {
                 id: "step_3",
                 title: "Incident machine",
                 description: <p>Machine details...</p>,
                 route: "/phone-factory/ec07e887",
-                selector: "[data-scenario=maintenance-step-3]",
+                selector: "[data-scenario=incident-step-3]",
             },
         ],
     },
@@ -82,14 +86,30 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
         title: "Predictive maintenance",
         description: "Simulate a predictive maintenance on Product A drilling operations.",
         image: "/scenarios/scenario_2.png",
-        steps: [],
+        steps: [
+            {
+                id: "step_1",
+                title: "Predictive maintenance",
+                description: <p>Predictive maintenance details...</p>,
+                route: "/",
+                selector: "[data-scenario=predictive-maintenance-step-1]",
+            },
+        ],
     },
     planned_maintenance: {
         id: "planned_maintenance",
         title: "Planned maintenance",
         description: "Simulate a planned maintenance on Product A drilling operations.",
         image: "/scenarios/scenario_3.png",
-        steps: [],
+        steps: [
+            {
+                id: "step_1",
+                title: "Planned maintenance",
+                description: <p>Planned maintenance details...</p>,
+                route: "/",
+                selector: "[data-scenario=planned-maintenance-step-1]",
+            },
+        ],
     },
 };
 

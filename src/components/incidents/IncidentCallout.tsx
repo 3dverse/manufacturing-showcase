@@ -9,7 +9,7 @@ export const IncidentCallout = ({ incident }: { incident: ScenarioIncident }) =>
     //--------------------------------------------------------------------------
     return (
         <div
-            data-scenario="maintenance-step-2"
+            data-scenario="incident-step-2"
             className="relative rounded-md border border-warning-400/70 bg-slate-0/95 px-3 py-2 shadow-lg starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400"
         >
             <p className="text-xs font-semibold text-muted">{incident.title}</p>

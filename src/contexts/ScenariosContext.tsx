@@ -1,4 +1,4 @@
-import { createContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useEffect, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 
 import { FIRST_SCENARIO_ID, SCENARIOS } from "@/content/scenarios/scenarios";
 import { useNavigationStore } from "@/store/useNavigationStore";
@@ -13,8 +13,10 @@ type ScenarioContextType = {
     activeStep?: ScenarioStep;
     scenarioActivatedAt?: number;
     pendingIncidentFocusScenarioId?: string;
+    isScenarioAutoplaying: boolean;
     setGuidanceVisible: (visible: boolean) => void;
     setTutorialMode: (active: boolean) => void;
+    setScenarioAutoplaying: Dispatch<SetStateAction<boolean>>;
     toggleGuidanceVisibility: () => void;
     toggleTutorialMode: () => void;
     activateScenario: (scenarioId: string) => void;
@@ -61,6 +63,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
         hasGuidanceQuery() ? Date.now() : undefined,
     );
     const [pendingIncidentFocusScenarioId, setPendingIncidentFocusScenarioId] = useState<string | undefined>();
+    const [isScenarioAutoplaying, setScenarioAutoplaying] = useState(false);
     const activeScenario = activeScenarioId ? SCENARIOS[activeScenarioId] : undefined;
     const activeStep = activeScenario?.steps.find((step) => step.id === activeStepId);
 
@@ -93,8 +96,10 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
             activeStep,
             scenarioActivatedAt,
             pendingIncidentFocusScenarioId,
+            isScenarioAutoplaying,
             setGuidanceVisible,
             setTutorialMode,
+            setScenarioAutoplaying,
             toggleGuidanceVisibility: () => setGuidanceVisible((current) => !current),
             toggleTutorialMode: () => setTutorialMode((current) => !current),
             activateScenario: (scenarioId: string) => {
@@ -136,7 +141,14 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
                 }
 
                 const nextScenarioId = getNextScenarioId(activeScenarioId);
-                if (!nextScenarioId) return;
+                if (!nextScenarioId) {
+                    setActiveScenarioId(undefined);
+                    setActiveStepId(undefined);
+                    setScenarioActivatedAt(undefined);
+                    setPendingIncidentFocusScenarioId(undefined);
+                    setScenarioAutoplaying(false);
+                    return;
+                }
                 const firstNextScenarioStep = SCENARIOS[nextScenarioId]?.steps[0];
 
                 navigateToStepRoute(firstNextScenarioStep);
@@ -149,6 +161,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
                 setActiveStepId(undefined);
                 setScenarioActivatedAt(undefined);
                 setPendingIncidentFocusScenarioId(undefined);
+                setScenarioAutoplaying(false);
             },
             requestIncidentFocus: (scenarioId?: string) => {
                 setPendingIncidentFocusScenarioId(scenarioId ?? activeScenarioId);
@@ -163,6 +176,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
             activeStep,
             scenarioActivatedAt,
             pendingIncidentFocusScenarioId,
+            isScenarioAutoplaying,
         ],
     );
 

@@ -66,13 +66,13 @@ export const MainGuidance = () => {
             </div>
             <header
                 className={`
-                        fixed bottom-0 left-1/2 -translate-x-1/2 flex items-center w-fit justify-between gap-2 p-2 pb-1 bg-slate-0 rounded-t-[1.9rem] [corner-shape:round]
-                        before:content-[''] before:absolute before:bottom-0 before:left-0 before:-translate-x-full before:w-5 before:h-5 before:bg-slate-50 before:rounded-tl-4xl before:[corner-shape:scoop]
-                        after:content-[''] after:absolute after:bottom-0 after:right-0 after:translate-x-full after:w-5 after:h-5 after:bg-slate-50 after:rounded-tr-4xl after:[corner-shape:scoop]
-                        group-data-current-use-case:pl-4
-                        transition-all duration-200
-                        shadow-[0_4px_20px_10px_#ffffff30]
-                    `}
+                    fixed bottom-0 left-1/2 -translate-x-1/2 flex items-center w-fit justify-between gap-2 p-2 pb-1 bg-slate-0 rounded-t-[1.9rem] [corner-shape:round] cursor-pointer
+                    before:content-[''] before:absolute before:bottom-0 before:left-0 before:-translate-x-full before:w-5 before:h-5 before:bg-slate-50 before:rounded-tl-4xl before:[corner-shape:scoop]
+                    after:content-[''] after:absolute after:bottom-0 after:right-0 after:translate-x-full after:w-5 after:h-5 after:bg-slate-50 after:rounded-tr-4xl after:[corner-shape:scoop]
+                    group-data-current-use-case:pl-4
+                    transition-all duration-200
+                    shadow-[0_4px_20px_10px_#ffffff30]
+                `}
             >
                 {activeScenario ? (
                     <div className="flex flex-col text-center px-2">

@@ -50,7 +50,7 @@ export default function HomePage() {
 
                 <ul className="flex flex-col gap-3 lg:gap-6 bg-slate-100 px-4 md:px-8 lg:px-10 py-4 md:py-6 lg:py-9 rounded-t-xl lg:rounded-t-3xl grow overflow-y-auto">
                     {factories.map((factoryItem, index) => (
-                        <li key={factoryItem.slug} data-scenario={index === 0 && "maintenance-step-1"}>
+                        <li key={factoryItem.slug} data-scenario={index === 0 && "incident-step-1"}>
                             <FactoryItem factoryItem={factoryItem} />
                             {factoryItem.enabled && (
                                 <div className="bg-slate-50 -mt-2 pt-5 p-3 rounded-b-md">

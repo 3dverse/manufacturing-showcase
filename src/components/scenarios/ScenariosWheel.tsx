@@ -10,7 +10,16 @@ import { cn } from "@/utils/cn";
 //------------------------------------------------------------------------------
 export const ScenariosWheel = () => {
     //--------------------------------------------------------------------------
-    const { scenarios, activeScenarioId, activateScenario } = useContext(ScenarioContext);
+    const { scenarios, activeScenarioId, activateScenario, clearActiveScenario } = useContext(ScenarioContext);
+
+    //--------------------------------------------------------------------------
+    const toggleScenario = (scenarioId: string) => {
+        if (activeScenarioId === scenarioId) {
+            clearActiveScenario();
+        } else {
+            activateScenario(scenarioId);
+        }
+    };
 
     //--------------------------------------------------------------------------
     return (
@@ -29,7 +38,7 @@ export const ScenariosWheel = () => {
                                 "pb-12 rotate-30 -translate-x-1/2 origin-bottom-left before:left-0 [&_p]:rotate-20",
                             activeScenarioId === scenarioId && "text-slate-0 before:bg-guidance-600",
                         )}
-                        onClick={() => activateScenario(scenarioId)}
+                        onClick={() => toggleScenario(scenarioId)}
                     >
                         <p className="relative z-10">{scenario.title}</p>
                     </button>
