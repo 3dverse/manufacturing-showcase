@@ -66,16 +66,16 @@ Two categories of parameters exist:
 
 | Parameter | Default | Description |
 |---|---|---|
-| `productionOrderCount` | `40` | Total number of PO instances to place across all production locations |
-| `downtimeEventCount` | `20` | Total number of downtime events to distribute across all operations |
+| `maxProductionOrderCount` | `40` | Total number of PO instances to place across all production locations |
 | `unitsPerHour` | `30` | Throughput rate shared by all operations; used to compute stagger and back-calculate batch qty in fill pass |
-| `operationDurationMinutes` | `240` | Wall-clock duration of each operation; primary PO sizing input |
+| `minOperationWorkingMinutes` | `320` | Minimum working-time duration of a PO (~1/3 of a working day) |
+| `maxOperationWorkingMinutes` | `3840` | Maximum working-time duration of a PO (~4 working days) |
 | `yieldRate` | `0.95` | Median yield across all operations; per-operation effective yield = `yieldRate + U(-(1-yieldRate), +(1-yieldRate))` |
 
 `productionOrderCount` is distributed across locations proportionally to the number of
-work centers (more complex lines get more POs). `downtimeEventCount` is distributed
-across operations using a 1-in-4 roll per operation, capped at the configured total;
-if the roll-based count falls short it is padded, if it exceeds it the excess is dropped.
+work centers (more complex lines get more POs).
+
+Each PO draws its `targetWorkingMinutes` independently from `U(minOperationWorkingMinutes, maxOperationWorkingMinutes)`. This produces natural variety: some POs finish within a single shift, others span a weekend or longer.
 
 #### EAM
 
@@ -138,22 +138,25 @@ Every instance of a given PO template has the same set of operations — no step
 skipped or added.
 
 **Pipeline scheduling** — operations run concurrently in pipeline fashion. All operations
-share the same `unitsPerHour` (global config) and therefore have identical wall-clock
+share the same `unitsPerHour` (global config) and therefore have identical working-time
 duration. Each operation processes a different item in the batch at any given moment:
 op[0] is on item N, op[1] is on item N−1, op[2] is on item N−2, etc.
 
 Scheduling math:
 ```
-cycleTime   = 60 / unitsPerHour              (minutes per item)
-stagger     = setupMinutes + cycleTime       (time until first item flows to next op)
-op[i].start = op[0].start + i × stagger
-op[i].end   = op[i].start + operationDurationMinutes   (wall-clock)
+cycleTime          = 60 / unitsPerHour                    (working minutes per item)
+stagger            = setupMinutes + cycleTime             (working minutes until first item flows to next op)
+targetWorkingMin   = U(minOperationWorkingMinutes, maxOperationWorkingMinutes)   (per PO)
+
+op[i].start = addWorkingMinutes(op[0].start, i × stagger)
+op[i].end   = addWorkingMinutes(op[i].start, targetWorkingMin)   (working-time duration)
 po.start    = op[0].start
 po.end      = op[last].end
 ```
 
-`operationDurationMinutes` is wall-clock time. Operations may span multiple shifts or
-overnight periods — this is expected and fine. Batch size is not set here; it is
+`targetWorkingMin` is working time — nights, weekends, and any planned stoppages (work
+orders, downtime events) are not counted. A PO with a long `targetWorkingMin` will
+naturally span multiple calendar days or straddle a weekend. Batch size is
 back-calculated in the fill pass from net productive time (see §3.1).
 
 ### 1.3 Downtime event templates _(generation-only)_
@@ -331,11 +334,18 @@ This is the primary timeline. Everything else is anchored to it.
 
 For each production location (locations whose name contains "production"):
 
-1. Starting from `windowStart`, walk the timeline forward slot by slot.
-2. Alternate between **maintenance gaps** and **Production Order slots**.
-3. For each Production Order slot, schedule **Operations** pipeline-style across work centers.
+1. Starting from `windowStart` (snapped to the next shift start), place POs back-to-back.
+2. For each PO slot, draw `targetWorkingMinutes` from the configured range and schedule
+   **Operations** pipeline-style across work centers using working-time arithmetic.
+3. After the operations are placed, scan the PO's wall-clock span for any PM work orders
+   that have become due; inject them directly **inside** the PO (see §2.3).
+4. Advance the cursor to `clampToShift(po.end)` and repeat.
 
-The result is a dense, non-overlapping sequence of POs covering the full window.
+The result is a dense, non-overlapping sequence of POs covering the full window. There
+are no dedicated maintenance gaps between POs — work orders live inside production
+order spans. A PO may start on any working day and end on a different calendar day,
+crossing overnight gaps or weekends; only the accumulated working time determines when
+the PO is done.
 
 ### 2.2 ERP orders
 
@@ -347,8 +357,17 @@ Sales Orders and Purchase Orders are placed relative to the MES timeline:
 
 ### 2.3 EAM activity
 
-- **Predictive Maintenance Work Orders** — for each asset, walk `[windowStart, now]` stepping by `frequencyDays` from the plan. Each step instantiates one WO from the shared predictive-maintenance template, placed at that date with `estimatedDurationHours` duration. Past WOs are `completed`; the next upcoming one is `planned`.
-- Downtime events (from §1.3 templates) are injected into operations during this same pass (see §2.1).
+- **Predictive Maintenance Work Orders** — for each asset, a PM is due every
+  `frequencyDays` starting from a staggered offset within `windowStart`. When a PM
+  comes due at a date that falls inside a PO's wall-clock span, the WO is placed at the
+  next shift start at or after the due date (still within the PO span). The WO occupies
+  `pmDurationHours` hours of working time, during which the production line is stopped.
+  If the due date falls between two POs (e.g. over a weekend), the WO is placed at the
+  next shift start regardless. In both cases, the WO's working time is deducted from the
+  PO's net productive minutes when computing produced quantities (§3.1).
+- Each asset's `nextDue` is advanced by `frequencyDays` after each placed WO.
+- Downtime events (from §1.3 templates) are injected into operations during the same
+  pass (see §2.1).
 
 ### 2.4 WMS movement events
 
@@ -389,19 +408,21 @@ Mirror the MES operations onto the APS plan with the same time slots. Add capaci
 
 ### 3.1 MES quantities
 
-Batch size is derived from how much productive time actually occurred within the
-operation's wall-clock span.
+Batch size is derived at the **PO level** from net productive time — the working time
+remaining after all stoppages (nights/weekends, work orders, downtime events) are
+removed.
 
-For each operation:
 ```
-effectiveUnitsPerHour = unitsPerHour × U(0.9, 1.1)   (sampled once per PO, shared by all ops)
-shiftMinutes          = working minutes within [op.start, op.end]  (excl. nights/weekends)
-downtimeMinutes       = sum of all downtime event durations on this operation
-netMinutes            = shiftMinutes - downtimeMinutes
-producedQty           = netMinutes × effectiveUnitsPerHour / 60
+effectiveUnitsPerHour = unitsPerHour × U(0.9, 1.1)      (sampled once per PO, shared by all ops)
+shiftMinutes          = workingMinutes(po.start, po.end) (excl. nights/weekends)
+woMinutes             = working minutes consumed by WOs whose span overlaps this PO
+downtimeMinutes       = sum of all downtime event durations on all operations in this PO
+netMinutes            = shiftMinutes - woMinutes - downtimeMinutes
+producedQty           = floor(netMinutes × effectiveUnitsPerHour / 60)
 ```
 
-All operations in the same PO produce the same `producedQty` (same duration, same rate).
+All operations in the same PO share the same `producedQty` (identical effective duration
+and rate).
 
 ```
 effectiveYield = yieldRate + U(-(1-yieldRate), +(1-yieldRate))   (sampled per operation)
@@ -410,8 +431,8 @@ scrapQty       = producedQty - goodQty
 ```
 
 - **Past POs** (`po.end < now`): full calculation above.
-- **In-progress POs** (`po.start < now < po.end`): same formula but using
-  `[op.start, now]` as the window — partial quantity proportional to elapsed productive time.
+- **In-progress POs** (`po.start < now < po.end`): same formula but clamp the window to
+  `[po.start, now]` — partial quantity proportional to elapsed productive time.
 - **Future POs** (`po.start > now`): no produced qty yet; `plannedQty` is computed
   the same way as a projection.
 
@@ -420,19 +441,20 @@ scrapQty       = producedQty - goodQty
 Derived directly from the same numbers used in §3.1 — not generated independently:
 
 ```
-plannedMinutes    = shiftMinutes                          (working time in the window)
-downtimeMinutes   = sum of downtime event durations
-runtimeMinutes    = plannedMinutes - downtimeMinutes
+plannedMinutes    = shiftMinutes                          (working time in [po.start, po.end])
+stoppageMinutes   = woMinutes + downtimeMinutes           (WO time + unplanned downtime)
+runtimeMinutes    = plannedMinutes - stoppageMinutes
 
 Availability  = runtimeMinutes / plannedMinutes
 Performance   = 1.0   (by construction — unitsPerHour is the ideal rate, net time gives ideal output)
-Quality       = goodQty / producedQty                    (TBD — yield curve per op type)
+Quality       = goodQty / producedQty
 OEE           = Availability × Performance × Quality
 ```
 
-Performance is 1.0 because `producedQty` is already computed from net productive time
-at the ideal rate — there is no separate "actual vs ideal speed" dimension. Only
-availability losses (downtime + shift gaps) and quality losses (scrap) affect OEE.
+Performance is 1.0 because `producedQty` is computed from net productive time at the
+ideal rate. Availability losses come from **three sources**: off-shift gaps (nights/
+weekends already excluded from `shiftMinutes`), planned stoppages (WOs), and unplanned
+stoppages (downtime events). Quality losses come from scrap.
 
 ### 3.3 EAM
 
@@ -615,7 +637,8 @@ All statuses are fixed at their terminal (completed) value — see §Core Philos
 - [x] One PO template per production location, named after the location.
 - [x] `producedQty` variance: each PO instance draws an `effectiveUnitsPerHour` = `unitsPerHour × U(0.9, 1.1)` (uniform ±10%). Used in place of `unitsPerHour` for that PO's quantity calculation.
 - [x] Shift configuration is configurable. Default: two shifts Mon–Fri, shift 1 06:00–14:00, shift 2 14:00–22:00.
-- [x] Gap sizing: gaps only appear when a PM is due; duration = `pmDurationHours` from the maintenance plan config.
+- [x] PO duration is variable working time drawn from `U(minOperationWorkingMinutes, maxOperationWorkingMinutes)`, replacing the old fixed `operationDurationMinutes`. POs may span multiple days or straddle weekends.
+- [x] Work orders occur inside PO spans, not between them. The PO's produced quantity accounts for WO time as stoppage. There are no dedicated maintenance gaps.
 - [x] Yield: single configurable `yieldRate` (default 0.95). Per-operation effective yield = `yieldRate + U(-(1-yieldRate), +(1-yieldRate))`. The global rate is the median; variance scales with the defect rate.
 - [x] Nonconformances are QMS-only entities, generated independently of MES scrap. Rate and MES linkage deferred pending QMS API schema review.
 - [x] Item model: three types (FG, RM, WIP); WIP auto-derived from routing; operation inputs/outputs assigned per step; full inventory movement log with `asOf` projection. See §1.5a.

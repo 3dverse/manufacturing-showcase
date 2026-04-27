@@ -453,7 +453,7 @@ function buildPickTasksStory(tasks: ProjectedPickTask[], present: number): Story
     const bars: BarItem[] = tasks.map((t) => ({
         id: t.id,
         entityType: "pickTask" as EntityType,
-        start: t.createdAt,
+        start: t.startedAt ?? t.createdAt,
         end: t.pickedDate ?? present,
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-amber-400/50",
@@ -498,7 +498,7 @@ function buildPutawayTasksStory(tasks: ProjectedPutawayTask[], present: number):
     const bars: BarItem[] = tasks.map((t) => ({
         id: t.id,
         entityType: "putawayTask" as EntityType,
-        start: t.createdAt,
+        start: t.startedAt ?? t.createdAt,
         end: t.putawayDate ?? present,
         className: cn(
             "hover:ring-2 hover:ring-offset-0 hover:ring-emerald-400/50",

@@ -13,7 +13,7 @@
 import type { RNG } from "../rng";
 import type { GeneratorConfig } from "../config";
 import type { Dataset, OEEBucket, WorkCenterTimeline } from "../types";
-import type { Phase1Result, FGRoutingTemplate } from "./phase1";
+import type { Phase1Result } from "./phase1";
 import type { Phase2Result, PlacedPO, PlacedOperation, PlacedMaintenanceWO } from "./phase2";
 import { workingMinutes, shiftCoverage, addDays } from "../shifts";
 
@@ -40,26 +40,38 @@ function addDaysToDate(d: Date, n: number): Date {
 const TECHNICIANS = ["J. Smith", "M. Johnson", "P. Williams", "K. Brown", "C. Davis"];
 
 // ---------------------------------------------------------------------------
-// MES quantities for one operation
+// MES quantities for one production order (stoppage-aware)
 // ---------------------------------------------------------------------------
 
-function computeOpQty(
-    op: PlacedOperation,
+function computePOQty(
     po: PlacedPO,
+    wosByPO: Map<string, PlacedMaintenanceWO[]>,
     config: GeneratorConfig,
     rng: RNG,
-): { producedQty: number; goodQty: number; scrapQty: number; effectiveYield: number } {
-    const plannedRunMinutes = config.operationDurationMinutes - op.setupMinutes;
-    const plannedQty = Math.floor((plannedRunMinutes * po.effectiveUnitsPerHour) / 60);
+): { plannedQty: number; producedQty: number; goodQty: number; scrapQty: number; effectiveYield: number } {
+    // Planned qty: based purely on the PO's target working minutes (before any stoppages)
+    const plannedQty = Math.floor((po.targetWorkingMinutes * po.effectiveUnitsPerHour) / 60);
 
-    // Yield: global median ± defectRate (see plan §3.1)
+    // Net working time: subtract WO minutes and downtime minutes
+    const shiftMins = workingMinutes(po.start, po.end, config.shifts, config.workDays);
+    const woMins = (wosByPO.get(po.id) ?? []).reduce(
+        (s, wo) => s + workingMinutes(wo.start, wo.end, config.shifts, config.workDays),
+        0,
+    );
+    const downtimeMins = po.operations.reduce(
+        (s, op) => s + op.downtimes.reduce((ss, dt) => ss + dt.durationMinutes, 0),
+        0,
+    );
+    const netMins = Math.max(0, shiftMins - woMins - downtimeMins);
+    const producedQty = Math.floor((netMins * po.effectiveUnitsPerHour) / 60);
+
+    // Yield: global median ± defectRate (sampled once per PO)
     const defectRate = 1 - config.yieldRate;
     const effectiveYield = Math.min(1, Math.max(0, config.yieldRate + rng.nextFloat(-defectRate, defectRate)));
-    const goodQty = plannedQty;
-    const scrapQty = Math.floor(plannedQty * (1 - effectiveYield));
-    const producedQty = goodQty + scrapQty;
+    const goodQty = Math.floor(producedQty * effectiveYield);
+    const scrapQty = producedQty - goodQty;
 
-    return { producedQty, goodQty, scrapQty, effectiveYield };
+    return { plannedQty, producedQty, goodQty, scrapQty, effectiveYield };
 }
 
 // ---------------------------------------------------------------------------
@@ -118,7 +130,7 @@ export function fillDataset(
     rng: RNG,
 ): Dataset {
     const { now, siteId } = config;
-    const { placedPOs, allPlacedWOs } = timeline;
+    const { placedPOs, allPlacedWOs, wosByPO } = timeline;
 
     const windowStart = new Date(now);
     windowStart.setMonth(windowStart.getMonth() - config.monthsBack);
@@ -159,22 +171,20 @@ export function fillDataset(
         const status = poStatus(po);
         const opIds: string[] = [];
 
-        // All ops in same PO use the same effective UPH; take the first op's qty as the PO qty
-        let poProducedQty = 0;
-        let poGoodQty = 0;
+        // PO-level quantity (all ops share the same produced/good/scrap qty)
+        const {
+            plannedQty,
+            producedQty: poProducedQty,
+            goodQty: poGoodQty,
+            scrapQty: poScrapQty,
+            effectiveYield: poYield,
+        } = computePOQty(po, wosByPO, config, rng);
 
         for (const op of po.operations) {
-            const { producedQty, goodQty, scrapQty, effectiveYield } = computeOpQty(op, po, config, rng);
-            opYields.set(op.id, effectiveYield);
-
-            if (op === po.operations[0]) {
-                poProducedQty = producedQty;
-                poGoodQty = goodQty;
-            }
+            opYields.set(op.id, poYield);
 
             const opSt = opStatus(op);
             const opIndex = po.operations.indexOf(op);
-            const plannedRunMinutes = config.operationDurationMinutes - op.setupMinutes;
             const actualRunMinutes = workingMinutes(op.start, op.end, config.shifts, config.workDays);
             mesOperations.set(op.id, {
                 id: op.id,
@@ -193,24 +203,18 @@ export function fillDataset(
                 actualEnd: toUnix(op.end),
                 progressPercent: 100,
                 plannedSetupTimeMinutes: op.setupMinutes,
-                plannedRunTimeMinutes: plannedRunMinutes,
+                plannedRunTimeMinutes: po.targetWorkingMinutes,
                 actualSetupTimeMinutes: op.setupMinutes,
                 actualRunTimeMinutes: actualRunMinutes,
                 quantities: {
-                    plannedQuantity: Math.floor((plannedRunMinutes * po.effectiveUnitsPerHour) / 60),
-                    producedQuantity: producedQty,
-                    goodQuantity: goodQty,
-                    scrapQuantity: scrapQty,
+                    plannedQuantity: plannedQty,
+                    producedQuantity: poProducedQty,
+                    goodQuantity: poGoodQty,
+                    scrapQuantity: poScrapQty,
                     uom: "pcs",
                 },
-                inputs: buildOpInputs(po.itemId, opIndex, producedQty, entities),
-                outputs: buildOpOutputs(
-                    po.itemId,
-                    opIndex,
-                    producedQty,
-                    Math.floor((plannedRunMinutes * po.effectiveUnitsPerHour) / 60),
-                    entities,
-                ),
+                inputs: buildOpInputs(po.itemId, opIndex, poProducedQty, entities),
+                outputs: buildOpOutputs(po.itemId, opIndex, poProducedQty, plannedQty, entities),
             });
             mesOperationList.push(op.id);
             opIds.push(op.id);
@@ -249,7 +253,7 @@ export function fillDataset(
                     workCenterId: op.workCenterId,
                     eventType: type,
                     timestamp: toUnix(ts),
-                    quantity: type === "op_end" ? producedQty : null,
+                    quantity: type === "op_end" ? poProducedQty : null,
                 };
                 mesProductionEvents.push(evt);
                 [
@@ -273,9 +277,6 @@ export function fillDataset(
 
         mesOperationsByPO.set(po.id, opIds);
 
-        const plannedQty = Math.floor(
-            ((config.operationDurationMinutes - (po.operations[0]?.setupMinutes ?? 0)) * po.effectiveUnitsPerHour) / 60,
-        );
         mesProductionOrders.set(po.id, {
             id: po.id,
             orderNumber: `${po.id}`,
@@ -298,7 +299,7 @@ export function fillDataset(
                 plannedQuantity: plannedQty,
                 producedQuantity: poProducedQty,
                 goodQuantity: poGoodQty,
-                scrapQuantity: poProducedQty - poGoodQty,
+                scrapQuantity: poScrapQty,
                 uom: "pcs",
             },
         });
@@ -360,9 +361,9 @@ export function fillDataset(
                 const clampEnd = new Date(Math.min(opEnd.getTime(), slot.overlapEnd.getTime()));
                 if (clampEnd <= clampStart) continue;
 
-                // Downtime events within the clamped window
                 const placed = placedPOs.flatMap((p) => p.operations).find((o) => o.id === op.id);
                 if (placed) {
+                    // Unplanned downtime events within the clamped window
                     for (const dt of placed.downtimes) {
                         const dStart = new Date(Math.max(dt.start.getTime(), clampStart.getTime()));
                         const dEnd = new Date(Math.min(dt.end.getTime(), clampEnd.getTime()));
@@ -370,15 +371,22 @@ export function fillDataset(
                     }
                 }
 
-                const netMins = Math.max(0, (clampEnd.getTime() - clampStart.getTime()) / 60_000);
+                // Planned stoppages: WOs overlapping the clamped window for this PO
                 const po = opToPO.get(op.id)!;
+                for (const wo of wosByPO.get(po.id) ?? []) {
+                    const wStart = new Date(Math.max(wo.start.getTime(), clampStart.getTime()));
+                    const wEnd = new Date(Math.min(wo.end.getTime(), clampEnd.getTime()));
+                    if (wEnd > wStart) downtimeMins += (wEnd.getTime() - wStart.getTime()) / 60_000;
+                }
+
+                const netMins = Math.max(0, (clampEnd.getTime() - clampStart.getTime()) / 60_000 - downtimeMins);
                 const qty = Math.floor((netMins * po.effectiveUnitsPerHour) / 60);
                 const yld = opYields.get(op.id) ?? config.yieldRate;
                 producedQty += qty;
                 goodQty += Math.floor(qty * yld);
             }
 
-            const runtimeMins = plannedMins - downtimeMins;
+            const runtimeMins = Math.max(0, plannedMins - downtimeMins);
             const availability = plannedMins > 0 ? runtimeMins / plannedMins : 0;
             const quality = producedQty > 0 ? goodQty / producedQty : 1;
             const scrapQty = producedQty - goodQty;
@@ -596,8 +604,8 @@ export function fillDataset(
     const deliveryFallbackBin = deliveryBinIds[0] ?? `${delivery}-BIN-01`;
 
     // Tracks which delivery bins each PO's FG is split across, set when pick tasks are assigned
-    const poDeliveryBin = new Map<string, { binId: string; qty: number }[]>();
-    const ITEMS_PER_BIN = 25;
+    const poDeliveryBin = new Map<string, { binId: string; qty: number; pickedDate: number }[]>();
+    const ITEMS_PER_BIN = config.putawayItemsPerTask;
 
     // Greedy bin pool allocator: tracks when each bin becomes free again.
     // A bin is "free" when its freeAt timestamp <= the arrival timestamp.
@@ -651,7 +659,7 @@ export function fillDataset(
     // Staging window per SO — populated in the PO loop, consumed in the FG allocation loop
     const soStagingWindow = new Map<
         string,
-        { pickAt: number; shipAt: number; deliveryBin: string; poActualEnd: number }
+        { firstPickStartAt: number; shipAt: number; deliveryBin: string; poActualEnd: number }
     >();
 
     for (const po of placedPOs) {
@@ -668,9 +676,7 @@ export function fillDataset(
         const orderDate = addDaysToDate(earliestAllocation, -rng.nextInt(2, 3));
         const delivDate = addDaysToDate(po.end, rng.nextFloat(0.5, 2));
 
-        // FG stages in Delivery for a few hours before shipping out
-        const pickDate = delivDate;
-        const shipDate = addDaysToDate(delivDate, rng.nextFloat(0.25, 0.5)); // 6–12h dwell
+        const shipDate = addDaysToDate(delivDate, rng.nextFloat(0.25, 0.5)); // 6–12h dwell after delivery
         const soStatus = "shipped";
         const soId = newSoId();
 
@@ -692,34 +698,59 @@ export function fillDataset(
         erpSalesOrders.set(soId, soObj);
         erpSalesOrderList.push(soObj);
 
-        // ---- Pick task + shipment (anchored to SO.orderDate) ----
+        // ---- Pick tasks + shipment (anchored to SO.orderDate) ----
         if (qty > 0) {
-            const pickId = `PICK-${String(pickNum++).padStart(4, "0")}`;
             const shipId = `SHIP-${String(shipNum++).padStart(4, "0")}`;
 
-            // Claim delivery bins for the staging window — split across 25-per-bin slots
-            const nDeliveryBins = Math.min(Math.ceil(qty / ITEMS_PER_BIN), deliveryBinIds.length || 1);
-            const deliveryBinSlots: { binId: string; qty: number }[] = [];
-            for (let b = 0; b < nDeliveryBins; b++) {
-                const binQty = b < nDeliveryBins - 1 ? ITEMS_PER_BIN : qty - ITEMS_PER_BIN * (nDeliveryBins - 1);
-                if (binQty === 0) continue;
-                deliveryBinSlots.push({ binId: claimDeliveryBin(toUnix(pickDate), toUnix(shipDate)), qty: binQty });
+            // Pick tasks are spread across the last production operation, ending at po.end.
+            // Pass 1: count slots to derive sequential timestamps before claiming bins.
+            const PICK_PER_TASK = config.pickItemsPerTask;
+            const nPickSlots = Math.min(Math.ceil(qty / PICK_PER_TASK), deliveryBinIds.length || 1);
+            const pickSlotQtys: number[] = [];
+            for (let b = 0; b < nPickSlots; b++) {
+                const binQty = b < nPickSlots - 1 ? PICK_PER_TASK : qty - PICK_PER_TASK * (nPickSlots - 1);
+                if (binQty > 0) pickSlotQtys.push(binQty);
             }
-            poDeliveryBin.set(po.id, deliveryBinSlots);
-            const primaryDeliveryBin = deliveryBinSlots[0]?.binId ?? deliveryFallbackBin;
 
-            wmsPickTasks.push({
-                id: pickId,
-                warehouseId: delivery,
-                sourceLocationId: primaryDeliveryBin,
-                itemId: po.itemId,
-                quantity: qty,
-                uom: "pcs",
-                createdAt: toUnix(addDaysToDate(pickDate, -1)),
-                pickedDate: toUnix(pickDate),
-                status: "completed",
-                salesOrderId: soId,
-            });
+            // Pass 2: claim delivery bins with actual task start times.
+            // Ends are evenly distributed across the last operation's span so picks are
+            // spread as production progresses, with the last pick ending at po.end.
+            const pickTaskDuration = config.pickTaskDurationMinutes;
+            const nPickTasks = pickSlotQtys.length;
+            const lastOpStart = po.operations[po.operations.length - 1].start.getTime();
+            const lastOpEnd = po.end.getTime();
+            const deliveryBinSlots: { binId: string; qty: number; startedAt: number; pickedDate: number }[] = [];
+            for (let ti = 0; ti < nPickTasks; ti++) {
+                const taskEnd = new Date(lastOpStart + ((ti + 1) / nPickTasks) * (lastOpEnd - lastOpStart));
+                const taskStart = new Date(taskEnd.getTime() - pickTaskDuration * 60_000);
+                deliveryBinSlots.push({
+                    binId: claimDeliveryBin(toUnix(taskStart), toUnix(shipDate)),
+                    qty: pickSlotQtys[ti],
+                    startedAt: toUnix(taskStart),
+                    pickedDate: toUnix(taskEnd),
+                });
+            }
+            poDeliveryBin.set(
+                po.id,
+                deliveryBinSlots.map(({ binId, qty: q, pickedDate }) => ({ binId, qty: q, pickedDate })),
+            );
+
+            for (const slot of deliveryBinSlots) {
+                const pickId = `PICK-${String(pickNum++).padStart(4, "0")}`;
+                wmsPickTasks.push({
+                    id: pickId,
+                    warehouseId: delivery,
+                    sourceLocationId: slot.binId,
+                    itemId: po.itemId,
+                    quantity: slot.qty,
+                    uom: "pcs",
+                    createdAt: toUnix(po.end),
+                    startedAt: slot.startedAt,
+                    pickedDate: slot.pickedDate,
+                    status: "completed",
+                    salesOrderId: soId,
+                });
+            }
             wmsShipments.push({
                 id: shipId,
                 warehouseId: delivery,
@@ -752,9 +783,9 @@ export function fillDataset(
             // Record staging window for FG allocation loop (primary bin as representative)
             const poActualEnd = Number(mesPO?.timing?.actualEnd ?? mesPO?.timing?.scheduledEnd ?? toUnix(po.end));
             soStagingWindow.set(soId, {
-                pickAt: toUnix(pickDate),
+                firstPickStartAt: deliveryBinSlots[0]?.startedAt ?? toUnix(po.end),
                 shipAt: toUnix(shipDate),
-                deliveryBin: primaryDeliveryBin,
+                deliveryBin: deliveryBinSlots[0]?.binId ?? deliveryFallbackBin,
                 poActualEnd,
             });
         }
@@ -887,18 +918,51 @@ export function fillDataset(
 
         let i = 0;
         while (i < consumptions.length) {
-            const chunkSize = rng.nextInt(10, 20);
+            const chunkSize = rng.nextInt(config.minPurchaseOrderGroupSize, config.maxPurchaseOrderGroupSize);
             const chunk = consumptions.slice(i, i + chunkSize);
             i += chunkSize;
 
             const totalQty = chunk.reduce((s, c) => s + c.qty, 0);
 
-            // Receipt arrives 2 days before the first op in this chunk needs its material
-            const rcvDate = new Date((chunk[0].putawayAt - 24 * 3600) * 1000);
+            // Pass 1: count bin slots per consumption to determine task count and timestamps.
+            // claimBin is NOT called here — we need actual task timestamps first.
+            const putawayAnchor = new Date(chunk[0].putawayAt * 1000);
+            const taskDuration = config.putawayTaskDurationMinutes;
+
+            type BinSlot = { opId: string; consumedAt: number; qty: number; binId: string };
+            const allBinSlots: Omit<BinSlot, "binId">[] = [];
+            for (const consumption of chunk) {
+                const nBins = Math.min(Math.ceil(consumption.qty / ITEMS_PER_BIN), storageBinIds.length || 1);
+                for (let b = 0; b < nBins; b++) {
+                    const binQty = b < nBins - 1 ? ITEMS_PER_BIN : consumption.qty - ITEMS_PER_BIN * (nBins - 1);
+                    if (binQty === 0) continue;
+                    allBinSlots.push({ opId: consumption.opId, consumedAt: consumption.consumedAt, qty: binQty });
+                }
+            }
+
+            // Now timestamps are known — claim bins with actual task start times.
+            const nTasks = allBinSlots.length;
+            const rcptDurationMinutes = nTasks * taskDuration;
+            const deliveryDate = new Date(putawayAnchor.getTime() - rcptDurationMinutes * 60_000);
+
+            type BinSlotFull = BinSlot;
+            const resolvedSlots: BinSlotFull[] = allBinSlots.map((slot, ti) => {
+                const taskEnd = new Date(putawayAnchor.getTime() - (nTasks - 1 - ti) * taskDuration * 60_000);
+                const taskStart = new Date(taskEnd.getTime() - taskDuration * 60_000);
+                return { ...slot, binId: claimBin(toUnix(taskStart), slot.consumedAt) };
+            });
+
+            const slotsByOp = new Map<string, { binId: string; qty: number }[]>();
+            for (const slot of resolvedSlots) {
+                const arr = slotsByOp.get(slot.opId) ?? [];
+                arr.push({ binId: slot.binId, qty: slot.qty });
+                slotsByOp.set(slot.opId, arr);
+            }
+
             const supplier = rng.pick(supplierIds);
             const suppRec = entities.erpSuppliers.get(supplier)!;
             const leadTime = (suppRec as any).leadTimeDays ?? 7;
-            const poOrderDate = addDaysToDate(rcvDate, -Math.round(leadTime / 2));
+            const poOrderDate = addDaysToDate(deliveryDate, -Math.round(leadTime / 2));
             const erpPoId = newPoId();
             const lineAmount = totalQty * rmUnitCost;
 
@@ -908,7 +972,7 @@ export function fillDataset(
                 orderNumber: erpPoId,
                 supplierId: supplier,
                 orderDate: toUnix(poOrderDate),
-                receivedAt: toUnix(rcvDate),
+                receivedAt: toUnix(deliveryDate),
                 status: "received",
                 currency: "USD",
                 lines: [
@@ -916,7 +980,7 @@ export function fillDataset(
                         lineNumber: 1,
                         itemId: rmId,
                         orderedQuantity: totalQty,
-                        expectedReceiptDate: toUnix(rcvDate),
+                        expectedReceiptDate: toUnix(deliveryDate),
                         unitPrice: rmUnitCost,
                         lineAmount,
                     },
@@ -926,8 +990,8 @@ export function fillDataset(
             erpPurchaseOrders.set(erpPoId, rmPoObj);
             erpPurchaseOrderList.push(rmPoObj);
 
-            // AP Invoice
-            const apInvDate = addDaysToDate(rcvDate, rng.nextInt(1, 3));
+            // AP Invoice — raised after goods fully processed (putawayAnchor)
+            const apInvDate = addDaysToDate(putawayAnchor, rng.nextInt(1, 3));
             const apTerms = (suppRec as any).paymentTermsDays ?? 30;
             const apDue = addDaysToDate(apInvDate, apTerms);
             const apInvId = newInvId();
@@ -953,18 +1017,20 @@ export function fillDataset(
                 warehouseId: reception,
                 receiptNumber: rcptId,
                 status: "completed",
-                receivedAt: toUnix(rcvDate),
+                receivedAt: toUnix(deliveryDate),
+                completedAt: toUnix(putawayAnchor),
+                durationMinutes: rcptDurationMinutes,
                 dockLocationId: receptionBin,
                 erpPurchaseOrderId: erpPoId,
                 lineCount: 1,
                 lines: [{ lineNumber: 1, itemId: rmId, quantity: totalQty, uom: "pcs" }],
             });
 
-            // Receipt movement: bulk arrival at dock
+            // Receipt movement: goods arrive at dock when truck delivers
             mkMov({
                 warehouseId: reception,
                 locationId: receptionBin,
-                occurredAt: toUnix(rcvDate),
+                occurredAt: toUnix(deliveryDate),
                 movementType: "receipt",
                 itemId: rmId,
                 quantity: totalQty,
@@ -977,67 +1043,64 @@ export function fillDataset(
                 operationId: null,
             });
 
-            // One set of putaway tasks per operation in the chunk, split across N bins
-            for (const consumption of chunk) {
-                const putawayDate = new Date(consumption.putawayAt * 1000);
-                const nBins = Math.min(Math.ceil(consumption.qty / ITEMS_PER_BIN), storageBinIds.length || 1);
-                const binSlots: { binId: string; qty: number }[] = [];
+            // Emit putaway tasks sequentially — last task ends at putawayAnchor
+            for (let ti = 0; ti < resolvedSlots.length; ti++) {
+                const { opId, binId: targetBinId, qty: binQty } = resolvedSlots[ti];
+                const taskEnd = new Date(putawayAnchor.getTime() - (nTasks - 1 - ti) * taskDuration * 60_000);
+                const taskStart = new Date(taskEnd.getTime() - taskDuration * 60_000);
 
-                for (let b = 0; b < nBins; b++) {
-                    const binQty = b < nBins - 1 ? ITEMS_PER_BIN : consumption.qty - ITEMS_PER_BIN * (nBins - 1);
-                    if (binQty === 0) continue;
-                    const targetBinId = claimBin(consumption.putawayAt, consumption.consumedAt);
-                    binSlots.push({ binId: targetBinId, qty: binQty });
+                const putawayId = `PUT-${String(putawayNum++).padStart(4, "0")}`;
+                wmsPutawayTasks.push({
+                    id: putawayId,
+                    warehouseId: storage,
+                    receiptId: rcptId,
+                    itemId: rmId,
+                    quantity: binQty,
+                    uom: "pcs",
+                    sourceLocationId: receptionBin,
+                    destinationLocationId: targetBinId,
+                    createdAt: toUnix(deliveryDate),
+                    startedAt: toUnix(taskStart),
+                    putawayDate: toUnix(taskEnd),
+                    durationMinutes: taskDuration,
+                    status: "completed",
+                    operationId: opId,
+                });
 
-                    const putawayId = `PUT-${String(putawayNum++).padStart(4, "0")}`;
-                    wmsPutawayTasks.push({
-                        id: putawayId,
-                        warehouseId: storage,
-                        receiptId: rcptId,
-                        itemId: rmId,
-                        quantity: binQty,
-                        uom: "pcs",
-                        sourceLocationId: receptionBin,
-                        destinationLocationId: targetBinId,
-                        createdAt: toUnix(rcvDate),
-                        putawayDate: toUnix(putawayDate),
-                        status: "completed",
-                        operationId: consumption.opId,
-                    });
+                mkMov({
+                    warehouseId: storage,
+                    locationId: targetBinId,
+                    occurredAt: toUnix(taskEnd),
+                    movementType: "putaway",
+                    itemId: rmId,
+                    quantity: binQty,
+                    uom: "pcs",
+                    fromLocationId: receptionBin,
+                    toLocationId: targetBinId,
+                    sourceDocumentType: "putaway_task",
+                    sourceDocumentId: putawayId,
+                    productionOrderId: null,
+                    operationId: opId,
+                });
+                mkMov({
+                    warehouseId: reception,
+                    locationId: receptionBin,
+                    occurredAt: toUnix(taskEnd),
+                    movementType: "putaway",
+                    itemId: rmId,
+                    quantity: -binQty,
+                    uom: "pcs",
+                    fromLocationId: receptionBin,
+                    toLocationId: targetBinId,
+                    sourceDocumentType: "putaway_task",
+                    sourceDocumentId: putawayId,
+                    productionOrderId: null,
+                    operationId: opId,
+                });
+            }
 
-                    mkMov({
-                        warehouseId: storage,
-                        locationId: targetBinId,
-                        occurredAt: toUnix(putawayDate),
-                        movementType: "putaway",
-                        itemId: rmId,
-                        quantity: binQty,
-                        uom: "pcs",
-                        fromLocationId: receptionBin,
-                        toLocationId: targetBinId,
-                        sourceDocumentType: "putaway_task",
-                        sourceDocumentId: putawayId,
-                        productionOrderId: null,
-                        operationId: consumption.opId,
-                    });
-                    mkMov({
-                        warehouseId: reception,
-                        locationId: receptionBin,
-                        occurredAt: toUnix(putawayDate),
-                        movementType: "putaway",
-                        itemId: rmId,
-                        quantity: -binQty,
-                        uom: "pcs",
-                        fromLocationId: receptionBin,
-                        toLocationId: targetBinId,
-                        sourceDocumentType: "putaway_task",
-                        sourceDocumentId: putawayId,
-                        productionOrderId: null,
-                        operationId: consumption.opId,
-                    });
-                }
-
-                opBinAssignment.set(`${consumption.opId}|${rmId}`, binSlots);
+            for (const [opId, slots] of slotsByOp) {
+                opBinAssignment.set(`${opId}|${rmId}`, slots);
             }
         }
     }
@@ -1064,13 +1127,15 @@ export function fillDataset(
                 operationId: null,
             });
 
-            // QC transfer: FG moves from Storage to Delivery — one movement pair per bin slot
-            const destBinSlots = poDeliveryBin.get(po.id) ?? [{ binId: deliveryFallbackBin, qty }];
-            for (const { binId: destBin, qty: binQty } of destBinSlots) {
+            // QC transfer: FG moves from Storage to Delivery as each pick task completes
+            const destBinSlots = poDeliveryBin.get(po.id) ?? [
+                { binId: deliveryFallbackBin, qty, pickedDate: toUnix(po.end) },
+            ];
+            for (const { binId: destBin, qty: binQty, pickedDate: slotPickedDate } of destBinSlots) {
                 mkMov({
                     warehouseId: storage,
                     locationId: storageFallbackBin,
-                    occurredAt: toUnix(po.end),
+                    occurredAt: slotPickedDate,
                     movementType: "quality_control",
                     itemId: po.itemId,
                     quantity: -binQty,
@@ -1085,7 +1150,7 @@ export function fillDataset(
                 mkMov({
                     warehouseId: delivery,
                     locationId: destBin,
-                    occurredAt: toUnix(po.end),
+                    occurredAt: slotPickedDate,
                     movementType: "quality_control",
                     itemId: po.itemId,
                     quantity: binQty,
@@ -1305,9 +1370,9 @@ export function fillDataset(
 
         const staging = soStagingWindow.get(so.id);
         const productionEnd = staging?.poActualEnd ?? so.orderDate;
-        // QC transfer is modelled as instantaneous at po.end; qcClearDate = productionEnd
         const qcClearDate = productionEnd;
-        const pickAt = staging?.pickAt ?? so.requestedDeliveryDate;
+        const firstPickStartAt = staging?.firstPickStartAt ?? productionEnd;
+        const shipAt = staging?.shipAt ?? so.requestedDeliveryDate;
         const stagingBin = staging?.deliveryBin ?? deliveryFallbackBin;
         const uom = entities.erpItems.get(fgItemId)?.uom ?? "pcs";
 
@@ -1341,8 +1406,8 @@ export function fillDataset(
             productionOrderId: null,
             erpSalesOrderId: so.id,
             status: "allocated",
-            allocatedAt: qcClearDate,
-            clearedAt: pickAt,
+            allocatedAt: firstPickStartAt,
+            clearedAt: shipAt,
         });
     }
 

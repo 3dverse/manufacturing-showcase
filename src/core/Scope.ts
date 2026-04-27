@@ -94,6 +94,7 @@ export type PickTaskEntry = {
     salesOrderId?: string | null;
     pickedDate: number | null;
     createdAt: number;
+    startedAt: number | null;
     sourceLocationId: string | null;
 };
 
@@ -116,6 +117,7 @@ export type PutawayTaskEntry = {
     quantity: number;
     putawayDate: number | null;
     createdAt: number;
+    startedAt: number | null;
     sourceLocationId: string | null;
     destinationLocationId: string | null;
 };

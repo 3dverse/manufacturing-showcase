@@ -214,6 +214,7 @@ function mapPutawayTask(pt: PutawayTask): PutawayTaskEntry {
         quantity: pt.quantity,
         putawayDate: pt.putawayDate ?? null,
         createdAt: pt.createdAt,
+        startedAt: pt.startedAt ?? null,
         sourceLocationId: pt.sourceLocationId ?? null,
         destinationLocationId: pt.destinationLocationId ?? null,
     };
@@ -248,6 +249,7 @@ function mapPickTask(pt: PickTask): PickTaskEntry {
         salesOrderId: pt.salesOrderId ?? null,
         pickedDate: pt.pickedDate ?? null,
         createdAt: pt.createdAt,
+        startedAt: pt.startedAt ?? null,
         sourceLocationId: pt.sourceLocationId ?? null,
     };
 }

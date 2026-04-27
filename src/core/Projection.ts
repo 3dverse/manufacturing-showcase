@@ -200,8 +200,9 @@ function projectWorkOrder(e: WorkOrderEntry, asOf: number): ProjectedWorkOrder {
 }
 
 function projectPickTask(e: PickTaskEntry, asOf: number): ProjectedPickTask {
+    const startRef = e.startedAt ?? e.createdAt;
     const phase: Phase =
-        e.pickedDate != null && e.pickedDate <= asOf ? "completed" : e.createdAt > asOf ? "future" : "active";
+        e.pickedDate != null && e.pickedDate <= asOf ? "completed" : startRef > asOf ? "future" : "active";
     return { ...e, phase };
 }
 
@@ -212,15 +213,16 @@ function projectReceipt(e: ReceiptEntry, putawayDate: number | null, asOf: numbe
 }
 
 function projectPutawayTask(e: PutawayTaskEntry, asOf: number): ProjectedPutawayTask {
+    const startRef = e.startedAt ?? e.createdAt;
     const phase: Phase =
-        e.putawayDate != null && e.putawayDate <= asOf ? "completed" : e.createdAt > asOf ? "future" : "active";
+        e.putawayDate != null && e.putawayDate <= asOf ? "completed" : startRef > asOf ? "future" : "active";
     const estimatedProgress =
         phase === "completed"
             ? 1
             : phase === "future"
               ? 0
               : e.putawayDate != null
-                ? clamp((asOf - e.createdAt) / (e.putawayDate - e.createdAt), 0, 1)
+                ? clamp((asOf - startRef) / (e.putawayDate - startRef), 0, 1)
                 : 0; // active with no putawayDate — can't interpolate
     return {
         ...e,

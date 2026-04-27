@@ -29,11 +29,13 @@ export function addDays(d: Date, days: number): Date {
 
 function intervalsForDay(day: Date, shifts: ShiftDefinition[]): ShiftInterval[] {
     return shifts
-        .map(s => {
+        .map((s) => {
             const { h: sh, m: sm } = parseHHMM(s.start);
             const { h: eh, m: em } = parseHHMM(s.end);
-            const start = new Date(day); start.setHours(sh, sm, 0, 0);
-            const end   = new Date(day); end.setHours(eh, em, 0, 0);
+            const start = new Date(day);
+            start.setHours(sh, sm, 0, 0);
+            const end = new Date(day);
+            end.setHours(eh, em, 0, 0);
             return { name: s.name, start, end };
         })
         .sort((a, b) => a.start.getTime() - b.start.getTime());
@@ -60,11 +62,7 @@ export function clampToShift(from: Date, shifts: ShiftDefinition[], workDays: nu
 }
 
 /** First shift-start timestamp at or after `from`. */
-export function nextShiftStart(
-    from: Date,
-    shifts: ShiftDefinition[],
-    workDays: number[],
-): Date {
+export function nextShiftStart(from: Date, shifts: ShiftDefinition[], workDays: number[]): Date {
     let day = startOfDay(from);
     for (let i = 0; i < 14; i++, day = addDays(day, 1)) {
         if (!workDays.includes(day.getDay())) continue;
@@ -76,12 +74,7 @@ export function nextShiftStart(
 }
 
 /** Count of working minutes in the half-open interval [start, end). */
-export function workingMinutes(
-    start: Date,
-    end: Date,
-    shifts: ShiftDefinition[],
-    workDays: number[],
-): number {
+export function workingMinutes(start: Date, end: Date, shifts: ShiftDefinition[], workDays: number[]): number {
     if (end <= start) return 0;
     let total = 0;
     let day = startOfDay(start);
@@ -96,6 +89,60 @@ export function workingMinutes(
         day = addDays(day, 1);
     }
     return total;
+}
+
+/**
+ * Advance `from` by exactly `workMinutes` of working time, skipping
+ * nights, weekends, and gaps between shifts.  If `from` falls outside
+ * a shift it is first snapped to the next shift start (consuming 0 minutes).
+ */
+export function addWorkingMinutes(
+    from: Date,
+    workMinutes: number,
+    shifts: ShiftDefinition[],
+    workDays: number[],
+): Date {
+    let cursor = new Date(from);
+    let remaining = workMinutes;
+
+    for (let guard = 0; guard < 100_000; guard++) {
+        const day = startOfDay(cursor);
+
+        if (!workDays.includes(day.getDay())) {
+            // Off-day — jump to the next work day's first shift
+            cursor = nextShiftStart(cursor, shifts, workDays);
+            continue;
+        }
+
+        const intervals = intervalsForDay(day, shifts);
+        let advanced = false;
+
+        for (const iv of intervals) {
+            if (cursor < iv.start) {
+                // Gap before this shift — snap forward, then re-evaluate
+                cursor = new Date(iv.start);
+                advanced = true;
+                break;
+            }
+            if (cursor >= iv.start && cursor < iv.end) {
+                const minsLeft = (iv.end.getTime() - cursor.getTime()) / 60_000;
+                if (remaining <= minsLeft) {
+                    return new Date(cursor.getTime() + remaining * 60_000);
+                }
+                remaining -= minsLeft;
+                cursor = new Date(iv.end);
+                advanced = true;
+                break;
+            }
+        }
+
+        if (!advanced) {
+            // Past all shifts today — advance to the next shift start
+            cursor = nextShiftStart(addDays(day, 1), shifts, workDays);
+        }
+    }
+
+    return cursor; // safety fallback
 }
 
 /**
@@ -117,11 +164,11 @@ export function shiftCoverage(
                 const b = Math.min(iv.end.getTime(), end.getTime());
                 if (b > a) {
                     result.push({
-                        name:         iv.name,
-                        start:        iv.start,
-                        end:          iv.end,
+                        name: iv.name,
+                        start: iv.start,
+                        end: iv.end,
                         overlapStart: new Date(a),
-                        overlapEnd:   new Date(b),
+                        overlapEnd: new Date(b),
                     });
                 }
             }

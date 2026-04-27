@@ -11,7 +11,7 @@
 import type { RNG } from "../rng";
 import type { GeneratorConfig } from "../config";
 import { getProductionLocations } from "../graph";
-import { nextShiftStart, clampToShift, addMinutes, addDays } from "../shifts";
+import { nextShiftStart, clampToShift, addMinutes, addDays, addWorkingMinutes, workingMinutes } from "../shifts";
 import type { POTemplate, DowntimeTemplate, MaintenancePlanTemplate } from "./phase1";
 
 // ---------------------------------------------------------------------------
@@ -51,6 +51,7 @@ export type PlacedPO = {
     end: Date; // = ops[last].end
     operations: PlacedOperation[];
     effectiveUnitsPerHour: number; // sampled once per PO: unitsPerHour × U(0.9, 1.1)
+    targetWorkingMinutes: number; // working-time duration drawn from config range
 };
 
 export type PlacedMaintenanceWO = {
@@ -61,20 +62,14 @@ export type PlacedMaintenanceWO = {
     locationId: string;
     start: Date;
     end: Date;
-};
-
-export type PlacedGap = {
-    locationId: string;
-    start: Date;
-    end: Date;
-    workOrders: PlacedMaintenanceWO[];
+    poId?: string; // set when the WO falls inside a PO's span
 };
 
 export type Phase2Result = {
     placedPOs: PlacedPO[];
-    placedGaps: PlacedGap[];
     posByLocation: Map<string, PlacedPO[]>;
     wosByAsset: Map<string, PlacedMaintenanceWO[]>;
+    wosByPO: Map<string, PlacedMaintenanceWO[]>;
     allPlacedWOs: PlacedMaintenanceWO[];
 };
 
@@ -151,7 +146,7 @@ export function placeTimeline(
     // Distribute productionOrderCount across locations proportional to work-center count
     const totalWCs = prodLocations.reduce((s, l) => s + l.workCenters.length, 0);
     const poCountPerLoc = prodLocations.map((loc) =>
-        Math.max(1, Math.round((config.productionOrderCount * loc.workCenters.length) / totalWCs)),
+        Math.max(1, Math.round((config.maxProductionOrderCount * loc.workCenters.length) / totalWCs)),
     );
 
     // Group maintenance plan templates by location
@@ -164,10 +159,10 @@ export function placeTimeline(
     }
 
     const allPOs: PlacedPO[] = [];
-    const allGaps: PlacedGap[] = [];
     const allWOs: PlacedMaintenanceWO[] = [];
     const posByLocation = new Map<string, PlacedPO[]>();
     const wosByAsset = new Map<string, PlacedMaintenanceWO[]>();
+    const wosByPO = new Map<string, PlacedMaintenanceWO[]>();
 
     for (let li = 0; li < prodLocations.length; li++) {
         const loc = prodLocations[li];
@@ -179,23 +174,29 @@ export function placeTimeline(
         const hasPMs = locPMs.length > 0;
         const locPOs: PlacedPO[] = [];
 
-        // Pipeline stagger: time until the first item flows out of op[i] into op[i+1]
-        // = setupMinutes_of_op_i + one_cycle_time
-        // Since all ops share unitsPerHour, cycle time is the same for all.
-        const cycleTime = 60 / config.unitsPerHour; // minutes per item at nominal rate
+        // Pipeline stagger (in working minutes): time until first item flows to next op
+        const cycleTime = 60 / config.unitsPerHour;
 
         let cursor = nextShiftStart(windowStart, config.shifts, config.workDays);
 
         for (let i = 0; i < targetPOs && cursor < windowEnd; i++) {
-            // Per-PO throughput variance: ±10 %
             const effectiveUPH = config.unitsPerHour * rng.nextFloat(0.9, 1.1);
+            // Log-uniform: equal probability per order of magnitude → many short POs, few long ones
+            const targetWorkingMinutes = Math.round(
+                Math.exp(
+                    rng.nextFloat(
+                        Math.log(config.minOperationWorkingMinutes),
+                        Math.log(config.maxOperationWorkingMinutes),
+                    ),
+                ),
+            );
             const poId = nextId("MO");
 
-            // Place operations pipeline-style
+            // Place operations pipeline-style using working-time arithmetic
             const ops: PlacedOperation[] = template.operations.map((opTmpl, j) => {
-                const stagger = opTmpl.setupMinutes + cycleTime; // time to deliver first item
-                const opStart = addMinutes(cursor, j * stagger);
-                const opEnd = addMinutes(opStart, config.operationDurationMinutes);
+                const stagger = opTmpl.setupMinutes + cycleTime;
+                const opStart = addWorkingMinutes(cursor, j * stagger, config.shifts, config.workDays);
+                const opEnd = addWorkingMinutes(opStart, targetWorkingMinutes, config.shifts, config.workDays);
                 return {
                     id: nextId("OP"),
                     operationType: opTmpl.operationType,
@@ -210,7 +211,6 @@ export function placeTimeline(
                 };
             });
 
-            // Inject downtime events (probabilistic, inside operation spans)
             for (const op of ops) {
                 injectDowntimes(op, downtimeTemplates, rng, nextId);
             }
@@ -224,59 +224,79 @@ export function placeTimeline(
                 end: ops[ops.length - 1].end,
                 operations: ops,
                 effectiveUnitsPerHour: effectiveUPH,
+                targetWorkingMinutes,
             };
 
-            locPOs.push(po);
-            allPOs.push(po);
-            cursor = po.end;
-
-            // ---- Maintenance gap check ----
-            // A gap opens after this PO if at least one machine in the location has a PM due.
+            // ---- Inject maintenance WOs inside this PO's span ----
+            // Any PM that becomes due before po.end is placed at the next shift
+            // start at or after its due date (clamped to within the PO span).
             if (hasPMs) {
-                const due = locPMs.filter((p) => p.nextDue <= cursor);
-                if (due.length > 0) {
-                    const gapStart = clampToShift(cursor, config.shifts, config.workDays);
-                    const gapEnd = addMinutes(gapStart, config.pmDurationHours * 60);
+                for (const pm of locPMs) {
+                    while (pm.nextDue <= po.end) {
+                        // If due date falls before the PO started (e.g. over a weekend
+                        // between two POs), clamp to the PO's start.
+                        const effectiveDue = pm.nextDue < po.start ? po.start : pm.nextDue;
+                        const woStart = clampToShift(effectiveDue, config.shifts, config.workDays);
+                        if (woStart >= po.end) break; // doesn't fit — leave for next PO
 
-                    const wos: PlacedMaintenanceWO[] = due.map((p) => {
+                        const woEnd = addWorkingMinutes(
+                            woStart,
+                            pm.pmDurationHours * 60,
+                            config.shifts,
+                            config.workDays,
+                        );
+
                         const wo: PlacedMaintenanceWO = {
                             id: nextId("WO"),
-                            planId: p.planId,
-                            assetId: p.assetId,
-                            assetName: p.assetName,
+                            planId: pm.planId,
+                            assetId: pm.assetId,
+                            assetName: pm.assetName,
                             locationId: loc.hash,
-                            start: gapStart,
-                            end: gapEnd,
+                            start: woStart,
+                            end: woEnd,
+                            poId: po.id,
                         };
-                        const list = wosByAsset.get(p.assetId) ?? [];
-                        list.push(wo);
-                        wosByAsset.set(p.assetId, list);
-                        allWOs.push(wo);
-                        // Advance this machine's next-due date
-                        p.nextDue = addDays(p.nextDue, p.frequencyDays);
-                        return wo;
-                    });
 
-                    allGaps.push({ locationId: loc.hash, start: gapStart, end: gapEnd, workOrders: wos });
-                    cursor = clampToShift(gapEnd, config.shifts, config.workDays);
-                    continue;
+                        const byAsset = wosByAsset.get(pm.assetId) ?? [];
+                        byAsset.push(wo);
+                        wosByAsset.set(pm.assetId, byAsset);
+
+                        const byPO = wosByPO.get(po.id) ?? [];
+                        byPO.push(wo);
+                        wosByPO.set(po.id, byPO);
+
+                        allWOs.push(wo);
+                        pm.nextDue = addDays(pm.nextDue, pm.frequencyDays);
+                    }
                 }
             }
 
-            // No gap: stay within the shift if possible, otherwise jump to next shift start
-            cursor = clampToShift(cursor, config.shifts, config.workDays);
+            // Extend op and PO ends to account for WO time: WOs pause the entire
+            // production line, so the PO needs extra wall-clock time to complete
+            // its targetWorkingMinutes of net productive work.
+            const posWOs = wosByPO.get(po.id) ?? [];
+            if (posWOs.length > 0) {
+                const totalWoWorkingMins = posWOs.reduce(
+                    (s, wo) => s + workingMinutes(wo.start, wo.end, config.shifts, config.workDays),
+                    0,
+                );
+                for (const op of ops) {
+                    op.end = addWorkingMinutes(op.end, totalWoWorkingMins, config.shifts, config.workDays);
+                }
+                po.end = ops[ops.length - 1].end;
+            }
+
+            locPOs.push(po);
+            allPOs.push(po);
+            cursor = clampToShift(po.end, config.shifts, config.workDays);
         }
 
         posByLocation.set(loc.hash, locPOs);
     }
 
-    // ---- Dedicated PM pass for locations skipped by the PO loop ----
-    // Locations with no valid PO template (e.g. no operations) were skipped above
-    // and never received work orders.  Walk those locations independently and place
-    // WOs at regular PM-frequency intervals so every production area gets maintenance
-    // activity regardless of whether it runs production orders.
+    // ---- Dedicated PM pass for locations with no valid PO template ----
     for (const loc of prodLocations) {
-        if (posByLocation.has(loc.hash)) continue; // already handled above
+        if (posByLocation.has(loc.hash)) continue;
 
         const locPMs = pmByLocation.get(loc.hash) ?? [];
         if (locPMs.length === 0) continue;
@@ -284,9 +304,9 @@ export function placeTimeline(
         for (const pm of locPMs) {
             let due = new Date(pm.nextDue);
             while (due < windowEnd) {
-                const gapStart = nextShiftStart(due, config.shifts, config.workDays);
-                if (gapStart >= windowEnd) break;
-                const gapEnd = addMinutes(gapStart, pm.pmDurationHours * 60);
+                const woStart = nextShiftStart(due, config.shifts, config.workDays);
+                if (woStart >= windowEnd) break;
+                const woEnd = addWorkingMinutes(woStart, pm.pmDurationHours * 60, config.shifts, config.workDays);
 
                 const wo: PlacedMaintenanceWO = {
                     id: nextId("WO"),
@@ -294,8 +314,8 @@ export function placeTimeline(
                     assetId: pm.assetId,
                     assetName: pm.assetName,
                     locationId: loc.hash,
-                    start: gapStart,
-                    end: gapEnd,
+                    start: woStart,
+                    end: woEnd,
                 };
 
                 const list = wosByAsset.get(pm.assetId) ?? [];
@@ -308,5 +328,5 @@ export function placeTimeline(
         }
     }
 
-    return { placedPOs: allPOs, placedGaps: allGaps, posByLocation, wosByAsset, allPlacedWOs: allWOs };
+    return { placedPOs: allPOs, posByLocation, wosByAsset, wosByPO, allPlacedWOs: allWOs };
 }

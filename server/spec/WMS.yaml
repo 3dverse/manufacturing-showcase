@@ -995,6 +995,10 @@ components:
         createdAt:
           type: integer
           description: Task creation timestamp.
+        startedAt:
+          type: integer
+          nullable: true
+          description: Timestamp when the task was started (unix seconds). Null if not yet started.
         putawayDate:
           type: integer
           nullable: true
@@ -1046,6 +1050,10 @@ components:
         createdAt:
           type: integer
           description: Task creation timestamp (unix seconds).
+        startedAt:
+          type: integer
+          nullable: true
+          description: Timestamp when the pick was started (unix seconds). Null if not yet started.
         pickedDate:
           type: integer
           nullable: true
