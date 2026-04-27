@@ -41,10 +41,10 @@ export const AreaChildrensOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
     return (
         <>
             {areaNode.lines.map((lineNode) => (
-                <NodeSummary node={lineNode} />
+                <NodeSummary node={lineNode} key={lineNode.hash} />
             ))}
             {areaNode.cells.map((cellNode) => (
-                <NodeSummary node={cellNode} />
+                <NodeSummary node={cellNode} key={cellNode.hash} />
             ))}
             {areaNode.cells.flatMap((cellNode) =>
                 cellNode.outputs.map((out, index) => (
@@ -59,7 +59,7 @@ export const AreaChildrensOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
 //------------------------------------------------------------------------------
 export const LineChildrensOverlay = ({ lineNode }: { lineNode: LineNode }) => {
     {
-        lineNode.cells.map((cellNode) => <NodeSummary node={cellNode} />);
+        lineNode.cells.map((cellNode) => <NodeSummary node={cellNode} key={cellNode.hash} />);
     }
     {
         lineNode.cells.flatMap((cellNode, index) =>
