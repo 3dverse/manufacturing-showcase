@@ -27,6 +27,7 @@ import { MEDIA_QUERIES, useMediaQuery } from "@/utils/useMediaQuery";
 //------------------------------------------------------------------------------
 import type { Factory } from "@/content/type";
 import { DevMode, PUBLIC_FOLDER_ID, SCENE_WHITELIST, USER_TOKEN } from "./content/3dverse";
+import { UserMode } from "./core/UserMode";
 
 //------------------------------------------------------------------------------
 setUserToken(USER_TOKEN);
@@ -37,6 +38,8 @@ export function App() {
 }
 
 let factoriesPromise: Promise<unknown>;
+
+UserMode.init();
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -153,7 +156,7 @@ function AppLayout() {
         <FactoriesContext.Provider value={{ factories }}>
             <ScenarioContextProvider>
                 {content}
-                {!isMobile && <MainGuidance />}
+                {!isMobile && UserMode.presentation && <MainGuidance />}
                 <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
             </ScenarioContextProvider>
         </FactoriesContext.Provider>
