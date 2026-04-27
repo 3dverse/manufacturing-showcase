@@ -30,13 +30,13 @@ export const ScenariosWheel = () => {
                         key={scenarioId}
                         className={cn(
                             "relative flex justify-center items-center h-full text-xs text-slate-200 border transition-colors duration-300 cursor-pointer",
-                            "before:content-[''] before:absolute before:bottom-0 before:bg-guidance hover:before:bg-guidance-600 before:w-[160%] before:h-[160%] before:transition-colors before:duration-300",
+                            "before:content-[''] before:absolute before:bottom-0 before:bg-guidance-600 hover:before:bg-guidance before:w-[160%] before:h-[160%] before:transition-colors before:duration-300",
                             index === 0 &&
                                 "pb-12 -rotate-30 translate-x-1/2 origin-bottom-right before:right-0 [&_p]:-rotate-20",
                             index === 1 && "pb-12 -z-10",
                             index === 2 &&
                                 "pb-12 rotate-30 -translate-x-1/2 origin-bottom-left before:left-0 [&_p]:rotate-20",
-                            activeScenarioId === scenarioId && "text-slate-0 before:bg-guidance-600",
+                            activeScenarioId === scenarioId && "text-slate-0 before:bg-guidance",
                         )}
                         onClick={() => toggleScenario(scenarioId)}
                     >

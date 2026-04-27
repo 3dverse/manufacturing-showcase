@@ -192,7 +192,7 @@ export const ScenarioStepper = () => {
             {targetPosition && (
                 <div
                     aria-hidden
-                    className="fixed -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_9999px_color-mix(in_oklch,var(--color-slate-1000)_15%,transparent)] pointer-events-none transition-all duration-400"
+                    className="fixed -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_9999px_color-mix(in_oklch,var(--color-slate-1000)_15%,transparent)] pointer-events-none starting:opacity-0 opacity-100 starting:scale-200 scale-100 transition-all duration-400"
                     style={{
                         left: targetPosition.x,
                         top: targetPosition.y,
@@ -234,7 +234,7 @@ export const ScenarioStepper = () => {
                     </Button>
                 </div>
                 <h2 className="text-lg font-semibold mb-1">{activeStep.title}</h2>
-                <div className="text-sm text-muted mb-7">{activeStep.description}</div>
+                <div className="text-sm text-subtle mb-7">{activeStep.description}</div>
                 <div className="flex gap-2">
                     {!isFirstStep && (
                         <Button variant="soft" colorScheme="guidance" size="sm" className="px-2" onClick={prevStep}>

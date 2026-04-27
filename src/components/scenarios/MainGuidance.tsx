@@ -21,7 +21,7 @@ export const MainGuidance = () => {
         if (!scenarioActivatedAt) return;
 
         setIsRetracting(true);
-        const timeout = window.setTimeout(() => setIsRetracting(false), 1000);
+        const timeout = window.setTimeout(() => setIsRetracting(false), 500);
 
         return () => window.clearTimeout(timeout);
     }, [scenarioActivatedAt]);
