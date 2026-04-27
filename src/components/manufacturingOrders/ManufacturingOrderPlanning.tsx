@@ -6,26 +6,24 @@ import { faList, faTimeline } from "@fortawesome/pro-light-svg-icons";
 import { Icon } from "@/components/common/Icon";
 import { PanelLabel } from "@/components/common/panel";
 import Button from "@/components/common/Button";
+import { ManufacturingOrderList } from "./ManufacturingOrderList";
+import { ManufacturingOrderTimeline } from "./ManufacturingOrderTimeline";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import { SalesOrderList } from "./SalesOrderList";
-import { SalesOrderTimeline } from "./SalesOrderTimeline";
-
-//------------------------------------------------------------------------------
 type ViewMode = "list" | "timeline";
 
 //------------------------------------------------------------------------------
-export const SalesOrderPlanning = () => {
+export const ManufacturingOrderPlanning = () => {
     const [mode, setMode] = useState<ViewMode>("timeline");
 
     //--------------------------------------------------------------------------
     return (
         <div className="@container flex flex-col gap-1">
             <header className="flex justify-between items-center gap-2 mb-1">
-                <PanelLabel className="text-sm text-default font-medium">Sales Order Planning</PanelLabel>
+                <PanelLabel className="text-sm text-default font-medium">Manufacturing Order Planning</PanelLabel>
                 <div className="flex items-center rounded-sm border border-muted p-px">
                     <Button
                         title="Timeline view"
@@ -58,7 +56,7 @@ export const SalesOrderPlanning = () => {
                 </div>
             </header>
 
-            {mode === "list" ? <SalesOrderList /> : <SalesOrderTimeline />}
+            {mode === "list" ? <ManufacturingOrderList /> : <ManufacturingOrderTimeline />}
             <footer className="w-full flex justify-between items-center mt-1 px-px">
                 <p className="flex items-center gap-1 text-2xs text-muted/80">
                     <img src="/logo/sap.svg" alt="SAP" className="h-3" />

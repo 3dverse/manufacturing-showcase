@@ -3,8 +3,8 @@ import React from "react";
 //------------------------------------------------------------------------------
 import { MetricCard } from "@/components/common/metrics/MetricCard";
 import { PanelHeader } from "@/components/common/panel/PanelHeader";
-import { MonthlyProductionChart } from "@/components/dashboard/production/MonthlyProductionChart";
-import { DailyProductionChart } from "@/components/dashboard/production/DailyProductionChart";
+import { MonthlyProductionChart } from "@/components/__TO_DELETE__/dashboard/production/MonthlyProductionChart";
+import { DailyProductionChart } from "@/components/__TO_DELETE__/dashboard/production/DailyProductionChart";
 
 //------------------------------------------------------------------------------
 import { type DashboardData } from "@/services/dashboardApi";

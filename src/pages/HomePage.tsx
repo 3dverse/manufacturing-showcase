@@ -5,7 +5,9 @@ import { FactoriesContext } from "@/contexts/FactoriesContext";
 
 //------------------------------------------------------------------------------
 import { FactoryItem } from "@/components/nodes/factory/FactoryItem";
-import { SalesOrderPlanning } from "@/components/salesOrders/SalesOrderPlanning";
+import { ManufacturingOrderPlanning } from "@/components/manufacturingOrders/ManufacturingOrderPlanning";
+
+//------------------------------------------------------------------------------
 import { DevMode } from "@/content/3dverse";
 
 //------------------------------------------------------------------------------
@@ -51,7 +53,7 @@ export default function HomePage() {
                             <FactoryItem factoryItem={factoryItem} />
                             {factoryItem.enabled && (
                                 <div className="bg-slate-50 -mt-2 pt-5 p-3 rounded-b-md">
-                                    <SalesOrderPlanning />
+                                    <ManufacturingOrderPlanning />
                                 </div>
                             )}
                         </li>

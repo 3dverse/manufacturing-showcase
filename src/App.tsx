@@ -4,8 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import { getFolderAssets, setUserToken } from "@3dverse/api";
 
 //------------------------------------------------------------------------------
-import IntroductionModal from "@/components/guidance/IntroductionModal";
-import { MainGuidance } from "@/components/guidance/MainGuidance";
+import IntroductionModal from "@/components/scenarios/IntroductionModal";
+import { MainGuidance } from "@/components/scenarios/MainGuidance";
 
 //------------------------------------------------------------------------------
 import HomePage from "@/pages/HomePage";
@@ -17,7 +17,7 @@ import ThemePage from "@/pages/ThemePage";
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { useNavigationStore } from "@/store/useNavigationStore";
 import { FactoriesContext } from "@/contexts/FactoriesContext";
-import { UseCaseContextProvider } from "@/contexts/UseCaseContext";
+import { ScenarioContextProvider } from "@/contexts/ScenariosContext";
 
 //------------------------------------------------------------------------------
 import { LOCAL_STORAGE_KEYS, useLocalStorage } from "@/hooks/useLocalStorage";
@@ -151,11 +151,11 @@ function AppLayout() {
     //--------------------------------------------------------------------------
     return (
         <FactoriesContext.Provider value={{ factories }}>
-            <UseCaseContextProvider>
+            <ScenarioContextProvider>
                 {content}
                 {!isMobile && <MainGuidance />}
                 <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
-            </UseCaseContextProvider>
+            </ScenarioContextProvider>
         </FactoriesContext.Provider>
     );
 }

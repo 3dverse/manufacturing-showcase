@@ -10,7 +10,8 @@ import { formatDuration } from "@/utils/helpers-time";
 import { orderStatus } from "@/content/orders";
 import type { Order } from "@/content/type";
 
-type SalesOrderProgressBarProps = {
+//------------------------------------------------------------------------------
+type ManufacturingOrderProgressBarProps = {
     order: Order;
     size?: "md" | "lg";
     showClientName?: boolean;
@@ -21,7 +22,7 @@ type SalesOrderProgressBarProps = {
 };
 
 //------------------------------------------------------------------------------
-export const SalesOrderProgressBar = ({
+export const ManufacturingOrderProgressBar = ({
     order,
     size = "md",
     showClientName = false,
@@ -29,7 +30,7 @@ export const SalesOrderProgressBar = ({
     className,
     style,
     onClick,
-}: SalesOrderProgressBarProps) => {
+}: ManufacturingOrderProgressBarProps) => {
     const progress_prct = order.unitsPlanned > 0 ? Math.round((order.unitsCompleted / order.unitsPlanned) * 100) : 0;
 
     //--------------------------------------------------------------------------

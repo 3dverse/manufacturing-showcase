@@ -6,7 +6,7 @@ import { Viewer } from "@/components/viewer/Viewer";
 import { Navigation } from "@/components/navigation/Navigation";
 import { InvitePanel } from "@/components/clients/InvitePanel";
 import { MobileMainHeader } from "@/components/layout/MobileMainHeader";
-import { SalesOrderCarousel } from "@/components/salesOrders/SalesOrderCarousel";
+import { ManufacturingOrdersCarousel } from "@/components/manufacturingOrders/ManufacturingOrdersCarousel";
 
 //------------------------------------------------------------------------------
 import { Router } from "@/core/Router";
@@ -30,7 +30,7 @@ export const MobileLayout = () => {
                     <InvitePanel />
                 </div>
                 <span className="grow" />
-                <SalesOrderCarousel />
+                <ManufacturingOrdersCarousel />
                 <MobileMainHeader>
                     <Navigation />
                 </MobileMainHeader>

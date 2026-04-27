@@ -9,7 +9,7 @@ import { cn } from "@/utils/cn";
 import { orders, orderStatus } from "@/content/orders";
 
 //------------------------------------------------------------------------------
-export const SalesOrderList = () => {
+export const ManufacturingOrderList = () => {
     return (
         <div>
             <div className="grid grid-cols-3 @sm:grid-cols-5 text-2xs text-muted px-2 pb-1">

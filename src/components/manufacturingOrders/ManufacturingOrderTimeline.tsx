@@ -3,7 +3,7 @@ import { useMemo, useEffect, useRef, useState, useContext } from "react";
 
 //------------------------------------------------------------------------------
 import Tooltip from "@/components/common/Tooltip/Tooltip";
-import { SalesOrderProgressBar } from "./SalesOrderProgressBar";
+import { ManufacturingOrderProgressBar } from "@/components/manufacturingOrders/ManufacturingOrderProgressBar";
 
 //------------------------------------------------------------------------------
 import { useTimelineStore } from "@/store/useTimelineStore";
@@ -28,7 +28,7 @@ type TimelineEventColumn = {
 };
 
 //------------------------------------------------------------------------------
-export const SalesOrderTimeline = () => {
+export const ManufacturingOrderTimeline = () => {
     //--------------------------------------------------------------------------
     const sorted = useMemo(() => [...orders].sort((a, b) => a.startDate.getTime() - b.startDate.getTime()), []);
 
@@ -178,7 +178,7 @@ export const SalesOrderTimeline = () => {
                                     className="flex items-center gap-2 px-1 py-px hover:bg-underground/30 transition-colors duration-150 group pointer-events-none"
                                 >
                                     <div className="relative flex-1 h-5">
-                                        <SalesOrderTimelineNode
+                                        <ManufacturingOrderTimelineNode
                                             order={order}
                                             style={{
                                                 left: `${leftPct}%`,
@@ -256,7 +256,7 @@ const TimelineEventOverlay = ({ eventColumn }: TimelineEventOverlayProps) => {
 };
 
 //------------------------------------------------------------------------------
-type SalesOrderTimelineNodeProps = {
+type ManufacturingOrderTimelineNodeProps = {
     order: (typeof orders)[number];
     style: React.CSSProperties;
     onClick: () => void;
@@ -264,7 +264,7 @@ type SalesOrderTimelineNodeProps = {
 };
 
 //------------------------------------------------------------------------------
-const SalesOrderTimelineNode = ({ order, style, onClick, className }: SalesOrderTimelineNodeProps) => {
+const ManufacturingOrderTimelineNode = ({ order, style, onClick, className }: ManufacturingOrderTimelineNodeProps) => {
     return (
         <div className={className} style={style}>
             <Tooltip
@@ -292,7 +292,7 @@ const SalesOrderTimelineNode = ({ order, style, onClick, className }: SalesOrder
                 offset={4}
                 containerClassName="block h-full w-full"
             >
-                <SalesOrderProgressBar order={order} className="h-full w-full" onClick={onClick} />
+                <ManufacturingOrderProgressBar order={order} className="h-full w-full" onClick={onClick} />
             </Tooltip>
         </div>
     );

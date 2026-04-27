@@ -5,7 +5,7 @@ import { faGrid } from "@fortawesome/sharp-solid-svg-icons";
 //------------------------------------------------------------------------------
 import { PanelWrapper } from "@/components/common/panel/PanelWrapper";
 import { Icon } from "@/components/common/Icon";
-import { KeyStatusIndicators } from "./StatusIndicators";
+import { KeyStatusIndicators } from "../../../nodes/factory/StatusIndicators";
 
 //------------------------------------------------------------------------------
 import { type KeyStatus } from "@/services/dashboardApi";

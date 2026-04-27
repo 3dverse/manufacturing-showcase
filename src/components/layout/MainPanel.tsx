@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 import { ViewerPanelResizable } from "@/components/common/ViewerPanelResizable";
-import { LiveDashboard } from "@/components/dashboard";
+import { LiveDashboard } from "@/components/__TO_DELETE__/dashboard";
 
 //------------------------------------------------------------------------------
 const MainPanel = () => {

@@ -1,24 +1,25 @@
 import { useContext, useMemo } from "react";
-import { faAngleRight, faMapMarkerAlt } from "@fortawesome/sharp-regular-svg-icons";
+import { faMapMarkerAlt } from "@fortawesome/sharp-regular-svg-icons";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
 import { Triangle } from "@/components/common/icons/Triangle";
-import { KeyStatusIndicators } from "@/components/dashboard/header/StatusIndicators";
 import { BadgeOEE } from "@/components/common/BadgeOEE";
+import { KeyStatusIndicators } from "@/components/nodes/factory/StatusIndicators";
+import { ConnectedSystemsBadge } from "@/components/connectedSystems/ConnectedSystemsBadge";
+import { IncidentCallout } from "@/components/incidents/IncidentCallout";
 
 //------------------------------------------------------------------------------
-import { UseCaseContext } from "@/contexts/UseCaseContext";
+import { ScenarioContext } from "@/contexts/ScenariosContext";
 import { useFactoryItemOEE } from "@/hooks/useFactoryItemOEE";
+import { useNavigationStore } from "@/store/useNavigationStore";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
+import { MEDIA_QUERIES, useMediaQuery } from "@/utils/useMediaQuery";
 
 //------------------------------------------------------------------------------
 import type { Factory } from "@/content/type";
-import { ConnectedSystemsBadge } from "@/components/connectedSystems/ConnectedSystemsBadge";
-import Button from "@/components/common/Button";
-import { useNavigationStore } from "@/store/useNavigationStore";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -27,36 +28,36 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
     // Hooks
     const oee = useFactoryItemOEE(factoryItem.scene_id);
     const navigate = useNavigationStore((state) => state.navigate);
-    const { useCases, activeUseCaseId, requestIncidentFocus } = useContext(UseCaseContext);
+    const { activeStep } = useContext(ScenarioContext);
+    const incident = activeStep?.incident;
+    const isMobile = useMediaQuery(MEDIA_QUERIES.MOBILE);
 
     //--------------------------------------------------------------------------
     // Memos
-    const activeUseCase = useMemo(
-        () => (activeUseCaseId ? useCases[activeUseCaseId] : undefined),
-        [activeUseCaseId, useCases],
-    );
-    const incidentConfig = activeUseCase?.salesOrderIncident;
     const className = useMemo(() => {
         return factoryItem.enabled ? "rounded-b-none!" : "grayscale pointer-events-none opacity-50";
     }, [factoryItem.enabled]);
 
     //--------------------------------------------------------------------------
-    const openActiveIncident = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const enterFullscreenOnMobile = () => {
+        if (!window.matchMedia(MEDIA_QUERIES.MOBILE).matches) return;
+        if (!document.fullscreenEnabled || document.fullscreenElement) return;
+
+        void document.documentElement.requestFullscreen().catch(() => {
+            // Browsers can reject fullscreen requests depending on runtime policies.
+        });
+    };
+
+    //--------------------------------------------------------------------------
+    const openFactory = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
         e.preventDefault();
-        e.stopPropagation();
+        if (!factoryItem.enabled) return;
 
-        if (!activeUseCaseId || !incidentConfig) return;
+        //TODO: if incident is active, open incident
 
-        requestIncidentFocus(activeUseCaseId);
-        // setAsOf(Math.floor(new Date(incidentConfig.startDateIso).getTime() / 1000));
-
-        const targetFactory = factoryItem;
-        if (!targetFactory) return;
-
-        const targetRoute = `/${targetFactory.slug}`;
-        if (window.location.pathname !== targetRoute) {
-            navigate(targetRoute);
-        }
+        const targetRoute = `/${factoryItem.slug}`;
+        enterFullscreenOnMobile();
+        navigate(targetRoute);
     };
 
     //--------------------------------------------------------------------------
@@ -68,7 +69,9 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
     // Render
     return (
         <As
+            //TODO: keep link but if incident is active, open incident
             href={`/${factoryItem.slug}`}
+            onClick={isMobile ? openFactory : undefined}
             {...(!factoryItem.enabled ? { "data-disabled": true } : {})}
             className={cn(
                 "relative flex w-full h-full text-left bg-slate-50 rounded-md border-b border-slate-200/50 md:rounded-xl transition-all duration-300 cursor-pointer overflow-hidden group",
@@ -78,12 +81,6 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                 className,
             )}
         >
-            {/* {isGuidanceEmphasized && (
-                <span
-                    aria-hidden
-                    className="fixed left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-96 h-96 rounded-full border border-guidance z-20 shadow-[0_0_30px_-4px_color-mix(in_oklch,var(--color-guidance)_70%,transparent)]"
-                />
-            )} */}
             <div className="flex flex-col md:flex-row grow">
                 {factoryItem.video && (
                     <video
@@ -115,31 +112,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                             </div>
                         </div>
 
-                        {incidentConfig && (
-                            <div className="relative rounded-md border border-warning-400/70 bg-slate-0/95 px-3 py-2 shadow-lg starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400">
-                                <p className="text-xs font-semibold text-muted">{incidentConfig.title}</p>
-                                <p className="mt-1 text-xs text-warning-700">{incidentConfig.warningMessage}</p>
-                                <div className="mt-2 flex items-center justify-between gap-1">
-                                    <Button
-                                        variant="ghost"
-                                        size="xs"
-                                        disabled={Boolean(incidentConfig.actions[0]?.disabled)}
-                                        className="border border-warning-300/60 text-warning-700 pointer-events-none"
-                                    >
-                                        {incidentConfig.actions[0]?.label}
-                                    </Button>
-                                    <Button
-                                        colorScheme="guidance"
-                                        className="text-warning-50 bg-warning-700 hover:bg-warning-600"
-                                        size="xs"
-                                        onClick={openActiveIncident}
-                                    >
-                                        <Icon icon={faAngleRight} size="xs" className="mr-1" />
-                                        {incidentConfig.actions[1]?.label}
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
+                        {incident && <IncidentCallout incidentConfig={incident} />}
                     </div>
                 </div>
                 <div className="flex">

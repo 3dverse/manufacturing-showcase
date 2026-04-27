@@ -2,19 +2,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 //------------------------------------------------------------------------------
-import { SalesOrderCarouselItem } from "./SalesOrderCarouselItem";
+import { ManufacturingOrdersCarouselItem } from "@/components/manufacturingOrders/ManufacturingOrdersCarouselItem";
 
 //------------------------------------------------------------------------------
 import { orders, orderStatus } from "@/content/orders";
 import type { Order } from "@/content/type";
 
 //------------------------------------------------------------------------------
-type SalesOrderCarouselProps = {
+type ManufacturingOrdersCarouselProps = {
     onOrderSelect?: (order: Order) => void;
 };
 
 //------------------------------------------------------------------------------
-export const SalesOrderCarousel = ({ onOrderSelect }: SalesOrderCarouselProps) => {
+export const ManufacturingOrdersCarousel = ({ onOrderSelect }: ManufacturingOrdersCarouselProps) => {
     //--------------------------------------------------------------------------
     const scrollerRef = useRef<HTMLDivElement>(null);
     const scrollEndTimeoutRef = useRef<number | null>(null);
@@ -121,7 +121,7 @@ export const SalesOrderCarousel = ({ onOrderSelect }: SalesOrderCarouselProps) =
             >
                 <div className="shrink-0 w-3 snap-start" />
                 {sortedOrders.map((order) => (
-                    <SalesOrderCarouselItem key={order.ref} order={order} now={now} />
+                    <ManufacturingOrdersCarouselItem key={order.ref} order={order} now={now} />
                 ))}
                 <div className="shrink-0 w-3 snap-end" />
             </div>

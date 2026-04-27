@@ -4,7 +4,7 @@ import Button from "@/components/common/Button";
 import { CONTACT_URL, LANDING_3DVERSE_URL } from "@/content/routes";
 
 //------------------------------------------------------------------------------
-const MainGuidance = () => {
+export const ScenarioList = () => {
     const handleContact = () => {
         window.open(CONTACT_URL, "_blank", "noopener,noreferrer");
     };
@@ -38,5 +38,3 @@ const MainGuidance = () => {
         </aside>
     );
 };
-
-export default MainGuidance;

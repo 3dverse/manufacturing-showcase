@@ -9,7 +9,8 @@ import Button from "@/components/common/Button";
 import { PanelTitle } from "@/components/common/panel";
 
 //------------------------------------------------------------------------------
-import { UseCaseContext } from "@/contexts/UseCaseContext";
+import { ScenarioContext } from "@/contexts/ScenariosContext";
+
 //------------------------------------------------------------------------------
 import { generateIncidentReport } from "@/utils/generateIncidentReport";
 
@@ -35,7 +36,7 @@ export const CellIncident = ({
 }) => {
     //--------------------------------------------------------------------------
     // Context
-    const { activeUseCaseId, useCases } = useContext(UseCaseContext);
+    const { activeScenarioId, activeStep } = useContext(ScenarioContext);
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -52,8 +53,7 @@ export const CellIncident = ({
     );
 
     //--------------------------------------------------------------------------
-    const incidentMessage =
-        (activeUseCaseId && useCases[activeUseCaseId]?.salesOrderIncident?.warningMessage) || undefined;
+    const incidentMessage = (activeScenarioId && activeStep?.incident?.message) || undefined;
 
     //--------------------------------------------------------------------------
     return (

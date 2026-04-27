@@ -2,6 +2,7 @@ import type { Client, Entity, Vec3 } from "@3dverse/livelink";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type { StationId } from "./stations/enum";
 import type { NodeTypes } from "./enums";
+import type { ScenarioIncidentAction } from "./scenarios/scenarios";
 
 //------------------------------------------------------------------------------
 export type Avatar = {
@@ -106,33 +107,30 @@ export type Order = {
 };
 
 //------------------------------------------------------------------------------
-export type UseCase = {
+export type Scenario = {
     id: string;
     name: string;
     description: string;
     image?: string;
-    steps: UseCaseStep[];
+    steps: ScenarioStep[];
 };
 
 //------------------------------------------------------------------------------
-export type UseCaseStep = {
+export type ScenarioStep = {
     id: string;
-    name: string;
-    description: string;
-    delayBefore: number; // ms
-    incidents: UseCaseIncident[];
+    title: string;
+    description: React.ReactNode | string;
+    route: string;
+    selector: string;
+    incident?: ScenarioIncident;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 };
 
 //------------------------------------------------------------------------------
-export type UseCaseIncident = {
-    type: "warning" | "error";
-    description: string;
-    machines: Machine[];
-    possibleCauses: string[];
-    consequences: string[];
-    actions: Action[];
+export type ScenarioIncident = {
+    message: string;
+    actions: ScenarioIncidentAction[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 };

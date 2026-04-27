@@ -4,7 +4,8 @@ import { faCheck, faListCheck } from "@fortawesome/sharp-light-svg-icons";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
-import { SalesOrderProgressBar } from "./SalesOrderProgressBar";
+import Button from "@/components/common/Button";
+import { ManufacturingOrderProgressBar } from "@/components/manufacturingOrders/ManufacturingOrderProgressBar";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -13,16 +14,15 @@ import { timeAgo } from "@/utils/helpers-time";
 //------------------------------------------------------------------------------
 import { orderStatus } from "@/content/orders";
 import type { Order } from "@/content/type";
-import Button from "../common/Button";
 
 //------------------------------------------------------------------------------
-type SalesOrderCarouselItemProps = {
+type ManufacturingOrdersCarouselItemProps = {
     order: Order;
     now: number;
 };
 
 //------------------------------------------------------------------------------
-export const SalesOrderCarouselItem = ({ order, now }: SalesOrderCarouselItemProps) => {
+export const ManufacturingOrdersCarouselItem = ({ order, now }: ManufacturingOrdersCarouselItemProps) => {
     //--------------------------------------------------------------------------
     const isNotStarted = order.status.name === orderStatus.planned.name;
     const nowDate = new Date(now);
@@ -111,7 +111,7 @@ export const SalesOrderCarouselItem = ({ order, now }: SalesOrderCarouselItemPro
                     </p>
                 </div>
             </div>
-            <SalesOrderProgressBar order={order} size="lg" showClientName showDuration />
+            <ManufacturingOrderProgressBar order={order} size="lg" showClientName showDuration />
         </div>
     );
 };
