@@ -19,7 +19,7 @@ export const FloorOutline = ({ node }: { node: SceneGraphNode }) => {
 
     // Memos
     const stateClassName = useMemo(() => {
-        const classNames = [isSelected ? "pointer-events-none" : "cursor-pointer bg-accent-500/05"];
+        const classNames = [isSelected ? "pointer-events-none" : "cursor-pointer bg-accent-500/5"];
         if (!isSelected && isHovered) {
             classNames.push("bg-accent-500/10");
         }
