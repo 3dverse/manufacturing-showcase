@@ -32,7 +32,7 @@ export const NodeChildrensOverlay = ({ node }: { node: SceneGraphNode }) => {
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const FactoryChildrensOverlay = ({ factoryNode }: { factoryNode: FactoryNode }) => {
-    return factoryNode.areas.map((areaNode) => <TopPanel node={areaNode} />);
+    return factoryNode.areas.map((areaNode) => <TopPanel key={areaNode.hash} node={areaNode} />);
 };
 
 //------------------------------------------------------------------------------
