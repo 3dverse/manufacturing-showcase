@@ -112,7 +112,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                             </div>
                         </div>
 
-                        {incident && <IncidentCallout incidentConfig={incident} />}
+                        {incident && <IncidentCallout incident={incident} />}
                     </div>
                 </div>
                 <div className="flex">
