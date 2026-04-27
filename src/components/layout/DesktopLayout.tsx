@@ -11,6 +11,7 @@ import { GlobalOrderPanel } from "@/components/manufacturingOrders/GlobalOrderPa
 import { InvitePanel } from "@/components/clients/InvitePanel";
 import { KeyStatusIndicators } from "@/components/nodes/factory/StatusIndicators";
 import { BOMPanel } from "@/components/bom/BOMPanel";
+import { ScenarioStepper } from "@/components/scenarios/ScenarioStepper";
 // import { IncidentRouteOverlay } from "@/components/incidents/IncidentRouteOverlay";
 
 //------------------------------------------------------------------------------
@@ -85,6 +86,7 @@ export const DesktopLayout = () => {
             </div>
 
             {/* {isIncidentRoute && <IncidentRouteOverlay incidentId={incidentRoute.incidentId} />} */}
+            <ScenarioStepper />
         </div>
     );
 };

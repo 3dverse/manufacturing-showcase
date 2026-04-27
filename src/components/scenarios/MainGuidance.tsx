@@ -75,7 +75,7 @@ export const MainGuidance = () => {
                     `}
             >
                 {activeScenario ? (
-                    <div className="flex flex-col text-center pr-2">
+                    <div className="flex flex-col text-center px-2">
                         <p className="text-2xs text-subtle">Scenario</p>
                         <p className="text-xs text-guidance">{activeScenario.title}</p>
                     </div>

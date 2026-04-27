@@ -1,10 +1,12 @@
 import { createContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { FIRST_SCENARIO_ID, SCENARIOS } from "@/content/scenarios/scenarios";
+import { useNavigationStore } from "@/store/useNavigationStore";
 import type { ScenarioStep } from "@/content/type";
 
 type ScenarioContextType = {
     isGuidanceVisible: boolean;
+    tutorialMode: boolean;
     scenarios: typeof SCENARIOS;
     activeScenarioId?: string;
     activeStepId?: string;
@@ -12,8 +14,11 @@ type ScenarioContextType = {
     scenarioActivatedAt?: number;
     pendingIncidentFocusScenarioId?: string;
     setGuidanceVisible: (visible: boolean) => void;
+    setTutorialMode: (active: boolean) => void;
     toggleGuidanceVisibility: () => void;
+    toggleTutorialMode: () => void;
     activateScenario: (scenarioId: string) => void;
+    prevStep: () => void;
     nextStep: () => void;
     clearActiveScenario: () => void;
     requestIncidentFocus: (scenarioId?: string) => void;
@@ -31,9 +36,21 @@ export const ScenarioContext = createContext(
 
 const hasGuidanceQuery = () => new URLSearchParams(window.location.search).has("guidance");
 const getFirstScenarioStepId = (scenarioId?: string) => (scenarioId ? SCENARIOS[scenarioId]?.steps[0]?.id : undefined);
+const getNextScenarioId = (scenarioId?: string) => {
+    if (!scenarioId) return undefined;
+
+    const scenarioIds = Object.keys(SCENARIOS);
+    const scenarioIndex = scenarioIds.indexOf(scenarioId);
+    return scenarioIds[scenarioIndex + 1];
+};
+const navigateToStepRoute = (step?: ScenarioStep) => {
+    if (!step?.route || window.location.pathname === step.route) return;
+    useNavigationStore.getState().navigate(step.route);
+};
 
 export const ScenarioContextProvider = ({ children }: { children: ReactNode }) => {
     const [isGuidanceVisible, setGuidanceVisible] = useState(() => hasGuidanceQuery());
+    const [tutorialMode, setTutorialMode] = useState(true);
     const [activeScenarioId, setActiveScenarioId] = useState<string | undefined>(() =>
         hasGuidanceQuery() ? FIRST_SCENARIO_ID : undefined,
     );
@@ -69,6 +86,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
     const value = useMemo(
         () => ({
             isGuidanceVisible,
+            tutorialMode,
             scenarios: SCENARIOS,
             activeScenarioId,
             activeStepId,
@@ -76,11 +94,29 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
             scenarioActivatedAt,
             pendingIncidentFocusScenarioId,
             setGuidanceVisible,
+            setTutorialMode,
             toggleGuidanceVisibility: () => setGuidanceVisible((current) => !current),
+            toggleTutorialMode: () => setTutorialMode((current) => !current),
             activateScenario: (scenarioId: string) => {
                 setActiveScenarioId(scenarioId);
                 setActiveStepId(getFirstScenarioStepId(scenarioId));
                 setScenarioActivatedAt(Date.now());
+            },
+            prevStep: () => {
+                if (!activeScenarioId) return;
+
+                const steps = SCENARIOS[activeScenarioId]?.steps;
+                if (!steps?.length) {
+                    setActiveStepId(undefined);
+                    return;
+                }
+
+                const currentStepIndex = steps.findIndex((step) => step.id === activeStepId);
+                const prevStep = steps[currentStepIndex - 1];
+                if (!prevStep) return;
+
+                navigateToStepRoute(prevStep);
+                setActiveStepId(prevStep.id);
             },
             nextStep: () => {
                 if (!activeScenarioId) return;
@@ -91,10 +127,22 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
                     return;
                 }
 
-                setActiveStepId((currentStepId) => {
-                    const currentStepIndex = steps.findIndex((step) => step.id === currentStepId);
-                    return steps[currentStepIndex + 1]?.id ?? currentStepId ?? steps[0]?.id;
-                });
+                const currentStepIndex = steps.findIndex((step) => step.id === activeStepId);
+                const nextStep = steps[currentStepIndex + 1];
+                if (nextStep) {
+                    navigateToStepRoute(nextStep);
+                    setActiveStepId(nextStep.id);
+                    return;
+                }
+
+                const nextScenarioId = getNextScenarioId(activeScenarioId);
+                if (!nextScenarioId) return;
+                const firstNextScenarioStep = SCENARIOS[nextScenarioId]?.steps[0];
+
+                navigateToStepRoute(firstNextScenarioStep);
+                setActiveScenarioId(nextScenarioId);
+                setActiveStepId(firstNextScenarioStep?.id);
+                setScenarioActivatedAt(Date.now());
             },
             clearActiveScenario: () => {
                 setActiveScenarioId(undefined);
@@ -109,6 +157,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
         }),
         [
             isGuidanceVisible,
+            tutorialMode,
             activeScenarioId,
             activeStepId,
             activeStep,

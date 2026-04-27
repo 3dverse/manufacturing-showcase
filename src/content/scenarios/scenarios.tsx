@@ -39,13 +39,15 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
             {
                 id: "step_1",
                 title: "Hypervison",
-                description: <p>Sales order planning</p>,
+                circleSize: 500,
+                description: <p>Follow in real time your order planning...</p>,
                 route: "/",
                 selector: "[data-scenario=maintenance-step-1]",
             },
             {
                 id: "step_2",
                 title: "Incident reported",
+                circleSize: 300,
                 incident: {
                     message: "Incident lorem ipsum dolor sit amet...",
                     actions: [
@@ -70,7 +72,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                 id: "step_3",
                 title: "Incident machine",
                 description: <p>Machine details...</p>,
-                route: "/factory/machine/1",
+                route: "/phone-factory/ec07e887",
                 selector: "[data-scenario=maintenance-step-3]",
             },
         ],
