@@ -118,6 +118,7 @@ export const InvitePanel = () => {
                 <div className="relative" ref={menuRef}>
                     <Button
                         colorScheme="accent"
+                        variant="soft"
                         size="sm"
                         className={cn(
                             "md:min-w-24 p-2 gap-2 rounded-full md:rounded-3xl aspect-square md:aspect-auto font-normal",
@@ -139,7 +140,7 @@ export const InvitePanel = () => {
 
                     {menuOpen && (
                         <div
-                            className="absolute right-0 mt-px w-40 bg-white border border-gray-200 rounded shadow-lg z-50"
+                            className="absolute -right-1 mt-1 w-40 bg-white border border-slate-200 rounded shadow-lg z-50"
                             role="menu"
                         >
                             {actions.map(({ label, onClick, icon }, index) => (
@@ -149,7 +150,7 @@ export const InvitePanel = () => {
                                         onClick();
                                         setMenuOpen(false);
                                     }}
-                                    className="flex items-center w-full px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100 cursor-pointer"
+                                    className="flex items-center w-full px-2 py-1.5 text-xs text-slate-700 hover:bg-slate-100 cursor-pointer"
                                     role="menuitem"
                                     type="button"
                                 >

@@ -4,6 +4,7 @@ import { QRCode } from "react-qrcode-logo";
 
 //------------------------------------------------------------------------------
 import Button from "@/components/common/Button";
+import Modal from "@/components/common/modal/Modal";
 
 //------------------------------------------------------------------------------
 export const InviteModal = ({
@@ -37,15 +38,21 @@ export const InviteModal = ({
         return null;
     }
     return (
-        <aside
-            className="fixed inset-0 flex flex-col items-center justify-center pointer-events-auto z-50 bg-white/90 backdrop-blur-xl starting:opacity-0 opacity-100 transition-opacity duration-300"
-            onClick={onClose}
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            variant="bottomSheet"
+            isFullScreen={true}
+            showCloseButton={false}
+            closeOnOverlayClick={true}
+            contentClassName="flex flex-col items-center justify-center"
+            bodyClassName="p-4 mb-16 md:my-16"
         >
             <QRCode value={guestLink} size={200} bgColor="transparent" />
-            <p className="mt-2 text-center text-sm text-gray-500">Scan to join the 3D session</p>
-            <Button onClick={onClose} className="mt-4 min-w-48">
+            <p className="mt-3 text-center text-sm text-slate">Scan to join the 3D session</p>
+            <Button onClick={onClose} className="mt-12 min-w-48">
                 Close
             </Button>
-        </aside>
+        </Modal>
     );
 };

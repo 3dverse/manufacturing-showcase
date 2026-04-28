@@ -27,11 +27,13 @@ const IntroductionModal = ({ isOpen, onClose }: IntroductionModalProps) => {
             showCloseButton={false}
             contentClassName="!max-w-5xl !h-[50%] !max-h-[80vh] !min-h-[30rem]"
             bodyClassName="p-0"
+            variant="bottomSheet"
+            closeOnOverlayClick={true}
         >
             <div className="flex flex-col lg:flex-row h-full">
                 {/* Video */}
                 <div className="hidden lg:flex lg:w-96 bg-stripes border-r border-muted/50 p-6 lg:p-8 items-center justify-center">
-                    <div className="w-full flex items-center justify-center overflow-hidden">
+                    <div className="w-full flex items-center justify-center overflow-hidden ">
                         <div className="text-center p-4">
                             <p className="text-sm text-muted">Video</p>
                         </div>
@@ -40,8 +42,10 @@ const IntroductionModal = ({ isOpen, onClose }: IntroductionModalProps) => {
 
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col justify-center p-8 lg:p-12 overflow-y-auto">
-                    <h1 className="text-2xl font-bold text-default mb-2">Welcome to Manufacturing 5.0</h1>
-                    <p className="text-sm text-subtle mb-8 max-w-md">
+                    <h1 className="text-2xl md:text-3xl font-bold text-default mb-2 md:mb-4">
+                        Welcome to Manufacturing 5.0
+                    </h1>
+                    <p className="text-subtle max-w-md">
                         Explore our cutting-edge manufacturing solutions with immersive 3D visualization. Discover how
                         we revolutionize industrial processes through innovative technology and design.
                     </p>
@@ -73,7 +77,13 @@ const IntroductionModal = ({ isOpen, onClose }: IntroductionModalProps) => {
                         </div>
                     </div>
 
-                    <Button variant="plain" colorScheme="guidance" className="w-fit min-w-56" onClick={handleContinue}>
+                    <Button
+                        variant="plain"
+                        colorScheme="guidance"
+                        size={{ base: "lg", sm: "sm" }}
+                        className="mt-16 md:w-fit min-w-56"
+                        onClick={handleContinue}
+                    >
                         Continue
                     </Button>
                 </div>

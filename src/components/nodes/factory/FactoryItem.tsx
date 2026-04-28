@@ -100,7 +100,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                 <div className="grow flex pl-4 md:pl-7 pr-4 md:pr-3 pt-2 md:pt-5 pb-3">
                     <div className="grow flex items-start justify-between">
                         <div className="grow flex flex-col gap-y-1 h-full">
-                            <h2 className="text-xl md:text-2xl font-semibold group-hover:text-accent transition-colors">
+                            <h2 className="text-accent-900 text-xl md:text-2xl font-semibold group-hover:text-accent transition-colors">
                                 {factoryItem.name}
                             </h2>
                             <div className="grow flex flex-col lg:flex-row items-start lg:items-baseline justify-between gap-x-3 gap-y-2">

@@ -95,6 +95,15 @@ export type OrderStatus = {
 };
 
 //------------------------------------------------------------------------------
+export type OrderDetails = {
+    delivery: string;
+    machine: string;
+    incident: string;
+    digitalTwin: string;
+    action: string;
+};
+
+//------------------------------------------------------------------------------
 export type Order = {
     ref: string;
     client: string;
@@ -104,6 +113,8 @@ export type Order = {
     endDate: Date;
     unitsPlanned: number;
     unitsCompleted: number;
+    estimatedDelayInMin?: number;
+    details?: OrderDetails;
 };
 
 //------------------------------------------------------------------------------
