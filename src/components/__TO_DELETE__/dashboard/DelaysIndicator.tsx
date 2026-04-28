@@ -19,7 +19,7 @@ export const DelaysIndicator: React.FC<DelaysIndicatorProps> = ({ weeks, days, c
                 <span className="text-xs text-subtle">Delays</span>
                 <span className="text-green-600 text-xs">↑</span>
             </div>
-            <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
+            <div className="relative h-6 bg-slate-100 rounded-full overflow-hidden">
                 {/* Red segment (1 week) */}
                 <div className="absolute left-0 h-full bg-red-500" style={{ width: `${(7 / maxValue) * 100}%` }}>
                     <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-white font-medium">

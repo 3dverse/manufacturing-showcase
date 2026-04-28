@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 //------------------------------------------------------------------------------
-import { ManufacturingOrdersCarouselItem } from "@/components/manufacturingOrders/ManufacturingOrdersCarouselItem";
+import { ManufacturingOrdersCarouselItem } from "@/components/manufacturingOrders/carousel/CarouselItem";
 
 //------------------------------------------------------------------------------
 import { orders, orderStatus } from "@/content/orders";
@@ -32,6 +32,8 @@ export const ManufacturingOrdersCarousel = ({ onOrderSelect }: ManufacturingOrde
             null,
         [sortedOrders],
     );
+    const [selectedOrderRef, setSelectedOrderRef] = useState<string | null>(initialOrderRef);
+    const [detailsMode, setDetailsMode] = useState(false);
 
     //--------------------------------------------------------------------------
     useEffect(() => {
@@ -67,9 +69,36 @@ export const ManufacturingOrdersCarousel = ({ onOrderSelect }: ManufacturingOrde
 
         const selectedOrder = sortedOrders.find((order) => order.ref === centeredCard.ref);
         if (selectedOrder) {
+            setSelectedOrderRef(selectedOrder.ref);
             onOrderSelect?.(selectedOrder);
         }
     }, [onOrderSelect, sortedOrders]);
+
+    //--------------------------------------------------------------------------
+    const handleOrderClick = useCallback(
+        (order: Order) => {
+            setSelectedOrderRef(order.ref);
+            setDetailsMode((currentDetailsMode) => (selectedOrderRef === order.ref ? !currentDetailsMode : true));
+            onOrderSelect?.(order);
+
+            const target = scrollerRef.current?.querySelector<HTMLDivElement>(`[data-order-ref="${order.ref}"]`);
+            target?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+        },
+        [onOrderSelect, selectedOrderRef],
+    );
+
+    //--------------------------------------------------------------------------
+    const handleOrderDetailsToggle = useCallback(
+        (order: Order, isOpen: boolean) => {
+            setSelectedOrderRef(order.ref);
+            setDetailsMode(isOpen);
+            onOrderSelect?.(order);
+
+            const target = scrollerRef.current?.querySelector<HTMLDivElement>(`[data-order-ref="${order.ref}"]`);
+            target?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+        },
+        [onOrderSelect],
+    );
 
     //--------------------------------------------------------------------------
     useEffect(() => {
@@ -115,13 +144,22 @@ export const ManufacturingOrdersCarousel = ({ onOrderSelect }: ManufacturingOrde
     return (
         <div className="relative">
             <span className="absolute bottom-0 left-0 w-full h-[140%] scale-200 bg-linear-to-t from-slate-0 to-transparent -z-1" />
+            <span className="absolute bottom-0 left-0 w-full h-[140%] scale-150 bg-linear-to-t from-slate-0 via-slate-0/80 to-transparent -z-1" />
             <div
                 ref={scrollerRef}
-                className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-2 pb-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-2 transition-transform duration-500 ease-out [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
                 <div className="shrink-0 w-3 snap-start" />
                 {sortedOrders.map((order) => (
-                    <ManufacturingOrdersCarouselItem key={order.ref} order={order} now={now} />
+                    <ManufacturingOrdersCarouselItem
+                        key={order.ref}
+                        order={order}
+                        now={now}
+                        isSelected={selectedOrderRef === order.ref}
+                        isDetailsOpen={detailsMode && selectedOrderRef === order.ref}
+                        onClick={() => handleOrderClick(order)}
+                        onDetailsToggle={(isOpen) => handleOrderDetailsToggle(order, isOpen)}
+                    />
                 ))}
                 <div className="shrink-0 w-3 snap-end" />
             </div>

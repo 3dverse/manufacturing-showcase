@@ -1,9 +1,7 @@
 //------------------------------------------------------------------------------
-import { useCallback, useContext, type MouseEvent } from "react";
-import { faGrid } from "@fortawesome/pro-solid-svg-icons";
+import { useCallback, useContext } from "react";
 
 //------------------------------------------------------------------------------
-import { Icon } from "@/components/common/Icon";
 import { BadgeOEE } from "@/components/common/BadgeOEE";
 
 //------------------------------------------------------------------------------
@@ -15,7 +13,6 @@ import { useFactoryOEE } from "@/hooks/useFactoryOEE";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
-import { useNavigationStore } from "@/store/useNavigationStore";
 
 //------------------------------------------------------------------------------
 export const MobileMainHeader = ({ className, children }: { className?: string; children?: React.ReactNode }) => {
@@ -26,21 +23,7 @@ export const MobileMainHeader = ({ className, children }: { className?: string; 
     const oee = useFactoryOEE();
 
     //--------------------------------------------------------------------------
-    // Hooks
-    const { navigate } = useNavigationStore();
-
-    //--------------------------------------------------------------------------
     // Handlers
-    const homeClickHandler = useCallback(
-        (e: MouseEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            navigate("/");
-        },
-        [navigate],
-    );
-
-    //--------------------------------------------------------------------------
     const factoryClickHandler = useCallback(() => {
         if (nodeGraph) setSelectedNode(nodeGraph);
     }, [nodeGraph, setSelectedNode]);
@@ -49,18 +32,11 @@ export const MobileMainHeader = ({ className, children }: { className?: string; 
     return (
         <div className="flex flex-col text-slate-50 bg-slate-900 pointer-events-auto">
             <header className={cn("flex gap-3 w-full h-fit", className)}>
-                <a
-                    className="flex items-center justify-center aspect-square text-xs text-slate-0 bg-accent-100/10 group-hover:bg-accent-100/20 transition-colors duration-200 cursor-pointer"
-                    href="/"
-                    onClick={homeClickHandler}
-                >
-                    <Icon icon={faGrid} size="xl" />
-                </a>
-                <div className="grow flex flex-wrap items-center" onClick={factoryClickHandler}>
+                <div className="grow flex flex-wrap items-center pl-4" onClick={factoryClickHandler}>
                     <div className="flex items-baseline flex-wrap gap-x-2">
                         <h2
                             className={cn(
-                                "font-medium text-base group-hover:text-slate-100 transition-colors duration-200",
+                                "font-semibold text-base group-hover:text-slate-100 transition-colors duration-200",
                             )}
                         >
                             {factory?.name}

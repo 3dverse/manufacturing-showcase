@@ -48,7 +48,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 neutral: "bg-neutral-600 hover:bg-neutral-700 text-white focus:ring-neutral",
                 positive: "bg-positive-600 hover:bg-positive-700 text-white focus:ring-positive",
                 negative: "bg-negative-600 hover:bg-negative-700 text-white focus:ring-negative",
-                guidance: "bg-guidance hover:bg-guidance-600 text-slate-0 focus:ring-guidance",
+                guidance: "bg-guidance hover:bg-guidance-600 text-slate-1000 dark:text-slate-0 focus:ring-guidance",
                 warning: "bg-warning-600 hover:bg-warning-700 text-warning-50 focus:ring-warning",
             },
             outline: {
@@ -73,7 +73,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 warning: "bg-transparent hover:bg-warning-50 text-warning-700 focus:ring-warning",
             },
             soft: {
-                accent: "bg-accent-100 hover:bg-accent-200 text-accent-800 focus:ring-accent",
+                accent: "bg-accent-100 hover:bg-accent-200 text-accent-600 focus:ring-accent",
                 neutral: "bg-neutral-200 hover:bg-neutral-300 text-neutral-800 focus:ring-neutral",
                 positive: "bg-positive-100 hover:bg-positive-200 text-positive-800 focus:ring-positive",
                 negative: "bg-negative-100 hover:bg-negative-200 text-negative-800 focus:ring-negative",

@@ -1,12 +1,13 @@
 //------------------------------------------------------------------------------
 import { useCallback, useContext, type MouseEvent } from "react";
-import { faGrid } from "@fortawesome/pro-solid-svg-icons";
+import { faAngleLeft } from "@fortawesome/pro-light-svg-icons";
 import { faClock } from "@fortawesome/sharp-regular-svg-icons";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
 import { Icon } from "@/components/common/Icon";
 import { BadgeOEE } from "@/components/common/BadgeOEE";
+import { ClientProductLogo } from "../common/icons/ClientProductLogo";
 
 //------------------------------------------------------------------------------
 import { useNavigationStore } from "@/store/useNavigationStore";
@@ -56,11 +57,16 @@ export const MainHeader = ({ className }: { className?: string }) => {
                 )}
             >
                 <a
-                    className="p-1 aspect-square rounded-sm text-xs text-slate-0 bg-accent-100/10 group-hover:bg-accent-100/20 transition-colors duration-200 cursor-pointer"
-                    href={"/"}
+                    className="group p-1 aspect-square rounded-sm text-xs text-slate-0 bg-accent/60 group-hover:bg-accent-100/20 transition-colors duration-200 overflow-hidden cursor-pointer"
+                    href="/"
                     onClick={homeClickHandler}
                 >
-                    <Icon icon={faGrid} size="lg" />
+                    <Icon
+                        icon={faAngleLeft}
+                        size="lg"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 scale-75 group-hover:translate-x-3 group-hover:scale-100 transition-transform duration-200"
+                    />
+                    <ClientProductLogo className="group-hover:translate-x-5 group-hover:scale-90 transition-transform duration-200" />
                 </a>
             </ViewerPanel>
 

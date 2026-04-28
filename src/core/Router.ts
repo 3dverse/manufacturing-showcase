@@ -2,6 +2,7 @@
 export type Route = {
     factorySlug?: string;
     nodeSlug?: string;
+    itemSlug?: string;
     pathname: string;
     url: string;
 };
@@ -50,24 +51,26 @@ export class Router {
     private static parsePath(pathname: string): Route {
         const localPath = this.stripBasePath(pathname);
         const clean = localPath.replace(/^\/+|\/+$/g, "");
-        const [factorySlugRaw, nodeSlugRaw] = clean ? clean.split("/") : [];
+        const [factorySlugRaw, nodeSlugRaw, itemSlugRaw] = clean ? clean.split("/") : [];
 
         return {
             factorySlug: factorySlugRaw ? decodeURIComponent(factorySlugRaw) : undefined,
             nodeSlug: nodeSlugRaw ? decodeURIComponent(nodeSlugRaw) : undefined,
+            itemSlug: itemSlugRaw ? decodeURIComponent(itemSlugRaw) : undefined,
             pathname: pathname || "/",
             url: window.location.href,
         };
     }
 
     //--------------------------------------------------------------------------
-    private static buildPath(factorySlug?: string, nodeSlug?: string): string {
+    private static buildPath(factorySlug?: string, nodeSlug?: string, itemSlug?: string): string {
         if (!factorySlug) {
             return this.addBasePath("/");
         }
 
         const parts = [encodeURIComponent(factorySlug)];
         if (nodeSlug) parts.push(encodeURIComponent(nodeSlug));
+        if (nodeSlug && itemSlug) parts.push(encodeURIComponent(itemSlug));
 
         return this.addBasePath(`/${parts.join("/")}`);
     }
@@ -116,6 +119,7 @@ export class Router {
                 pathname: route.pathname,
                 factorySlug: route.factorySlug,
                 nodeSlug: route.nodeSlug,
+                itemSlug: route.itemSlug,
             },
             "",
             window.location.pathname + window.location.search + window.location.hash,
@@ -158,9 +162,9 @@ export class Router {
     }
 
     //--------------------------------------------------------------------------
-    static replace(data: { factorySlug: string; nodeSlug?: string }, state: unknown = {}) {
+    static replace(data: { factorySlug: string; nodeSlug?: string; itemSlug?: string }, state: unknown = {}) {
         Router.activeFactorySlug = data.factorySlug;
-        const pathname = this.buildPath(data.factorySlug, data.nodeSlug);
+        const pathname = this.buildPath(data.factorySlug, data.nodeSlug, data.itemSlug);
 
         history.replaceState(
             {

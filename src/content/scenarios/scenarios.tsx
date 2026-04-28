@@ -49,7 +49,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
             {
                 id: "step_2",
                 title: "Incident reported",
-                circleSize: 300,
+                circleSize: 340,
                 offsetY: 50,
                 incident: {
                     message: "The drilling machine is not working.",

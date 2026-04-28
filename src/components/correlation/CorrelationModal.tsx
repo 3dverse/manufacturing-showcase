@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 
 import Modal from "@/components/common/modal/Modal";
@@ -16,6 +16,8 @@ import { PutawayTaskSheet } from "@/components/correlation/sections/PutawayTaskS
 import { useCorrelation } from "@/hooks/useCorrelation";
 import { useSpanProjection } from "@/hooks/useSpanProjection";
 import { useFocusStore } from "@/store/useFocusStore";
+import { entityTypeFromId } from "@/core/Correlation";
+import { Router } from "@/core/Router";
 import type { FocusedEntity } from "@/core/Correlation";
 
 // ---------------------------------------------------------------------------
@@ -70,6 +72,25 @@ export function CorrelationModal() {
     const projection = useSpanProjection();
     const correlated = useCorrelation(projection, selected);
 
+    useEffect(() => {
+        return Router.onChange(({ route, source }) => {
+            if (source !== "pop") return;
+            if (!route.itemSlug) {
+                setSelected(null);
+                return;
+            }
+            const type = entityTypeFromId(route.itemSlug);
+            if (type) setSelected({ type, id: route.itemSlug });
+            else setSelected(null);
+        });
+    }, [setSelected]);
+
+    const handleClose = useCallback(() => {
+        setSelected(null);
+        const { factorySlug, nodeSlug } = Router.currentRoute();
+        if (factorySlug) Router.replace({ factorySlug, nodeSlug });
+    }, [setSelected]);
+
     const title = useMemo(() => {
         if (!selected || !projection) return "";
         return getFocusedLabel(selected, projection);
@@ -97,7 +118,7 @@ export function CorrelationModal() {
     return createPortal(
         <Modal
             isOpen={true}
-            onClose={() => setSelected(null)}
+            onClose={handleClose}
             title={title}
             contentClassName="w-full max-w-md"
             bodyClassName="overflow-y-auto max-h-[65vh]"

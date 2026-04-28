@@ -23,7 +23,8 @@ import { useTimelineStore } from "@/store/useTimelineStore";
 import { useFocusStore } from "@/store/useFocusStore";
 
 //------------------------------------------------------------------------------
-import { highlightStateForBar, type EntityType, type HighlightState } from "@/core/Correlation";
+import { highlightStateForBar, entityTypeFromId, type EntityType, type HighlightState } from "@/core/Correlation";
+import { Router } from "@/core/Router";
 import { isArea } from "@/core/SceneGraph";
 import type { TimelineLevel } from "@/core/Scope";
 import type {
@@ -746,6 +747,10 @@ function Bar({
         (e: ReactMouseEvent) => {
             e.stopPropagation();
             setSelected({ type: bar.entityType, id: bar.id });
+            const { factorySlug, nodeSlug } = Router.currentRoute();
+            if (factorySlug) {
+                Router.replace({ factorySlug, nodeSlug, itemSlug: bar.id });
+            }
         },
         [bar, setSelected],
     );
@@ -782,6 +787,13 @@ export function Timeline({ className }: { className?: string }) {
     //--------------------------------------------------------------------------
     const { hovered, setHovered, setSelected } = useFocusStore();
     const { asOf, setAsOf, present, isPlaying, play, pause, playbackSpeed, setPlaybackSpeed } = useTimelineStore();
+
+    useEffect(() => {
+        const { itemSlug } = Router.currentRoute();
+        if (!itemSlug) return;
+        const type = entityTypeFromId(itemSlug);
+        if (type) setSelected({ type, id: itemSlug });
+    }, [setSelected]);
     const { scope, level, isLoading } = useScope(selectedNode ?? null);
     const projection = useProjection(scope);
     const spanProjection = useSpanProjection();
@@ -1052,6 +1064,10 @@ export function Timeline({ className }: { className?: string }) {
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setSelected({ type: "workOrder", id: wo.id });
+                                            const { factorySlug, nodeSlug } = Router.currentRoute();
+                                            if (factorySlug) {
+                                                Router.replace({ factorySlug, nodeSlug, itemSlug: wo.id });
+                                            }
                                         }}
                                     />
                                 );
@@ -1102,6 +1118,10 @@ export function Timeline({ className }: { className?: string }) {
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setSelected({ type: "downtime", id: dt.id });
+                                            const { factorySlug, nodeSlug } = Router.currentRoute();
+                                            if (factorySlug) {
+                                                Router.replace({ factorySlug, nodeSlug, itemSlug: dt.id });
+                                            }
                                         }}
                                     />
                                 );

@@ -6,7 +6,10 @@ interface ModalProps {
     onClose: () => void;
     children: ReactNode;
     title?: string;
+    variant?: "default" | "bottomSheet";
+    isFullScreen?: boolean;
     showCloseButton?: boolean;
+    closeOnOverlayClick?: boolean;
     contentClassName?: string;
     bodyClassName?: string;
 }
@@ -17,17 +20,36 @@ const Modal = ({
     onClose,
     children,
     title,
+    variant = "default",
+    isFullScreen = false,
     showCloseButton = true,
+    closeOnOverlayClick = true,
     contentClassName = "",
     bodyClassName = "",
 }: ModalProps) => {
+    //--------------------------------------------------------------------------
     const dialogRef = useRef<HTMLDialogElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
+
+    //--------------------------------------------------------------------------
     const [isClosing, setIsClosing] = useState(false);
     const [touchStart, setTouchStart] = useState<number | null>(null);
     const [touchCurrent, setTouchCurrent] = useState<number | null>(null);
     const [isDragging, setIsDragging] = useState(false);
 
+    //--------------------------------------------------------------------------
+    const isBottomSheet = variant === "bottomSheet";
+    const canDragBottomSheet = () => isBottomSheet && window.matchMedia("(max-width: 768px)").matches;
+
+    //--------------------------------------------------------------------------
+    const resetDragStyles = useCallback(() => {
+        const content = contentRef.current;
+        if (!content) return;
+
+        content.style.transform = "";
+    }, []);
+
+    //--------------------------------------------------------------------------
     const handleClose = useCallback(() => {
         setIsClosing(true);
         // Wait for animation to complete before actually closing
@@ -36,11 +58,13 @@ const Modal = ({
             if (dialog) {
                 dialog.close();
             }
+            resetDragStyles();
             setIsClosing(false);
             onClose();
         }, 300);
-    }, [onClose]);
+    }, [onClose, resetDragStyles]);
 
+    //--------------------------------------------------------------------------
     // Handle dialog open/close
     useEffect(() => {
         const dialog = dialogRef.current;
@@ -49,6 +73,7 @@ const Modal = ({
         if (isOpen) {
             if (!dialog.open) {
                 dialog.showModal();
+                resetDragStyles();
                 setIsClosing(false);
             }
         } else {
@@ -61,15 +86,18 @@ const Modal = ({
                 } else {
                     // Programmatic close (isOpen set to false externally), close immediately
                     dialog.close();
+                    resetDragStyles();
                     setIsClosing(false);
                 }
             } else {
                 // Dialog is already closed, ensure closing state is reset
+                resetDragStyles();
                 setIsClosing(false);
             }
         }
-    }, [isOpen, isClosing]);
+    }, [isOpen, isClosing, resetDragStyles]);
 
+    //--------------------------------------------------------------------------
     // Handle escape key
     useEffect(() => {
         const dialog = dialogRef.current;
@@ -85,34 +113,34 @@ const Modal = ({
         return () => dialog.removeEventListener("keydown", handleEscape);
     }, [handleClose]);
 
+    //--------------------------------------------------------------------------
     // Touch handlers for swipe down on mobile
     const handleTouchStart = (e: React.TouchEvent) => {
+        if (!canDragBottomSheet()) return;
+
         const touch = e.touches[0];
         setTouchStart(touch.clientY);
         setTouchCurrent(touch.clientY);
         setIsDragging(true);
     };
 
+    //--------------------------------------------------------------------------
     const handleTouchMove = (e: React.TouchEvent) => {
-        if (touchStart === null) return;
+        if (!canDragBottomSheet() || touchStart === null) return;
 
         const touch = e.touches[0];
         const deltaY = touch.clientY - touchStart;
 
-        // Only allow downward swipes
-        if (deltaY > 0) {
-            setTouchCurrent(touch.clientY);
-            if (contentRef.current) {
-                const translateY = Math.min(deltaY, 200); // Max drag distance
-                contentRef.current.style.transform = `translateY(${translateY}px)`;
-                // Add opacity fade based on drag distance
-                const opacity = Math.max(0.5, 1 - translateY / 200);
-                contentRef.current.style.opacity = opacity.toString();
-            }
+        setTouchCurrent(touch.clientY);
+        if (contentRef.current) {
+            const translateY = Math.max(-20, Math.min(deltaY, 200));
+            contentRef.current.style.transform = `translateY(${translateY}px)`;
         }
     };
 
+    //--------------------------------------------------------------------------
     const handleTouchEnd = () => {
+        if (!canDragBottomSheet()) return;
         if (touchStart === null || touchCurrent === null) return;
 
         const deltaY = touchCurrent - touchStart;
@@ -123,8 +151,7 @@ const Modal = ({
             handleClose();
         } else if (contentRef.current) {
             // Snap back
-            contentRef.current.style.transform = "";
-            contentRef.current.style.opacity = "";
+            resetDragStyles();
         }
 
         setTouchStart(null);
@@ -132,13 +159,14 @@ const Modal = ({
         setIsDragging(false);
     };
 
+    //--------------------------------------------------------------------------
     return (
         <dialog
             ref={dialogRef}
-            className={`modal ${isClosing ? "modal--closing" : ""}`}
+            className={`modal modal--${variant} ${isClosing ? "modal--closing" : ""} pointer-events-auto`}
             onClick={(e) => {
                 // Close when clicking on backdrop
-                if (e.target === dialogRef.current) {
+                if (closeOnOverlayClick && e.target === dialogRef.current) {
                     handleClose();
                 }
             }}
@@ -147,14 +175,14 @@ const Modal = ({
                 ref={contentRef}
                 className={`modal__content ${isClosing ? "modal__content--closing" : ""} ${
                     isDragging ? "modal__content--dragging" : ""
-                } ${contentClassName}`}
+                } ${isFullScreen ? "animate-none! w-full h-full max-w-none! max-h-none!" : ""} ${contentClassName}`}
                 onClick={(e) => e.stopPropagation()}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchEnd}
             >
-                {/* Mobile drag handle */}
-                <div className="modal__drag-handle" />
+                {isBottomSheet && <div className="modal__drag-handle" />}
 
                 {/* Header */}
                 {(title || showCloseButton) && (
@@ -179,7 +207,6 @@ const Modal = ({
                         )}
                     </div>
                 )}
-
                 {/* Content */}
                 <div className={`modal__body ${bodyClassName}`}>{children}</div>
             </div>
