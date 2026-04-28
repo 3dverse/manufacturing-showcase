@@ -644,7 +644,7 @@ export function fillDataset(
         return `SO-${String(soNum++).padStart(4, "0")}`;
     }
     function newPoId() {
-        return `PO-ERP-${String(poNum++).padStart(4, "0")}`;
+        return `PO-${String(poNum++).padStart(4, "0")}`;
     }
     function newInvId() {
         return `INV-${String(invNum++).padStart(4, "0")}`;

@@ -18,6 +18,24 @@ export type EntityType =
 
 export type FocusedEntity = { type: EntityType; id: string };
 
+const ID_PREFIX_TO_ENTITY_TYPE: Record<string, EntityType> = {
+    SO: "salesOrder",
+    MO: "productionOrder",
+    OP: "operation",
+    DT: "downtime",
+    WO: "workOrder",
+    PICK: "pickTask",
+    RCP: "receipt",
+    PUT: "putawayTask",
+    PO: "purchaseOrder",
+    ALLOC: "allocation",
+};
+
+export function entityTypeFromId(id: string): EntityType | null {
+    const prefix = id.match(/^[A-Z]+/)?.[0];
+    return prefix ? (ID_PREFIX_TO_ENTITY_TYPE[prefix] ?? null) : null;
+}
+
 export type HighlightState = "focused" | "correlated" | "dimmed" | "idle";
 
 // ---------------------------------------------------------------------------
