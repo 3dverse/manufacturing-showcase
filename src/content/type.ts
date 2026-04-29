@@ -134,6 +134,7 @@ export type ScenarioStep = {
     route: string;
     selector: string;
     incident?: ScenarioIncident;
+    beforeStep?: () => string | void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 };

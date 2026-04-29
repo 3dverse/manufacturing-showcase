@@ -50,7 +50,11 @@ export const ScenarioStepper = () => {
     const [autoplayProgress, setAutoplayProgress] = useState(0);
     const [overlayBounds, setOverlayBounds] = useState<ElementBounds>({ x: 0, y: 0, width: 0, height: 0 });
     const [popoverSize, setPopoverSize] = useState({ width: 0, height: 0 });
-    const isActiveStepRoute = !activeStep?.route || window.location.pathname === activeStep.route;
+    const isActiveStepRoute =
+        !activeStep?.route ||
+        (activeStep.beforeStep
+            ? window.location.pathname.startsWith(activeStep.route)
+            : window.location.pathname === activeStep.route);
     const scenarioEntries = Object.entries(scenarios);
     const activeScenarioIndex = scenarioEntries.findIndex(([scenarioId]) => scenarioId === activeScenarioId);
     const activeScenario = activeScenarioId ? scenarios[activeScenarioId] : undefined;

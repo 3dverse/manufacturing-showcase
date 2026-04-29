@@ -1,4 +1,5 @@
 import type { ScenarioStep } from "../../content/type";
+import { useTimelineStore } from "@/store/useTimelineStore";
 
 export type ScenarioCellMatcher = {
     lineNameIncludes?: string[];
@@ -75,10 +76,28 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
             },
             {
                 id: "step_3",
+                title: "Factory overview",
+                circleSize: 400,
+                description: <p>Factory overview details...</p>,
+                route: "/phone-factory",
+                selector: "[data-scenario=incident-step-3]",
+            },
+            {
+                id: "step_4",
                 title: "Incident machine",
                 description: <p>Machine details...</p>,
                 route: "/phone-factory/ec07e887",
-                selector: "[data-scenario=incident-step-3]",
+                beforeStep: () => {
+                    const { span, setAsOf } = useTimelineStore.getState();
+                    const latest = span
+                        ? [...span.downtimeEvents.values()].sort((a, b) => b.startedAt - a.startedAt)[0]
+                        : undefined;
+                    if (latest) {
+                        setAsOf(latest.startedAt);
+                        return `/phone-factory/ec07e887/${latest.id}`;
+                    }
+                },
+                selector: "[data-scenario=incident-step-4]",
             },
         ],
     },

@@ -2,6 +2,7 @@ import { createContext, useEffect, useMemo, useState, type Dispatch, type ReactN
 
 import { FIRST_SCENARIO_ID, SCENARIOS } from "@/content/scenarios/scenarios";
 import { useNavigationStore } from "@/store/useNavigationStore";
+import { Router } from "@/core/Router";
 import type { ScenarioStep } from "@/content/type";
 
 type ScenarioContextType = {
@@ -46,8 +47,13 @@ const getNextScenarioId = (scenarioId?: string) => {
     return scenarioIds[scenarioIndex + 1];
 };
 const navigateToStepRoute = (step?: ScenarioStep) => {
-    if (!step?.route || window.location.pathname === step.route) return;
-    useNavigationStore.getState().navigate(step.route);
+    if (!step) return;
+    const overrideRoute = step.beforeStep?.();
+    const targetRoute = overrideRoute ?? step.route;
+    if (!targetRoute || window.location.pathname === targetRoute) return;
+    useNavigationStore.getState().navigate(targetRoute);
+    const [, factorySlug, nodeSlug, itemSlug] = targetRoute.split("/");
+    if (factorySlug) Router.replace({ factorySlug, nodeSlug, itemSlug });
 };
 
 export const ScenarioContextProvider = ({ children }: { children: ReactNode }) => {

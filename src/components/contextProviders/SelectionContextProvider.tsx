@@ -77,6 +77,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
                         initialNodeSlug.current = event.route.nodeSlug;
                     }
                     break;
+                case "replace":
                 case "pop":
                     if (event.route?.nodeSlug) {
                         const nodeSlug = event.route.nodeSlug;
