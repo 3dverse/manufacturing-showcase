@@ -39,6 +39,8 @@ export function MiniSparkline({
         range: [innerH, 0],
     });
     const pathData = data.map((y, x) => ({ x, y }));
+    const lastX = xScale(data.length - 1);
+    const lastY = yScale(data[data.length - 1]);
     return (
         <svg width={SPARKLINE_WIDTH} height={SPARKLINE_HEIGHT} className={cn("overflow-visible", className)}>
             <Group left={margin.left} top={margin.top}>
@@ -50,6 +52,7 @@ export function MiniSparkline({
                     stroke={color}
                     strokeWidth={1.5}
                 />
+                <circle cx={lastX} cy={lastY} r={2.5} fill={color} />
             </Group>
         </svg>
     );

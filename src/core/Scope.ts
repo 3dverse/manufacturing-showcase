@@ -151,6 +151,16 @@ export type AllocationEntry = {
     clearedAt: number | null;
 };
 
+export type OEEBucketEntry = {
+    shiftStart: number;
+    shiftEnd: number;
+    plannedMinutes: number;
+    runtimeMinutes: number;
+    goodQuantity: number;
+    producedQuantity: number;
+    oeePercent: number;
+};
+
 // ---------------------------------------------------------------------------
 // Span — timespan-scoped cache
 // ---------------------------------------------------------------------------
@@ -173,6 +183,8 @@ export type TimelineSpan = {
     putawayTasks: Map<string, PutawayTaskEntry>;
     purchaseOrders: Map<string, PurchaseOrderEntry>;
     allocations: Map<string, AllocationEntry>;
+    /** Shift-level OEE buckets keyed by workCenterId, covering the full span window. */
+    oeeByWorkCenter: Map<string, OEEBucketEntry[]>;
     // Indexes built from the above
     productionOrdersByLocation: Map<string, string[]>;
     productionOrdersByWorkCenter: Map<string, string[]>;
@@ -197,6 +209,7 @@ export function emptySpan(origin: number): TimelineSpan {
         putawayTasks: new Map(),
         purchaseOrders: new Map(),
         allocations: new Map(),
+        oeeByWorkCenter: new Map(),
         productionOrdersByLocation: new Map(),
         productionOrdersByWorkCenter: new Map(),
         operationsByWorkCenter: new Map(),
@@ -268,6 +281,7 @@ export function mergeSpan(a: TimelineSpan, b: TimelineSpan): TimelineSpan {
     merge(result.putawayTasks, a.putawayTasks, b.putawayTasks);
     merge(result.purchaseOrders, a.purchaseOrders, b.purchaseOrders);
     merge(result.allocations, a.allocations, b.allocations);
+    merge(result.oeeByWorkCenter, a.oeeByWorkCenter, b.oeeByWorkCenter);
     buildSpanIndexes(result);
     return result;
 }

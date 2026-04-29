@@ -10,6 +10,7 @@ import { CellIncident } from "../nodes/cells/CellIncident";
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
+import { useOEEHistory } from "@/hooks/useOEEHistory";
 import { BadgeOEE } from "../common/BadgeOEE";
 import { AnchoredPanel } from "./DOM3D/AnchoredPanel";
 import { StorageOverlay } from "./StorageOverlay";
@@ -53,6 +54,7 @@ const AreaDetailsOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const oee = useAreaOEE(areaNode);
+    const oeeHistory = useOEEHistory(areaNode);
 
     //--------------------------------------------------------------------------
     const kpi = useMemo(() => {
@@ -61,11 +63,12 @@ const AreaDetailsOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
             <div className="starting:opacity-0 starting:translate-y-4 opacity-100 translate-y-0 transition-all duration-300 delay-1700 transform-3d">
                 <BadgeOEE
                     oee={oee}
+                    oeeHistory={oeeHistory}
                     className="text-2xl -translate-y-8 px-3 py-2 shadow-xl transform-3d backdrop-blur-3xl"
                 />
             </div>
         );
-    }, [oee]);
+    }, [oee, oeeHistory]);
 
     //--------------------------------------------------------------------------
     const content = useMemo(() => {
@@ -191,6 +194,7 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
         <>
             <InfoPanel node={cellNode} incident={incident} extra={extra}>
                 <CellSummary
+                    cell={cellNode}
                     manufacturingOrder={productionOrder}
                     operation={operation}
                     machineDetails={machineDetails}

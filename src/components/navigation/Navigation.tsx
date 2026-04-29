@@ -17,6 +17,7 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 import { isArea, isFactory, isLine, sortNode } from "@/core/SceneGraph";
 import { useNavNode } from "./hooks";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
+import { useOEEHistory } from "@/hooks/useOEEHistory";
 import { cn } from "@/utils/cn";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
@@ -259,6 +260,7 @@ const AreaNav = ({
 
     //--------------------------------------------------------------------------
     const oee = useAreaOEE(area);
+    const oeeHistory = useOEEHistory(area);
 
     //--------------------------------------------------------------------------
     // Memos
@@ -306,7 +308,9 @@ const AreaNav = ({
             {SHOW_FLOW_BUTTON && index === 0 && <FlowNode isSelected={isSelected} />}
             <div className="flex justify-between gap-1">
                 <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
-                {area.name === "production" && oee !== undefined && <BadgeOEE oee={oee} hideLabel />}
+                {area.name === "production" && oee !== undefined && (
+                    <BadgeOEE oee={oee} oeeHistory={oeeHistory} hideLabel />
+                )}
             </div>
             <ul className="flex overflow-visible">
                 {children.map((child, index) => (

@@ -16,6 +16,7 @@ import {
     type PutawayTaskEntry,
     type PurchaseOrderEntry,
     type AllocationEntry,
+    type OEEBucketEntry,
 } from "@/core/Scope";
 import { isArea } from "@/core/SceneGraph";
 import type { SceneGraphNode } from "@/content/type";
@@ -149,6 +150,26 @@ function mapOp(op: OperationDetail): OperationEntry {
         },
         plannedRunTimeMinutes: op.plannedRunTimeMinutes,
         actualRunTimeMinutes: op.actualRunTimeMinutes,
+    };
+}
+
+function mapOEEBucket(b: {
+    shiftStart: number;
+    shiftEnd: number;
+    plannedMinutes: number;
+    runtimeMinutes: number;
+    goodQuantity: number;
+    producedQuantity: number;
+    oeePercent: number;
+}): OEEBucketEntry {
+    return {
+        shiftStart: b.shiftStart,
+        shiftEnd: b.shiftEnd,
+        plannedMinutes: b.plannedMinutes,
+        runtimeMinutes: b.runtimeMinutes,
+        goodQuantity: b.goodQuantity,
+        producedQuantity: b.producedQuantity,
+        oeePercent: b.oeePercent,
     };
 }
 
@@ -307,19 +328,31 @@ export async function fetchSpan(node: SceneGraphNode, siteId: string, window: Wi
     );
     for (const op of opPages.flat()) span.operations.set(op.id, mapOp(op));
 
-    // Downtime — always fetched for all work centers in scope
-    const dtPages = await Promise.all(
-        workCenterIds.map((wcId) =>
-            MES.listDowntimeEvents({
-                siteId,
-                workCenterId: wcId,
-                startedFrom: window.from,
-                startedTo: window.to,
-                pageSize: PAGE_SIZE,
-            }).then((r) => r.data.data),
+    // Downtime + OEE timeseries — always fetched for all work centers in scope
+    const [dtPages, oeePages] = await Promise.all([
+        Promise.all(
+            workCenterIds.map((wcId) =>
+                MES.listDowntimeEvents({
+                    siteId,
+                    workCenterId: wcId,
+                    startedFrom: window.from,
+                    startedTo: window.to,
+                    pageSize: PAGE_SIZE,
+                }).then((r) => r.data.data),
+            ),
         ),
-    );
+        Promise.all(
+            workCenterIds.map((wcId) =>
+                MES.getPerformanceTimeseries({ siteId, workCenterId: wcId, from: window.from, to: window.to })
+                    .then((r) => ({ wcId, buckets: r.data.data }))
+                    .catch(() => ({ wcId, buckets: [] })),
+            ),
+        ),
+    ]);
     for (const dt of dtPages.flat()) span.downtimeEvents.set(dt.id, mapDowntime(dt));
+    for (const { wcId, buckets } of oeePages) {
+        span.oeeByWorkCenter.set(wcId, buckets.map(mapOEEBucket));
+    }
 
     // Sales orders — site-wide, no time filter
     const soResp = await ERP.getSalesOrders({ siteId, pageSize: PAGE_SIZE });

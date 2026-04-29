@@ -963,7 +963,7 @@ export function Timeline() {
             <aside
                 data-scenario="incident-step-5"
                 className={cn(
-                    "flex flex-col-reverse pointer-events-auto border-b border-slate-200 select-none",
+                    "flex flex-col pointer-events-auto border-b border-slate-200 select-none",
                     PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
                 )}
             >

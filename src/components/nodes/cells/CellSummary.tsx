@@ -7,6 +7,8 @@ import { Icon } from "@/components/common/Icon";
 import Button from "@/components/common/Button";
 import { DataContainer, DataLabel, DataValue } from "@/components/common/panel/DataLabel";
 import { Triangle } from "@/components/common/icons/Triangle";
+import { MiniSparkline } from "@/components/common/metrics/MetricBlock";
+import { useCellKpis } from "@/components/nodes/cells/useCellKpis";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -15,18 +17,22 @@ import { fmtDuration } from "@/utils/helpers-time";
 //------------------------------------------------------------------------------
 import type { ProjectedOperation, ProjectedProductionOrder } from "@/core/Projection";
 import type { MachineDetails } from "@/content/machine";
+import type { CellNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const CellSummary = ({
+    cell,
     operation,
     manufacturingOrder,
     machineDetails,
 }: {
+    cell: CellNode;
     operation?: ProjectedOperation;
     manufacturingOrder?: ProjectedProductionOrder;
     machineDetails: MachineDetails;
 }) => {
+    const { oeeHistory } = useCellKpis(cell);
     //--------------------------------------------------------------------------
     const [isMESDashboardVisible, setIsMESDashboardVisible] = useState(false);
 
@@ -69,6 +75,11 @@ export const CellSummary = ({
                                 <span className="text-slate-300 font-light text-2xl">N/A</span>
                             )}
                         </DataValue>
+                        <MiniSparkline
+                            data={oeeHistory}
+                            color="var(--color-positive-500)"
+                            className="mt-1 opacity-70"
+                        />
                     </DataContainer>
                     <DataContainer className="gap-0 justify-between">
                         <DataLabel className="flex items-center gap-2 text-positive-700 ">
