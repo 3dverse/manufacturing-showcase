@@ -50,7 +50,7 @@ export default function HomePage() {
                             <FactoryItem factoryItem={factoryItem} />
                             {factoryItem.enabled && (
                                 <div className="bg-slate-50 -mt-2 pt-5 p-3 rounded-b-md">
-                                    <ManufacturingOrderPlanning />
+                                    <ManufacturingOrderPlanning siteId={factoryItem.scene_id} />
                                 </div>
                             )}
                         </li>

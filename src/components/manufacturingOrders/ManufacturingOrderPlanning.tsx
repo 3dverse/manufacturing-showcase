@@ -10,14 +10,16 @@ import { ManufacturingOrderList } from "./ManufacturingOrderList";
 import { ManufacturingOrderTimeline } from "./ManufacturingOrderTimeline";
 
 //------------------------------------------------------------------------------
+import { useHomePageData } from "@/hooks/useHomePageData";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 type ViewMode = "list" | "timeline";
 
 //------------------------------------------------------------------------------
-export const ManufacturingOrderPlanning = () => {
+export const ManufacturingOrderPlanning = ({ siteId }: { siteId: string }) => {
     const [mode, setMode] = useState<ViewMode>("timeline");
+    const { orders, downtimeEvents, eamWorkOrders, isLoading, refTs } = useHomePageData(siteId);
 
     //--------------------------------------------------------------------------
     return (
@@ -56,7 +58,17 @@ export const ManufacturingOrderPlanning = () => {
                 </div>
             </header>
 
-            {mode === "list" ? <ManufacturingOrderList /> : <ManufacturingOrderTimeline />}
+            {mode === "list" ? (
+                <ManufacturingOrderList orders={orders} isLoading={isLoading} />
+            ) : (
+                <ManufacturingOrderTimeline
+                    orders={orders}
+                    downtimeEvents={downtimeEvents}
+                    eamWorkOrders={eamWorkOrders}
+                    isLoading={isLoading}
+                    refTs={refTs}
+                />
+            )}
             <footer className="w-full flex justify-between items-center mt-1 px-px">
                 <p className="flex items-center gap-1 text-2xs text-muted/80">
                     <img src="/logo/sap.svg" alt="SAP" className="h-3" />

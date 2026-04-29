@@ -2,11 +2,16 @@
 import { ViewerPanel } from "@/components/common/ViewerPanel";
 import { ProductionAreaSummary } from "@/components/nodes/areas/production/ProductionAreaSummary";
 import { ManufacturingOrderPlanning } from "@/components/manufacturingOrders/ManufacturingOrderPlanning";
+import { FactoryContext } from "@/contexts/FactoryContext";
+import { useContext } from "react";
 
 //------------------------------------------------------------------------------
 export const FactoryPanel = () => {
     //--------------------------------------------------------------------------
     const SHOW_PLANNING_PANEL = false;
+
+    //--------------------------------------------------------------------------
+    const { factory } = useContext(FactoryContext);
 
     //--------------------------------------------------------------------------
     return (
@@ -20,7 +25,7 @@ export const FactoryPanel = () => {
 
             {SHOW_PLANNING_PANEL && (
                 <article className="p-2 pt-0">
-                    <ManufacturingOrderPlanning />
+                    <ManufacturingOrderPlanning siteId={factory.scene_id} />
                 </article>
             )}
         </ViewerPanel>

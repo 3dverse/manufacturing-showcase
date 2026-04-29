@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useMemo, useEffect, useRef, useState, useContext } from "react";
+import { useMemo, useRef, useContext, useCallback } from "react";
 
 //------------------------------------------------------------------------------
 import Tooltip from "@/components/common/Tooltip/Tooltip";
@@ -10,10 +10,12 @@ import { useTimelineStore } from "@/store/useTimelineStore";
 import { useNavigationStore } from "@/store/useNavigationStore";
 import { useFactoryStore } from "@/store/useFactoryStore";
 import { FactoriesContext } from "@/contexts/FactoriesContext";
+import { buildClosedIntervals } from "@/core/Calendar";
 
 //------------------------------------------------------------------------------
-import { orders } from "@/content/orders";
-import { machineTimelineEvents } from "@/content/events";
+import type { Order } from "@/content/type";
+import type { HomeDowntimeEvent } from "@/hooks/useHomePageData";
+import type { ProjectedWorkOrder } from "@/core/Projection";
 
 //------------------------------------------------------------------------------
 type TimelineEventColumn = {
@@ -28,17 +30,38 @@ type TimelineEventColumn = {
 };
 
 //------------------------------------------------------------------------------
-export const ManufacturingOrderTimeline = () => {
+export const ManufacturingOrderTimeline = ({
+    orders,
+    downtimeEvents,
+    eamWorkOrders,
+    isLoading,
+    refTs,
+}: {
+    orders: Order[];
+    downtimeEvents: HomeDowntimeEvent[];
+    eamWorkOrders: ProjectedWorkOrder[];
+    isLoading: boolean;
+    refTs: number; // Unix seconds — center of the display window (asOf ?? present)
+}) => {
     //--------------------------------------------------------------------------
-    const sorted = useMemo(() => [...orders].sort((a, b) => a.startDate.getTime() - b.startDate.getTime()), []);
+    const refMs = useMemo(() => refTs * 1000, [refTs]);
+    const minTime = useMemo(() => refMs - 7 * 24 * 60 * 60 * 1000, [refMs]);
+    const maxTime = useMemo(() => refMs + 3 * 24 * 60 * 60 * 1000, [refMs]);
+    const totalSpan = useMemo(() => maxTime - minTime, [maxTime, minTime]);
 
+    // Helper: ms → % within the window
+    const toPct = useCallback((ms: number) => ((ms - minTime) / totalSpan) * 100, [minTime, totalSpan]);
     //--------------------------------------------------------------------------
-    const minTime = useMemo(() => Math.min(...sorted.map((o) => o.startDate.getTime())), [sorted]);
-    const maxTime = useMemo(() => Math.max(...sorted.map((o) => o.endDate.getTime())), [sorted]);
-    const totalSpan = maxTime - minTime || 1;
+    const sorted = useMemo(
+        () =>
+            [...orders]
+                .filter((o) => o.endDate.getTime() >= minTime && o.startDate.getTime() <= maxTime)
+                .sort((a, b) => a.startDate.getTime() - b.startDate.getTime()),
+        [orders, minTime, maxTime],
+    );
 
     const clientGroups = useMemo(() => {
-        const groups = new Map<string, typeof orders>();
+        const groups = new Map<string, Order[]>();
         for (const order of sorted) {
             if (!groups.has(order.client)) groups.set(order.client, []);
             groups.get(order.client)!.push(order);
@@ -46,16 +69,8 @@ export const ManufacturingOrderTimeline = () => {
         return groups;
     }, [sorted]);
 
-    const [now, setNow] = useState(() => Date.now());
-
-    //--------------------------------------------------------------------------
-    useEffect(() => {
-        const id = setInterval(() => setNow(Date.now()), 60_000);
-        return () => clearInterval(id);
-    }, []);
-
-    const nowPct = ((now - minTime) / totalSpan) * 100;
-    const isNowInRange = nowPct >= 0 && nowPct <= 100;
+    // refTs is always 7/10 through the window
+    const nowPct = 70;
 
     const rowsRef = useRef<HTMLDivElement>(null);
     const setAsOf = useTimelineStore((state) => state.setAsOf);
@@ -64,30 +79,53 @@ export const ManufacturingOrderTimeline = () => {
     const { factories } = useContext(FactoriesContext);
 
     //--------------------------------------------------------------------------
+    // Closed intervals (nights + weekends)
+    const closedIntervals = useMemo(() => buildClosedIntervals(minTime / 1000, maxTime / 1000), [minTime, maxTime]);
+
+    //--------------------------------------------------------------------------
     const timelineEventColumns = useMemo(() => {
-        return machineTimelineEvents
+        return downtimeEvents
             .map((event) => {
-                const startMs = event.date.getTime();
-                const endMs = startMs + event.durationHours * 60 * 60 * 1000;
-                const clippedStartMs = Math.max(startMs, minTime);
-                const clippedEndMs = Math.min(endMs, maxTime);
+                const clippedStartMs = Math.max(event.startMs, minTime);
+                const clippedEndMs = Math.min(event.endMs, maxTime);
                 if (clippedEndMs <= clippedStartMs) return null;
 
                 return {
                     id: event.id,
                     type: event.type,
-                    machine: event.machine,
+                    machine: event.label,
                     details: event.details,
-                    startMs,
-                    endMs,
-                    leftPct: ((clippedStartMs - minTime) / totalSpan) * 100,
+                    startMs: event.startMs,
+                    endMs: event.endMs,
+                    leftPct: toPct(clippedStartMs),
                     widthPct: Math.max(((clippedEndMs - clippedStartMs) / totalSpan) * 100, 0.5),
                 } satisfies TimelineEventColumn;
             })
             .filter((event): event is TimelineEventColumn => event !== null)
             .sort((a, b) => a.startMs - b.startMs);
-    }, [minTime, maxTime, totalSpan]);
+    }, [downtimeEvents, minTime, maxTime, totalSpan, toPct]);
 
+    //--------------------------------------------------------------------------
+    const workOrderColumns = useMemo(
+        () =>
+            eamWorkOrders
+                .map((wo) => {
+                    const startMs = wo.effectiveStart * 1000;
+                    const endMs = wo.effectiveEnd * 1000;
+                    const clippedStart = Math.max(startMs, minTime);
+                    const clippedEnd = Math.min(endMs, maxTime);
+                    if (clippedEnd <= clippedStart) return null;
+                    return {
+                        wo,
+                        leftPct: toPct(clippedStart),
+                        widthPct: Math.max(((clippedEnd - clippedStart) / totalSpan) * 100, 0.5),
+                    };
+                })
+                .filter((x): x is NonNullable<typeof x> => x !== null),
+        [eamWorkOrders, minTime, maxTime, totalSpan, toPct],
+    );
+
+    //--------------------------------------------------------------------------
     const timeLabels = useMemo(() => {
         const labels: { label: string; pct: number }[] = [];
         const start = new Date(minTime);
@@ -100,12 +138,12 @@ export const ManufacturingOrderTimeline = () => {
                     step < 24 * 3600 * 1000
                         ? new Date(t).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
                         : new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-                pct: ((t - minTime) / totalSpan) * 100,
+                pct: toPct(t),
             });
             t += step;
         }
         return labels;
-    }, [minTime, maxTime, totalSpan]);
+    }, [minTime, maxTime, totalSpan, toPct]);
 
     const firstEnabledFactory = useMemo(
         () => factories.find((factory) => factory.enabled) || factories[0],
@@ -113,7 +151,7 @@ export const ManufacturingOrderTimeline = () => {
     );
 
     //--------------------------------------------------------------------------
-    const openOrderAtStart = (order: (typeof orders)[number]) => {
+    const openOrderAtStart = (order: Order) => {
         setAsOf(Math.floor(order.startDate.getTime() / 1000));
 
         const targetFactory = currentFactory ?? firstEnabledFactory;
@@ -124,6 +162,15 @@ export const ManufacturingOrderTimeline = () => {
             navigate(targetRoute);
         }
     };
+
+    //--------------------------------------------------------------------------
+    if (isLoading || sorted.length === 0) {
+        return (
+            <div className="flex items-center justify-center h-16 text-xs text-muted">
+                {isLoading ? "Loading orders..." : "No orders in this period"}
+            </div>
+        );
+    }
 
     //--------------------------------------------------------------------------
     return (
@@ -139,38 +186,94 @@ export const ManufacturingOrderTimeline = () => {
                         {label}
                     </span>
                 ))}
-                {isNowInRange && (
-                    <span
-                        className="absolute left-0 -bottom-5 px-1 text-2xs text-accent -translate-x-1/2 tracking-wide whitespace-nowrap bg-slate-0 rounded-md z-10"
-                        style={{ left: `${nowPct}%` }}
-                    >
-                        {new Date(now).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                )}
+                <span
+                    className="absolute left-0 -bottom-5 px-1 text-2xs text-accent -translate-x-1/2 tracking-wide whitespace-nowrap bg-slate-0 rounded-md z-10"
+                    style={{ left: `${nowPct}%` }}
+                >
+                    {new Date(refMs).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                </span>
             </div>
 
             {/* Rows */}
             <div
                 ref={rowsRef}
-                className="relative flex flex-col divide-y divide-muted border border-muted rounded bg-neutral-0/50"
+                className="relative flex flex-col divide-y divide-muted border border-muted rounded bg-neutral-0/50 overflow-hidden"
             >
-                {isNowInRange && (
+                {/* Schedule bands — nights + weekends */}
+                {closedIntervals.map(({ start, end }) => (
                     <div
-                        className="absolute top-0 bottom-0 w-px bg-accent/70 z-0 pointer-events-none"
-                        style={{ left: `${nowPct}%` }}
+                        key={start}
+                        className="absolute top-0 bottom-0 bg-underground/60 pointer-events-none z-0"
+                        style={{
+                            left: `${toPct(start * 1000)}%`,
+                            width: `${((end - start) / (totalSpan / 1000)) * 100}%`,
+                        }}
                     />
-                )}
+                ))}
+
+                {/* Work order bands */}
+                {workOrderColumns.map(({ wo, leftPct, widthPct }) => (
+                    <div
+                        key={wo.id}
+                        className="absolute top-0 bottom-0 z-1 pointer-events-auto"
+                        style={{ left: `${leftPct}%`, width: `${widthPct}%`, minWidth: "3px" }}
+                    >
+                        <Tooltip
+                            content={
+                                <div className="flex flex-col gap-1 px-1.5 py-1">
+                                    <p className="text-xs text-muted capitalize">{wo.workType.replace("_", " ")}</p>
+                                    <p className="text-sm font-medium">{wo.workOrderNumber}</p>
+                                    {wo.isOverdue && <p className="text-xs text-warning">Overdue</p>}
+                                    <p className="text-xs text-muted">
+                                        {new Date(wo.effectiveStart * 1000).toLocaleString(undefined, {
+                                            month: "short",
+                                            day: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}{" "}
+                                        →{" "}
+                                        {new Date(wo.effectiveEnd * 1000).toLocaleString(undefined, {
+                                            month: "short",
+                                            day: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                    </p>
+                                </div>
+                            }
+                            showArrow={true}
+                            offset={4}
+                            containerClassName="block h-full w-full"
+                        >
+                            <div className="h-full w-full bg-warning/20 hover:bg-warning/35 transition-colors duration-150" />
+                        </Tooltip>
+                    </div>
+                ))}
+
+                {/* Now marker */}
+                <div
+                    className="absolute top-0 bottom-0 w-px bg-accent/70 z-0 pointer-events-none"
+                    style={{ left: `${nowPct}%` }}
+                />
+
+                {/* Downtime bands */}
                 {timelineEventColumns.map((eventColumn) => (
                     <TimelineEventOverlay key={eventColumn.id} eventColumn={eventColumn} />
                 ))}
+
+                {/* Order rows */}
                 {[...clientGroups.entries()].map(([client, clientOrders]) => (
-                    <div key={client}>
-                        <div className="px-2 py-0.5 text-2xs font-medium text-muted bg-underground/80 backdrop-blur-xl relative z-1">
+                    <div key={client} className="relative z-1 pointer-events-none">
+                        <div className="px-2 py-0.5 text-2xs font-medium text-muted bg-underground/80 backdrop-blur-xl relative z-1 pointer-events-auto">
                             {client}
                         </div>
                         {clientOrders.map((order) => {
-                            const leftPct = ((order.startDate.getTime() - minTime) / totalSpan) * 100;
-                            const widthPct = ((order.endDate.getTime() - order.startDate.getTime()) / totalSpan) * 100;
+                            const leftPct = toPct(order.startDate.getTime());
+                            const rightPct = toPct(order.endDate.getTime());
+                            const clampedLeft = Math.max(0, leftPct);
+                            const clampedRight = Math.min(100, rightPct);
+                            if (rightPct < 0 || leftPct > 100) return null;
+                            const clampedWidth = Math.max(clampedRight - clampedLeft, 0.5);
 
                             return (
                                 <div
@@ -181,8 +284,8 @@ export const ManufacturingOrderTimeline = () => {
                                         <ManufacturingOrderTimelineNode
                                             order={order}
                                             style={{
-                                                left: `${leftPct}%`,
-                                                width: `${Math.max(widthPct, 2)}%`,
+                                                left: `${clampedLeft}%`,
+                                                width: `${clampedWidth}%`,
                                             }}
                                             className="absolute top-0 h-full pointer-events-auto"
                                             onClick={() => openOrderAtStart(order)}
@@ -227,7 +330,7 @@ const TimelineEventOverlay = ({ eventColumn }: TimelineEventOverlayProps) => {
 
     return (
         <div
-            className="absolute top-0 bottom-0 z-0"
+            className="absolute top-0 bottom-0 z-1"
             style={{
                 left: `${eventColumn.leftPct}%`,
                 width: `${eventColumn.widthPct}%`,
@@ -257,7 +360,7 @@ const TimelineEventOverlay = ({ eventColumn }: TimelineEventOverlayProps) => {
 
 //------------------------------------------------------------------------------
 type ManufacturingOrderTimelineNodeProps = {
-    order: (typeof orders)[number];
+    order: Order;
     style: React.CSSProperties;
     onClick: () => void;
     className: string;
@@ -292,7 +395,7 @@ const ManufacturingOrderTimelineNode = ({ order, style, onClick, className }: Ma
                 offset={4}
                 containerClassName="block h-full w-full"
             >
-                <ManufacturingOrderProgressBar order={order} className="h-full w-full" onClick={onClick} />
+                <ManufacturingOrderProgressBar order={order} solid className="h-full w-full" onClick={onClick} />
             </Tooltip>
         </div>
     );

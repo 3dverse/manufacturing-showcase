@@ -54,7 +54,7 @@ export function buildConfig(partial: Partial<GeneratorConfig> & { site: SiteNode
         yieldRate: 0.95,
         pmFrequencyDays: 14,
         pmDurationHours: 4,
-        customerCount: 6,
+        customerCount: 3,
         supplierCount: 4,
         minPurchaseOrderGroupSize: 3,
         maxPurchaseOrderGroupSize: 6,

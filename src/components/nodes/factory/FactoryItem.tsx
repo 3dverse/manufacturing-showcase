@@ -134,9 +134,10 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                                 {oee ?? "—"}
                                 <span className="text-base opacity-80 ml-px">{oee !== null ? "%" : ""}</span>
                             </p>
-                            <p>
+                            <p className="flex items-center gap-1">
                                 OEE <Triangle />
                             </p>
+                            <p className="text-xs text-positive-700/70 -mt-0.5">This week</p>
                         </div>
                     </div>
                 </div>

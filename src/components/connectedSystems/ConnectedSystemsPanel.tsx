@@ -24,14 +24,14 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
     //--------------------------------------------------------------------------
     // Sync API with Process state (Process disconnected by default)
     useEffect(() => {
-        dashboardApi.setProductionRunning(connections.PSS);
-    }, [connections.PSS]);
+        dashboardApi.setProductionRunning(connections.APS);
+    }, [connections.APS]);
 
     //--------------------------------------------------------------------------
     const toggle = (id: SystemId) => {
         setConnections((prev) => {
             const next = { ...prev, [id]: !prev[id] };
-            if (id === "PSS") dashboardApi.setProductionRunning(next.PSS);
+            if (id === "APS") dashboardApi.setProductionRunning(next.APS);
             return next;
         });
     };
