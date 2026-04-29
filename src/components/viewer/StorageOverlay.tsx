@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
 //------------------------------------------------------------------------------
 import { DOMEntity } from "@3dverse/livelink-react";
@@ -24,6 +24,10 @@ export function StorageOverlay({ areaNode }: { areaNode: AreaNode }) {
     const targetAsOf = asOf || present;
 
     //--------------------------------------------------------------------------
+    // State
+    const [occupancy, setOccupancy] = useState<Map<string, BinOccupancy[]>>(new Map());
+
+    //--------------------------------------------------------------------------
     // Derive display nodes and WMS bin IDs.
     //
     // Storage: has aisles → racks → bins; one WMS location per bin (bin.hash).
@@ -37,17 +41,6 @@ export function StorageOverlay({ areaNode }: { areaNode: AreaNode }) {
         const zoneBinId = `${areaNode.hash}-BIN-01`;
         return { displayNodes: areaNode.cells as OverlayNode[], queryBinIds: [zoneBinId], isPerBin: false };
     }, [areaNode]);
-
-    //--------------------------------------------------------------------------
-    // State
-    const [occupancy, setOccupancy] = useState<Map<string, BinOccupancy[]>>(new Map());
-
-    useEffect(() => {
-        if (!siteId || !queryBinIds.length) return;
-        getBinOccupancy({ siteId, warehouseId: areaNode.hash, binIds: queryBinIds, asOf: targetAsOf }).then(
-            setOccupancy,
-        );
-    }, [siteId, areaNode.hash, queryBinIds, targetAsOf]);
 
     //--------------------------------------------------------------------------
     // Map display nodes to their occupancy.
@@ -68,6 +61,15 @@ export function StorageOverlay({ areaNode }: { areaNode: AreaNode }) {
     }, [isPerBin, displayNodes, occupancy, queryBinIds]);
 
     //--------------------------------------------------------------------------
+    // Effects
+    useEffect(() => {
+        if (!siteId || !queryBinIds.length) return;
+        getBinOccupancy({ siteId, warehouseId: areaNode.hash, binIds: queryBinIds, asOf: targetAsOf }).then(
+            setOccupancy,
+        );
+    }, [siteId, areaNode.hash, queryBinIds, targetAsOf]);
+
+    //--------------------------------------------------------------------------
     // Render
     return useMemo(() => {
         return displayNodes.map((node, i) => (
@@ -82,20 +84,20 @@ function StorageOverlayItem({ node, occupancy }: { node: OverlayNode; occupancy:
     //--------------------------------------------------------------------------
     // Memos
     const primary = useMemo(() => occupancy[0] ?? null, [occupancy]);
-
-    //--------------------------------------------------------------------------
     const totalQty = useMemo(() => occupancy.reduce((s, o) => s + o.quantity, 0), [occupancy]);
+    const style: CSSProperties = useMemo(
+        () => ({ backgroundColor: primary ? itemColor(primary.itemId) : "rgba(100,116,139,0.5)" }),
+        [primary],
+    );
 
     //--------------------------------------------------------------------------
     // Render
     if (!totalQty) return null;
-
-    //--------------------------------------------------------------------------
     return (
         <DOMEntity entity={node.entity}>
             <div
-                className="h-6 min-w-6 px-1 pointer-events-auto cursor-pointer rounded-full flex items-center justify-center text-[10px] font-bold text-black/70 leading-none"
-                style={{ backgroundColor: primary ? itemColor(primary.itemId) : "rgba(100,116,139,0.5)" }}
+                className="h-6 min-w-6 px-1 rounded-full flex items-center justify-center text-[10px] font-bold text-black/70 leading-none"
+                style={style}
             >
                 {totalQty}
             </div>

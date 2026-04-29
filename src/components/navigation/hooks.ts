@@ -114,21 +114,39 @@ export const useNavNode = (node: SceneGraphNode, source: "nav" | "dom3d") => {
     }, [setHoveredNode, source]);
 
     //--------------------------------------------------------------------------
-    return {
-        isActive,
-        isParentActive,
-        isSelected,
-        isParentSelected,
-        isChildSelected,
-        isHovered,
-        isParentHovered,
-        isChildHovered,
-        pointerDownHandler,
-        clickHandler,
-        mouseEnterHandler,
-        mouseLeaveHandler,
-        setSelectedNode,
-    };
+
+    return useMemo(
+        () => ({
+            isActive,
+            isParentActive,
+            isSelected,
+            isParentSelected,
+            isChildSelected,
+            isHovered,
+            isParentHovered,
+            isChildHovered,
+            pointerDownHandler,
+            clickHandler,
+            mouseEnterHandler,
+            mouseLeaveHandler,
+            setSelectedNode,
+        }),
+        [
+            isActive,
+            isParentActive,
+            isSelected,
+            isParentSelected,
+            isChildSelected,
+            isHovered,
+            isParentHovered,
+            isChildHovered,
+            pointerDownHandler,
+            clickHandler,
+            mouseEnterHandler,
+            mouseLeaveHandler,
+            setSelectedNode,
+        ],
+    );
 };
 
 //------------------------------------------------------------------------------

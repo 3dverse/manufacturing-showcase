@@ -25,6 +25,9 @@ import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
 import type { SceneGraphNode, AreaNode, CellNode, LineNode, AisleNode, RackNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
+const SHOW_FLOW_BUTTON = false;
+
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const Navigation = ({ className }: { className?: string }) => {
     //--------------------------------------------------------------------------
@@ -277,8 +280,6 @@ const AreaNav = ({
         }
         return "bg-slate/50 border-transparent md:bg-muted/5 md:border-muted/50";
     }, [isSelected, isChildSelected, isHovered]);
-
-    const SHOW_FLOW_BUTTON = false;
 
     //--------------------------------------------------------------------------
     // Render

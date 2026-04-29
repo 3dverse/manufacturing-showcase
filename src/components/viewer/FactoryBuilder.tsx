@@ -1,12 +1,10 @@
-import { Fragment, useContext, useMemo } from "react";
+import { useContext, useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { FloatingLabel } from "./DOM3D/FloatingLabel";
-import { FloorRegion } from "./DOM3D/FloorRegion";
 import { FloorOutline } from "./DOM3D/FloorOutline";
+import { FloorRegion } from "./DOM3D/FloorRegion";
 import { FlowSpline } from "./DOM3D/FlowSpline";
-import { MachineOutline } from "./DOM3D/MachineOutline";
-import { MachineLabel } from "./DOM3D/MachineLabel";
 import { IncidentInfoPanel } from "./DOM3D/IncidentInfoPanel";
 
 //------------------------------------------------------------------------------
@@ -68,13 +66,7 @@ const FactoryBuilder = () => {
     const shownCells = useMemo(() => {
         switch (selectedNode?.type) {
             case NodeTypes.factory:
-                return selectedNode.areas.reduce((acc: CellNode[], area) => {
-                    acc.push(...area.cells);
-                    for (const line of area.lines) {
-                        acc.push(...line.cells);
-                    }
-                    return acc;
-                }, []);
+                return [];
             case NodeTypes.area:
                 return selectedNode.cells;
             case NodeTypes.line:
@@ -112,33 +104,18 @@ const FactoryBuilder = () => {
             {shownLines.map((line) => (
                 <FloorRegion key={line.hash} node={line} />
             ))}
-
-            {shownCells.map((cell) => (
-                <CellBuilderItem key={cell.hash} cell={cell} />
-            ))}
-            {selectedNode && isCell(selectedNode) && selectedNode.machines.length > 0 && (
-                <>
-                    {selectedNode.machines.map((machine) => (
-                        <Fragment key={machine.hash}>
-                            <MachineOutline machine={machine} />
-                            <MachineLabel machine={machine} />
-                        </Fragment>
-                    ))}
-                </>
-            )}
             {downtimeCells.map((cell) => (
                 <IncidentInfoPanel key={cell.hash} cell={cell} />
             ))}
+            {shownCells.map((cell) =>
+                isArea(cell.parent) ? (
+                    <FloorRegion key={cell.hash} node={cell} />
+                ) : (
+                    <FloatingLabel key={cell.hash} node={cell} />
+                ),
+            )}
         </>
     );
-};
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-const CellBuilderItem = ({ cell }: { cell: CellNode }) => {
-    //--------------------------------------------------------------------------
-    // Render
-    return <>{isArea(cell.parent) ? <FloorRegion node={cell} /> : <FloatingLabel node={cell} />}</>;
 };
 
 export default FactoryBuilder;

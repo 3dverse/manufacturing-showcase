@@ -25,7 +25,7 @@ const SHOW_DETAILS = false;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export function BOMPanel({ className }: { className?: string }) {
+export function BOMPanel() {
     //--------------------------------------------------------------------------
     // State
     const [routings, setRoutings] = useState<MESRoutingItem[]>([]);
@@ -160,9 +160,8 @@ export function BOMPanel({ className }: { className?: string }) {
     return (
         <div
             className={cn(
-                "pointer-events-auto border-t border-slate-200/15",
+                "flex flex-col-reverse border-b border-slate-200 pointer-events-auto",
                 PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
-                className,
             )}
         >
             {loading ? (
