@@ -146,6 +146,81 @@ export function addWorkingMinutes(
 }
 
 /**
+ * If `from` is within a shift, returns `from` unchanged.
+ * Otherwise returns the end of the most recent shift before `from`.
+ * Use this to snap a deadline backward into working hours.
+ */
+export function prevShiftMoment(from: Date, shifts: ShiftDefinition[], workDays: number[]): Date {
+    const fromMs = from.getTime();
+    let day = startOfDay(new Date(from));
+
+    for (let i = 0; i < 14; i++, day = addDays(day, -1)) {
+        if (!workDays.includes(day.getDay())) continue;
+
+        for (const { start, end } of [...intervalsForDay(day, shifts)].reverse()) {
+            if (fromMs >= start.getTime() && fromMs <= end.getTime()) return from; // within shift
+            if (fromMs > end.getTime()) return end; // after shift → snap to end
+            // fromMs < start: shift is in the future relative to from, try earlier one
+        }
+    }
+
+    return from; // fallback — should not be reached with sane config
+}
+
+/**
+ * Advance `from` backward by exactly `workMinutes` of working time, skipping
+ * nights, weekends, and gaps between shifts.  The inverse of addWorkingMinutes.
+ * If `from` falls outside a shift it is first snapped to prevShiftMoment.
+ */
+export function subtractWorkingMinutes(
+    from: Date,
+    workMinutes: number,
+    shifts: ShiftDefinition[],
+    workDays: number[],
+): Date {
+    if (workMinutes <= 0) return from;
+
+    let cursor = new Date(from);
+    let remaining = workMinutes;
+
+    for (let guard = 0; guard < 100_000; guard++) {
+        const day = startOfDay(cursor);
+
+        if (!workDays.includes(day.getDay())) {
+            cursor = new Date(day.getTime() - 1); // last ms of previous day
+            continue;
+        }
+
+        const intervals = [...intervalsForDay(day, shifts)].reverse(); // latest first
+        let movedBack = false;
+
+        for (const { start, end } of intervals) {
+            const rightMs = Math.min(cursor.getTime(), end.getTime());
+            const startMs = start.getTime();
+
+            if (rightMs <= startMs) continue; // cursor is at or before this interval's start
+
+            const minsAvail = (rightMs - startMs) / 60_000;
+
+            if (remaining <= minsAvail) {
+                return new Date(rightMs - remaining * 60_000);
+            }
+
+            remaining -= minsAvail;
+            cursor = new Date(startMs); // rewind to start of this interval
+            movedBack = true;
+            break; // re-enter outer loop to handle earlier intervals / previous days
+        }
+
+        if (!movedBack) {
+            cursor = new Date(day.getTime() - 1); // before all shifts today → previous day
+        }
+    }
+
+    return cursor; // safety fallback
+}
+
+/**
  * All shift intervals that overlap [start, end), each annotated with the
  * clamped overlap window.  Used to build OEE buckets.
  */

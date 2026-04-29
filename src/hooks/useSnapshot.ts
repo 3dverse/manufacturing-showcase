@@ -8,7 +8,6 @@ import {
     salesOrderAtAsOf,
     productionOrderAtAsOf,
     operationAtAsOf,
-    downtimeAtAsOf,
     workOrderAtAsOf,
 } from "@/components/timeline/timeUtils";
 
@@ -33,7 +32,9 @@ export function useSnapshot(scope: TimelineScope | null): {
             salesOrders: scope.salesOrders.filter((e) => salesOrderAtAsOf(e, targetAsOf)),
             productionOrders: scope.productionOrders.filter((e) => productionOrderAtAsOf(e, targetAsOf)),
             operations: scope.operations.filter((e) => operationAtAsOf(e, targetAsOf)),
-            downtimeEvents: scope.downtimeEvents.filter((e) => downtimeAtAsOf(e, targetAsOf)),
+            // Include all downtimes that started before asOf, not just those currently
+            // active — past downtimes still reduce elapsed available time in the projection.
+            downtimeEvents: scope.downtimeEvents.filter((e) => e.startedAt <= targetAsOf),
             eamWorkOrders: scope.eamWorkOrders.filter((e) => workOrderAtAsOf(e, targetAsOf)),
             pickTasks: scope.pickTasks,
             receipts: scope.receipts,

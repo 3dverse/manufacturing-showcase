@@ -1,4 +1,5 @@
 import { USE_PROJECTION } from "@/content/3dverse";
+import { buildClosedIntervals } from "@/core/Calendar";
 import type {
     SalesOrderEntry,
     ProductionOrderEntry,
@@ -115,12 +116,62 @@ function classifyPhase(
     return "future";
 }
 
-function interpolateProgress(effectiveStart: number, effectiveEnd: number, phase: Phase, asOf: number): number {
+type Interval = { start: number; end: number };
+
+export function mergeIntervals(intervals: Interval[]): Interval[] {
+    if (intervals.length === 0) return [];
+    const sorted = [...intervals].sort((a, b) => a.start - b.start);
+    const merged: Interval[] = [{ ...sorted[0] }];
+    for (let i = 1; i < sorted.length; i++) {
+        const last = merged[merged.length - 1];
+        if (sorted[i].start <= last.end) {
+            last.end = Math.max(last.end, sorted[i].end);
+        } else {
+            merged.push({ ...sorted[i] });
+        }
+    }
+    return merged;
+}
+
+/** Seconds within [start, end] not covered by any stoppage interval. */
+export function computeAvailableSeconds(start: number, end: number, stoppages: Interval[]): number {
+    if (end <= start) return 0;
+    let blocked = 0;
+    for (const s of mergeIntervals(stoppages)) {
+        const oStart = Math.max(s.start, start);
+        const oEnd = Math.min(s.end, end);
+        if (oStart < oEnd) blocked += oEnd - oStart;
+    }
+    return Math.max(0, end - start - blocked);
+}
+
+/**
+ * Progress interpolation that accounts for stoppages.
+ *
+ * - Total denominator: calendar-only (scheduled working time over full span).
+ *   Future stoppages (downtime, work orders) are unknown, so they don't
+ *   deflate the denominator.
+ * - Numerator: calendar + actual stoppages (downtime, work orders) elapsed
+ *   up to asOf — so quantity cannot increase while the machine is stopped.
+ */
+function stoppageAwareInterpolate(
+    effectiveStart: number,
+    effectiveEnd: number,
+    phase: Phase,
+    asOf: number,
+    calendarStoppages: Interval[],
+    actualStoppages: Interval[],
+): number {
     if (phase === "completed") return 1;
     if (phase === "future") return 0;
-    const span = effectiveEnd - effectiveStart;
-    if (span <= 0) return 1;
-    return clamp((asOf - effectiveStart) / span, 0, 1);
+    const totalAvailable = computeAvailableSeconds(effectiveStart, effectiveEnd, calendarStoppages);
+    if (totalAvailable <= 0) return 1;
+    const elapsedEnd = Math.min(asOf, effectiveEnd);
+    const elapsedAvailable = computeAvailableSeconds(effectiveStart, elapsedEnd, [
+        ...calendarStoppages,
+        ...actualStoppages,
+    ]);
+    return clamp(elapsedAvailable / totalAvailable, 0, 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -136,7 +187,12 @@ function projectSalesOrder(e: SalesOrderEntry, asOf: number): ProjectedSalesOrde
     };
 }
 
-function projectProductionOrder(e: ProductionOrderEntry, asOf: number): ProjectedProductionOrder {
+function projectProductionOrder(
+    e: ProductionOrderEntry,
+    asOf: number,
+    downtimes: DowntimeEntry[],
+    workOrders: WorkOrderEntry[],
+): ProjectedProductionOrder {
     const effectiveStart = e.timing.actualStart ?? e.timing.scheduledStart;
     const effectiveEnd = e.timing.actualEnd ?? e.timing.scheduledEnd;
     const phase = classifyPhase(
@@ -146,7 +202,22 @@ function projectProductionOrder(e: ProductionOrderEntry, asOf: number): Projecte
         e.timing.actualEnd,
         asOf,
     );
-    const estimatedProgress = interpolateProgress(effectiveStart, effectiveEnd, phase, asOf);
+    const calendarStoppages = buildClosedIntervals(effectiveStart, effectiveEnd);
+    const actualStoppages: Interval[] = [
+        ...downtimes.map((dt) => ({ start: dt.startedAt, end: dt.endedAt ?? asOf })),
+        ...workOrders.map((wo) => ({
+            start: wo.actualStart ?? wo.scheduledStart,
+            end: wo.actualEnd ?? wo.scheduledEnd,
+        })),
+    ];
+    const estimatedProgress = stoppageAwareInterpolate(
+        effectiveStart,
+        effectiveEnd,
+        phase,
+        asOf,
+        calendarStoppages,
+        actualStoppages,
+    );
     return {
         ...e,
         phase,
@@ -161,14 +232,34 @@ function projectProductionOrder(e: ProductionOrderEntry, asOf: number): Projecte
     };
 }
 
-function projectOperation(e: OperationEntry, asOf: number): ProjectedOperation {
+function projectOperation(
+    e: OperationEntry,
+    asOf: number,
+    downtimes: DowntimeEntry[],
+    workOrders: WorkOrderEntry[],
+): ProjectedOperation {
     const effectiveStart = e.actualStart ?? e.scheduledStart;
     const effectiveEnd = e.actualEnd ?? e.scheduledEnd;
     const phase = classifyPhase(e.scheduledStart, e.scheduledEnd, e.actualStart, e.actualEnd, asOf);
-    const estimatedProgress = interpolateProgress(effectiveStart, effectiveEnd, phase, asOf);
+    const calendarStoppages = buildClosedIntervals(effectiveStart, effectiveEnd);
+    const relevantDowntimes = downtimes.filter((dt) => dt.workCenterId === e.workCenterId);
+    const actualStoppages: Interval[] = [
+        ...relevantDowntimes.map((dt) => ({ start: dt.startedAt, end: dt.endedAt ?? asOf })),
+        ...workOrders.map((wo) => ({
+            start: wo.actualStart ?? wo.scheduledStart,
+            end: wo.actualEnd ?? wo.scheduledEnd,
+        })),
+    ];
+    const estimatedProgress = stoppageAwareInterpolate(
+        effectiveStart,
+        effectiveEnd,
+        phase,
+        asOf,
+        calendarStoppages,
+        actualStoppages,
+    );
     const isFuture = phase === "future";
-
-    const output = {
+    return {
         ...e,
         phase,
         effectiveStart,
@@ -182,7 +273,6 @@ function projectOperation(e: OperationEntry, asOf: number): ProjectedOperation {
             scrapQuantity: isFuture ? 0 : Math.round(e.quantities.scrapQuantity * estimatedProgress),
         },
     };
-    return output;
 }
 
 function projectDowntime(e: DowntimeEntry, asOf: number): ProjectedDowntime {
@@ -252,8 +342,12 @@ export function projectSnapshot(snapshot: AsOfSnapshot, asOf: number): AsOfProje
     return {
         level: snapshot.level,
         salesOrders: snapshot.salesOrders.map((e) => projectSalesOrder(e, asOf)),
-        productionOrders: snapshot.productionOrders.map((e) => projectProductionOrder(e, asOf)),
-        operations: snapshot.operations.map((e) => projectOperation(e, asOf)),
+        productionOrders: snapshot.productionOrders.map((e) =>
+            projectProductionOrder(e, asOf, snapshot.downtimeEvents, snapshot.eamWorkOrders),
+        ),
+        operations: snapshot.operations.map((e) =>
+            projectOperation(e, asOf, snapshot.downtimeEvents, snapshot.eamWorkOrders),
+        ),
         downtimeEvents: snapshot.downtimeEvents.map((e) => projectDowntime(e, asOf)),
         eamWorkOrders: snapshot.eamWorkOrders.map((e) => projectWorkOrder(e, asOf)),
         pickTasks: snapshot.pickTasks.map((e) => projectPickTask(e, asOf)),

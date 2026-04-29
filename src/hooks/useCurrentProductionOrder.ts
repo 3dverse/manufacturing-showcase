@@ -2,6 +2,8 @@ import { useMemo } from "react";
 
 import { useTimelineStore } from "@/store/useTimelineStore";
 import type { ProductionOrderEntry } from "@/core/Scope";
+import { buildClosedIntervals } from "@/core/Calendar";
+import { computeAvailableSeconds } from "@/core/Projection";
 
 // ---------------------------------------------------------------------------
 
@@ -78,16 +80,6 @@ export function useCurrentProductionOrder(): CurrentProductionOrder | null {
         const effectiveStart = effectiveStartOf(target);
         const effectiveEnd = effectiveEndOf(target);
 
-        let estimatedProgress: number;
-        if (phase === "completed") {
-            estimatedProgress = 1;
-        } else if (phase === "future") {
-            estimatedProgress = 0;
-        } else {
-            const dur = effectiveEnd - effectiveStart;
-            estimatedProgress = dur > 0 ? Math.min(1, Math.max(0, (targetAsOf - effectiveStart) / dur)) : 1;
-        }
-
         const salesOrder = target.erpSalesOrderId ? span.salesOrders.get(target.erpSalesOrderId) : null;
 
         // Downtime events linked to this PO
@@ -100,6 +92,25 @@ export function useCurrentProductionOrder(): CurrentProductionOrder | null {
             const start = Math.min(dt.startedAt, targetAsOf);
             return sum + Math.max(0, end - start) / 60;
         }, 0);
+
+        let estimatedProgress: number;
+        if (phase === "completed") {
+            estimatedProgress = 1;
+        } else if (phase === "future") {
+            estimatedProgress = 0;
+        } else {
+            const calendarStoppages = buildClosedIntervals(effectiveStart, effectiveEnd);
+            const actualStoppages = poDowntimes
+                .filter((dt) => dt.startedAt <= targetAsOf)
+                .map((dt) => ({ start: dt.startedAt, end: dt.endedAt ?? targetAsOf }));
+            const totalAvailable = computeAvailableSeconds(effectiveStart, effectiveEnd, calendarStoppages);
+            const elapsedEnd = Math.min(targetAsOf, effectiveEnd);
+            const elapsedAvailable = computeAvailableSeconds(effectiveStart, elapsedEnd, [
+                ...calendarStoppages,
+                ...actualStoppages,
+            ]);
+            estimatedProgress = totalAvailable > 0 ? Math.min(1, Math.max(0, elapsedAvailable / totalAvailable)) : 1;
+        }
 
         return {
             id: target.id,

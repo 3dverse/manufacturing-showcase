@@ -15,7 +15,14 @@ import type { GeneratorConfig } from "../config";
 import type { Dataset, OEEBucket, WorkCenterTimeline } from "../types";
 import type { Phase1Result } from "./phase1";
 import type { Phase2Result, PlacedPO, PlacedOperation, PlacedMaintenanceWO } from "./phase2";
-import { workingMinutes, shiftCoverage, addDays } from "../shifts";
+import {
+    workingMinutes,
+    shiftCoverage,
+    addDays,
+    addWorkingMinutes,
+    prevShiftMoment,
+    subtractWorkingMinutes,
+} from "../shifts";
 
 const toUnix = (d: Date): number => Math.floor(d.getTime() / 1000);
 
@@ -926,7 +933,10 @@ export function fillDataset(
 
             // Pass 1: count bin slots per consumption to determine task count and timestamps.
             // claimBin is NOT called here — we need actual task timestamps first.
-            const putawayAnchor = new Date(chunk[0].putawayAt * 1000);
+            //
+            // Anchor: snap the target putaway deadline backward into a working shift so
+            // tasks and receipts never fall on nights or weekends.
+            const putawayAnchor = prevShiftMoment(new Date(chunk[0].putawayAt * 1000), config.shifts, config.workDays);
             const taskDuration = config.putawayTaskDurationMinutes;
 
             type BinSlot = { opId: string; consumedAt: number; qty: number; binId: string };
@@ -940,16 +950,28 @@ export function fillDataset(
                 }
             }
 
-            // Now timestamps are known — claim bins with actual task start times.
+            // Delivery date: go backward from the anchor by the total working minutes
+            // needed for all putaway tasks, skipping nights/weekends.
             const nTasks = allBinSlots.length;
             const rcptDurationMinutes = nTasks * taskDuration;
-            const deliveryDate = new Date(putawayAnchor.getTime() - rcptDurationMinutes * 60_000);
+            const deliveryDate = subtractWorkingMinutes(
+                putawayAnchor,
+                rcptDurationMinutes,
+                config.shifts,
+                config.workDays,
+            );
 
-            type BinSlotFull = BinSlot;
+            // Claim bins with shift-aware task timestamps, scheduled forward from deliveryDate.
+            type BinSlotFull = BinSlot & { taskStart: Date; taskEnd: Date };
             const resolvedSlots: BinSlotFull[] = allBinSlots.map((slot, ti) => {
-                const taskEnd = new Date(putawayAnchor.getTime() - (nTasks - 1 - ti) * taskDuration * 60_000);
-                const taskStart = new Date(taskEnd.getTime() - taskDuration * 60_000);
-                return { ...slot, binId: claimBin(toUnix(taskStart), slot.consumedAt) };
+                const taskStart = addWorkingMinutes(deliveryDate, ti * taskDuration, config.shifts, config.workDays);
+                const taskEnd = addWorkingMinutes(
+                    deliveryDate,
+                    (ti + 1) * taskDuration,
+                    config.shifts,
+                    config.workDays,
+                );
+                return { ...slot, binId: claimBin(toUnix(taskStart), slot.consumedAt), taskStart, taskEnd };
             });
 
             const slotsByOp = new Map<string, { binId: string; qty: number }[]>();
@@ -1043,11 +1065,9 @@ export function fillDataset(
                 operationId: null,
             });
 
-            // Emit putaway tasks sequentially — last task ends at putawayAnchor
+            // Emit putaway tasks sequentially — timestamps come from resolvedSlots
             for (let ti = 0; ti < resolvedSlots.length; ti++) {
-                const { opId, binId: targetBinId, qty: binQty } = resolvedSlots[ti];
-                const taskEnd = new Date(putawayAnchor.getTime() - (nTasks - 1 - ti) * taskDuration * 60_000);
-                const taskStart = new Date(taskEnd.getTime() - taskDuration * 60_000);
+                const { opId, binId: targetBinId, qty: binQty, taskStart, taskEnd } = resolvedSlots[ti];
 
                 const putawayId = `PUT-${String(putawayNum++).padStart(4, "0")}`;
                 wmsPutawayTasks.push({
@@ -1337,7 +1357,14 @@ export function fillDataset(
             if (allocatedQty === 0) continue;
             rmAvailable.set(rmItemId, available - allocatedQty);
 
-            const allocatedAt = Number(mePo.timing?.scheduledStart ?? 0) - rng.nextFloat(1800, 86400);
+            const allocatedAt = toUnix(
+                subtractWorkingMinutes(
+                    new Date(Number(mePo.timing?.scheduledStart ?? 0) * 1000),
+                    rng.nextFloat(30, 480),
+                    config.shifts,
+                    config.workDays,
+                ),
+            );
             const clearedAt = Number(mePo.timing?.actualStart ?? mePo.timing?.scheduledStart ?? 0);
             wmsStockAllocations.push({
                 id: `ALLOC-${String(allocNum++).padStart(5, "0")}`,
