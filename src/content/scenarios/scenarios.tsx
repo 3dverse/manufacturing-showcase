@@ -33,17 +33,23 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
     maintenance_urgency: {
         id: "incidentScenario",
         title: "Incident",
-        description: "Simulate an urgent maintenance incident on Product A drilling operations.",
+        description:
+            "An unplanned machine stop has halted drilling operations mid-run. Trace the impact from the factory floor to the customer delivery.",
         image: "/scenarios/scenario_1.png",
 
         steps: [
             {
                 id: "step_1",
-                title: "Hypervison",
+                title: "Production at a glance",
                 circleSize: 500,
                 offsetX: 50,
                 offsetY: 100,
-                description: <p>Follow in real time your order planning...</p>,
+                description: (
+                    <p>
+                        The hypervisor shows all active manufacturing orders across the site. MO 000022 is currently
+                        running on the Y Factory — on schedule and producing units. Everything looks nominal.
+                    </p>
+                ),
                 route: "/",
                 selector: "[data-scenario=incident-step-1]",
             },
@@ -53,9 +59,10 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                 circleSize: 340,
                 offsetY: 50,
                 incident: {
-                    message: "The drilling machine is not working.",
-                    title: "The drilling machine is not working.",
-                    warningMessage: "Incident lorem ipsum dolor sit amet...",
+                    message: "Unplanned stop on CNC drilling machine.",
+                    title: "CNC Drilling — Unplanned Stop",
+                    warningMessage:
+                        "Spindle overload detected on Yantra Design CNC Drilling. Machine halted at 09:14. Production order MO 000022 is now at risk.",
                     actions: [
                         {
                             label: "Stop machine",
@@ -69,23 +76,39 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         },
                     ],
                 },
-                description: <p>Incident details...</p>,
+                description: (
+                    <p>
+                        A critical alert has fired — the CNC drilling machine stopped unexpectedly. You can halt the
+                        machine safely from here, or navigate directly to the incident location on the factory floor.
+                    </p>
+                ),
                 route: "/",
-                // beforeStep: showIncident({ id: "incident_1", orderRef: "SO 000022", startDateIso: "2026-04-17T09:30:00" }),
                 selector: "[data-scenario=incident-step-2]",
             },
             {
                 id: "step_3",
-                title: "Factory overview",
+                title: "Factory health",
                 circleSize: 400,
-                description: <p>Factory overview details...</p>,
+                description: (
+                    <p>
+                        The KPI dashboard reflects the impact in real time. Efficiency and quality hold steady, but the{" "}
+                        <strong>Maintenance</strong> indicator has turned red — the unplanned stop is now visible at
+                        factory level.
+                    </p>
+                ),
                 route: "/phone-factory",
                 selector: "[data-scenario=incident-step-3]",
             },
             {
                 id: "step_4",
-                title: "Incident machine",
-                description: <p>Machine details...</p>,
+                title: "Locate the incident",
+                description: (
+                    <p>
+                        The digital twin navigates to the affected cell. The red marker on the floor pinpoints the exact
+                        machine that stopped. The incident panel confirms the downtime window and reason:{" "}
+                        <strong>spindle overload</strong>. Download the full incident report as a PDF.
+                    </p>
+                ),
                 route: "/phone-factory/ec07e887",
                 beforeStep: () => {
                     const { span, setAsOf } = useTimelineStore.getState();
@@ -98,6 +121,32 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                     }
                 },
                 selector: "[data-scenario=incident-step-4]",
+            },
+            {
+                id: "step_5",
+                title: "Downtime on the timeline",
+                description: (
+                    <p>
+                        The timeline reveals the full picture. The <strong>red band</strong> marks the exact window of
+                        unplanned downtime. The manufacturing order bar running through it shows MO 000022 was
+                        interrupted mid-run — planned units are now unaccounted for.
+                    </p>
+                ),
+                route: "/phone-factory/ec07e887",
+                selector: "[data-scenario=incident-step-5]",
+            },
+            {
+                id: "step_6",
+                title: "Trace the order impact",
+                description: (
+                    <p>
+                        Click any bar on the timeline to open the correlation view. From this downtime event, trace back
+                        through the production order and interrupted operation all the way to the sales order — and see
+                        exactly which customer delivery is now at risk.
+                    </p>
+                ),
+                route: "/phone-factory/ec07e887",
+                selector: "[data-scenario=incident-step-5]",
             },
         ],
     },
