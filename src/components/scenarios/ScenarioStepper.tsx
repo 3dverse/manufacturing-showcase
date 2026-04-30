@@ -67,17 +67,17 @@ export const ScenarioStepper = () => {
     //--------------------------------------------------------------------------
     const popoverPosition = targetPosition
         ? {
-              x: clamp(
-                  targetPosition.x - overlayBounds.x + (activeStep?.offsetX ?? 0),
-                  POPOVER_MARGIN,
-                  Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
-              ),
-              y: clamp(
-                  targetPosition.y - overlayBounds.y + (activeStep?.offsetY ?? 0),
-                  POPOVER_MARGIN,
-                  Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
-              ),
-          }
+            x: clamp(
+                targetPosition.x - overlayBounds.x + (activeStep?.offsetX ?? 0),
+                POPOVER_MARGIN,
+                Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
+            ),
+            y: clamp(
+                targetPosition.y - overlayBounds.y + (activeStep?.offsetY ?? 0),
+                POPOVER_MARGIN,
+                Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
+            ),
+        }
         : { x: POPOVER_MARGIN, y: POPOVER_MARGIN };
 
     //--------------------------------------------------------------------------
@@ -196,7 +196,7 @@ export const ScenarioStepper = () => {
             {targetPosition && (
                 <div
                     aria-hidden
-                    className="fixed -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_9999px_color-mix(in_oklch,var(--color-slate-1000)_15%,transparent)] pointer-events-none starting:opacity-0 opacity-100 starting:scale-200 scale-100 transition-all duration-400"
+                    className="fixed -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_9999px_color-mix(in_oklch,var(--color-slate-1000)_15%,transparent)] pointer-events-auto starting:opacity-0 opacity-100 starting:scale-200 scale-100 transition-all duration-400"
                     style={{
                         left: targetPosition.x,
                         top: targetPosition.y,
@@ -208,7 +208,7 @@ export const ScenarioStepper = () => {
             <section
                 ref={popoverRef}
                 data-theme="dark"
-                className="absolute w-[min(calc(100vw-2rem),22rem)] rounded-lg bg-slate-0 px-5 pt-3 pb-4 text-default shadow-xl starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400"
+                className="absolute w-[min(calc(100vw-2rem),24rem)] rounded-lg bg-slate-0 px-5 pt-3 pb-4 text-default shadow-xl starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400"
                 style={
                     {
                         left: `${popoverPosition.x}px`,
@@ -249,7 +249,7 @@ export const ScenarioStepper = () => {
                         type="button"
                         colorScheme="guidance"
                         size="sm"
-                        className={cn("relative w-full overflow-hidden text-left", isLastStep && "justify-start")}
+                        className={cn("relative w-full overflow-hidden text-left", isLastStep && nextScenario && "justify-start")}
                         onClick={nextStep}
                     >
                         <span
@@ -258,7 +258,7 @@ export const ScenarioStepper = () => {
                             style={{ width: `${autoplayProgress}%` }}
                         />
                         <span className="relative">
-                            {isLastStep && <span className="text-xs block font-semibold">Next scenario</span>}
+                            {isLastStep && nextScenario && <span className="text-xs block font-semibold">Next scenario</span>}
                             <span>{nextButtonLabel}</span>
                         </span>
                     </Button>

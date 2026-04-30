@@ -88,7 +88,9 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
             {
                 id: "step_3",
                 title: "Factory health",
-                circleSize: 400,
+                circleSize: 500,
+                offsetX: -100,
+                offsetY: 50,
                 description: (
                     <p>
                         The KPI dashboard reflects the impact in real time. Efficiency and quality hold steady, but the{" "}
@@ -125,6 +127,9 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
             {
                 id: "step_5",
                 title: "Downtime on the timeline",
+                circleSize: 250,
+                offsetX: 50,
+                offsetY: -300,
                 description: (
                     <p>
                         The timeline reveals the full picture. The <strong>red band</strong> marks the exact window of
@@ -138,6 +143,9 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
             {
                 id: "step_6",
                 title: "Trace the order impact",
+                circleSize: 200,
+                offsetX: 30,
+                offsetY: -250,
                 description: (
                     <p>
                         Click any bar on the timeline to open the correlation view. From this downtime event, trace back

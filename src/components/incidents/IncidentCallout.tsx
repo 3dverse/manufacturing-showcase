@@ -2,21 +2,25 @@
 import Button from "@/components/common/Button";
 
 //------------------------------------------------------------------------------
+import { cn } from "@/utils/cn";
+
+//------------------------------------------------------------------------------
 import type { ScenarioIncident } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export const IncidentCallout = ({ incident }: { incident: ScenarioIncident }) => {
+export const IncidentCallout = ({ incident, className }: { incident: ScenarioIncident, className?: string }) => {
     //--------------------------------------------------------------------------
     return (
         <div
             data-scenario="incident-step-2"
-            className="relative rounded-md border border-warning-400/70 bg-slate-0/95 px-3 py-2 shadow-lg starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400"
+            className={cn("relative rounded-md border border-warning-400/70 bg-slate-0/95 px-3 py-2 shadow-lg starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400", className)}
         >
             <p className="text-xs font-semibold text-muted">{incident.title}</p>
             <p className="mt-1 text-xs text-warning-700">{incident.warningMessage}</p>
             <div className="mt-2 flex items-center justify-between gap-1">
                 {incident.actions.map((action) => (
                     <Button
+                        key={action.label}
                         variant="ghost"
                         size="xs"
                         // disabled={Boolean(action.disabled)}
