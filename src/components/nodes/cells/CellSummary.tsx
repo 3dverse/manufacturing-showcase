@@ -1,10 +1,9 @@
 //------------------------------------------------------------------------------
-import { useMemo, useState } from "react";
-import { faChartLine, faCheckToSlot } from "@fortawesome/sharp-regular-svg-icons";
+import { useMemo } from "react";
+import { faCheckToSlot } from "@fortawesome/sharp-regular-svg-icons";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
-import Button from "@/components/common/Button";
 import { DataContainer, DataLabel, DataValue } from "@/components/common/panel/DataLabel";
 import { Triangle } from "@/components/common/icons/Triangle";
 import { MiniSparkline } from "@/components/common/metrics/MetricBlock";
@@ -32,9 +31,8 @@ export const CellSummary = ({
     manufacturingOrder?: ProjectedProductionOrder;
     machineDetails: MachineDetails;
 }) => {
-    const { oeeHistory } = useCellKpis(cell);
     //--------------------------------------------------------------------------
-    const [isMESDashboardVisible, setIsMESDashboardVisible] = useState(false);
+    const { oeeHistory } = useCellKpis(cell);
 
     //--------------------------------------------------------------------------
     const { orderNumber, itemCode } = manufacturingOrder ?? { orderNumber: "", itemCode: "" };
@@ -167,15 +165,6 @@ export const CellSummary = ({
                         <p className="text-sm text-muted/50">No operation data</p>
                     </DataContainer>
                 )}
-                <Button
-                    size="2xs"
-                    variant="ghost"
-                    className="flex w-fit justify-start gap-2"
-                    onClick={() => setIsMESDashboardVisible(!isMESDashboardVisible)}
-                >
-                    <Icon icon={faChartLine} />
-                    MES Dashboard
-                </Button>
             </div>
         </>
     );

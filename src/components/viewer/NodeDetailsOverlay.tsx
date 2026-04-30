@@ -152,7 +152,7 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
     }, [cellNode, projection, correlated, targetAsOf]);
     const productionOrderId = correlated?.productionOrders.values().next().value;
     const productionOrder = projection?.productionOrders.find((po) => po.id === productionOrderId);
-    const machineDetails = getMachineDocumentation(cellNode.name);
+    const machineDetails = getMachineDocumentation(cellNode.machines[0].name);
     //--------------------------------------------------------------------------
     // Memos
     const outs = useMemo(() => {

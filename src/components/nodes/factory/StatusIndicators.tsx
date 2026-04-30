@@ -50,7 +50,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ index, label, 
             }
         >
             <div className="relative text-(--color)">
-                <div className={cn("text-xl opacity-60", score !== 1 ? "drop-shadow-[0_2px_10px_var(--color)]" : "")}>
+                <div className={cn("text-xl opacity-90", score !== 1 ? "drop-shadow-[0_2px_10px_var(--color)]" : "")}>
                     {icon}
                 </div>
                 <div className="absolute -bottom-1 -right-3">
@@ -62,7 +62,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ index, label, 
                     />
                 </div>
             </div>
-            <p className="text-xs font-normal tracking-wide text-accent-200">{label}</p>
+            <p className="text-2xs font-normal tracking-wide text-accent-200">{label}</p>
         </div>
     );
 };

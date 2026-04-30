@@ -18,7 +18,7 @@ export const ViewerPanel = ({
     return (
         <Element
             className={cn(
-                "rounded-md border border-slate-0/50 shadow-[0_-4px_24px_-1px_var(--color-slate-200)]",
+                "rounded-md border border-slate-0/50 shadow-[0_4px_24px_-1px_var(--color-slate-200)]",
                 PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
                 className,
             )}
