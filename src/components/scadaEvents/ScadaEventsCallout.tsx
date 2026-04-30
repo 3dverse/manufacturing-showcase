@@ -8,7 +8,11 @@ import { cn } from "@/utils/cn";
 import type { ScenarioIncident } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export const IncidentCallout = ({ incident, className }: { incident: ScenarioIncident, className?: string }) => {
+export const ScadaEventsCallout = ({ incident, className }: { incident: ScenarioIncident, className?: string }) => {
+
+    //--------------------------------------------------------------------------
+    const canStopMachine = true;
+
     //--------------------------------------------------------------------------
     return (
         <div
@@ -17,18 +21,24 @@ export const IncidentCallout = ({ incident, className }: { incident: ScenarioInc
         >
             <p className="text-xs font-semibold text-muted">{incident.title}</p>
             <p className="mt-1 text-xs text-warning-700">{incident.warningMessage}</p>
-            <div className="mt-2 flex items-center justify-between gap-1">
-                {incident.actions.map((action) => (
+            <div className="mt-2 flex items-center justify-end gap-1">
+                {canStopMachine && (
                     <Button
-                        key={action.label}
                         variant="ghost"
                         size="xs"
-                        // disabled={Boolean(action.disabled)}
+                        disabled
                         className="border border-warning-300/60 text-warning-700 pointer-events-none"
                     >
-                        {action.label}
+                        Stop machine
                     </Button>
-                ))}
+                )}
+                <Button
+                    variant="plain"
+                    colorScheme="warning"
+                    size="xs"
+                >
+                    Go to incident
+                </Button>
             </div>
         </div>
     );

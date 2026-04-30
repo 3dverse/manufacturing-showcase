@@ -193,18 +193,16 @@ export const ScenarioStepper = () => {
     if (!tutorialMode || !activeScenarioId || !activeStep || !isActiveStepRoute) return null;
     return (
         <div ref={overlayRef} className="absolute inset-0 z-100">
-            {targetPosition && (
-                <div
-                    aria-hidden
-                    className="fixed -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_9999px_color-mix(in_oklch,var(--color-slate-1000)_15%,transparent)] pointer-events-auto starting:opacity-0 opacity-100 starting:scale-200 scale-100 transition-all duration-400"
-                    style={{
-                        left: targetPosition.x,
-                        top: targetPosition.y,
-                        width: activeStep?.circleSize ?? 150,
-                        height: activeStep?.circleSize ?? 100,
-                    }}
-                />
-            )}
+            <div
+                aria-hidden
+                className="fixed -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_9999px_color-mix(in_oklch,var(--color-slate-1000)_15%,transparent)] pointer-events-auto starting:opacity-0 opacity-100 starting:scale-200 scale-100 transition-all duration-400"
+                style={{
+                    left: targetPosition?.x ?? activeStep?.left ?? 0,
+                    top: targetPosition?.y ?? activeStep?.top ?? 0,
+                    width: activeStep?.circleSize ?? 150,
+                    height: activeStep?.circleSize ?? 100,
+                }}
+            />
             <section
                 ref={popoverRef}
                 data-theme="dark"

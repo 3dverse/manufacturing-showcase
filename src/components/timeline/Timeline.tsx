@@ -254,8 +254,8 @@ function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
                 po.phase === "completed"
                     ? "bg-emerald-500 border border-emerald-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50"
                     : po.phase === "future"
-                      ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
-                      : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
+                        ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
+                        : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
             tooltip: (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{po.orderNumber}</div>
@@ -309,8 +309,8 @@ function buildOperationsStory(ops: ProjectedOperation[]): Story {
                 op.phase === "completed"
                     ? "bg-slate-400 border border-slate-300/40 hover:ring-2 hover:ring-offset-0 hover:ring-slate-400/50"
                     : op.phase === "future"
-                      ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
-                      : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
+                        ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
+                        : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
             tooltip: (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{op.operationCode}</div>
@@ -363,8 +363,8 @@ function buildReceiptsStory(receipts: ProjectedReceipt[], present: number): Stor
                 r.phase === "completed"
                     ? "bg-sky-500 border border-sky-400/50"
                     : r.phase === "future"
-                      ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                      : "bg-amber-400 border border-amber-300/60",
+                        ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                        : "bg-amber-400 border border-amber-300/60",
             ),
             tooltip: (
                 <div className="space-y-1.5">
@@ -461,8 +461,8 @@ function buildPickTasksStory(tasks: ProjectedPickTask[], present: number): Story
             t.phase === "completed"
                 ? "bg-amber-400 border border-amber-300/50"
                 : t.phase === "future"
-                  ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                  : "bg-amber-300 border border-amber-300/50",
+                    ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                    : "bg-amber-300 border border-amber-300/50",
         ),
         tooltip: (
             <div className="space-y-1.5">
@@ -506,8 +506,8 @@ function buildPutawayTasksStory(tasks: ProjectedPutawayTask[], present: number):
             t.phase === "completed"
                 ? "bg-emerald-500 border border-emerald-400/50"
                 : t.phase === "future"
-                  ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                  : "bg-emerald-400 border border-emerald-300/50",
+                    ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                    : "bg-emerald-400 border border-emerald-300/50",
         ),
         tooltip: (
             <div className="space-y-1.5">
@@ -553,8 +553,8 @@ function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[], present: number
                 po.phase === "completed"
                     ? "bg-violet-500 border border-violet-400/50"
                     : po.phase === "future"
-                      ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                      : "bg-violet-400 border border-violet-300/50",
+                        ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                        : "bg-violet-400 border border-violet-300/50",
             ),
             tooltip: (
                 <div className="space-y-1.5">
@@ -961,14 +961,14 @@ export function Timeline() {
     return (
         <>
             <aside
-                data-scenario="incident-step-5"
+                data-scenario="incident-step-6"
                 className={cn(
                     "flex flex-col pointer-events-auto border-b border-slate-200 select-none",
                     PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
                 )}
             >
                 {/* Body */}
-                <div className="flex flex-grow">
+                <div className="flex grow">
                     {/* Label column */}
                     <div
                         className="shrink-0 w-18 border-r border-slate-200/30 flex flex-col"

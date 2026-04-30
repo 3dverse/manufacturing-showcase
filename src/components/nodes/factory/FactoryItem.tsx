@@ -7,7 +7,7 @@ import { Triangle } from "@/components/common/icons/Triangle";
 import { BadgeOEE } from "@/components/common/BadgeOEE";
 import { KeyStatusIndicators } from "@/components/nodes/factory/StatusIndicators";
 import { ConnectedSystemsBadge } from "@/components/connectedSystems/ConnectedSystemsBadge";
-import { IncidentCallout } from "@/components/incidents/IncidentCallout";
+import { ScadaEventsCallout } from "@/components/scadaEvents/scadaEventsCallout";
 
 //------------------------------------------------------------------------------
 import { ScenarioContext } from "@/contexts/ScenariosContext";
@@ -112,7 +112,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                             </div>
                         </div>
 
-                        {incident && <IncidentCallout incident={incident} className="max-w-110" />}
+                        {incident && <ScadaEventsCallout incident={incident} className="max-w-110" />}
                     </div>
                 </div>
                 <div className="flex">

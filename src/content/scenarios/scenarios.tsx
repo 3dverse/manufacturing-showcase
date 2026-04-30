@@ -46,8 +46,8 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                 offsetY: 100,
                 description: (
                     <p>
-                        The hypervisor shows all active manufacturing orders across the site. MO 000022 is currently
-                        running on the Y Factory — on schedule and producing units. Everything looks nominal.
+                        Follow all manufacturing orders across the site and check their status.
+                        Connect to your own externals sytems and enrich the data.
                     </p>
                 ),
                 route: "/",
@@ -56,8 +56,10 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
             {
                 id: "step_2",
                 title: "Incident reported",
-                circleSize: 340,
-                offsetY: 50,
+                circleSize: 500,
+                offsetY: 60,
+                offsetX: -100,
+                // TODO: replace incident by beforeStep: clearIncident() && createIncident({ message, title, warningMessage })
                 incident: {
                     message: "Unplanned stop on CNC drilling machine.",
                     title: "CNC Drilling — Unplanned Stop",
@@ -78,8 +80,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                 },
                 description: (
                     <p>
-                        A critical alert has fired — the CNC drilling machine stopped unexpectedly. You can halt the
-                        machine safely from here, or navigate directly to the incident location on the factory floor.
+                        A critical alert has fired — the CNC drilling machine stopped unexpectedly.
                     </p>
                 ),
                 route: "/",
@@ -87,31 +88,13 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
             },
             {
                 id: "step_3",
-                title: "Factory health",
-                circleSize: 500,
-                offsetX: -100,
-                offsetY: 50,
-                description: (
-                    <p>
-                        The KPI dashboard reflects the impact in real time. Efficiency and quality hold steady, but the{" "}
-                        <strong>Maintenance</strong> indicator has turned red — the unplanned stop is now visible at
-                        factory level.
-                    </p>
-                ),
-                route: "/phone-factory",
-                selector: "[data-scenario=incident-step-3]",
-            },
-            {
-                id: "step_4",
                 title: "Locate the incident",
                 description: (
                     <p>
-                        The digital twin navigates to the affected cell. The red marker on the floor pinpoints the exact
-                        machine that stopped. The incident panel confirms the downtime window and reason:{" "}
-                        <strong>spindle overload</strong>. Download the full incident report as a PDF.
+                        Navigates to the affected cell. The incident panel confirms the downtime window and reason.
                     </p>
                 ),
-                route: "/phone-factory/ec07e887",
+                route: "/phone-factory/4441414f",
                 beforeStep: () => {
                     const { span, setAsOf } = useTimelineStore.getState();
                     const latest = span
@@ -119,10 +102,43 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         : undefined;
                     if (latest) {
                         setAsOf(latest.startedAt);
-                        return `/phone-factory/ec07e887/${latest.id}`;
+                        return `/phone-factory/4441414f/${latest.id}`;
                     }
                 },
+                circleSize: 700,
+                top: "40%",
+                left: "70%",
+                selector: "[data-scenario=incident-step-3]",
+            },
+            {
+                id: "step_4",
+                title: "Fix the machine",
+                description: (
+                    <p>
+                        Learn how to fix the machine and return it to production.
+                    </p>
+                ),
+                route: "/phone-factory/4441414f",
+                circleSize: 700,
+                top: "40%",
+                left: "90%",
                 selector: "[data-scenario=incident-step-4]",
+            },
+            {
+                id: "step_5",
+                title: "Factory health",
+                circleSize: 500,
+                offsetX: -100,
+                offsetY: 50,
+                description: (
+                    <p>
+                        The machine is now fixed and returned to production!
+
+                        Before continuing, check the KPI dashboard to see the impact in real time. Efficiency and quality hold steady.
+                    </p>
+                ),
+                route: "/phone-factory",
+                selector: "[data-scenario=incident-step-5]",
             },
             {
                 id: "step_5",
@@ -137,8 +153,8 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         interrupted mid-run — planned units are now unaccounted for.
                     </p>
                 ),
-                route: "/phone-factory/ec07e887",
-                selector: "[data-scenario=incident-step-5]",
+                route: "/phone-factory/4441414f",
+                selector: "[data-scenario=incident-step-6]",
             },
             {
                 id: "step_6",
@@ -153,8 +169,8 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         exactly which customer delivery is now at risk.
                     </p>
                 ),
-                route: "/phone-factory/ec07e887",
-                selector: "[data-scenario=incident-step-5]",
+                route: "/phone-factory/4441414f",
+                selector: "[data-scenario=incident-step-7]",
             },
         ],
     },
@@ -168,7 +184,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                 id: "step_1",
                 title: "Predictive maintenance",
                 description: <p>Predictive maintenance details...</p>,
-                route: "/",
+                route: "/phone-factory",
                 selector: "[data-scenario=predictive-maintenance-step-1]",
             },
         ],
@@ -183,7 +199,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                 id: "step_1",
                 title: "Planned maintenance",
                 description: <p>Planned maintenance details...</p>,
-                route: "/",
+                route: "/phone-factory",
                 selector: "[data-scenario=planned-maintenance-step-1]",
             },
         ],

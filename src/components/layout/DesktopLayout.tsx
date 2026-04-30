@@ -62,8 +62,8 @@ export const DesktopLayout = () => {
                     >
                         <MainHeader />
                         <div
-                            data-scenario="incident-step-3"
-                            className="hidden md:flex w-full justify-around p-2 pt-3 bg-accent-700 backdrop-blur-sm rounded-b overflow-hidden starting:-translate-y-3 -translate-y-2 starting:opacity-0 opacity-100 transition-all duration-200 delay-1000 -z-10"
+                            data-scenario="incident-step-5"
+                            className="hidden md:flex w-full justify-around px-2 pt-3 pb-1 bg-accent-700 backdrop-blur-sm rounded-b overflow-hidden starting:-translate-y-3 -translate-y-2 starting:opacity-0 opacity-100 transition-all duration-200 delay-900 shadow-2xl -z-10"
                         >
                             <KeyStatusIndicators keyStatus={data.keyStatus} />
                         </div>

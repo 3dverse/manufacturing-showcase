@@ -4,7 +4,7 @@ import { faCheck } from "@fortawesome/sharp-regular-svg-icons";
 import { Icon } from "@/components/common/Icon";
 
 //------------------------------------------------------------------------------
-import { CONNECTED_SYSTEMS } from "./content";
+import { DEFAULT_CONNECTIONS } from "./content";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -17,12 +17,12 @@ export const ConnectedSystemsBadge = ({ className }: { className?: string }) => 
             )}
         >
             <Icon icon={faCheck} className="text-2xs pl-1.5 pr-5 text-positive-50" />
-            {CONNECTED_SYSTEMS.map((system) => (
+            {Object.entries(DEFAULT_CONNECTIONS).filter(([_, value]) => value).map(([key]) => (
                 <span
-                    key={system}
+                    key={key}
                     className="bg-slate-0 h-full rounded-full px-1 py-px text-2xs -ml-5 pl-2 pr-5 last:pr-2 outline outline-positive-500/50"
                 >
-                    {system}
+                    {key}
                 </span>
             ))}
         </div>

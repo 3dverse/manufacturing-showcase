@@ -132,7 +132,9 @@ export type ScenarioStep = {
     title: string;
     description: React.ReactNode | string;
     route: string;
-    selector: string;
+    selector?: string;
+    top?: string;
+    left?: string;
     incident?: ScenarioIncident;
     beforeStep?: () => string | void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

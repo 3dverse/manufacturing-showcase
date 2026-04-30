@@ -56,7 +56,7 @@ export const CellSummary = ({
             <p className="px-2 capitalize text-sm font-semibold text-slate-800 border-b border-slate-200/80 pb-2">
                 {machineDetails.name}
             </p>
-            <div className="flex flex-col gap-2">
+            <div data-scenario="incident-step-3" className="flex flex-col gap-2">
                 <div className="grid grid-cols-2 gap-2">
                     <DataContainer className="gap-0 justify-between bg-positive-500/10">
                         <DataLabel>
