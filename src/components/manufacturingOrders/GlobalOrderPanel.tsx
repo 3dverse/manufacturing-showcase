@@ -46,7 +46,7 @@ export const GlobalOrderPanel = ({ className }: { className?: string }) => {
     return (
         <ViewerPanel
             as="article"
-            className={cn("relative @container w-full flex flex-col gap-2 px-3 py-2 pointer-events-auto", className)}
+            className={cn("relative @container w-full flex flex-col gap-2 px-3 py-2 mt-2 pointer-events-auto", className)}
         >
             {SHOW_PREV_NEXT_BUTTONS && (
                 <>

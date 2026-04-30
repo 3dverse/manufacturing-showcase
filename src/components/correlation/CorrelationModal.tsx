@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { faXmark } from "@fortawesome/pro-light-svg-icons"
 
-import Modal from "@/components/common/modal/Modal";
+import { Icon } from "@/components/common/Icon";
+import Button from "@/components/common/Button";
 import { SalesOrderSheet } from "@/components/correlation/sections/SalesOrderSheet";
 import { PurchaseOrderSheet } from "@/components/correlation/sections/PurchaseOrderSheet";
 import { ProductionOrderSheet } from "@/components/correlation/sections/ProductionOrderSheet";
@@ -19,13 +21,10 @@ import { useFocusStore } from "@/store/useFocusStore";
 import { entityTypeFromId } from "@/core/Correlation";
 import { Router } from "@/core/Router";
 import type { FocusedEntity } from "@/core/Correlation";
+import type { AsOfProjection } from "@/core/Projection";
 
 // ---------------------------------------------------------------------------
 // Helpers
-// ---------------------------------------------------------------------------
-
-import type { AsOfProjection } from "@/core/Projection";
-
 function getFocusedLabel(focused: FocusedEntity, projection: AsOfProjection): string {
     switch (focused.type) {
         case "salesOrder": {
@@ -64,14 +63,13 @@ function getFocusedLabel(focused: FocusedEntity, projection: AsOfProjection): st
 }
 
 // ---------------------------------------------------------------------------
-// CorrelationModal
-// ---------------------------------------------------------------------------
-
 export function CorrelationModal() {
+    //--------------------------------------------------------------------------
     const { selected, setSelected } = useFocusStore();
     const projection = useSpanProjection();
     const correlated = useCorrelation(projection, selected);
 
+    //--------------------------------------------------------------------------
     useEffect(() => {
         return Router.onChange(({ route, source }) => {
             if (source !== "pop") return;
@@ -85,17 +83,20 @@ export function CorrelationModal() {
         });
     }, [setSelected]);
 
+    //--------------------------------------------------------------------------
     const handleClose = useCallback(() => {
         setSelected(null);
         const { factorySlug, nodeSlug } = Router.currentRoute();
         if (factorySlug) Router.replace({ factorySlug, nodeSlug });
     }, [setSelected]);
 
+    //--------------------------------------------------------------------------
     const title = useMemo(() => {
         if (!selected || !projection) return "";
         return getFocusedLabel(selected, projection);
     }, [selected, projection]);
 
+    //--------------------------------------------------------------------------
     // Gather correlated items by filtering each projection array against the correlated ID sets
     const sections = useMemo(() => {
         if (!correlated || !projection) return null;
@@ -113,18 +114,20 @@ export function CorrelationModal() {
         };
     }, [correlated, projection]);
 
+    //--------------------------------------------------------------------------
     if (!selected) return null;
-
     return createPortal(
-        <Modal
-            isOpen={true}
-            onClose={handleClose}
-            title={title}
-            contentClassName="w-full max-w-md"
-            bodyClassName="overflow-y-auto max-h-[65vh]"
+        <aside
+            className="fixed top-0 right-0 bottom-0 w-1/2 max-w-md bg-slate-0/95 backdrop-blur-md border-l border-slate-200/70 shadow-3xl z-100 overflow-y-auto starting:translate-x-full translate-x-0 transition-all duration-200"
         >
+            <header className="sticky top-0 flex items-center justify-between pl-6 pr-3 py-2 mb-4 bg-slate-0/95 border-b border-slate-200/70 backdrop-blur-sm">
+                {title && <h2 className="text-lg font-semibold">{title}</h2>}
+                <Button variant="ghost" colorScheme="neutral" size="lg" className="px-2" onClick={handleClose}>
+                    <Icon icon={faXmark} />
+                </Button>
+            </header>
             {/* key resets all section states (page, collapsed) when focused entity changes */}
-            <div key={`${selected.type}-${selected.id}`} className="flex flex-col gap-2">
+            <div key={`${selected.type}-${selected.id}`} className="flex flex-col gap-2 p-5 pt-3">
                 {!sections && <p className="text-sm text-muted text-center py-6 animate-pulse">Loading…</p>}
 
                 {sections && (
@@ -211,7 +214,7 @@ export function CorrelationModal() {
                     </>
                 )}
             </div>
-        </Modal>,
+        </aside>,
         document.body,
     );
 }

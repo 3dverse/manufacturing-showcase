@@ -44,13 +44,13 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ index, label, 
             )}
             style={
                 {
-                    "--color": `var(--color-${color}-700)`,
+                    "--color": `var(--color-${color}-500)`,
                     "--animation-delay": `${index * 800}ms`,
                 } as React.CSSProperties
             }
         >
             <div className="relative text-(--color)">
-                <div className={cn("text-2xl opacity-60", score !== 1 ? "drop-shadow-[0_2px_10px_var(--color)]" : "")}>
+                <div className={cn("text-xl opacity-60", score !== 1 ? "drop-shadow-[0_2px_10px_var(--color)]" : "")}>
                     {icon}
                 </div>
                 <div className="absolute -bottom-1 -right-3">
@@ -62,7 +62,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ index, label, 
                     />
                 </div>
             </div>
-            <p className="text-xs font-medium tracking-wide text-(--color)">{label}</p>
+            <p className="text-xs font-normal tracking-wide text-accent-200">{label}</p>
         </div>
     );
 };

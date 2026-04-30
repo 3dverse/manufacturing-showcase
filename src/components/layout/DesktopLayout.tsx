@@ -56,14 +56,14 @@ export const DesktopLayout = () => {
                 <div className="flex flex-col md:flex-row items-start justify-between gap-2 md:p-2">
                     <div
                         className={cn(
-                            "flex flex-col items-start gap-2 w-full max-w-96 2xl:max-w-120 transition-all duration-200",
+                            "flex flex-col items-start w-full max-w-96 2xl:max-w-120 transition-all duration-200",
                             isIncidentRoute && "-translate-x-full opacity-0",
                         )}
                     >
                         <MainHeader />
                         <div
                             data-scenario="incident-step-3"
-                            className="hidden md:flex w-full justify-around pt-2 pb-1 px-2 bg-slate-0/90 backdrop-blur-sm border border-muted rounded overflow-hidden starting:-translate-y-3 -translate-y-1 starting:opacity-0 opacity-100 transition-all duration-200 delay-1000"
+                            className="hidden md:flex w-full justify-around p-2 pt-3 bg-accent-600 backdrop-blur-sm rounded-b overflow-hidden starting:-translate-y-3 -translate-y-2 starting:opacity-0 opacity-100 transition-all duration-200 delay-1000 -z-10"
                         >
                             <KeyStatusIndicators keyStatus={data.keyStatus} />
                         </div>
