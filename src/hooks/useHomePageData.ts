@@ -143,7 +143,7 @@ export function useHomePageData(siteId: string): {
                         const so = po.erpSalesOrderId ? soMap.get(po.erpSalesOrderId) : undefined;
                         return {
                             ref: po.orderNumber,
-                            client: so?.customerId ?? po.itemCode,
+                            client: (so?.customerName?.trim() || so?.customerId) ?? po.itemCode,
                             status: phaseToOrderStatus(po.phase, po.status),
                             startDate: new Date(po.effectiveStart * 1000),
                             endDate: new Date(po.effectiveEnd * 1000),
