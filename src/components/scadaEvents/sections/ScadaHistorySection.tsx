@@ -1,5 +1,4 @@
 import { fmtHistoryDate } from "@/components/scadaEvents/modal/format";
-import { timeAgo } from "@/utils/helpers-time";
 
 //------------------------------------------------------------------------------
 type FaultHistoryEntry = { date: Date; description: string; author: string };

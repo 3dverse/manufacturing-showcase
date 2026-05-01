@@ -1,9 +1,8 @@
+//------------------------------------------------------------------------------
 import { useMemo } from "react";
 import { createPortal } from "react-dom";
 
-import type { MachineDetails } from "@/content/machine";
-import { getDowntimeDocumentation } from "@/content/machine";
-
+//------------------------------------------------------------------------------
 import { ScadaModalHeader } from "@/components/scadaEvents/modal/ScadaModalHeader";
 import { IncidentPdfDownload } from "@/components/scadaEvents/modal/IncidentPdfDownload";
 import { resolveVideoPresentation } from "@/components/scadaEvents/modal/format";
@@ -12,8 +11,14 @@ import { ScadaEquipmentSection } from "@/components/scadaEvents/sections/ScadaEq
 import { ScadaReferenceDocumentationSection } from "@/components/scadaEvents/sections/ScadaReferenceDocumentationSection";
 import { ScadaNoDocumentationNotice } from "@/components/scadaEvents/sections/ScadaNoDocumentationNotice";
 import { ScadaProductionImpactSection } from "@/components/scadaEvents/sections/ScadaProductionImpactSection";
-import type { IncidentReportData } from "@/utils/generateIncidentReport";
 import { ScadaHistorySection } from "@/components/scadaEvents/sections/ScadaHistorySection";
+
+//------------------------------------------------------------------------------
+import type { IncidentReportData } from "@/utils/generateIncidentReport";
+
+//------------------------------------------------------------------------------
+import type { MachineDetails } from "@/content/machine";
+import { getDowntimeDocumentation } from "@/content/machine";
 
 //------------------------------------------------------------------------------
 type Props = {
@@ -53,7 +58,6 @@ export function ScadaEventsModal({ open, onClose, reportData, machineDetails }: 
                     <ScadaReferenceDocumentationSection
                         reasonCode={dt.reasonCode}
                         videoPresentation={videoPresentation}
-                        historyEntries={historyEntries}
                     />
                 )}
                 {!downtimeDocs && <ScadaNoDocumentationNotice reasonCode={dt.reasonCode} />}
