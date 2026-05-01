@@ -17,6 +17,9 @@ import type { Order } from "@/content/type";
 import type { HomeDowntimeEvent } from "@/hooks/useHomePageData";
 import type { ProjectedWorkOrder } from "@/core/Projection";
 
+/** Half-width of the visible window on each side of ref (ref = horizontal center). */
+const TIMELINE_HALF_WINDOW_MS = 5 * 24 * 60 * 60 * 1000;
+
 //------------------------------------------------------------------------------
 type TimelineEventColumn = {
     id: string;
@@ -45,8 +48,8 @@ export const ManufacturingOrderTimeline = ({
 }) => {
     //--------------------------------------------------------------------------
     const refMs = useMemo(() => refTs * 1000, [refTs]);
-    const minTime = useMemo(() => refMs - 7 * 24 * 60 * 60 * 1000, [refMs]);
-    const maxTime = useMemo(() => refMs + 3 * 24 * 60 * 60 * 1000, [refMs]);
+    const minTime = useMemo(() => refMs - TIMELINE_HALF_WINDOW_MS, [refMs]);
+    const maxTime = useMemo(() => refMs + TIMELINE_HALF_WINDOW_MS, [refMs]);
     const totalSpan = useMemo(() => maxTime - minTime, [maxTime, minTime]);
 
     // Helper: ms → % within the window
@@ -69,8 +72,10 @@ export const ManufacturingOrderTimeline = ({
         return groups;
     }, [sorted]);
 
-    // refTs is always 7/10 through the window
-    const nowPct = 70;
+    const nowPct = useMemo(
+        () => (totalSpan > 0 ? ((refMs - minTime) / totalSpan) * 100 : 50),
+        [refMs, minTime, totalSpan],
+    );
 
     const rowsRef = useRef<HTMLDivElement>(null);
     const setAsOf = useTimelineStore((state) => state.setAsOf);

@@ -67,14 +67,22 @@ const getNextScenarioId = (scenarioId?: string) => {
     return scenarioIds[scenarioIds.indexOf(scenarioId) + 1];
 };
 
+const pushRoute = (route: string) => {
+    useNavigationStore.getState().navigate(route);
+    const [, factorySlug, nodeSlug, itemSlug] = route.split("/");
+    if (factorySlug) Router.replace({ factorySlug, nodeSlug, itemSlug });
+};
+
 const navigateToStepRoute = (step?: ScenarioStep) => {
     if (!step) return;
+    const primary = step.route;
+    if (primary && window.location.pathname !== primary) {
+        pushRoute(primary);
+    }
     const overrideRoute = step.beforeStep?.();
-    const targetRoute = overrideRoute ?? step.route;
-    if (!targetRoute || window.location.pathname === targetRoute) return;
-    useNavigationStore.getState().navigate(targetRoute);
-    const [, factorySlug, nodeSlug, itemSlug] = targetRoute.split("/");
-    if (factorySlug) Router.replace({ factorySlug, nodeSlug, itemSlug });
+    if (typeof overrideRoute === "string" && overrideRoute && window.location.pathname !== overrideRoute) {
+        pushRoute(overrideRoute);
+    }
 };
 
 export const ScenarioContextProvider = ({ children }: { children: ReactNode }) => {

@@ -81,7 +81,10 @@ export const ScenarioStepper = () => {
                   Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
               ),
           }
-        : { x: POPOVER_MARGIN, y: POPOVER_MARGIN };
+        : {
+              x: Math.max(POPOVER_MARGIN, (overlayBounds.width - popoverSize.width) / 2),
+              y: Math.max(POPOVER_MARGIN, (overlayBounds.height - popoverSize.height) / 2),
+          };
 
     //--------------------------------------------------------------------------
     const updateTargetPosition = useCallback(() => {

@@ -9,6 +9,10 @@ export type MachineDetails = {
         label: string;
         value: string;
     }[];
+    downtime_documentations?: Record<string, {
+        video: string;
+        history: { date: Date; description: string; author: string }[];
+    }>;
 };
 
 //------------------------------------------------------------------------------
@@ -55,6 +59,28 @@ export const machinesDocumentation: MachineDetails[] = [
         description: "Automatic Press with Double Linear Feed System",
         image: "",
         technical_documentations: ["https://www.sekiguchi-mfg.co.jp/en/press_machine/ssd1000-dsf/"],
+        downtime_documentations: {
+            "COOLANT_LEAK": {
+                video: "https://www.youtube.com/watch?v=3qzVjBSnIGA",
+                history: [
+                    {
+                        date: new Date(),
+                        description: "Fixed by replacing the coolant filter",
+                        author: "John Smith",
+                    },
+                    {
+                        date: new Date(),
+                        description: "Fixed by replacing the coolant filter",
+                        author: "John Smith",
+                    },
+                    {
+                        date: new Date(),
+                        description: "Fixed by replacing the coolant filter",
+                        author: "John Smith",
+                    },
+                ],
+            }
+        },
     },
     {
         id: "yantra-design-drilling",
@@ -62,6 +88,28 @@ export const machinesDocumentation: MachineDetails[] = [
         description: "AManufacturer & Exporter of CNC Drilling Machine",
         image: "",
         technical_documentations: ["https://yantradesign.co.in/cnc-drilling-machine.php"],
+        downtime_documentations: {
+            "COOLANT_LEAK": {
+                video: "https://www.youtube.com/watch?v=3qzVjBSnIGA",
+                history: [
+                    {
+                        date: new Date(),
+                        description: "Fixed by replacing the coolant filter",
+                        author: "John Smith",
+                    },
+                    {
+                        date: new Date(),
+                        description: "Fixed by replacing the coolant filter",
+                        author: "John Smith",
+                    },
+                    {
+                        date: new Date(),
+                        description: "Fixed by replacing the coolant filter",
+                        author: "John Smith",
+                    },
+                ],
+            }
+        },
     },
 ];
 
@@ -69,4 +117,16 @@ export const machinesDocumentation: MachineDetails[] = [
 export function getMachineDocumentation(machineName: string): MachineDetails {
     const doc = machinesDocumentation.find((m) => m.id.toLowerCase() === machineName.toLowerCase());
     return doc || machinesDocumentation[0];
+}
+
+//------------------------------------------------------------------------------
+/** Video and corrective history keyed by downtime `reasonCode` (match is case-insensitive). */
+export function getDowntimeDocumentation(machine: MachineDetails, reasonCode: string) {
+    const map = machine.downtime_documentations;
+    if (!map || !reasonCode.trim()) return undefined;
+    const trimmed = reasonCode.trim();
+    const direct = map[trimmed] ?? map[trimmed.toUpperCase()];
+    if (direct) return direct;
+    const key = Object.keys(map).find((k) => k.toUpperCase() === trimmed.toUpperCase());
+    return key !== undefined ? map[key] : undefined;
 }

@@ -119,7 +119,7 @@ export function CorrelationModal() {
     return createPortal(
         <aside
             data-scenario="corrective-maintenance-step-8"
-            className="fixed top-0 right-0 bottom-0 w-1/2 max-w-md bg-slate-0/95 backdrop-blur-sm border-l border-slate-200/70 shadow-3xl z-100 overflow-y-auto starting:-translate-x-full translate-x-0 transition-all duration-200"
+            className="fixed top-0 right-0 bottom-0 w-1/2 max-w-md bg-slate-0/95 backdrop-blur-sm border-l border-slate-200/70 shadow-3xl z-100 overflow-y-auto starting:translate-x-full translate-x-0 transition-all duration-200"
         >
             <header className="sticky top-0 flex items-center justify-between pl-6 pr-3 py-2 mb-4 bg-slate-0/95 border-b border-slate-200/70 backdrop-blur-sm">
                 {title && <h2 className="text-lg font-semibold">{title}</h2>}

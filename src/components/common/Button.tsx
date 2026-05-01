@@ -52,17 +52,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 warning: "bg-warning-600 hover:bg-warning-700 text-warning-50 focus:ring-warning",
             },
             outline: {
-                accent: "border-2 border-accent-600 bg-transparent hover:bg-accent-50 text-accent-700 focus:ring-accent",
+                accent: "border border-accent-600 bg-transparent hover:bg-accent-50 text-accent-700 focus:ring-accent",
                 neutral:
-                    "border-2 border-neutral-500 bg-transparent hover:bg-neutral-100 text-neutral-700 focus:ring-neutral",
+                    "border border-neutral-500 bg-transparent hover:bg-neutral-100 text-neutral-700 focus:ring-neutral",
                 positive:
-                    "border-2 border-positive-500 bg-transparent hover:bg-positive-50 text-positive-700 focus:ring-positive",
+                    "border border-positive-500 bg-transparent hover:bg-positive-50 text-positive-700 focus:ring-positive",
                 negative:
-                    "border-2 border-negative-500 bg-transparent hover:bg-negative-50 text-negative-700 focus:ring-negative",
+                    "border border-negative-500 bg-transparent hover:bg-negative-50 text-negative-700 focus:ring-negative",
                 guidance:
-                    "border-2 border-guidance-500 bg-transparent hover:bg-guidance-50 text-guidance-700 focus:ring-guidance",
+                    "border border-guidance-500 bg-transparent hover:bg-guidance-50 text-guidance-700 focus:ring-guidance",
                 warning:
-                    "border-2 border-warning-500 bg-transparent hover:bg-warning-50 text-warning-700 focus:ring-warning",
+                    "border border-warning-500 bg-transparent hover:bg-warning-50 text-warning-700 focus:ring-warning",
             },
             ghost: {
                 accent: "bg-transparent hover:bg-accent-50 text-accent-700 focus:ring-accent",
@@ -74,7 +74,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             },
             soft: {
                 accent: "bg-accent-100 hover:bg-accent-200 text-accent-600 focus:ring-accent",
-                neutral: "bg-neutral-200 hover:bg-neutral-300 text-neutral-800 focus:ring-neutral",
+                neutral: "bg-neutral-100 hover:bg-neutral-200 text-neutral-800 focus:ring-neutral",
                 positive: "bg-positive-100 hover:bg-positive-200 text-positive-800 focus:ring-positive",
                 negative: "bg-negative-100 hover:bg-negative-200 text-negative-800 focus:ring-negative",
                 guidance: "bg-guidance-50/50 hover:bg-guidance-50/80 text-guidance-600 focus:ring-guidance",
@@ -114,9 +114,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                     breakpoint === "base"
                         ? sizeClasses[breakpointSize as ButtonSize]
                         : getResponsiveClasses(
-                              sizeClasses[breakpointSize as ButtonSize],
-                              breakpoint as Exclude<ResponsiveBreakpoint, "base">,
-                          ),
+                            sizeClasses[breakpointSize as ButtonSize],
+                            breakpoint as Exclude<ResponsiveBreakpoint, "base">,
+                        ),
                 )
                 .join(" ") || sizeClasses.md;
 
