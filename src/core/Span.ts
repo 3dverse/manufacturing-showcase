@@ -190,6 +190,7 @@ function mapSalesOrder(so: SalesOrder): SalesOrderEntry {
         id: so.id,
         orderNumber: so.orderNumber,
         customerId: so.customerId,
+        customerName: so.customerName ?? undefined,
         status: so.status,
         orderDate: so.orderDate,
         requestedDeliveryDate: so.requestedDeliveryDate ?? 0,

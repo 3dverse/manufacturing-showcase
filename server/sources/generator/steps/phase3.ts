@@ -695,6 +695,7 @@ export function fillDataset(
             siteId: config.siteId,
             orderNumber: soId,
             customerId: customer,
+            customerName: custRec.name,
             orderDate: toUnix(orderDate),
             requestedDeliveryDate: toUnix(delivDate),
             status: soStatus,

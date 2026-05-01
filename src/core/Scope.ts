@@ -9,6 +9,8 @@ export type SalesOrderEntry = {
     id: string;
     orderNumber: string;
     customerId: string;
+    /** Denormalized from ERP when available (for display without a customer lookup). */
+    customerName?: string;
     status: string;
     orderDate: number;
     requestedDeliveryDate: number;

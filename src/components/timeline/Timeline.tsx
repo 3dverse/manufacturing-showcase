@@ -242,7 +242,13 @@ function buildSalesOrdersStory(orders: ProjectedSalesOrder[]): Story {
     };
 }
 
-function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
+type ProductionOrdersStoryMeta = {
+    id: string;
+    title: string;
+    label: string;
+};
+
+function buildProductionOrdersStory(orders: ProjectedProductionOrder[], meta?: ProductionOrdersStoryMeta): Story {
     const bars: BarItem[] = orders.map((po) => {
         const slip =
             po.timing.actualEnd && po.timing.actualEnd > po.timing.scheduledEnd
@@ -292,13 +298,56 @@ function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
         };
     });
     return {
-        id: "production",
-        title: "Manufacturing orders",
-        label: "MO",
+        id: meta?.id ?? "production",
+        title: meta?.title ?? "Manufacturing orders",
+        label: meta?.label ?? "MO",
         lanes: buildLanes(bars, "swimlane"),
         barStyle: "bar",
         stackingStyle: "swimlane",
     };
+}
+
+function clientLabelForProductionOrder(po: ProjectedProductionOrder, soById: Map<string, ProjectedSalesOrder>): string {
+    if (!po.erpSalesOrderId) return "Unlinked orders";
+    const so = soById.get(po.erpSalesOrderId);
+    if (!so) return "Unknown client";
+    const name = so.customerName?.trim();
+    if (name) return name;
+    return so.customerId || "Unknown client";
+}
+
+/** One manufacturing-order swimlane block per distinct client (production line only). */
+function buildProductionOrderStoriesByClient(
+    orders: ProjectedProductionOrder[],
+    salesOrders: ProjectedSalesOrder[],
+): Story[] {
+    if (orders.length === 0) return [];
+    const soById = new Map(salesOrders.map((s) => [s.id, s]));
+    const groups = new Map<string, ProjectedProductionOrder[]>();
+    for (const po of orders) {
+        const key = clientLabelForProductionOrder(po, soById);
+        const g = groups.get(key) ?? [];
+        g.push(po);
+        groups.set(key, g);
+    }
+    const rank = (k: string) => (k === "Unknown client" || k === "Unlinked orders" ? 1 : 0);
+    const sortedKeys = [...groups.keys()].sort((a, b) => {
+        const d = rank(a) - rank(b);
+        if (d !== 0) return d;
+        return a.localeCompare(b);
+    });
+    return sortedKeys.map((label, index) => {
+        const slug =
+            label
+                .replace(/[^a-zA-Z0-9]+/g, "-")
+                .replace(/^-|-$/g, "")
+                .slice(0, 48) || "client";
+        return buildProductionOrdersStory(groups.get(label)!, {
+            id: `production-${index}-${slug}`,
+            title: `${label} — manufacturing orders`,
+            label,
+        });
+    });
 }
 
 function buildOperationsStory(ops: ProjectedOperation[]): Story {
@@ -639,7 +688,7 @@ function buildStories(
         case "area":
             switch (areatype) {
                 case "production":
-                    return [buildProductionOrdersStory(po)];
+                    return buildProductionOrderStoriesByClient(po, so);
                 case "delivery":
                     return [
                         buildSalesOrdersStory(so),
@@ -663,6 +712,10 @@ function buildStories(
                     return [buildSalesOrdersStory(so)];
             }
         case "line":
+            return [
+                ...buildProductionOrderStoriesByClient(po, so),
+                ...(SHOW_OPERATING_ORDERS ? [buildOperationsStory(ops)] : []),
+            ];
         case "cell":
         case "machine":
             return [buildProductionOrdersStory(po), ...(SHOW_OPERATING_ORDERS ? [buildOperationsStory(ops)] : [])];
@@ -985,7 +1038,7 @@ export function Timeline() {
                 <div className="flex grow">
                     {/* Label column */}
                     <div
-                        className="shrink-0 w-18 border-r border-slate-200/30 flex flex-col"
+                        className="shrink-0 w-24 border-r border-slate-200/30 flex flex-col"
                         style={{ paddingTop: AXIS_H + ROW_GAP }}
                     >
                         {stories.map((story) => (
