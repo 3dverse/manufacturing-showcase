@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 import React, { useContext, useEffect, useMemo, useRef } from "react";
 import { faArrowTurnDownRight, faHome } from "@fortawesome/sharp-light-svg-icons";
-import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
+import { faExclamationTriangle, faWrench } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
@@ -12,6 +12,7 @@ import { BadgeOEE } from "@/components/common/BadgeOEE";
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
+import { ScenarioContext } from "@/contexts/ScenariosContext";
 
 //------------------------------------------------------------------------------
 import { isArea, isFactory, isLine, sortNode } from "@/core/SceneGraph";
@@ -346,12 +347,18 @@ const ChildNode = ({
         node,
         "nav",
     );
+    const { focus } = useContext(ScenarioContext);
 
     //--------------------------------------------------------------------------
     // Memos
     const hasDowntime = useMemo(
         () => (isLine(node) ? node.cells.some((c) => downtimeCellIds.has(c.hash)) : downtimeCellIds.has(node.hash)),
         [node, downtimeCellIds],
+    );
+
+    const isScenarioTarget = useMemo(
+        () => (isLine(node) ? node.cells.some((c) => c.hash === focus?.cellHash) : node.hash === focus?.cellHash),
+        [node, focus],
     );
 
     //--------------------------------------------------------------------------
@@ -380,6 +387,9 @@ const ChildNode = ({
     return (
         <li>
             <button
+                data-scenario={
+                    isScenarioTarget && focus?.kind === "predictive" ? "predictive-maintenance-step-2" : undefined
+                }
                 className={cn(
                     "relative px-2 py-1 text-xs capitalize whitespace-nowrap border rounded-md cursor-pointer transition-colors duration-200",
                     stateClassName,
@@ -411,6 +421,11 @@ const ChildNode = ({
                 {hasDowntime && (
                     <span className="absolute -top-2 right-px w-4 aspect-square bg-warning rounded-full">
                         <Icon icon={faExclamationTriangle} size="xs" className="text-warning-100" />
+                    </span>
+                )}
+                {!hasDowntime && isScenarioTarget && focus?.kind === "predictive" && (
+                    <span className="absolute -top-2 right-px w-4 aspect-square bg-amber-400 rounded-full">
+                        <Icon icon={faWrench} size="xs" className="text-amber-900" />
                     </span>
                 )}
             </button>

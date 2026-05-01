@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import React from "react";
+import React, { useContext } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faIndustry,
@@ -13,10 +13,25 @@ import {
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
+import { ScenarioContext } from "@/contexts/ScenariosContext";
 
 //------------------------------------------------------------------------------
 import type { KeyStatus, StatusScore } from "@/services/dashboardApi";
 import { cn } from "@/utils/cn";
+
+//------------------------------------------------------------------------------
+type KpiOverride = Partial<Record<"efficiency" | "quality" | "tracking" | "maintenance", StatusScore>>;
+
+const SCENARIO_KPI_OVERRIDES: Record<string, KpiOverride> = {
+    corrective_maintenance: { maintenance: 3 },
+    predictive_maintenance: { efficiency: 2, maintenance: 2 },
+    planned_maintenance: { maintenance: 1 },
+};
+
+const STEP_KPI_OVERRIDES: Record<string, KpiOverride> = {
+    "corrective_maintenance:step_10": { maintenance: 2 },
+    "predictive_maintenance:step_1": { efficiency: 2, maintenance: 1 },
+};
 
 //------------------------------------------------------------------------------
 const StatusScoreEnum = {
@@ -75,30 +90,37 @@ interface KeyStatusIndicatorsProps {
 
 //------------------------------------------------------------------------------
 export const KeyStatusIndicators: React.FC<KeyStatusIndicatorsProps> = ({ keyStatus }) => {
+    const { activeScenarioId, activeStepId } = useContext(ScenarioContext);
+    const stepKey = activeScenarioId && activeStepId ? `${activeScenarioId}:${activeStepId}` : null;
+    const overrides: KpiOverride = {
+        ...(activeScenarioId ? SCENARIO_KPI_OVERRIDES[activeScenarioId] : {}),
+        ...(stepKey ? STEP_KPI_OVERRIDES[stepKey] : {}),
+    };
+
     return (
         <>
             <StatusIndicator
                 index={1}
                 label="Efficiency"
-                score={keyStatus.efficiency}
+                score={overrides.efficiency ?? keyStatus.efficiency}
                 icon={<FontAwesomeIcon icon={faIndustry} />}
             />
             <StatusIndicator
                 index={2}
                 label="Quality"
-                score={keyStatus.quality}
+                score={overrides.quality ?? keyStatus.quality}
                 icon={<FontAwesomeIcon icon={faStar} />}
             />
             <StatusIndicator
                 index={3}
                 label="Tracking"
-                score={keyStatus.tracking}
+                score={overrides.tracking ?? keyStatus.tracking}
                 icon={<FontAwesomeIcon icon={faBoxesStacked} />}
             />
             <StatusIndicator
                 index={4}
                 label="Maintenance"
-                score={keyStatus.maintenance}
+                score={overrides.maintenance ?? keyStatus.maintenance}
                 icon={<FontAwesomeIcon icon={faHardHat} />}
             />
         </>

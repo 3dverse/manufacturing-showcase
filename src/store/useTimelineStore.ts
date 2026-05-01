@@ -12,6 +12,10 @@ import type { SceneGraphNode } from "@/content/type";
 // Types
 //------------------------------------------------------------------------------
 
+export type ZoomKey = "1D" | "1W" | "2W" | "1M" | "3M" | "6M";
+
+export type TimelineWindow = { kind: "zoom"; key: ZoomKey } | { kind: "custom"; from: number; to: number };
+
 interface TimelineStore {
     span: TimelineSpan | null;
     loadedKeys: Set<string>;
@@ -27,6 +31,9 @@ interface TimelineStore {
     play: () => void; // snaps present to actual now, then resumes ticking
     pause: () => void;
     setPlaybackSpeed: (speed: number) => void;
+    timelineWindow: TimelineWindow;
+    setZoom: (key: ZoomKey) => void;
+    setCustomWindow: (from: number, to: number) => void;
 }
 
 //------------------------------------------------------------------------------
@@ -97,4 +104,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     play: () => set({ isPlaying: true, present: Math.floor(Date.now() / 1000) }),
     pause: () => set({ isPlaying: false }),
     setPlaybackSpeed: (speed) => set({ playbackSpeed: speed }),
+    timelineWindow: { kind: "zoom", key: "1W" },
+    setZoom: (key) => set({ timelineWindow: { kind: "zoom", key } }),
+    setCustomWindow: (from, to) => set({ timelineWindow: { kind: "custom", from, to } }),
 }));

@@ -7,7 +7,7 @@ import { Triangle } from "@/components/common/icons/Triangle";
 import { BadgeOEE } from "@/components/common/BadgeOEE";
 import { KeyStatusIndicators } from "@/components/nodes/factory/StatusIndicators";
 import { ConnectedSystemsBadge } from "@/components/connectedSystems/ConnectedSystemsBadge";
-import { ScadaEventsCallout } from "@/components/scadaEvents/scadaEventsCallout";
+import { ScadaEventsCallout } from "@/components/scadaEvents/ScadaEventsCallout";
 
 //------------------------------------------------------------------------------
 import { ScenarioContext } from "@/contexts/ScenariosContext";

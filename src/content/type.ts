@@ -135,6 +135,7 @@ export type ScenarioStep = {
     selector?: string;
     top?: string;
     left?: string;
+    skip?: boolean;
     incident?: ScenarioIncident;
     beforeStep?: () => string | void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

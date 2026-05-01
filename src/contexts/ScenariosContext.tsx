@@ -1,7 +1,17 @@
-import { createContext, useEffect, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
+import {
+    createContext,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+    type Dispatch,
+    type ReactNode,
+    type SetStateAction,
+} from "react";
 
-import { FIRST_SCENARIO_ID, SCENARIOS } from "@/content/scenarios/scenarios";
+import { FIRST_SCENARIO_ID, SCENARIOS, type ScenarioFocus } from "@/content/scenarios/scenarios";
 import { useNavigationStore } from "@/store/useNavigationStore";
+import { useTimelineStore } from "@/store/useTimelineStore";
 import { Router } from "@/core/Router";
 import type { ScenarioStep } from "@/content/type";
 
@@ -12,12 +22,15 @@ type ScenarioContextType = {
     activeScenarioId?: string;
     activeStepId?: string;
     activeStep?: ScenarioStep;
+    activeSteps: ScenarioStep[];
+    focus: ScenarioFocus | null;
     scenarioActivatedAt?: number;
     pendingIncidentFocusScenarioId?: string;
     isScenarioAutoplaying: boolean;
     setGuidanceVisible: (visible: boolean) => void;
     setTutorialMode: (active: boolean) => void;
     setScenarioAutoplaying: Dispatch<SetStateAction<boolean>>;
+    setFocus: (scenarioId: string, focus: ScenarioFocus | null) => void;
     toggleGuidanceVisibility: () => void;
     toggleTutorialMode: () => void;
     activateScenario: (scenarioId: string) => void;
@@ -38,14 +51,22 @@ export const ScenarioContext = createContext(
 );
 
 const hasGuidanceQuery = () => new URLSearchParams(window.location.search).has("guidance");
-const getFirstScenarioStepId = (scenarioId?: string) => (scenarioId ? SCENARIOS[scenarioId]?.steps[0]?.id : undefined);
+
+const resolveSteps = (scenarioId?: string, focus: ScenarioFocus | null = null): ScenarioStep[] => {
+    if (!scenarioId) return [];
+    const scenario = SCENARIOS[scenarioId];
+    if (!scenario) return [];
+    return typeof scenario.steps === "function" ? scenario.steps(focus) : scenario.steps;
+};
+
+const getFirstScenarioStepId = (scenarioId?: string) => resolveSteps(scenarioId, null).find((s) => !s.skip)?.id;
+
 const getNextScenarioId = (scenarioId?: string) => {
     if (!scenarioId) return undefined;
-
     const scenarioIds = Object.keys(SCENARIOS);
-    const scenarioIndex = scenarioIds.indexOf(scenarioId);
-    return scenarioIds[scenarioIndex + 1];
+    return scenarioIds[scenarioIds.indexOf(scenarioId) + 1];
 };
+
 const navigateToStepRoute = (step?: ScenarioStep) => {
     if (!step) return;
     const overrideRoute = step.beforeStep?.();
@@ -70,8 +91,22 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
     );
     const [pendingIncidentFocusScenarioId, setPendingIncidentFocusScenarioId] = useState<string | undefined>();
     const [isScenarioAutoplaying, setScenarioAutoplaying] = useState(false);
-    const activeScenario = activeScenarioId ? SCENARIOS[activeScenarioId] : undefined;
-    const activeStep = activeScenario?.steps.find((step) => step.id === activeStepId);
+    const [focusMap, setFocusMap] = useState<Record<string, ScenarioFocus | null>>({});
+    const setFocus = useCallback(
+        (scenarioId: string, newFocus: ScenarioFocus | null) =>
+            setFocusMap((prev) => ({ ...prev, [scenarioId]: newFocus })),
+        [],
+    );
+
+    const focus = activeScenarioId ? (focusMap[activeScenarioId] ?? null) : null;
+
+    const activeSteps = useMemo(
+        () => resolveSteps(activeScenarioId, focus),
+
+        [activeScenarioId, focus],
+    );
+
+    const activeStep = useMemo(() => activeSteps.find((s) => s.id === activeStepId), [activeSteps, activeStepId]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -100,49 +135,38 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
             activeScenarioId,
             activeStepId,
             activeStep,
+            activeSteps,
+            focus,
             scenarioActivatedAt,
             pendingIncidentFocusScenarioId,
             isScenarioAutoplaying,
             setGuidanceVisible,
             setTutorialMode,
             setScenarioAutoplaying,
+            setFocus,
             toggleGuidanceVisibility: () => setGuidanceVisible((current) => !current),
             toggleTutorialMode: () => setTutorialMode((current) => !current),
             activateScenario: (scenarioId: string) => {
+                useTimelineStore.getState().pause();
                 setActiveScenarioId(scenarioId);
                 setActiveStepId(getFirstScenarioStepId(scenarioId));
                 setScenarioActivatedAt(Date.now());
             },
             prevStep: () => {
-                if (!activeScenarioId) return;
-
-                const steps = SCENARIOS[activeScenarioId]?.steps;
-                if (!steps?.length) {
-                    setActiveStepId(undefined);
-                    return;
-                }
-
-                const currentStepIndex = steps.findIndex((step) => step.id === activeStepId);
-                const prevStep = steps[currentStepIndex - 1];
-                if (!prevStep) return;
-
-                navigateToStepRoute(prevStep);
-                setActiveStepId(prevStep.id);
+                if (!activeSteps.length) return;
+                const currentIndex = activeSteps.findIndex((s) => s.id === activeStepId);
+                const prev = [...activeSteps.slice(0, currentIndex)].reverse().find((s) => !s.skip);
+                if (!prev) return;
+                navigateToStepRoute(prev);
+                setActiveStepId(prev.id);
             },
             nextStep: () => {
-                if (!activeScenarioId) return;
-
-                const steps = SCENARIOS[activeScenarioId]?.steps;
-                if (!steps?.length) {
-                    setActiveStepId(undefined);
-                    return;
-                }
-
-                const currentStepIndex = steps.findIndex((step) => step.id === activeStepId);
-                const nextStep = steps[currentStepIndex + 1];
-                if (nextStep) {
-                    navigateToStepRoute(nextStep);
-                    setActiveStepId(nextStep.id);
+                if (!activeSteps.length) return;
+                const currentIndex = activeSteps.findIndex((s) => s.id === activeStepId);
+                const next = activeSteps.slice(currentIndex + 1).find((s) => !s.skip);
+                if (next) {
+                    navigateToStepRoute(next);
+                    setActiveStepId(next.id);
                     return;
                 }
 
@@ -155,14 +179,16 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
                     setScenarioAutoplaying(false);
                     return;
                 }
-                const firstNextScenarioStep = SCENARIOS[nextScenarioId]?.steps[0];
-
-                navigateToStepRoute(firstNextScenarioStep);
+                const firstStep = resolveSteps(nextScenarioId, null).find((s) => !s.skip);
+                navigateToStepRoute(firstStep);
                 setActiveScenarioId(nextScenarioId);
-                setActiveStepId(firstNextScenarioStep?.id);
+                setActiveStepId(firstStep?.id);
                 setScenarioActivatedAt(Date.now());
             },
             clearActiveScenario: () => {
+                const tl = useTimelineStore.getState();
+                tl.play();
+                tl.setZoom("1W");
                 setActiveScenarioId(undefined);
                 setActiveStepId(undefined);
                 setScenarioActivatedAt(undefined);
@@ -180,9 +206,12 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
             activeScenarioId,
             activeStepId,
             activeStep,
+            activeSteps,
+            focus,
             scenarioActivatedAt,
             pendingIncidentFocusScenarioId,
             isScenarioAutoplaying,
+            setFocus,
         ],
     );
 

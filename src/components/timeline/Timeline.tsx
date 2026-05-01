@@ -21,6 +21,7 @@ import { useCorrelation } from "@/hooks/useCorrelation";
 import { SelectionContext } from "@/contexts/SelectionContext";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { useFocusStore } from "@/store/useFocusStore";
+import { ScenarioContext } from "@/contexts/ScenariosContext";
 
 //------------------------------------------------------------------------------
 import { highlightStateForBar, entityTypeFromId, type EntityType, type HighlightState } from "@/core/Correlation";
@@ -53,7 +54,7 @@ import { FooterTabs } from "../common/FooterTabs";
 // Zoom levels
 //------------------------------------------------------------------------------
 
-type ZoomKey = "1D" | "1W" | "2W" | "1M" | "3M" | "6M";
+import type { ZoomKey } from "@/store/useTimelineStore";
 
 type AreaType = "production" | "delivery" | "reception" | "storage" | "quality" | "other";
 
@@ -254,8 +255,8 @@ function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
                 po.phase === "completed"
                     ? "bg-emerald-500 border border-emerald-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50"
                     : po.phase === "future"
-                        ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
-                        : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
+                      ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
+                      : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
             tooltip: (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{po.orderNumber}</div>
@@ -309,8 +310,8 @@ function buildOperationsStory(ops: ProjectedOperation[]): Story {
                 op.phase === "completed"
                     ? "bg-slate-400 border border-slate-300/40 hover:ring-2 hover:ring-offset-0 hover:ring-slate-400/50"
                     : op.phase === "future"
-                        ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
-                        : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
+                      ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
+                      : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
             tooltip: (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{op.operationCode}</div>
@@ -363,8 +364,8 @@ function buildReceiptsStory(receipts: ProjectedReceipt[], present: number): Stor
                 r.phase === "completed"
                     ? "bg-sky-500 border border-sky-400/50"
                     : r.phase === "future"
-                        ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                        : "bg-amber-400 border border-amber-300/60",
+                      ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                      : "bg-amber-400 border border-amber-300/60",
             ),
             tooltip: (
                 <div className="space-y-1.5">
@@ -461,8 +462,8 @@ function buildPickTasksStory(tasks: ProjectedPickTask[], present: number): Story
             t.phase === "completed"
                 ? "bg-amber-400 border border-amber-300/50"
                 : t.phase === "future"
-                    ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                    : "bg-amber-300 border border-amber-300/50",
+                  ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                  : "bg-amber-300 border border-amber-300/50",
         ),
         tooltip: (
             <div className="space-y-1.5">
@@ -506,8 +507,8 @@ function buildPutawayTasksStory(tasks: ProjectedPutawayTask[], present: number):
             t.phase === "completed"
                 ? "bg-emerald-500 border border-emerald-400/50"
                 : t.phase === "future"
-                    ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                    : "bg-emerald-400 border border-emerald-300/50",
+                  ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                  : "bg-emerald-400 border border-emerald-300/50",
         ),
         tooltip: (
             <div className="space-y-1.5">
@@ -553,8 +554,8 @@ function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[], present: number
                 po.phase === "completed"
                     ? "bg-violet-500 border border-violet-400/50"
                     : po.phase === "future"
-                        ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                        : "bg-violet-400 border border-violet-300/50",
+                      ? "bg-slate-400 border border-slate-400/40 border-dashed"
+                      : "bg-violet-400 border border-violet-300/50",
             ),
             tooltip: (
                 <div className="space-y-1.5">
@@ -784,7 +785,9 @@ export function Timeline() {
 
     //--------------------------------------------------------------------------
     const { hovered, setHovered, setSelected } = useFocusStore();
-    const { asOf, setAsOf, present, isPlaying, play, pause, playbackSpeed, setPlaybackSpeed } = useTimelineStore();
+    const { asOf, setAsOf, present, isPlaying, play, pause, playbackSpeed, setPlaybackSpeed, timelineWindow, setZoom } =
+        useTimelineStore();
+    const { activeScenarioId } = useContext(ScenarioContext);
 
     useEffect(() => {
         const { itemSlug } = Router.currentRoute();
@@ -836,17 +839,15 @@ export function Timeline() {
         return () => clearTimeout(timeoutId);
     }, []);
 
-    const [zoom, setZoom] = useState<ZoomKey>("1W");
     const [tooltip, setTooltip] = useState<{ content: React.ReactNode; x: number; y: number } | null>(null);
 
     const trackRef = useRef<HTMLDivElement>(null);
     const isDragging = useRef(false);
 
     //--------------------------------------------------------------------------
-    const zoomDef = ZOOMS.find((z) => z.key === zoom)!;
-    const halfSecs = (zoomDef.days * 86400) / 2;
-    const winStart = present - zoomDef.days * 86400;
-    const winEnd = present + halfSecs;
+    const zoomDef = timelineWindow.kind === "zoom" ? ZOOMS.find((z) => z.key === timelineWindow.key)! : null;
+    const winStart = timelineWindow.kind === "zoom" ? present - zoomDef!.days * 86400 : timelineWindow.from;
+    const winEnd = timelineWindow.kind === "zoom" ? present + (zoomDef!.days * 86400) / 2 : timelineWindow.to;
     const effectiveNow = asOf ?? present;
 
     //--------------------------------------------------------------------------
@@ -875,7 +876,8 @@ export function Timeline() {
 
     const scopedDowntimeIds = useMemo(() => new Set(projection?.downtimeEvents.map((dt) => dt.id) ?? []), [projection]);
     const scopedWorkOrderIds = useMemo(() => new Set(projection?.eamWorkOrders.map((wo) => wo.id) ?? []), [projection]);
-    const ticks = useMemo(() => buildTicks(winStart, winEnd, zoomDef.days), [winStart, winEnd, zoomDef.days]);
+    const tickDays = zoomDef?.days ?? Math.ceil((winEnd - winStart) / 86400);
+    const ticks = useMemo(() => buildTicks(winStart, winEnd, tickDays), [winStart, winEnd, tickDays]);
     const closedIntervals = useMemo(() => buildClosedIntervals(winStart, winEnd), [winStart, winEnd]);
     const presentPct = toPct(present, winStart, winEnd);
     const playheadPct = Math.max(0, Math.min(100, toPct(asOf || present, winStart, winEnd)));
@@ -961,7 +963,7 @@ export function Timeline() {
     return (
         <>
             <aside
-                data-scenario="incident-step-6"
+                data-scenario="corrective-maintenance-step-6 predictive-maintenance-step-6"
                 className={cn(
                     "flex flex-col pointer-events-auto border-b border-slate-200 select-none",
                     PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
@@ -1017,59 +1019,61 @@ export function Timeline() {
                             })}
 
                             {/* Work order bands */}
-                            {workOrderBands.map(({ wo, start, end }) => {
-                                const left = toPct(start, winStart, winEnd);
-                                const width = toPct(end, winStart, winEnd) - left;
-                                const tooltip = (
-                                    <div className="space-y-1.5">
-                                        <div className="font-semibold text-white">{wo.workOrderNumber}</div>
-                                        <div className="text-slate-400 text-[11px] capitalize">{wo.workType}</div>
-                                        <div>
-                                            <span className="text-slate-500">Status </span>
-                                            <span className="capitalize">{wo.status.replace("_", " ")}</span>
-                                            {wo.isOverdue && <span className="ml-1.5 text-red-400">overdue</span>}
-                                        </div>
-                                        <div>
-                                            <span className="text-slate-500">Planned </span>
-                                            {fmtTs(wo.scheduledStart)} → {fmtTs(wo.scheduledEnd)}
-                                        </div>
-                                        {wo.actualStart && (
+                            <div data-scenario="predictive-maintenance-step-5" className="contents">
+                                {workOrderBands.map(({ wo, start, end }) => {
+                                    const left = toPct(start, winStart, winEnd);
+                                    const width = toPct(end, winStart, winEnd) - left;
+                                    const tooltip = (
+                                        <div className="space-y-1.5">
+                                            <div className="font-semibold text-white">{wo.workOrderNumber}</div>
+                                            <div className="text-slate-400 text-[11px] capitalize">{wo.workType}</div>
                                             <div>
-                                                <span className="text-slate-500">Actual </span>
-                                                {fmtTs(wo.actualStart)}
-                                                {wo.actualEnd ? ` → ${fmtTs(wo.actualEnd)}` : " (ongoing)"}
+                                                <span className="text-slate-500">Status </span>
+                                                <span className="capitalize">{wo.status.replace("_", " ")}</span>
+                                                {wo.isOverdue && <span className="ml-1.5 text-red-400">overdue</span>}
                                             </div>
-                                        )}
-                                    </div>
-                                );
-                                return (
-                                    <div
-                                        key={wo.id}
-                                        className={cn(
-                                            "absolute top-0 bottom-0 cursor-pointer",
-                                            scopedWorkOrderIds.has(wo.id) ? "bg-amber-200" : "bg-amber-200",
-                                        )}
-                                        style={{ left: `${left}%`, width: `${width}%`, minWidth: "2px" }}
-                                        onMouseEnter={(e) => {
-                                            showTooltip(tooltip, e);
-                                            setHovered({ type: "workOrder", id: wo.id });
-                                        }}
-                                        onMouseLeave={() => {
-                                            hideTooltip();
-                                            setHovered(null);
-                                        }}
-                                        onMouseDown={(e) => e.stopPropagation()}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelected({ type: "workOrder", id: wo.id });
-                                            const { factorySlug, nodeSlug } = Router.currentRoute();
-                                            if (factorySlug) {
-                                                Router.replace({ factorySlug, nodeSlug, itemSlug: wo.id });
-                                            }
-                                        }}
-                                    />
-                                );
-                            })}
+                                            <div>
+                                                <span className="text-slate-500">Planned </span>
+                                                {fmtTs(wo.scheduledStart)} → {fmtTs(wo.scheduledEnd)}
+                                            </div>
+                                            {wo.actualStart && (
+                                                <div>
+                                                    <span className="text-slate-500">Actual </span>
+                                                    {fmtTs(wo.actualStart)}
+                                                    {wo.actualEnd ? ` → ${fmtTs(wo.actualEnd)}` : " (ongoing)"}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                    return (
+                                        <div
+                                            key={wo.id}
+                                            className={cn(
+                                                "absolute top-0 bottom-0 cursor-pointer",
+                                                scopedWorkOrderIds.has(wo.id) ? "bg-amber-200" : "bg-amber-200",
+                                            )}
+                                            style={{ left: `${left}%`, width: `${width}%`, minWidth: "2px" }}
+                                            onMouseEnter={(e) => {
+                                                showTooltip(tooltip, e);
+                                                setHovered({ type: "workOrder", id: wo.id });
+                                            }}
+                                            onMouseLeave={() => {
+                                                hideTooltip();
+                                                setHovered(null);
+                                            }}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelected({ type: "workOrder", id: wo.id });
+                                                const { factorySlug, nodeSlug } = Router.currentRoute();
+                                                if (factorySlug) {
+                                                    Router.replace({ factorySlug, nodeSlug, itemSlug: wo.id });
+                                                }
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
 
                             {/* Downtime bands */}
                             {downtimeBands.map(({ dt, start, end }) => {
@@ -1194,7 +1198,7 @@ export function Timeline() {
                         ))}
 
                         {/* Future zone tint */}
-                        {presentPct >= 0 && presentPct <= 100 && (
+                        {!activeScenarioId && presentPct >= 0 && presentPct <= 100 && (
                             <div
                                 className="absolute top-0 bottom-0 bg-white/[0.025] pointer-events-none"
                                 style={{ left: `${presentPct}%`, right: 0 }}
@@ -1214,14 +1218,16 @@ export function Timeline() {
                         )}
 
                         {/* Playhead */}
-                        <div
-                            className="absolute top-0 bottom-0 z-20 cursor-ew-resize"
-                            style={{ left: `${playheadPct}%` }}
-                            onMouseDown={handleTrackMouseDown}
-                        >
-                            <div className="absolute top-1 -translate-x-1/2 w-3 h-3 rounded-full bg-accent border-2 border-white/90 shadow-md" />
-                            <div className="absolute top-3.5 bottom-0 w-px -translate-x-1/2 bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-                        </div>
+                        {!activeScenarioId && (
+                            <div
+                                className="absolute top-0 bottom-0 z-20 cursor-ew-resize"
+                                style={{ left: `${playheadPct}%` }}
+                                onMouseDown={handleTrackMouseDown}
+                            >
+                                <div className="absolute top-1 -translate-x-1/2 w-3 h-3 rounded-full bg-accent border-2 border-white/90 shadow-md" />
+                                <div className="absolute top-3.5 bottom-0 w-px -translate-x-1/2 bg-accent shadow-[0_0_6px_var(--color-accent)]" />
+                            </div>
+                        )}
 
                         {/* Loading overlay */}
                         {isLoading && (
@@ -1244,7 +1250,9 @@ export function Timeline() {
                                 onClick={() => setZoom(z.key)}
                                 className={cn(
                                     "px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide transition-colors",
-                                    zoom === z.key ? "bg-accent/20 text-accent" : "text-slate-400 hover:text-slate-200",
+                                    timelineWindow.kind === "zoom" && timelineWindow.key === z.key
+                                        ? "bg-accent/20 text-accent"
+                                        : "text-slate-400 hover:text-slate-200",
                                 )}
                             >
                                 {z.label}

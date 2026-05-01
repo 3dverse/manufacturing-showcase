@@ -1,5 +1,6 @@
 //------------------------------------------------------------------------------
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { faAngleLeft } from "@fortawesome/pro-solid-svg-icons";
 
 //------------------------------------------------------------------------------
@@ -37,6 +38,7 @@ export const ScenarioStepper = () => {
         scenarios,
         activeScenarioId,
         activeStep,
+        activeSteps,
         isScenarioAutoplaying,
         setScenarioAutoplaying,
         prevStep,
@@ -58,26 +60,27 @@ export const ScenarioStepper = () => {
     const scenarioEntries = Object.entries(scenarios);
     const activeScenarioIndex = scenarioEntries.findIndex(([scenarioId]) => scenarioId === activeScenarioId);
     const activeScenario = activeScenarioId ? scenarios[activeScenarioId] : undefined;
-    const activeStepIndex = activeScenario?.steps.findIndex((step) => step.id === activeStep?.id) ?? -1;
+    const visibleSteps = activeSteps.filter((step) => !step.skip);
+    const activeStepIndex = visibleSteps.findIndex((step) => step.id === activeStep?.id);
     const isFirstStep = activeStepIndex <= 0;
     const nextScenario = scenarioEntries[activeScenarioIndex + 1]?.[1];
-    const isLastStep = Boolean(activeScenario?.steps.length && activeStepIndex === activeScenario.steps.length - 1);
+    const isLastStep = Boolean(visibleSteps.length && activeStepIndex === visibleSteps.length - 1);
     const nextButtonLabel = isLastStep ? (nextScenario ? nextScenario.title : "Close") : "Next";
 
     //--------------------------------------------------------------------------
     const popoverPosition = targetPosition
         ? {
-            x: clamp(
-                targetPosition.x - overlayBounds.x + (activeStep?.offsetX ?? 0),
-                POPOVER_MARGIN,
-                Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
-            ),
-            y: clamp(
-                targetPosition.y - overlayBounds.y + (activeStep?.offsetY ?? 0),
-                POPOVER_MARGIN,
-                Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
-            ),
-        }
+              x: clamp(
+                  targetPosition.x - overlayBounds.x + (activeStep?.offsetX ?? 0),
+                  POPOVER_MARGIN,
+                  Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
+              ),
+              y: clamp(
+                  targetPosition.y - overlayBounds.y + (activeStep?.offsetY ?? 0),
+                  POPOVER_MARGIN,
+                  Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
+              ),
+          }
         : { x: POPOVER_MARGIN, y: POPOVER_MARGIN };
 
     //--------------------------------------------------------------------------
@@ -191,8 +194,8 @@ export const ScenarioStepper = () => {
 
     //--------------------------------------------------------------------------
     if (!tutorialMode || !activeScenarioId || !activeStep || !isActiveStepRoute) return null;
-    return (
-        <div ref={overlayRef} className="absolute inset-0 z-100">
+    return createPortal(
+        <div ref={overlayRef} className="absolute inset-0 z-200">
             <div
                 aria-hidden
                 className="fixed -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_9999px_color-mix(in_oklch,var(--color-slate-1000)_15%,transparent)] pointer-events-auto starting:opacity-0 opacity-100 starting:scale-200 scale-100 transition-all duration-400"
@@ -247,7 +250,10 @@ export const ScenarioStepper = () => {
                         type="button"
                         colorScheme="guidance"
                         size="sm"
-                        className={cn("relative w-full overflow-hidden text-left", isLastStep && nextScenario && "justify-start")}
+                        className={cn(
+                            "relative w-full overflow-hidden text-left",
+                            isLastStep && nextScenario && "justify-start",
+                        )}
                         onClick={nextStep}
                     >
                         <span
@@ -256,12 +262,15 @@ export const ScenarioStepper = () => {
                             style={{ width: `${autoplayProgress}%` }}
                         />
                         <span className="relative">
-                            {isLastStep && nextScenario && <span className="text-xs block font-semibold">Next scenario</span>}
+                            {isLastStep && nextScenario && (
+                                <span className="text-xs block font-semibold">Next scenario</span>
+                            )}
                             <span>{nextButtonLabel}</span>
                         </span>
                     </Button>
                 </div>
             </section>
-        </div>
+        </div>,
+        document.body,
     );
 };

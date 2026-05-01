@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { faXmark } from "@fortawesome/pro-light-svg-icons"
+import { faXmark } from "@fortawesome/pro-light-svg-icons";
 
 import { Icon } from "@/components/common/Icon";
 import Button from "@/components/common/Button";
@@ -22,7 +22,6 @@ import { entityTypeFromId } from "@/core/Correlation";
 import { Router } from "@/core/Router";
 import type { FocusedEntity } from "@/core/Correlation";
 import type { AsOfProjection } from "@/core/Projection";
-
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -119,7 +118,8 @@ export function CorrelationModal() {
     if (!selected) return null;
     return createPortal(
         <aside
-            className="fixed top-0 right-0 bottom-0 w-1/2 max-w-md bg-slate-0/95 backdrop-blur-sm border-l border-slate-200/70 shadow-3xl z-100 overflow-y-auto starting:-translate-x-full translate-x-0 opacity-0 transition-all duration-200"
+            data-scenario="corrective-maintenance-step-8"
+            className="fixed top-0 right-0 bottom-0 w-1/2 max-w-md bg-slate-0/95 backdrop-blur-sm border-l border-slate-200/70 shadow-3xl z-100 overflow-y-auto starting:-translate-x-full translate-x-0 transition-all duration-200"
         >
             <header className="sticky top-0 flex items-center justify-between pl-6 pr-3 py-2 mb-4 bg-slate-0/95 border-b border-slate-200/70 backdrop-blur-sm">
                 {title && <h2 className="text-lg font-semibold">{title}</h2>}

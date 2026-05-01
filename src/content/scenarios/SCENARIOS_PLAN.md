@@ -1,38 +1,67 @@
 # Guided Scenario Plan
 
-Three scenarios walk a viewer through increasingly different maintenance situations — from a crisis to a prediction to a scheduled event. Each scenario navigates the app's real features in sequence, spotlighting a different part of the digital twin.
+Three scenarios walk a viewer through three states of a maintenance operation — from reacting to a crisis, to acting on a prediction, to proving that a systematic plan works. Each scenario ends on a measurable, actionable payoff.
 
 See individual scenario files for step-by-step details:
-- [Scenario 1 — Incident Response](./scenario_1_incident_response.md)
-- [Scenario 2 — Predictive Maintenance](./scenario_2_predictive_maintenance.md)
-- [Scenario 3 — Planned Maintenance](./scenario_3_planned_maintenance.md)
+- [Corrective Maintenance](./corrective_maintenance.md)
+- [Predictive Maintenance](./predictive_maintenance.md)
+- [Planned Maintenance](./planned_maintenance.md)
 
 ---
 
-## Narrative Contrast
+## Narrative Arc
 
-| | Incident | Predictive | Planned |
+| | Corrective | Predictive | Planned |
 |---|---|---|---|
-| **KPI state** | Maintenance = red | Maintenance = amber/warning | Maintenance = green |
-| **Timeline focus** | Red downtime band (now) | Amber EAM band (future) + declining OEE | Amber EAM band (future) + healthy MOs |
-| **Correlation** | Downtime → MO → SO at risk | EAM WO → MO → SO safe | EAM WO → MO → SO safe |
-| **Storage** | Not shown | Not shown | Pre-positioned materials |
-| **BOM** | Not shown | At-risk component | Full routing post-maintenance |
-| **Emotional arc** | Crisis → assess → act | Signal → predict → schedule | Plan → confirm → relax |
+| **Entry** | Machine just failed mid-shift | OEE trend quietly declining | Worst-performing machine, new plan in place |
+| **Posture** | React | Anticipate | Prove |
+| **KPI state** | Maintenance = red | Maintenance = amber | Maintenance = green |
+| **Timeline focus** | Red downtime band (now) | Amber EAM band (near future) + declining OEE | Before: dense red bands / After: clean amber windows |
+| **Actionable end** | Customer at risk identified + corrective work order created | Maintenance work order with technician guide | OEE/MTBF recovery + 0 unplanned stoppages this quarter |
+| **Emotional arc** | Crisis → assess → act | Signal → predict → schedule | Problem → plan → proof |
 
 ---
 
-## Cross-scenario Notes
+## Shared DOM Elements
 
-### Shared UI elements that need `data-scenario` attributes
-The following elements are referenced by multiple scenarios and may need dynamic or multi-valued attributes:
-- **KeyStatusIndicators** — used in incident (step 3), predictive (step 1), planned (step 2). Currently tagged as `incident-step-3` only.
-- **Timeline** — used in incident (step 5), predictive (steps 4–5), planned (step 4).
-- **BOMPanel** — used in predictive (step 6), planned (step 7).
-- **Navigation line/cell pills** — used in predictive (step 2), planned (step 3).
+Some DOM elements are referenced by multiple scenarios. They carry space-separated `data-scenario` values and are queried with the `~=` CSS attribute selector.
 
-### `asOf` time control
-The timeline `asOf` state is the key to showing the right moment in each scenario:
-- **Incident:** `asOf` = moment of the latest `DowntimeEntry.startedAt`
-- **Predictive:** `asOf` = current real time (or slightly ahead, showing the EAM work order in the future amber band)
-- **Planned:** `asOf` = a few days before the upcoming EAM work order
+| Element | File | DOM value |
+|---|---|---|
+| `KeyStatusIndicators` strip | `DesktopLayout.tsx` | `"corrective-maintenance-step-3 predictive-maintenance-step-1"` |
+| `Timeline` `<aside>` | `Timeline.tsx` | `"corrective-maintenance-step-6 predictive-maintenance-step-6"` |
+
+---
+
+## Tag Naming Convention
+
+All `data-scenario` attributes follow the pattern `{scenario-name}-step-{number}`:
+- `corrective-maintenance-step-N`
+- `predictive-maintenance-step-N`
+- `planned-maintenance-step-N`
+
+Selectors in `scenarios.tsx` use the `~=` word-match operator to support multi-value attributes:
+```
+selector: "[data-scenario~=corrective-maintenance-step-3]"
+```
+
+---
+
+## Time Control
+
+| | Corrective | Predictive | Planned |
+|---|---|---|---|
+| **Window** | Custom 48h (± 24h around downtime) via `onFocusResolved` | Default zoom | Extended historical view |
+| **`present` per step** | step 1: `downtimeStartedAt - 1` / step 2: `+duration/3` / step 10: `+duration*2/3` | — | — |
+| **NOW cursor** | Visible (shows `present`) | Visible | Visible |
+| **Playhead** | Hidden during scenario | Hidden | Hidden |
+
+---
+
+## Mock Data Requirements
+
+**Corrective:** existing downtime event data is sufficient.
+
+**Predictive:** needs a cell with a declining OEE sparkline and a future `preventive` EAM work order in the span.
+
+**Planned:** needs a cell with dense historical downtime events and a `preventive` EAM work order. The cell with the most downtime events + a preventive WO is selected automatically by `resolve`.
