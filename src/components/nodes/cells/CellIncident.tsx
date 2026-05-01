@@ -56,13 +56,15 @@ export const CellIncident = ({
                 machineDetails={machineDetails}
             />
             <PanelTitle className="capitalize text-warning-100">
-                <Icon icon={faExclamationTriangle} className="absolute -top-2 left-3 text-xs text-warning-100 bg-warning rounded-full p-1" />
-                <p className="font-semibold">{downtimeEvent.reasonCode}</p>
+                <Icon
+                    icon={faExclamationTriangle}
+                    className="absolute -top-2 left-3 text-2xs text-warning-100 bg-warning-700 rounded-full p-1"
+                />
                 <p className="text-xs">{downtimeEvent.reasonDescription}</p>
             </PanelTitle>
             <div className="transform-3d shrink-0 bg-warning-800 rounded-md">
                 <Button
-                    size="sm"
+                    size="xs"
                     variant="outline"
                     className="button bg-warning-100 text-warning-600 hover:bg-warning-50 border-0 -translate-z-[.1px] hover:translate-z-0"
                     onClick={openScadaModal}

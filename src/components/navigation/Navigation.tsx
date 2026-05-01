@@ -367,7 +367,7 @@ const ChildNode = ({
             if (isHovered) {
                 return "bg-slate-100 border-slate-100 text-accent";
             }
-            return "bg-accent md:bg-slate-0 border-slate-0 md:text-accent z-10";
+            return "bg-accent md:bg-slate-0 border-slate-0 md:text-accent";
         }
         if (isParentActive) {
             if (isHovered) {

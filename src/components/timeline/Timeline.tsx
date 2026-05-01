@@ -47,7 +47,7 @@ import { fmtDuration, fmtTs } from "@/utils/helpers-time";
 import { buildClosedIntervals } from "@/core/Calendar";
 
 //------------------------------------------------------------------------------
-import { PERFORMANCE_MODE, FULL_TIMELINE } from "@/content/3dverse";
+import { PERFORMANCE_MODE, FULL_TIMELINE, SHOW_OPERATING_ORDERS } from "@/content/3dverse";
 import { FooterTabs } from "../common/FooterTabs";
 
 //------------------------------------------------------------------------------
@@ -150,6 +150,8 @@ type BarItem = {
     end: number;
     className: string;
     tooltip: React.ReactNode;
+    /** Shown inside the bar when `barStyle === "bar"` (e.g. manufacturing order id). */
+    inlineLabel?: string;
 };
 
 type BarStyle = "bar" | "line";
@@ -251,6 +253,7 @@ function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
             entityType: "productionOrder" as EntityType,
             start: po.effectiveStart,
             end: po.effectiveEnd,
+            inlineLabel: po.orderNumber,
             className:
                 po.phase === "completed"
                     ? "bg-emerald-500 border border-emerald-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50"
@@ -636,7 +639,7 @@ function buildStories(
         case "area":
             switch (areatype) {
                 case "production":
-                    return [buildSalesOrdersStory(so), buildProductionOrdersStory(po)];
+                    return [buildProductionOrdersStory(po)];
                 case "delivery":
                     return [
                         buildSalesOrdersStory(so),
@@ -662,7 +665,7 @@ function buildStories(
         case "line":
         case "cell":
         case "machine":
-            return [buildProductionOrdersStory(po), buildOperationsStory(ops)];
+            return [buildProductionOrdersStory(po), ...(SHOW_OPERATING_ORDERS ? [buildOperationsStory(ops)] : [])];
     }
 }
 
@@ -765,6 +768,7 @@ function Bar({
             className={cn(
                 "absolute cursor-pointer pointer-events-auto transition-[shadow,opacity]",
                 barStyle === "line" ? "rounded-full" : "rounded-sm",
+                barStyle === "bar" && bar.inlineLabel && "flex items-center justify-start overflow-hidden px-0.5",
                 highlightState === "dimmed" && "opacity-20",
                 bar.className,
             )}
@@ -773,7 +777,13 @@ function Bar({
             onMouseLeave={mouseLeaveHandler}
             onMouseDown={mouseDownHandler}
             onClick={mouseClickHandler}
-        />
+        >
+            {barStyle === "bar" && bar.inlineLabel ? (
+                <span className="truncate text-[9px] font-semibold leading-none text-white drop-shadow-sm pointer-events-none select-none">
+                    {bar.inlineLabel}
+                </span>
+            ) : null}
+        </div>
     );
 }
 

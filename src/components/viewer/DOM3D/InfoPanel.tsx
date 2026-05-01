@@ -33,7 +33,7 @@ export function InfoPanel({
             {incident && (
                 <ViewerPanel
                     data-scenario="corrective-maintenance-step-4"
-                    className="backdrop-blur-none transform-[translateZ(-.1px)] relative min-w-80 bg-warning-500 shadow-[0_-4px_56px_-1px_var(--color-warning-500)] [corner-shape:bevel] starting:opacity-0 starting:translate-y-8 opacity-100 translate-y-0 translate-x-[80%] transition-all duration-400 delay-500 transform-3d"
+                    className="backdrop-blur-none transform-[translateZ(-.1px)] relative min-w-80 bg-warning-700 shadow-[0_-4px_56px_-1px_var(--color-warning-500)] [corner-shape:bevel] starting:opacity-0 starting:translate-y-8 opacity-100 translate-y-0 translate-x-[80%] transition-all duration-400 delay-500 transform-3d"
                 >
                     <PanelWrapper className="py-2 flex justify-between items-center gap-8 transform-3d">
                         {incident}

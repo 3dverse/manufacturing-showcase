@@ -43,14 +43,14 @@ export const ManufacturingOrderProgressBar = ({
               ? "bg-accent-500 text-accent-50"
               : order.status.name === orderStatus.cancelled.name
                 ? "bg-negative-500 text-negative-800"
-                : "bg-neutral-400 text-neutral-900"
+                : "bg-neutral-200 text-neutral-800"
         : order.status.name === orderStatus.completed.name
           ? "bg-positive-500/70 text-positive-50"
           : order.status.name === orderStatus.inProgress.name
             ? "bg-accent-500/60 text-accent-50"
             : order.status.name === orderStatus.cancelled.name
               ? "bg-negative-500/50 text-negative-800"
-              : "bg-neutral-400/40 text-neutral-900";
+              : "bg-neutral-200/40 text-neutral-800";
 
     const progressColor =
         order.status.name === orderStatus.completed.name

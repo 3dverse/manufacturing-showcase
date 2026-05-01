@@ -5,5 +5,7 @@ export const PUBLIC_FOLDER_ID = "3b1c6c2a-73e1-4787-a383-a7cdd4de54de";
 export const SCENE_WHITELIST = ["18c3828d-263a-4bc7-a3a5-17399959c5f0"];
 export const PERFORMANCE_MODE: boolean = true;
 export const FULL_TIMELINE: boolean = false;
+/** When false, MES operation bars are omitted from the timeline (line / cell / machine scope). */
+export const SHOW_OPERATING_ORDERS: boolean = false;
 export const USE_PROJECTION = true;
 export const DevMode = { active: false };
