@@ -15,7 +15,7 @@ import type { BOMNodeData, MESRoutingItem } from "./type";
 import { findNodeByWorkCenter } from "./utils";
 import { BOMFlow } from "./BomFlow";
 import { BOMDetails } from "./BOMDetails";
-import { FooterTabs } from "../common/FooterTabs";
+import { FooterTabs } from "../timeline/FooterTabs";
 import { PERFORMANCE_MODE } from "@/content/3dverse";
 
 //------------------------------------------------------------------------------
@@ -192,7 +192,7 @@ export function BOMPanel() {
                     )}
                 </>
             )}
-            <div className="flex items-center justify-between gap-4 px-2 h-8 border-b border-slate-200/10">
+            <div className="flex justify-end items-center gap-4 px-2 h-8 border-b border-slate-200/10">
                 <FooterTabs />
             </div>
         </div>

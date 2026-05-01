@@ -48,7 +48,7 @@ import { buildClosedIntervals } from "@/core/Calendar";
 
 //------------------------------------------------------------------------------
 import { PERFORMANCE_MODE, FULL_TIMELINE, SHOW_OPERATING_ORDERS } from "@/content/3dverse";
-import { FooterTabs } from "../common/FooterTabs";
+import { FooterTabs } from "./FooterTabs";
 
 //------------------------------------------------------------------------------
 // Zoom levels
@@ -256,10 +256,10 @@ function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
             inlineLabel: po.orderNumber,
             className:
                 po.phase === "completed"
-                    ? "bg-emerald-500 border border-emerald-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50"
+                    ? "bg-positive-700 hover:ring-2 hover:ring-offset-0 hover:ring-positive-500/50"
                     : po.phase === "future"
-                      ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
-                      : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
+                      ? "bg-slate-400 hover:ring-offset-0 hover:ring-slate-400/50"
+                      : "bg-accent-500 hover:ring-offset-0 hover:ring-accent-500/50",
             tooltip: (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{po.orderNumber}</div>
@@ -768,7 +768,9 @@ function Bar({
             className={cn(
                 "absolute cursor-pointer pointer-events-auto transition-[shadow,opacity]",
                 barStyle === "line" ? "rounded-full" : "rounded-sm",
-                barStyle === "bar" && bar.inlineLabel && "flex items-center justify-start overflow-hidden px-0.5",
+                barStyle === "bar" &&
+                    bar.inlineLabel &&
+                    "text-sm flex items-center justify-start overflow-hidden px-2 py-3",
                 highlightState === "dimmed" && "opacity-20",
                 bar.className,
             )}
@@ -1249,10 +1251,7 @@ export function Timeline() {
                 </div>
 
                 {/* Header */}
-                <div className="flex items-center pr-3 h-8 border-b border-slate-200/10">
-                    <div className="w-18 px-2 border-r border-slate-200/30">
-                        <FooterTabs />
-                    </div>
+                <div className="flex items-center pr-3 h-8">
                     <div className="flex items-center gap-0.5">
                         {ZOOMS.map((z) => (
                             <button
@@ -1269,7 +1268,7 @@ export function Timeline() {
                             </button>
                         ))}
                     </div>
-                    <div className="flex-grow" />
+                    <div className="grow" />
                     <div className="flex items-center gap-2">
                         {/* Play / pause */}
                         <button
@@ -1324,6 +1323,7 @@ export function Timeline() {
                             })}
                         </span>
                     </div>
+                    <FooterTabs className="ml-2" />
                 </div>
             </aside>
             <CorrelationModal />
