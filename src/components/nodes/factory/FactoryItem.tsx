@@ -112,7 +112,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                             </div>
                         </div>
 
-                        {incident && <ScadaEventsCallout incident={incident} className="max-w-110" />}
+                        {incident && <ScadaEventsCallout incident={incident} className="max-w-70" />}
                     </div>
                 </div>
                 <div className="flex">

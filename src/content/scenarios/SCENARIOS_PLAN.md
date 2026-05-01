@@ -42,7 +42,7 @@ All `data-scenario` attributes follow the pattern `{scenario-name}-step-{number}
 
 Selectors in `scenarios.tsx` use the `~=` word-match operator to support multi-value attributes:
 ```
-selector: "[data-scenario~=corrective-maintenance-step-3]"
+selector: "[data-scenario=corrective-maintenance-step-3]"
 ```
 
 ---

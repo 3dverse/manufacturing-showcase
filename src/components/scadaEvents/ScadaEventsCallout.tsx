@@ -17,7 +17,7 @@ export const ScadaEventsCallout = ({ incident, className }: { incident: Scenario
         <div
             data-scenario="corrective-maintenance-step-2"
             className={cn(
-                "relative rounded-md border border-warning-400/70 bg-slate-0/95 px-3 py-2 shadow-lg starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400",
+                "relative text-balance rounded-md border border-warning-400/70 bg-slate-0/95 px-3 py-2 shadow-lg starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400",
                 className,
             )}
         >
@@ -35,7 +35,7 @@ export const ScadaEventsCallout = ({ incident, className }: { incident: Scenario
                     </Button>
                 )}
                 <Button variant="plain" colorScheme="warning" size="xs">
-                    Go to incident
+                    Go to the incident
                 </Button>
             </div>
         </div>

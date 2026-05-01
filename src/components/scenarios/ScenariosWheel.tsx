@@ -37,8 +37,10 @@ export const ScenariosWheel = () => {
                             index === 2 &&
                                 "pb-12 rotate-30 -translate-x-1/2 origin-bottom-left before:left-0 [&_p]:rotate-20",
                             activeScenarioId === scenarioId && "text-slate-0 before:bg-guidance",
+                            scenario.disabled && "bg-accent-100! hover:bg-accent-100! cursor-not-allowed",
                         )}
                         onClick={() => toggleScenario(scenarioId)}
+                        disabled={scenario.disabled}
                     >
                         <p className="relative z-10">{scenario.title}</p>
                     </button>

@@ -28,6 +28,7 @@ type Props = {
     machineDetails: MachineDetails;
 };
 
+//TODO: Merge with CorrelationModal
 //------------------------------------------------------------------------------
 export function ScadaEventsModal({ open, onClose, reportData, machineDetails }: Props) {
     const dt = reportData.downtime;

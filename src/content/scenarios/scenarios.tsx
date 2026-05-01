@@ -1,8 +1,9 @@
 import type { ScenarioStep } from "../../content/type";
 import type { FactoryNode, CellNode } from "@/content/type";
-import type { TimelineSpan } from "@/core/Scope";
+import type { DowntimeEntry, TimelineSpan } from "@/core/Scope";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { useFocusStore } from "@/store/useFocusStore";
+import { timeAgo } from "@/utils/helpers-time";
 
 //------------------------------------------------------------------------------
 // Existing action/incident types
@@ -34,9 +35,7 @@ export type CorrectiveFocus = {
     kind: "corrective";
     cellHash: string;
     cellName: string;
-    downtimeId: string;
-    downtimeStartedAt: number;
-    downtimeEndedAt: number | null;
+    downtime: DowntimeEntry;
     orderNumber: string | null;
 };
 
@@ -65,6 +64,7 @@ export type ScenarioFocus = CorrectiveFocus | PredictiveFocus | PlannedFocus;
 // ScenarioDefinition
 
 export type ScenarioDefinition = {
+    disabled?: boolean;
     id: string;
     title: string;
     description: string;
@@ -96,19 +96,25 @@ function cellByMachineHash(nodeGraph: FactoryNode, machineHash: string): CellNod
 //------------------------------------------------------------------------------
 // Scenarios
 
+const INCIDENT_CELL_HASH = "ec07e887";
+const INCIDENT_REASON_CODE = "COOLANT_LEAK";
+
+//------------------------------------------------------------------------------
 export const SCENARIOS: Record<string, ScenarioDefinition> = {
     corrective_maintenance: {
         id: "corrective_maintenance",
-        title: "Corrective maintenance",
+        title: "Incident",
         description:
             "An unplanned machine stop has halted drilling operations mid-run. Identify the impact, trace it to the customer, and respond.",
         image: "/scenarios/scenario_1.png",
 
         resolve(span, nodeGraph) {
-            const latest = [...span.downtimeEvents.values()].sort((a, b) => b.startedAt - a.startedAt)[0];
+            const latest = [...span.downtimeEvents.values()]
+                .filter((dt) => dt.reasonCode === INCIDENT_REASON_CODE)
+                .sort((a, b) => b.startedAt - a.startedAt)[0];
             if (!latest) return null;
 
-            const cell = allCells(nodeGraph).find((c) => c.hash === latest.workCenterId);
+            const cell = allCells(nodeGraph).find((c) => c.hash === INCIDENT_CELL_HASH);
             if (!cell) return null;
 
             const order = latest.productionOrderId ? span.productionOrders.get(latest.productionOrderId) : null;
@@ -117,9 +123,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                 kind: "corrective",
                 cellHash: cell.hash,
                 cellName: cell.name,
-                downtimeId: latest.id,
-                downtimeStartedAt: latest.startedAt,
-                downtimeEndedAt: latest.endedAt ?? null,
+                downtime: latest,
                 orderNumber: order?.orderNumber ?? null,
             };
         },
@@ -128,7 +132,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
             const f = focus as CorrectiveFocus;
             useTimelineStore
                 .getState()
-                .setCustomWindow(f.downtimeStartedAt - 24 * 3600, f.downtimeStartedAt + 24 * 3600);
+                .setCustomWindow(f.downtime.startedAt - 24 * 3600, f.downtime.startedAt + 24 * 3600);
         },
 
         steps(focus): ScenarioStep[] {
@@ -136,10 +140,10 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
             const cellRoute = f ? `/phone-factory/${f.cellHash}` : "/phone-factory";
 
             const downtimeDuration = f
-                ? (f.downtimeEndedAt ?? f.downtimeStartedAt + 2 * 3600) - f.downtimeStartedAt
+                ? (f.downtime.endedAt ?? f.downtime.startedAt + 2 * 3600) - f.downtime.startedAt
                 : 0;
-            const timeAtOneThird = f ? f.downtimeStartedAt + Math.floor(downtimeDuration / 3) : 0;
-            const timeAtTwoThirds = f ? f.downtimeStartedAt + Math.floor((downtimeDuration * 2) / 3) : 0;
+            const timeAtOneThird = f ? f.downtime.startedAt + Math.floor(downtimeDuration / 3) : 0;
+            const timeAtTwoThirds = f ? f.downtime.startedAt + Math.floor((downtimeDuration * 2) / 3) : 0;
 
             return [
                 {
@@ -167,10 +171,10 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         ? () => {
                               const { pause, setPresent } = useTimelineStore.getState();
                               pause();
-                              setPresent(f.downtimeStartedAt - 1);
+                              setPresent(f.downtime.startedAt - 1);
                           }
                         : undefined,
-                    selector: "[data-scenario~=corrective-maintenance-step-1]",
+                    selector: "[data-scenario=corrective-maintenance-step-1]",
                 },
                 {
                     id: "step_2",
@@ -179,11 +183,12 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                     offsetY: 60,
                     offsetX: -100,
                     incident: {
-                        message: "Unplanned stop on CNC drilling machine.",
-                        title: "CNC Drilling — Unplanned Stop",
+                        message: "Downtime detected",
+                        title: "Downtime detected",
                         warningMessage:
-                            "Spindle overload detected on Yantra Design CNC Drilling. Machine halted at 09:14.",
-                        actions: [{ label: "Go to incident", disabled: false, role: "goToIncident" }],
+                            focus?.kind === "corrective" &&
+                            `${focus.downtime.reasonDescription} maintenance  ${timeAgo(new Date(focus.downtime.startedAt * 1000))}.`,
+                        actions: [{ label: "Go to the incident", disabled: false, role: "goToIncident" }],
                     },
                     description: f?.orderNumber ? (
                         <p>
@@ -204,9 +209,10 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                               setAsOf(timeAtOneThird);
                           }
                         : undefined,
-                    selector: "[data-scenario~=corrective-maintenance-step-2]",
+                    selector: "[data-scenario=corrective-maintenance-step-2]",
                 },
                 {
+                    skip: true,
                     id: "step_3",
                     title: "Factory health",
                     circleSize: 500,
@@ -219,9 +225,10 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: "/phone-factory",
-                    selector: "[data-scenario~=corrective-maintenance-step-3]",
+                    selector: "[data-scenario=corrective-maintenance-step-3]",
                 },
                 {
+                    skip: true,
                     id: "step_4",
                     title: "Locate the incident",
                     circleSize: 700,
@@ -234,7 +241,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: "/phone-factory",
-                    selector: "[data-scenario~=corrective-maintenance-step-4]",
+                    selector: "[data-scenario=corrective-maintenance-step-4]",
                 },
                 {
                     id: "step_5",
@@ -255,14 +262,15 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                             . Units that were in progress are now unaccounted for.
                         </p>
                     ),
-                    selector: "[data-scenario~=corrective-maintenance-step-5]",
+                    selector: "[data-scenario=corrective-maintenance-step-5]",
                     beforeStep: f
                         ? () => {
-                              return `/phone-factory/${f.cellHash}/${f.downtimeId}`;
+                              return `/phone-factory/${f.cellHash}`;
                           }
                         : undefined,
                 },
                 {
+                    skip: true,
                     id: "step_6",
                     title: "Downtime on the timeline",
                     circleSize: 250,
@@ -283,9 +291,10 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=corrective-maintenance-step-6]",
+                    selector: "[data-scenario=corrective-maintenance-step-6]",
                 },
                 {
+                    skip: true,
                     id: "step_7",
                     title: "Trace the order impact",
                     circleSize: 200,
@@ -295,12 +304,13 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                     route: cellRoute,
                     beforeStep: f
                         ? () => {
-                              useFocusStore.getState().setSelected({ type: "downtime", id: f.downtimeId });
+                              useFocusStore.getState().setSelected({ type: "downtime", id: f.downtime.id });
                           }
                         : undefined,
-                    selector: "[data-scenario~=corrective-maintenance-step-6]",
+                    selector: "[data-scenario=corrective-maintenance-step-6]",
                 },
                 {
+                    skip: true,
                     id: "step_8",
                     title: "Affected order and customer",
                     circleSize: 400,
@@ -321,9 +331,10 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=corrective-maintenance-step-8]",
+                    selector: "[data-scenario=corrective-maintenance-step-8]",
                 },
                 {
+                    skip: true,
                     id: "step_9",
                     title: "Create corrective work order",
                     //skip: true,
@@ -335,7 +346,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=corrective-maintenance-step-9]",
+                    selector: "[data-scenario=corrective-maintenance-step-9]",
                 },
                 {
                     id: "step_10",
@@ -357,15 +368,17 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                               const { setPresent, setAsOf } = useTimelineStore.getState();
                               setPresent(timeAtTwoThirds);
                               setAsOf(undefined);
+                              return `/phone-factory/${f.cellHash}/${f.downtime.id}`;
                           }
                         : undefined,
-                    selector: "[data-scenario~=corrective-maintenance-step-3]",
+                    selector: "[data-scenario=corrective-maintenance-step-10]",
                 },
             ];
         },
     },
 
     predictive_maintenance: {
+        disabled: true,
         id: "predictive_maintenance",
         title: "Predictive maintenance",
         description:
@@ -410,7 +423,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: "/phone-factory",
-                    selector: "[data-scenario~=predictive-maintenance-step-1]",
+                    selector: "[data-scenario=predictive-maintenance-step-1]",
                 },
                 {
                     id: "step_2",
@@ -422,7 +435,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=predictive-maintenance-step-2]",
+                    selector: "[data-scenario=predictive-maintenance-step-2]",
                 },
                 {
                     id: "step_3",
@@ -434,7 +447,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=predictive-maintenance-step-3]",
+                    selector: "[data-scenario=predictive-maintenance-step-3]",
                 },
                 {
                     id: "step_4",
@@ -452,7 +465,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=predictive-maintenance-step-4]",
+                    selector: "[data-scenario=predictive-maintenance-step-4]",
                 },
                 {
                     id: "step_5",
@@ -464,7 +477,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=predictive-maintenance-step-5]",
+                    selector: "[data-scenario=predictive-maintenance-step-5]",
                 },
                 {
                     id: "step_6",
@@ -477,13 +490,14 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=predictive-maintenance-step-6]",
+                    selector: "[data-scenario=predictive-maintenance-step-6]",
                 },
             ];
         },
     },
 
     planned_maintenance: {
+        disabled: true,
         id: "planned_maintenance",
         title: "Planned maintenance",
         description:
@@ -544,7 +558,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=planned-maintenance-step-1]",
+                    selector: "[data-scenario=planned-maintenance-step-1]",
                 },
                 {
                     id: "step_2",
@@ -563,7 +577,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=planned-maintenance-step-2]",
+                    selector: "[data-scenario=planned-maintenance-step-2]",
                 },
                 {
                     id: "step_3",
@@ -575,7 +589,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=planned-maintenance-step-3]",
+                    selector: "[data-scenario=planned-maintenance-step-3]",
                 },
                 {
                     id: "step_4",
@@ -587,7 +601,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=planned-maintenance-step-4]",
+                    selector: "[data-scenario=planned-maintenance-step-4]",
                 },
                 {
                     id: "step_5",
@@ -606,7 +620,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=planned-maintenance-step-5]",
+                    selector: "[data-scenario=planned-maintenance-step-5]",
                 },
                 {
                     id: "step_6",
@@ -618,7 +632,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=planned-maintenance-step-6]",
+                    selector: "[data-scenario=planned-maintenance-step-6]",
                 },
                 {
                     id: "step_7",
@@ -635,7 +649,7 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
                         </p>
                     ),
                     route: cellRoute,
-                    selector: "[data-scenario~=planned-maintenance-step-7]",
+                    selector: "[data-scenario=planned-maintenance-step-7]",
                 },
             ];
         },

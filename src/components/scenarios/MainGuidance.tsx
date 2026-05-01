@@ -32,7 +32,7 @@ export const MainGuidance = () => {
             data-theme="dark"
             className={`
                 group fixed bottom-0
-                shadow-[0_-4px_32px_-1px_color-mix(in_oklch,var(--color-accent-200)_20%,transparent)] z-100
+                shadow-[0_-4px_32px_-1px_color-mix(in_oklch,var(--color-accent-200)_20%,transparent)] z-300
                 ${isRetracting ? "pointer-events-none" : ""}
             `}
             {...(activeScenario && { "data-current-scenario": true })}

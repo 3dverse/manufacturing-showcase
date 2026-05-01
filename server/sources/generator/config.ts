@@ -49,8 +49,9 @@ export function buildConfig(partial: Partial<GeneratorConfig> & { site: SiteNode
         workDays: [1, 2, 3, 4, 5],
         maxProductionOrderCount: 2000,
         unitsPerHour: 120,
-        minOperationWorkingMinutes: 90,
-        maxOperationWorkingMinutes: 2000,
+        // One site working day = two 8h shifts → 960 min; keep POs slightly beyond that.
+        minOperationWorkingMinutes: 280,
+        maxOperationWorkingMinutes: 3200,
         yieldRate: 0.95,
         pmFrequencyDays: 14,
         pmDurationHours: 4,
