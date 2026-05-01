@@ -64,19 +64,19 @@ export const machinesDocumentation: MachineDetails[] = [
                 video: "https://www.youtube.com/watch?v=3qzVjBSnIGA",
                 history: [
                     {
-                        date: new Date(),
+                        date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
                         description: "Fixed by replacing the coolant filter",
-                        author: "John Smith",
+                        author: "Jenny Anderson",
                     },
                     {
-                        date: new Date(),
+                        date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20),
                         description: "Fixed by replacing the coolant filter",
-                        author: "John Smith",
+                        author: "Jenny Anderson",
                     },
                     {
-                        date: new Date(),
+                        date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10),
                         description: "Fixed by replacing the coolant filter",
-                        author: "John Smith",
+                        author: "Alice Smith",
                     },
                 ],
             }
@@ -93,19 +93,19 @@ export const machinesDocumentation: MachineDetails[] = [
                 video: "https://www.youtube.com/watch?v=3qzVjBSnIGA",
                 history: [
                     {
-                        date: new Date(),
+                        date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
                         description: "Fixed by replacing the coolant filter",
-                        author: "John Smith",
+                        author: "Jenny Anderson",
                     },
                     {
-                        date: new Date(),
+                        date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20),
                         description: "Fixed by replacing the coolant filter",
-                        author: "John Smith",
+                        author: "Jenny Anderson",
                     },
                     {
-                        date: new Date(),
+                        date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10),
                         description: "Fixed by replacing the coolant filter",
-                        author: "John Smith",
+                        author: "Alice Smith",
                     },
                 ],
             }

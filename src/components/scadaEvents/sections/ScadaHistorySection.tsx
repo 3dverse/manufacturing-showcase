@@ -1,4 +1,5 @@
 import { fmtHistoryDate } from "@/components/scadaEvents/modal/format";
+import { timeAgo } from "@/utils/helpers-time";
 
 //------------------------------------------------------------------------------
 type FaultHistoryEntry = { date: Date; description: string; author: string };
@@ -14,12 +15,12 @@ export function ScadaHistorySection({ historyEntries }: Props) {
         <section className="pb-4">
             {historyEntries.length > 0 && (
                 <div>
-                    <h4 className="text-xs font-semibold text-muted mb-2">History for this fault</h4>
-                    <ul className="flex flex-col gap-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">History</h3>
+                    <ul className="flex flex-col">
                         {historyEntries.map((entry, index) => (
                             <li
                                 key={`history-${index}`}
-                                className="rounded-md border border-slate-200/70 bg-slate-50/80 px-3 py-2"
+                                className="first:rounded-t-md last:rounded-b-md border-x border-t last:border-b border-slate-200/70 bg-slate-50/80 px-3 py-2"
                             >
                                 <p className="text-[11px] text-muted">
                                     {fmtHistoryDate(entry.date)} · {entry.author}
