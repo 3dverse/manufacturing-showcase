@@ -1,4 +1,4 @@
-import { Divider, Field, PhaseBadge } from "@/components/correlation/SectionWrapper";
+import { Field, PhaseBadge } from "@/components/correlation/SectionWrapper";
 import type { IncidentReportData } from "@/utils/generateIncidentReport";
 
 //------------------------------------------------------------------------------
@@ -11,7 +11,7 @@ export function ScadaProductionImpactSection({ reportData }: Props) {
     const { productionOrder, operation } = reportData;
 
     return (
-        <section>
+        <section className="pb-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Production impact</h3>
             <div className="space-y-1">
                 {productionOrder ? (
@@ -25,7 +25,6 @@ export function ScadaProductionImpactSection({ reportData }: Props) {
                 )}
                 {operation && (
                     <>
-                        <Divider />
                         <Field
                             label="Operation"
                             value={`${operation.operationCode} — ${operation.operationDescription ?? ""}`.trim()}

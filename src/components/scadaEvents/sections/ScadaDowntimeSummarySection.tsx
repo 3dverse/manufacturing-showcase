@@ -1,4 +1,4 @@
-import { Divider, Field, OngoingBadge } from "@/components/correlation/SectionWrapper";
+import { Field, OngoingBadge } from "@/components/correlation/SectionWrapper";
 import type { ProjectedDowntime } from "@/core/Projection";
 import { fmtDuration, fmtTs } from "@/utils/helpers-time";
 
@@ -10,12 +10,11 @@ type Props = {
 //------------------------------------------------------------------------------
 export function ScadaDowntimeSummarySection({ downtime: dt }: Props) {
     return (
-        <section>
-            <div className="flex items-center justify-between gap-2 mb-4">
+        <section className="pb-4">
+            <div className="flex items-center justify-between gap-2 mb-2">
                 <p className="text-base font-semibold leading-tight text-warning-700">{dt.reasonDescription}</p>
                 <div className="shrink-0">{dt.isOngoing && <OngoingBadge />}</div>
             </div>
-            <Divider />
             <div className="space-y-1">
                 <Field label="Started" value={fmtTs(dt.startedAt)} />
                 <Field

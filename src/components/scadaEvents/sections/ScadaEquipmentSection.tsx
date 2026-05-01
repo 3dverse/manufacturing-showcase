@@ -9,7 +9,7 @@ type Props = {
 //------------------------------------------------------------------------------
 export function ScadaEquipmentSection({ machineName, workCenterId }: Props) {
     return (
-        <section>
+        <section className="pb-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Equipment</h3>
             <div className="space-y-1">
                 <Field label="Machine" value={machineName} />

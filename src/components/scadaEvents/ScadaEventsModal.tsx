@@ -13,6 +13,7 @@ import { ScadaReferenceDocumentationSection } from "@/components/scadaEvents/sec
 import { ScadaNoDocumentationNotice } from "@/components/scadaEvents/sections/ScadaNoDocumentationNotice";
 import { ScadaProductionImpactSection } from "@/components/scadaEvents/sections/ScadaProductionImpactSection";
 import type { IncidentReportData } from "@/utils/generateIncidentReport";
+import { ScadaHistorySection } from "@/components/scadaEvents/sections/ScadaHistorySection";
 
 //------------------------------------------------------------------------------
 type Props = {
@@ -46,7 +47,7 @@ export function ScadaEventsModal({ open, onClose, reportData, machineDetails }: 
     return createPortal(
         <aside className="fixed top-0 right-0 bottom-0 w-1/2 max-w-md bg-slate-0/95 backdrop-blur-sm border-l border-slate-200/70 shadow-3xl z-100 overflow-y-auto starting:translate-x-full translate-x-0 transition-all duration-200">
             <ScadaModalHeader title="Downtime events" onClose={onClose} />
-            <div className="flex flex-col gap-4 p-5 pt-4">
+            <div className="flex flex-col gap-4 p-5 pt-4 divide-y divide-slate-200/70">
                 <ScadaDowntimeSummarySection downtime={dt} />
                 {downtimeDocs && (
                     <ScadaReferenceDocumentationSection
@@ -58,6 +59,7 @@ export function ScadaEventsModal({ open, onClose, reportData, machineDetails }: 
                 {!downtimeDocs && <ScadaNoDocumentationNotice reasonCode={dt.reasonCode} />}
                 <ScadaEquipmentSection machineName={reportData.machineName} workCenterId={reportData.workCenterId} />
                 <ScadaProductionImpactSection reportData={reportData} />
+                <ScadaHistorySection historyEntries={historyEntries} />
                 <IncidentPdfDownload reportData={reportData} />
             </div>
         </aside>,
