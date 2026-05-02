@@ -352,7 +352,7 @@ function scopeFactory(_node: FactoryNode, span: TimelineSpan): TimelineScope {
     return {
         level: "factory",
         salesOrders: Array.from(span.salesOrders.values()),
-        productionOrders: [],
+        productionOrders: Array.from(span.productionOrders.values()),
         operations: [],
         downtimeEvents: [],
         eamWorkOrders: [],

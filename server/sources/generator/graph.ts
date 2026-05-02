@@ -52,11 +52,25 @@ export function getLocationForMachine(site: SiteNode, machineHash: string): Loca
     return undefined;
 }
 
+/** Returns all bin nodes from the reception zone's aisle/rack hierarchy. */
+export function getReceptionBins(site: SiteNode): BinNode[] {
+    const reception = site.locations.find((l) => l.name.toLowerCase() === "reception");
+    if (!reception) return [];
+    return reception.aisles.flatMap((a) => a.racks.flatMap((r) => r.bins));
+}
+
 /** Returns all bin nodes from the storage zone's aisle/rack hierarchy. */
 export function getStorageBins(site: SiteNode): BinNode[] {
     const storage = site.locations.find((l) => l.name.toLowerCase() === "storage");
     if (!storage) return [];
     return storage.aisles.flatMap((a) => a.racks.flatMap((r) => r.bins));
+}
+
+/** Returns all bin nodes from the supply zone's aisle/rack hierarchy. */
+export function getSupplyBins(site: SiteNode): BinNode[] {
+    const supply = site.locations.find((l) => l.name.toLowerCase() === "supply");
+    if (!supply) return [];
+    return supply.aisles.flatMap((a) => a.racks.flatMap((r) => r.bins));
 }
 
 /** Returns all bin nodes from the delivery zone's aisle/rack hierarchy. */

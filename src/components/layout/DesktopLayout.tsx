@@ -12,6 +12,7 @@ import { InvitePanel } from "@/components/clients/InvitePanel";
 import { KeyStatusIndicators } from "@/components/nodes/factory/StatusIndicators";
 import { BOMPanel } from "@/components/bom/BOMPanel";
 import { ScenarioStepper } from "@/components/scenarios/ScenarioStepper";
+import { ItemViewPanel } from "@/components/itemView/ItemViewPanel";
 // import { IncidentRouteOverlay } from "@/components/incidents/IncidentRouteOverlay";
 
 //------------------------------------------------------------------------------
@@ -55,6 +56,7 @@ export const DesktopLayout = () => {
             <Viewer />
             {/* {isIncidentRoute && <IncidentRouteOverlay incidentId={incidentRoute.incidentId} />} */}
             <ScenarioStepper />
+            <ItemViewPanel />
 
             <div className="absolute bottom-0 left-0 flex flex-col w-full h-full pointer-events-none z-50">
                 <div className="flex flex-col md:flex-row items-start justify-between gap-2 md:p-2">

@@ -15,7 +15,6 @@ export function ScenarioFocusResolver() {
         if (!scenario?.resolve) return;
         const focus = scenario.resolve(span, nodeGraph);
         setFocus(activeScenarioId, focus);
-        console.log("focus", focus);
         if (focus) scenario.onFocusResolved?.(focus);
         // scenarios is a module-level constant; setFocus is stable via useCallback
         // eslint-disable-next-line react-hooks/exhaustive-deps

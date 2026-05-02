@@ -1,9 +1,5 @@
-import { useCallback, useEffect, useMemo } from "react";
-import { createPortal } from "react-dom";
-import { faXmark } from "@fortawesome/pro-light-svg-icons";
+import { useMemo } from "react";
 
-import { Icon } from "@/components/common/Icon";
-import Button from "@/components/common/Button";
 import { SalesOrderSheet } from "@/components/correlation/sections/SalesOrderSheet";
 import { PurchaseOrderSheet } from "@/components/correlation/sections/PurchaseOrderSheet";
 import { ProductionOrderSheet } from "@/components/correlation/sections/ProductionOrderSheet";
@@ -15,91 +11,22 @@ import { PickTaskSheet } from "@/components/correlation/sections/PickTaskSheet";
 import { ReceiptSheet } from "@/components/correlation/sections/ReceiptSheet";
 import { PutawayTaskSheet } from "@/components/correlation/sections/PutawayTaskSheet";
 
-import { useCorrelation } from "@/hooks/useCorrelation";
-import { useSpanProjection } from "@/hooks/useSpanProjection";
-import { useFocusStore } from "@/store/useFocusStore";
-import { entityTypeFromId } from "@/core/Correlation";
-import { Router } from "@/core/Router";
-import type { FocusedEntity } from "@/core/Correlation";
+import { ENTITY_COLORS } from "@/content/entityColors";
+import type { FocusedEntity, CorrelatedSet } from "@/core/Correlation";
 import type { AsOfProjection } from "@/core/Projection";
 
 // ---------------------------------------------------------------------------
-// Helpers
-function getFocusedLabel(focused: FocusedEntity, projection: AsOfProjection): string {
-    switch (focused.type) {
-        case "salesOrder": {
-            const e = projection.salesOrders.find((s) => s.id === focused.id);
-            return `Sales Order${e ? ` — ${e.orderNumber}` : ""}`;
-        }
-        case "productionOrder": {
-            const e = projection.productionOrders.find((p) => p.id === focused.id);
-            return `Manufacturing Order${e ? ` — ${e.orderNumber}` : ""}`;
-        }
-        case "operation": {
-            const e = projection.operations.find((o) => o.id === focused.id);
-            return `Operation${e ? ` — ${e.operationCode}` : ""}`;
-        }
-        case "downtime": {
-            const e = projection.downtimeEvents.find((d) => d.id === focused.id);
-            return `Downtime${e ? ` — ${e.reasonCode}` : ""}`;
-        }
-        case "workOrder": {
-            const e = projection.eamWorkOrders.find((w) => w.id === focused.id);
-            return `Work Order${e ? ` — ${e.workOrderNumber}` : ""}`;
-        }
-        case "pickTask":
-            return `Pick Task — ${focused.id}`;
-        case "receipt":
-            return `Receipt — ${focused.id}`;
-        case "putawayTask":
-            return `Putaway Task — ${focused.id}`;
-        case "purchaseOrder": {
-            const e = projection.purchaseOrders.find((p) => p.id === focused.id);
-            return `Purchase Order${e ? ` — ${e.orderNumber}` : ""}`;
-        }
-        case "allocation":
-            return `Allocation — ${focused.id}`;
-    }
-}
+type Props = {
+    selected: FocusedEntity;
+    projection: AsOfProjection;
+    correlated: CorrelatedSet | null;
+};
 
-// ---------------------------------------------------------------------------
-export function CorrelationModal() {
-    //--------------------------------------------------------------------------
-    const { selected, setSelected } = useFocusStore();
-    const projection = useSpanProjection();
-    const correlated = useCorrelation(projection, selected);
+export function CorrelationTabContent({ selected, projection, correlated }: Props) {
+    const focusedClassName = ENTITY_COLORS[selected.type].focusedBorder;
 
-    //--------------------------------------------------------------------------
-    useEffect(() => {
-        return Router.onChange(({ route, source }) => {
-            if (source !== "pop") return;
-            if (!route.itemSlug) {
-                setSelected(null);
-                return;
-            }
-            const type = entityTypeFromId(route.itemSlug);
-            if (type) setSelected({ type, id: route.itemSlug });
-            else setSelected(null);
-        });
-    }, [setSelected]);
-
-    //--------------------------------------------------------------------------
-    const handleClose = useCallback(() => {
-        setSelected(null);
-        const { factorySlug, nodeSlug } = Router.currentRoute();
-        if (factorySlug) Router.replace({ factorySlug, nodeSlug });
-    }, [setSelected]);
-
-    //--------------------------------------------------------------------------
-    const title = useMemo(() => {
-        if (!selected || !projection) return "";
-        return getFocusedLabel(selected, projection);
-    }, [selected, projection]);
-
-    //--------------------------------------------------------------------------
-    // Gather correlated items by filtering each projection array against the correlated ID sets
     const sections = useMemo(() => {
-        if (!correlated || !projection) return null;
+        if (!correlated) return null;
         return {
             salesOrders: projection.salesOrders.filter((e) => correlated.salesOrders.has(e.id)),
             purchaseOrders: projection.purchaseOrders.filter((e) => correlated.purchaseOrders.has(e.id)),
@@ -114,108 +41,80 @@ export function CorrelationModal() {
         };
     }, [correlated, projection]);
 
-    //--------------------------------------------------------------------------
-    if (!selected) return null;
-    return createPortal(
-        <aside
-            data-scenario="corrective-maintenance-step-8"
-            className="fixed top-0 right-0 bottom-0 w-1/2 max-w-md bg-slate-0/95 backdrop-blur-sm border-l border-slate-200/70 shadow-3xl z-100 overflow-y-auto starting:translate-x-full translate-x-0 transition-all duration-200"
-        >
-            <header className="sticky top-0 flex items-center justify-between pl-6 pr-3 py-2 mb-4 bg-slate-0/95 border-b border-slate-200/70 backdrop-blur-sm">
-                {title && <h2 className="text-lg font-semibold">{title}</h2>}
-                <Button variant="ghost" colorScheme="neutral" size="lg" className="px-2" onClick={handleClose}>
-                    <Icon icon={faXmark} />
-                </Button>
-            </header>
-            {/* key resets all section states (page, collapsed) when focused entity changes */}
-            <div key={`${selected.type}-${selected.id}`} className="flex flex-col gap-2 p-5 pt-3">
-                {!sections && <p className="text-sm text-muted text-center py-6 animate-pulse">Loading…</p>}
+    if (!sections) return <p className="text-sm text-muted text-center py-6 animate-pulse">Loading…</p>;
 
-                {sections && (
-                    <>
-                        {/* 1. Sales Orders */}
-                        {sections.salesOrders.length > 0 && (
-                            <SalesOrderSheet
-                                items={sections.salesOrders}
-                                focusedId={selected?.type === "salesOrder" ? selected.id : null}
-                            />
-                        )}
-
-                        {/* 2. Purchase Orders */}
-                        {sections.purchaseOrders.length > 0 && (
-                            <PurchaseOrderSheet
-                                items={sections.purchaseOrders}
-                                focusedId={selected?.type === "purchaseOrder" ? selected.id : null}
-                            />
-                        )}
-
-                        {/* 3. Production Orders */}
-                        {sections.productionOrders.length > 0 && (
-                            <ProductionOrderSheet
-                                items={sections.productionOrders}
-                                focusedId={selected?.type === "productionOrder" ? selected.id : null}
-                            />
-                        )}
-
-                        {/* 4. Allocations */}
-                        {sections.allocations.length > 0 && (
-                            <AllocationSheet
-                                items={sections.allocations}
-                                focusedId={selected?.type === "allocation" ? selected.id : null}
-                            />
-                        )}
-
-                        {/* 5. Operations */}
-                        {sections.operations.length > 0 && (
-                            <OperationSheet
-                                items={sections.operations}
-                                focusedId={selected?.type === "operation" ? selected.id : null}
-                            />
-                        )}
-
-                        {/* 6. Downtime Events */}
-                        {sections.downtimeEvents.length > 0 && (
-                            <DowntimeSheet
-                                items={sections.downtimeEvents}
-                                focusedId={selected?.type === "downtime" ? selected.id : null}
-                            />
-                        )}
-
-                        {/* 7. EAM Work Orders */}
-                        {sections.eamWorkOrders.length > 0 && (
-                            <WorkOrderSheet
-                                items={sections.eamWorkOrders}
-                                focusedId={selected?.type === "workOrder" ? selected.id : null}
-                            />
-                        )}
-
-                        {/* 8. Pick Tasks */}
-                        {sections.pickTasks.length > 0 && (
-                            <PickTaskSheet
-                                items={sections.pickTasks}
-                                focusedId={selected?.type === "pickTask" ? selected.id : null}
-                            />
-                        )}
-
-                        {/* 9. Receipts */}
-                        {sections.receipts.length > 0 && (
-                            <ReceiptSheet
-                                items={sections.receipts}
-                                focusedId={selected?.type === "receipt" ? selected.id : null}
-                            />
-                        )}
-
-                        {/* 10. Putaway Tasks */}
-                        {sections.putawayTasks.length > 0 && (
-                            <PutawayTaskSheet
-                                items={sections.putawayTasks}
-                                focusedId={selected?.type === "putawayTask" ? selected.id : null}
-                            />
-                        )}
-                    </>
-                )}
-            </div>
-        </aside>,
-        document.body,
+    return (
+        <>
+            {sections.salesOrders.length > 0 && (
+                <SalesOrderSheet
+                    items={sections.salesOrders}
+                    focusedId={selected.type === "salesOrder" ? selected.id : null}
+                    focusedClassName={focusedClassName}
+                />
+            )}
+            {sections.purchaseOrders.length > 0 && (
+                <PurchaseOrderSheet
+                    items={sections.purchaseOrders}
+                    focusedId={selected.type === "purchaseOrder" ? selected.id : null}
+                    focusedClassName={focusedClassName}
+                />
+            )}
+            {sections.productionOrders.length > 0 && (
+                <ProductionOrderSheet
+                    items={sections.productionOrders}
+                    focusedId={selected.type === "productionOrder" ? selected.id : null}
+                    focusedClassName={focusedClassName}
+                />
+            )}
+            {sections.allocations.length > 0 && (
+                <AllocationSheet
+                    items={sections.allocations}
+                    focusedId={selected.type === "allocation" ? selected.id : null}
+                    focusedClassName={focusedClassName}
+                />
+            )}
+            {sections.operations.length > 0 && (
+                <OperationSheet
+                    items={sections.operations}
+                    focusedId={selected.type === "operation" ? selected.id : null}
+                    focusedClassName={focusedClassName}
+                />
+            )}
+            {sections.downtimeEvents.length > 0 && (
+                <DowntimeSheet
+                    items={sections.downtimeEvents}
+                    focusedId={selected.type === "downtime" ? selected.id : null}
+                    focusedClassName={focusedClassName}
+                />
+            )}
+            {sections.eamWorkOrders.length > 0 && (
+                <WorkOrderSheet
+                    items={sections.eamWorkOrders}
+                    focusedId={selected.type === "workOrder" ? selected.id : null}
+                    focusedClassName={focusedClassName}
+                />
+            )}
+            {sections.pickTasks.length > 0 && (
+                <PickTaskSheet
+                    items={sections.pickTasks}
+                    focusedId={selected.type === "pickTask" ? selected.id : null}
+                    focusedClassName={focusedClassName}
+                />
+            )}
+            {sections.receipts.length > 0 && (
+                <ReceiptSheet
+                    items={sections.receipts}
+                    focusedId={selected.type === "receipt" ? selected.id : null}
+                    focusedClassName={focusedClassName}
+                />
+            )}
+            {sections.putawayTasks.length > 0 && (
+                <PutawayTaskSheet
+                    items={sections.putawayTasks}
+                    focusedId={selected.type === "putawayTask" ? selected.id : null}
+                    focusedClassName={focusedClassName}
+                />
+            )}
+        </>
     );
 }

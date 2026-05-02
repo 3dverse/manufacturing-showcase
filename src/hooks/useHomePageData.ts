@@ -4,7 +4,7 @@ import { MES, ERP, EAM } from "@/core/APIs";
 import { orderStatus } from "@/content/orders";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { projectSnapshot } from "@/core/Projection";
-import type { Phase, ProjectedWorkOrder } from "@/core/Projection";
+import type { ProjectedStatus, ProjectedWorkOrder } from "@/core/Projection";
 import type { ProductionOrderEntry, DowntimeEntry, WorkOrderEntry, AsOfSnapshot } from "@/core/Scope";
 
 import type { Order } from "@/content/type";
@@ -23,14 +23,14 @@ export type HomeDowntimeEvent = {
 };
 
 //------------------------------------------------------------------------------
-function phaseToOrderStatus(phase: Phase, apiStatus: string) {
+function statusToOrderStatus(status: ProjectedStatus, apiStatus: string) {
     if (apiStatus === "cancelled") return orderStatus.cancelled;
-    switch (phase) {
+    switch (status) {
         case "completed":
             return orderStatus.completed;
-        case "active":
+        case "in_progress":
             return orderStatus.inProgress;
-        case "future":
+        case "planned":
             return orderStatus.planned;
     }
 }
@@ -144,9 +144,9 @@ export function useHomePageData(siteId: string): {
                         return {
                             ref: po.orderNumber,
                             client: (so?.customerName?.trim() || so?.customerId) ?? po.itemCode,
-                            status: phaseToOrderStatus(po.phase, po.status),
-                            startDate: new Date(po.effectiveStart * 1000),
-                            endDate: new Date(po.effectiveEnd * 1000),
+                            status: statusToOrderStatus(po.status, po.status),
+                            startDate: new Date((po.timing.actualStart ?? po.timing.scheduledStart) * 1000),
+                            endDate: new Date((po.timing.actualEnd ?? po.timing.scheduledEnd) * 1000),
                             unitsPlanned: po.quantities.plannedQuantity,
                             unitsCompleted: po.quantities.producedQuantity,
                         };
@@ -160,7 +160,7 @@ export function useHomePageData(siteId: string): {
                         label: dt.workCenterId,
                         details: dt.reasonDescription ?? dt.reasonCode,
                         startMs: dt.startedAt * 1000,
-                        endMs: (dt.isOngoing ? refTs : dt.endedAt!) * 1000,
+                        endMs: (dt.projected.isOngoing ? refTs : dt.endedAt!) * 1000,
                     })),
                 );
 

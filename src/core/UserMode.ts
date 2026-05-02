@@ -73,7 +73,7 @@ export class UserMode {
         if (this.initialized) return;
         document.addEventListener("keydown", function (e) {
             if (!e.ctrlKey || !e.shiftKey) return;
-            if (e.key === "\\") {
+            if (e.key === "|") {
                 const key = STORAGE_KEY_DEV;
                 if (localStorage.getItem(key) === "true") localStorage.removeItem(key);
                 else localStorage.setItem(key, "true");

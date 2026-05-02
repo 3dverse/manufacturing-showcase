@@ -5,15 +5,15 @@ import type { ProductionOrderEntry } from "@/core/Scope";
 import { buildClosedIntervals } from "@/core/Calendar";
 import { computeAvailableSeconds } from "@/core/Projection";
 
+import type { ProjectedStatus } from "@/core/Projection";
+
 // ---------------------------------------------------------------------------
 
-type Phase = "active" | "future" | "completed";
-
-function classifyPhase(po: ProductionOrderEntry, asOf: number): Phase {
+function classifyStatus(po: ProductionOrderEntry, asOf: number): ProjectedStatus {
     const { actualStart, actualEnd, scheduledStart } = po.timing;
     if (actualEnd !== undefined && actualEnd <= asOf) return "completed";
-    if ((actualStart !== undefined && actualStart <= asOf) || scheduledStart <= asOf) return "active";
-    return "future";
+    if ((actualStart !== undefined && actualStart <= asOf) || scheduledStart <= asOf) return "in_progress";
+    return "planned";
 }
 
 function effectiveStartOf(po: ProductionOrderEntry): number {
@@ -30,9 +30,11 @@ export type CurrentProductionOrder = {
     id: string;
     orderNumber: string;
     customerId: string | null;
-    phase: Phase;
-    effectiveStart: number; // unix seconds
-    effectiveEnd: number; // unix seconds
+    status: ProjectedStatus;
+    scheduledStart: number;
+    scheduledEnd: number;
+    actualStart: number | undefined;
+    actualEnd: number | undefined;
     plannedQuantity: number;
     producedQuantity: number; // estimated at asOf
     downtimeCount: number; // total downtime events for this PO in the span
@@ -61,8 +63,8 @@ export function useCurrentProductionOrder(): CurrentProductionOrder | null {
         // Prefer active first, then the earliest future PO
         const activeFuture = allPOs
             .filter((po) => {
-                const p = classifyPhase(po, targetAsOf);
-                return p === "active" || p === "future";
+                const p = classifyStatus(po, targetAsOf);
+                return p === "in_progress" || p === "planned";
             })
             .sort((a, b) => effectiveStartOf(a) - effectiveStartOf(b));
 
@@ -70,13 +72,13 @@ export function useCurrentProductionOrder(): CurrentProductionOrder | null {
         const target =
             activeFuture[0] ??
             allPOs
-                .filter((po) => classifyPhase(po, targetAsOf) === "completed")
+                .filter((po) => classifyStatus(po, targetAsOf) === "completed")
                 .sort((a, b) => effectiveEndOf(b) - effectiveEndOf(a))[0] ??
             null;
 
         if (!target) return null;
 
-        const phase = classifyPhase(target, targetAsOf);
+        const status = classifyStatus(target, targetAsOf);
         const effectiveStart = effectiveStartOf(target);
         const effectiveEnd = effectiveEndOf(target);
 
@@ -94,9 +96,9 @@ export function useCurrentProductionOrder(): CurrentProductionOrder | null {
         }, 0);
 
         let estimatedProgress: number;
-        if (phase === "completed") {
+        if (status === "completed") {
             estimatedProgress = 1;
-        } else if (phase === "future") {
+        } else if (status === "planned") {
             estimatedProgress = 0;
         } else {
             const calendarStoppages = buildClosedIntervals(effectiveStart, effectiveEnd);
@@ -116,9 +118,11 @@ export function useCurrentProductionOrder(): CurrentProductionOrder | null {
             id: target.id,
             orderNumber: target.orderNumber,
             customerId: salesOrder?.customerId ?? null,
-            phase,
-            effectiveStart,
-            effectiveEnd,
+            status,
+            scheduledStart: target.timing.scheduledStart,
+            scheduledEnd: target.timing.scheduledEnd,
+            actualStart: target.timing.actualStart,
+            actualEnd: target.timing.actualEnd,
             plannedQuantity: target.quantities.plannedQuantity,
             producedQuantity: Math.round(target.quantities.plannedQuantity * estimatedProgress),
             downtimeCount: poDowntimes.length,

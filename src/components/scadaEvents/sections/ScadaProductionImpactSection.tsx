@@ -1,4 +1,4 @@
-import { Field, PhaseBadge } from "@/components/correlation/SectionWrapper";
+import { Field } from "@/components/correlation/SectionWrapper";
 import type { IncidentReportData } from "@/utils/generateIncidentReport";
 
 //------------------------------------------------------------------------------
@@ -18,7 +18,6 @@ export function ScadaProductionImpactSection({ reportData }: Props) {
                     <>
                         <Field label="Production order" value={productionOrder.orderNumber} />
                         <Field label="Item code" value={productionOrder.itemCode} />
-                        <Field label="Phase" value={<PhaseBadge phase={productionOrder.phase} />} />
                     </>
                 ) : (
                     <p className="text-xs text-muted">No active order at time of incident.</p>

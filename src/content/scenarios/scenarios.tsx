@@ -390,11 +390,9 @@ export const SCENARIOS: Record<string, ScenarioDefinition> = {
             const futurePreventive = [...span.eamWorkOrders.values()]
                 .filter((wo) => wo.workType === "predictive" && wo.scheduledStart > now)
                 .sort((a, b) => a.scheduledStart - b.scheduledStart)[0];
-            console.log({ futurePreventive });
             if (!futurePreventive) return null;
 
             const cell = cellByMachineHash(nodeGraph, futurePreventive.assetId);
-            console.log({ cell, futurePreventive });
             if (!cell) return null;
 
             return {

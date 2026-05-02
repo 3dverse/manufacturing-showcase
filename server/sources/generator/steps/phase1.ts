@@ -14,7 +14,15 @@
 
 import type { RNG } from "../rng";
 import type { GeneratorConfig } from "../config";
-import { getProductionLocations, getWMSZones, getStorageBins, getDeliveryBins, flattenWorkCenters } from "../graph";
+import {
+    getProductionLocations,
+    getWMSZones,
+    getReceptionBins,
+    getStorageBins,
+    getSupplyBins,
+    getDeliveryBins,
+    flattenWorkCenters,
+} from "../graph";
 import { addDays } from "../shifts";
 
 // ---------------------------------------------------------------------------
@@ -751,7 +759,16 @@ export function generateEntities(config: GeneratorConfig, rng: RNG): Phase1Resul
             status: "active",
         });
 
-        const sceneBins = key === "storage" ? getStorageBins(site) : key === "delivery" ? getDeliveryBins(site) : [];
+        const sceneBins =
+            key === "reception"
+                ? getReceptionBins(site)
+                : key === "storage"
+                  ? getStorageBins(site)
+                  : key === "supply"
+                    ? getSupplyBins(site)
+                    : key === "delivery"
+                      ? getDeliveryBins(site)
+                      : [];
         if (sceneBins.length > 0) {
             // Create one Location record per actual bin from the 3D scene
             const binIds: string[] = [];
@@ -770,15 +787,16 @@ export function generateEntities(config: GeneratorConfig, rng: RNG): Phase1Resul
             }
             wmsLocationsByWarehouse.set(zone.hash, binIds);
         } else {
-            // Fallback if scene has no bin entities for this zone
-            const binId = `${zone.hash}-BIN-01`;
+            // Fallback: zone has no bin entities in the scene — use the zone hash itself
+            // so generated location IDs resolve to a real navigatable scene node.
+            const binId = zone.hash;
             wmsLocations.set(binId, {
                 id: binId,
                 warehouseId: zone.hash,
-                code: binId,
-                name: "Bin 01",
+                code: zone.name,
+                name: zone.name,
                 zone: zoneType,
-                locationType: "bin",
+                locationType: "zone",
                 status: "active",
             });
             wmsLocationList.push(binId);

@@ -15,13 +15,13 @@ import { useScope } from "@/hooks/useScope";
 import { useSnapshot } from "@/hooks/useSnapshot";
 import { useProjection } from "@/hooks/useProjection";
 import { useTimelineStore } from "@/store/useTimelineStore";
-import type { ProjectedProductionOrder, ProjectedOperation, Phase } from "@/core/Projection";
+import type { ProjectedProductionOrder, ProjectedOperation, ProjectedStatus } from "@/core/Projection";
 
 //------------------------------------------------------------------------------
-const PHASE_LABEL: Record<Phase, string> = {
+const STATUS_LABEL: Record<ProjectedStatus, string> = {
     completed: "Completed",
-    active: "In progress",
-    future: "Scheduled",
+    in_progress: "In progress",
+    planned: "Scheduled",
 };
 
 //------------------------------------------------------------------------------
@@ -89,12 +89,12 @@ export const GlobalOrderPanel = ({ className }: { className?: string }) => {
                         <span
                             className={cn(
                                 "text-2xs px-1.5 py-px rounded-full",
-                                order.phase === "active" && "bg-accent-100 text-accent",
-                                order.phase === "completed" && "bg-slate-100 text-muted",
-                                order.phase === "future" && "bg-slate-50 text-subtle",
+                                order.status === "in_progress" && "bg-accent-100 text-accent",
+                                order.status === "completed" && "bg-slate-100 text-muted",
+                                order.status === "planned" && "bg-slate-50 text-subtle",
                             )}
                         >
-                            {PHASE_LABEL[order.phase]}
+                            {STATUS_LABEL[order.status]}
                         </span>
                     </div>
                 </div>
@@ -163,10 +163,10 @@ const GlobalOrderPanelHeader = ({
                 {opLabel && <p className="text-2xs text-muted/80">{opLabel}</p>}
             </div>
             <ProgressBar
-                progress={order.estimatedProgress}
+                progress={order.projected.estimatedProgress}
                 leftMarker={`Started ${formatSecs(startSecs)} ago`}
                 rightMarker={`Ends in ${formatSecs(endSecs)}`}
-                elapsedTime={`${order.progressPercent}%`}
+                elapsedTime={`${order.projected.progressPercent}%`}
                 className="w-full"
             />
         </div>

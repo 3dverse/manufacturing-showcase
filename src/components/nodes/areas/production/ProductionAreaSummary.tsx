@@ -22,7 +22,8 @@ export const ProductionAreaSummary: React.FC<ProductionAreaSummaryProps> = ({ cl
     //--------------------------------------------------------------------------
     const elapsedTime = useMemo(() => {
         if (!currentPO) return "";
-        const diffSec = currentPO.effectiveEnd - currentPO.effectiveStart;
+        const diffSec =
+            (currentPO.actualEnd ?? currentPO.scheduledEnd) - (currentPO.actualStart ?? currentPO.scheduledStart);
         const hours = Math.floor(diffSec / 3600);
         const minutes = Math.floor((diffSec % 3600) / 60);
         return `${hours}:${String(minutes).padStart(2, "0")}`;
@@ -43,13 +44,13 @@ export const ProductionAreaSummary: React.FC<ProductionAreaSummaryProps> = ({ cl
 
     const progress = currentPO.plannedQuantity > 0 ? currentPO.producedQuantity / currentPO.plannedQuantity : 0;
 
-    const isFuture = currentPO.phase === "future";
+    const isFuture = currentPO.status === "planned";
     const leftMarker = isFuture
-        ? `Starts in ${formatTimestamp(currentPO.effectiveStart)}`
-        : `Started ${formatTimestamp(currentPO.effectiveStart)} ago`;
+        ? `Starts in ${formatTimestamp(currentPO.actualStart ?? currentPO.scheduledStart)}`
+        : `Started ${formatTimestamp(currentPO.actualStart ?? currentPO.scheduledStart)} ago`;
     const rightMarker = isFuture
-        ? `Planned end in ${formatTimestamp(currentPO.effectiveEnd)}`
-        : `End ${formatTimestamp(currentPO.effectiveEnd)} ago`;
+        ? `Planned end in ${formatTimestamp(currentPO.actualEnd ?? currentPO.scheduledEnd)}`
+        : `End ${formatTimestamp(currentPO.actualEnd ?? currentPO.scheduledEnd)} ago`;
 
     //--------------------------------------------------------------------------
     return (

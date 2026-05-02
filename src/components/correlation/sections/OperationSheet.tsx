@@ -1,4 +1,4 @@
-import { SectionWrapper, Field, PhaseBadge, Divider } from "@/components/correlation/SectionWrapper";
+import { SectionWrapper, Field, StatusBadge, Divider } from "@/components/correlation/SectionWrapper";
 import { fmtTs } from "@/utils/helpers-time";
 import { cn } from "@/utils/cn";
 import type { ProjectedOperation } from "@/core/Projection";
@@ -6,14 +6,16 @@ import type { ProjectedOperation } from "@/core/Projection";
 type Props = {
     items: ProjectedOperation[];
     focusedId: string | null;
+    focusedClassName?: string;
 };
 
-export function OperationSheet({ items, focusedId }: Props) {
+export function OperationSheet({ items, focusedId, focusedClassName }: Props) {
     return (
         <SectionWrapper
             label="Operations"
             items={items}
             focusedId={focusedId}
+            focusedClassName={focusedClassName}
             getId={(e) => e.id}
             renderItem={(op) => (
                 <div>
@@ -23,7 +25,7 @@ export function OperationSheet({ items, focusedId }: Props) {
                             {op.operationDescription && <p className="text-xs text-muted">{op.operationDescription}</p>}
                         </div>
                         <div className="shrink-0 pt-px">
-                            <PhaseBadge phase={op.phase} />
+                            <StatusBadge status={op.status} />
                         </div>
                     </div>
 
@@ -33,19 +35,19 @@ export function OperationSheet({ items, focusedId }: Props) {
                             <span>
                                 {op.quantities.producedQuantity} / {op.quantities.plannedQuantity} {op.quantities.uom}
                             </span>
-                            <span>{op.progressPercent}%</span>
+                            <span>{op.projected.progressPercent}%</span>
                         </div>
                         <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
                             <div
                                 className={cn(
                                     "h-full rounded-full transition-all duration-500",
-                                    op.phase === "completed"
+                                    op.status === "completed"
                                         ? "bg-slate-400"
-                                        : op.phase === "future"
+                                        : op.status === "planned"
                                           ? "bg-blue-300"
                                           : "bg-emerald-500",
                                 )}
-                                style={{ width: `${op.progressPercent}%` }}
+                                style={{ width: `${op.projected.progressPercent}%` }}
                             />
                         </div>
                     </div>

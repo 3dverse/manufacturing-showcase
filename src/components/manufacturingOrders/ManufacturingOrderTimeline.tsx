@@ -115,8 +115,8 @@ export const ManufacturingOrderTimeline = ({
         () =>
             eamWorkOrders
                 .map((wo) => {
-                    const startMs = wo.effectiveStart * 1000;
-                    const endMs = wo.effectiveEnd * 1000;
+                    const startMs = (wo.actualStart ?? wo.scheduledStart) * 1000;
+                    const endMs = (wo.actualEnd ?? wo.scheduledEnd) * 1000;
                     const clippedStart = Math.max(startMs, minTime);
                     const clippedEnd = Math.min(endMs, maxTime);
                     if (clippedEnd <= clippedStart) return null;
@@ -228,16 +228,19 @@ export const ManufacturingOrderTimeline = ({
                                 <div className="flex flex-col gap-1 px-1.5 py-1">
                                     <p className="text-xs text-muted capitalize">{wo.workType.replace("_", " ")}</p>
                                     <p className="text-sm font-medium">{wo.workOrderNumber}</p>
-                                    {wo.isOverdue && <p className="text-xs text-warning">Overdue</p>}
+                                    {wo.projected.isOverdue && <p className="text-xs text-warning">Overdue</p>}
                                     <p className="text-xs text-muted">
-                                        {new Date(wo.effectiveStart * 1000).toLocaleString(undefined, {
-                                            month: "short",
-                                            day: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })}{" "}
+                                        {new Date((wo.actualStart ?? wo.scheduledStart) * 1000).toLocaleString(
+                                            undefined,
+                                            {
+                                                month: "short",
+                                                day: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            },
+                                        )}{" "}
                                         →{" "}
-                                        {new Date(wo.effectiveEnd * 1000).toLocaleString(undefined, {
+                                        {new Date((wo.actualEnd ?? wo.scheduledEnd) * 1000).toLocaleString(undefined, {
                                             month: "short",
                                             day: "numeric",
                                             hour: "2-digit",

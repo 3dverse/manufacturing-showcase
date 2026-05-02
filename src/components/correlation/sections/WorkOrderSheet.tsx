@@ -1,18 +1,20 @@
-import { SectionWrapper, Field, PhaseBadge, OverdueBadge, Divider } from "@/components/correlation/SectionWrapper";
+import { SectionWrapper, Field, StatusBadge, OverdueBadge, Divider } from "@/components/correlation/SectionWrapper";
 import { fmtTs } from "@/utils/helpers-time";
 import type { ProjectedWorkOrder } from "@/core/Projection";
 
 type Props = {
     items: ProjectedWorkOrder[];
     focusedId: string | null;
+    focusedClassName?: string;
 };
 
-export function WorkOrderSheet({ items, focusedId }: Props) {
+export function WorkOrderSheet({ items, focusedId, focusedClassName }: Props) {
     return (
         <SectionWrapper
             label="EAM Work Orders"
             items={items}
             focusedId={focusedId}
+            focusedClassName={focusedClassName}
             getId={(e) => e.id}
             renderItem={(wo) => (
                 <div>
@@ -22,8 +24,8 @@ export function WorkOrderSheet({ items, focusedId }: Props) {
                             <p className="text-xs text-muted capitalize">{wo.workType}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0 pt-px">
-                            <PhaseBadge phase={wo.phase} />
-                            {wo.isOverdue && <OverdueBadge />}
+                            <StatusBadge status={wo.status} />
+                            {wo.projected.isOverdue && <OverdueBadge />}
                         </div>
                     </div>
                     <Divider />

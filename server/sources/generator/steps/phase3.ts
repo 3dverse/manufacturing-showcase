@@ -599,8 +599,14 @@ export function fillDataset(
 
     // Zone IDs derived from site graph (Reception, Storage, Supply, Delivery)
     const { reception, storage, supply, delivery } = entities.wmsZoneIds;
-    const receptionBin = `${reception}-BIN-01`;
-    const supplyBin = `${supply}-BIN-01`;
+
+    // Reception bin — real bin from the 3D scene (or single fallback)
+    const receptionBinIds: string[] = entities.wmsLocationsByWarehouse.get(reception) ?? [];
+    const receptionBin = receptionBinIds[0] ?? `${reception}-BIN-01`;
+
+    // Supply bin — real bin from the 3D scene (or single fallback)
+    const supplyBinIds: string[] = entities.wmsLocationsByWarehouse.get(supply) ?? [];
+    const supplyBin = supplyBinIds[0] ?? `${supply}-BIN-01`;
 
     // Storage bin pool — real bins from the 3D scene (or single fallback)
     const storageBinIds: string[] = entities.wmsLocationsByWarehouse.get(storage) ?? [];

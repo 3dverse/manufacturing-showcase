@@ -5,14 +5,16 @@ import type { ProjectedAllocation } from "@/core/Projection";
 type Props = {
     items: ProjectedAllocation[];
     focusedId: string | null;
+    focusedClassName?: string;
 };
 
-export function AllocationSheet({ items, focusedId }: Props) {
+export function AllocationSheet({ items, focusedId, focusedClassName }: Props) {
     return (
         <SectionWrapper
             label="Allocations"
             items={items}
             focusedId={focusedId}
+            focusedClassName={focusedClassName}
             getId={(e) => e.id}
             renderItem={(a) => (
                 <div>

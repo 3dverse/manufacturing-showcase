@@ -92,9 +92,11 @@ export const CellSummary = ({
                     <DataContainer className="gap-2">
                         <div className="flex items-baseline justify-between gap-2">
                             <DataLabel>
-                                {operation.phase === "completed" ? "Last operation" : "Current operation"}
+                                {operation.status === "completed" ? "Last operation" : "Current operation"}
                             </DataLabel>
-                            <span className="text-xs tabular-nums text-muted">{operation.progressPercent}%</span>
+                            <span className="text-xs tabular-nums text-muted">
+                                {operation.projected.progressPercent}%
+                            </span>
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-slate-800 leading-tight">
@@ -109,9 +111,9 @@ export const CellSummary = ({
                             <div
                                 className={cn(
                                     "h-full rounded-full transition-all duration-500",
-                                    operation.phase === "completed" ? "bg-slate-400" : "bg-emerald-500",
+                                    operation.status === "completed" ? "bg-slate-400" : "bg-emerald-500",
                                 )}
-                                style={{ width: `${operation.progressPercent}%` }}
+                                style={{ width: `${operation.projected.progressPercent}%` }}
                             />
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted">

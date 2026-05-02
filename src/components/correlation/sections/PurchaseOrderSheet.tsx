@@ -1,18 +1,20 @@
-import { SectionWrapper, Field, PhaseBadge, Divider } from "@/components/correlation/SectionWrapper";
+import { SectionWrapper, Field, StatusBadge, Divider } from "@/components/correlation/SectionWrapper";
 import { fmtTs } from "@/utils/helpers-time";
 import type { ProjectedPurchaseOrder } from "@/core/Projection";
 
 type Props = {
     items: ProjectedPurchaseOrder[];
     focusedId: string | null;
+    focusedClassName?: string;
 };
 
-export function PurchaseOrderSheet({ items, focusedId }: Props) {
+export function PurchaseOrderSheet({ items, focusedId, focusedClassName }: Props) {
     return (
         <SectionWrapper
             label="Purchase Orders"
             items={items}
             focusedId={focusedId}
+            focusedClassName={focusedClassName}
             getId={(e) => e.id}
             renderItem={(po) => (
                 <div>
@@ -22,7 +24,7 @@ export function PurchaseOrderSheet({ items, focusedId }: Props) {
                             <p className="text-xs text-muted">{po.itemId}</p>
                         </div>
                         <div className="shrink-0 pt-px">
-                            <PhaseBadge phase={po.phase} />
+                            <StatusBadge status={po.status} />
                         </div>
                     </div>
                     <Divider />

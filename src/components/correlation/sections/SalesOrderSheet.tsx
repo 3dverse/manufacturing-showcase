@@ -1,18 +1,20 @@
-import { SectionWrapper, Field, PhaseBadge, OverdueBadge, Divider } from "@/components/correlation/SectionWrapper";
+import { SectionWrapper, Field, StatusBadge, OverdueBadge, Divider } from "@/components/correlation/SectionWrapper";
 import { fmtTs } from "@/utils/helpers-time";
 import type { ProjectedSalesOrder } from "@/core/Projection";
 
 type Props = {
     items: ProjectedSalesOrder[];
     focusedId: string | null;
+    focusedClassName?: string;
 };
 
-export function SalesOrderSheet({ items, focusedId }: Props) {
+export function SalesOrderSheet({ items, focusedId, focusedClassName }: Props) {
     return (
         <SectionWrapper
             label="Sales Orders"
             items={items}
             focusedId={focusedId}
+            focusedClassName={focusedClassName}
             getId={(e) => e.id}
             renderItem={(so) => (
                 <div>
@@ -22,8 +24,8 @@ export function SalesOrderSheet({ items, focusedId }: Props) {
                             <p className="text-xs text-muted">Customer {so.customerId}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0 pt-px">
-                            <PhaseBadge phase={so.phase} />
-                            {so.isOverdue && <OverdueBadge />}
+                            <StatusBadge status={so.status} />
+                            {so.projected.isOverdue && <OverdueBadge />}
                         </div>
                     </div>
                     <Divider />

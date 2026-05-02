@@ -1,4 +1,4 @@
-import type { AsOfProjection } from "@/core/Projection";
+import type { AsOfSnapshot } from "@/core/Scope";
 
 // ---------------------------------------------------------------------------
 // Entity types
@@ -81,7 +81,7 @@ export type CorrelationIndex = {
     allocToSo: Map<string, string>;
 };
 
-export function buildCorrelationIndex(projection: AsOfProjection): CorrelationIndex {
+export function buildCorrelationIndex(snapshot: AsOfSnapshot): CorrelationIndex {
     const soToPos = new Map<string, Set<string>>();
     const poToSo = new Map<string, string>();
     const poToOps = new Map<string, Set<string>>();
@@ -101,54 +101,54 @@ export function buildCorrelationIndex(projection: AsOfProjection): CorrelationIn
     const soToAllocations = new Map<string, Set<string>>();
     const allocToSo = new Map<string, string>();
 
-    for (const po of projection.productionOrders) {
+    for (const po of snapshot.productionOrders) {
         if (po.erpSalesOrderId) {
             poToSo.set(po.id, po.erpSalesOrderId);
             addToSet(soToPos, po.erpSalesOrderId, po.id);
         }
     }
 
-    for (const op of projection.operations) {
+    for (const op of snapshot.operations) {
         opToPo.set(op.id, op.productionOrderId);
         addToSet(poToOps, op.productionOrderId, op.id);
     }
 
-    for (const dt of projection.downtimeEvents) {
+    for (const dt of snapshot.downtimeEvents) {
         if (dt.productionOrderId) {
             downtimeToPo.set(dt.id, dt.productionOrderId);
             addToSet(poToDowntimes, dt.productionOrderId, dt.id);
         }
     }
 
-    for (const wo of projection.eamWorkOrders) {
+    for (const wo of snapshot.eamWorkOrders) {
         if (wo.mesProductionOrderId) {
             workOrderToPo.set(wo.id, wo.mesProductionOrderId);
             addToSet(poToWorkOrders, wo.mesProductionOrderId, wo.id);
         }
     }
 
-    for (const pt of projection.pickTasks) {
+    for (const pt of snapshot.pickTasks) {
         if (pt.salesOrderId) {
             pickTaskToSo.set(pt.id, pt.salesOrderId);
             addToSet(soToPickTasks, pt.salesOrderId, pt.id);
         }
     }
 
-    for (const put of projection.putawayTasks) {
+    for (const put of snapshot.putawayTasks) {
         if (put.receiptId) {
             putawayTaskToReceipt.set(put.id, put.receiptId);
             addToSet(receiptToPutawayTasks, put.receiptId, put.id);
         }
     }
 
-    for (const r of projection.receipts) {
+    for (const r of snapshot.receipts) {
         if (r.erpPurchaseOrderId) {
             receiptToErpPo.set(r.id, r.erpPurchaseOrderId);
             addToSet(erpPoToReceipts, r.erpPurchaseOrderId, r.id);
         }
     }
 
-    for (const alloc of projection.allocations) {
+    for (const alloc of snapshot.allocations) {
         if (alloc.demandType === "production_order" && alloc.productionOrderId) {
             allocToPo.set(alloc.id, alloc.productionOrderId);
             addToSet(poToAllocations, alloc.productionOrderId, alloc.id);
@@ -184,6 +184,19 @@ export function buildCorrelationIndex(projection: AsOfProjection): CorrelationIn
 // ---------------------------------------------------------------------------
 // Correlated set — all entities linked to a focused one
 // ---------------------------------------------------------------------------
+
+export const EMPTY_CORRELATED_SET: CorrelatedSet = {
+    salesOrders: new Set(),
+    productionOrders: new Set(),
+    operations: new Set(),
+    downtimeEvents: new Set(),
+    eamWorkOrders: new Set(),
+    pickTasks: new Set(),
+    receipts: new Set(),
+    putawayTasks: new Set(),
+    purchaseOrders: new Set(),
+    allocations: new Set(),
+};
 
 export type CorrelatedSet = {
     salesOrders: Set<string>;
@@ -381,4 +394,37 @@ function entitySet(type: EntityType, correlated: CorrelatedSet): Set<string> {
         case "allocation":
             return correlated.allocations;
     }
+}
+
+// ---------------------------------------------------------------------------
+// Snapshot slice — only the focused entity + correlated entities
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns a snapshot containing only the focused entity and its correlated
+ * neighbors. Used to project a minimal dataset instead of the whole span.
+ */
+export function buildCorrelatedSnapshot(
+    snapshot: AsOfSnapshot,
+    focused: FocusedEntity,
+    correlated: CorrelatedSet,
+): AsOfSnapshot {
+    const keep = (type: EntityType, id: string, set: Set<string>) =>
+        (focused.type === type && focused.id === id) || set.has(id);
+
+    return {
+        level: snapshot.level,
+        salesOrders: snapshot.salesOrders.filter((e) => keep("salesOrder", e.id, correlated.salesOrders)),
+        productionOrders: snapshot.productionOrders.filter((e) =>
+            keep("productionOrder", e.id, correlated.productionOrders),
+        ),
+        operations: snapshot.operations.filter((e) => keep("operation", e.id, correlated.operations)),
+        downtimeEvents: snapshot.downtimeEvents.filter((e) => keep("downtime", e.id, correlated.downtimeEvents)),
+        eamWorkOrders: snapshot.eamWorkOrders.filter((e) => keep("workOrder", e.id, correlated.eamWorkOrders)),
+        pickTasks: snapshot.pickTasks.filter((e) => keep("pickTask", e.id, correlated.pickTasks)),
+        receipts: snapshot.receipts.filter((e) => keep("receipt", e.id, correlated.receipts)),
+        putawayTasks: snapshot.putawayTasks.filter((e) => keep("putawayTask", e.id, correlated.putawayTasks)),
+        purchaseOrders: snapshot.purchaseOrders.filter((e) => keep("purchaseOrder", e.id, correlated.purchaseOrders)),
+        allocations: snapshot.allocations.filter((e) => keep("allocation", e.id, correlated.allocations)),
+    };
 }
