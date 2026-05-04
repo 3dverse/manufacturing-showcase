@@ -20,7 +20,7 @@ interface TimelineStore {
     span: TimelineSpan | null;
     loadedKeys: Set<string>;
     isLoading: boolean;
-    loadSpan: (node: SceneGraphNode, siteId: string) => Promise<void>;
+    loadSpan: (siteId: string, node?: SceneGraphNode) => Promise<void>;
     window: Window; // Time window of the data set
     present: number; // Real-time "now", advancing with the wall clock
     setPresent: (t: number) => void;
@@ -63,13 +63,20 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     span: null,
     loadedKeys: new Set<string>(),
     isLoading: false,
-    loadSpan: async (node, siteId) => {
+    loadSpan: async (siteId, node?) => {
         const window = get().window;
 
-        const fetchNode = toAreaOrAbove(node);
-        const wcKey = scopeKey(workCenterIdsFromNode(fetchNode));
-        // WMS zone areas have no work centers — include the node hash to differentiate zones
-        const nodeKey = wcKey === "" && isArea(fetchNode) ? fetchNode.hash : wcKey;
+        let fetchNode: SceneGraphNode | undefined;
+        let nodeKey: string;
+        if (node) {
+            fetchNode = toAreaOrAbove(node);
+            const wcKey = scopeKey(workCenterIdsFromNode(fetchNode));
+            // WMS zone areas have no work centers — include the node hash to differentiate zones
+            nodeKey = wcKey === "" && isArea(fetchNode) ? fetchNode.hash : wcKey;
+        } else {
+            fetchNode = undefined;
+            nodeKey = "factory";
+        }
         const key = `${siteId}:${nodeKey}:${window.from}:${window.to}`;
 
         if (get().loadedKeys.has(key)) return; // already loaded, stays loaded
@@ -79,7 +86,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
         set({ isLoading: true });
 
         try {
-            const incoming = await fetchSpan(fetchNode, siteId, window);
+            const incoming = await fetchSpan(siteId, window, fetchNode);
             if (!_activeKeys.has(key)) return; // cancelled
 
             const existing = get().span;

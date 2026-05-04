@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 
 //------------------------------------------------------------------------------
 import { FactoriesContext } from "@/contexts/FactoriesContext";
@@ -11,12 +11,20 @@ import { ClientProductLogo } from "@/components/common/icons/ClientProductLogo";
 
 //------------------------------------------------------------------------------
 import { DevMode } from "@/content/3dverse";
+import { useTimelineStore } from "@/store/useTimelineStore";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export default function HomePage() {
     //--------------------------------------------------------------------------
     const { factories } = useContext(FactoriesContext);
+    const loadSpan = useTimelineStore((s) => s.loadSpan);
+
+    useEffect(() => {
+        for (const factory of factories) {
+            if (factory.enabled) loadSpan(factory.scene_id);
+        }
+    }, [factories, loadSpan]);
 
     //--------------------------------------------------------------------------
     // Render

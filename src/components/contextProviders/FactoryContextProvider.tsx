@@ -51,7 +51,7 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
     useEffect(() => {
         if (!nodeGraph) return;
         const productionArea = nodeGraph.areas.find((a) => a.name.toLowerCase() === "production");
-        if (productionArea) loadSpan(productionArea, factory.scene_id);
+        if (productionArea) loadSpan(factory.scene_id, productionArea);
     }, [nodeGraph, factory.scene_id, loadSpan]);
 
     //--------------------------------------------------------------------------

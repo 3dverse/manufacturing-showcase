@@ -358,5 +358,8 @@ export const moveCamera = async (
         destination = viewpoint.position;
     }
 
-    cameraController.setLookAt(...destination, ...target, true);
+    window.dispatchEvent(new CustomEvent("cameraMoving"));
+    cameraController.setLookAt(...destination, ...target, true).then(() => {
+        window.dispatchEvent(new CustomEvent("cameraSettled"));
+    });
 };

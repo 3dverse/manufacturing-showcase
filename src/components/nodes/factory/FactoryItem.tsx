@@ -29,7 +29,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
     const oee = useFactoryItemOEE(factoryItem.scene_id);
     const navigate = useNavigationStore((state) => state.navigate);
     const { activeStep } = useContext(ScenarioContext);
-    const incident = activeStep?.incident;
+    const incident = activeStep?.message?.incident;
     const isMobile = useMediaQuery(MEDIA_QUERIES.MOBILE);
 
     //--------------------------------------------------------------------------

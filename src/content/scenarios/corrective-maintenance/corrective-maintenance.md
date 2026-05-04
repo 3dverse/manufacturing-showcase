@@ -41,7 +41,7 @@ Duration fallback when `downtimeEndedAt` is null: 2 hours.
 
 ## Steps
 
-| # | Title | Route | `beforeStep` side effects | DOM tag | File | Status |
+| # | Title | Route | `beforeRoute` side effects | DOM tag | File | Status |
 |---|---|---|---|---|---|---|
 | 1 | **Production at a glance** | `/` | `pause()`, `setPresent(startedAt - 1)` | `corrective-maintenance-step-1` | `HomePage.tsx` | ✅ |
 | 2 | **Incident alert** | `/` | `setPresent(+1/3)`, `setAsOf(+1/3)` | `corrective-maintenance-step-2` | `ScadaEventsCallout.tsx` | ✅ |

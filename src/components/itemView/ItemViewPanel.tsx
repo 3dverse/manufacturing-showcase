@@ -72,10 +72,11 @@ export function ItemViewPanel() {
     const { setSelected } = useFocusStore();
     const selected = useFocusStore((s) => s.selected);
 
-    // Sync panel open/close state with browser back/forward navigation
+    // Sync panel open/close with every route change — clears the panel whenever
+    // the URL no longer has an itemSlug, regardless of whether the navigation was
+    // programmatic or a browser back/forward.
     useEffect(() => {
-        return Router.onChange(({ route, source }) => {
-            if (source !== "pop") return;
+        return Router.onChange(({ route }) => {
             if (!route.itemSlug) {
                 setSelected(null);
                 return;
@@ -124,10 +125,7 @@ function ItemViewPanelInner({ selected }: { selected: FocusedEntity }) {
     const colors = ENTITY_COLORS[selected.type];
 
     return createPortal(
-        <aside
-            data-scenario="corrective-maintenance-step-8"
-            className="fixed top-0 right-0 bottom-0 w-1/2 max-w-md flex flex-col bg-slate-0/95 backdrop-blur-sm border-l border-slate-200/70 shadow-3xl z-100 starting:-translate-x-full translate-x-0 transition-all duration-200"
-        >
+        <aside className="fixed top-0 right-0 bottom-0 w-1/2 max-w-md flex flex-col bg-slate-0/95 backdrop-blur-sm border-l border-slate-200/70 shadow-3xl z-100 starting:-translate-x-full translate-x-0 transition-all duration-200">
             <header className={cn("shrink-0 pl-6 pr-3 pt-3 pb-3 backdrop-blur-sm", colors.header)}>
                 <div className="flex items-center justify-between">
                     {title && <h2 className="text-lg font-semibold leading-tight text-white">{title}</h2>}

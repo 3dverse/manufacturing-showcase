@@ -16,7 +16,7 @@ export function DowntimeView({ item, projection, correlated }: Props) {
     const salesOrder = correlated ? projection.salesOrders.find((so) => correlated.salesOrders.has(so.id)) : null;
 
     return (
-        <div className="flex flex-col gap-4">
+        <div data-scenario="corrective-maintenance-step-4" className="flex flex-col gap-4">
             <div>
                 <div className="flex items-start justify-between gap-2 mb-2">
                     <div>

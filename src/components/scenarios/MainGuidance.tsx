@@ -14,7 +14,7 @@ export const MainGuidance = () => {
     //--------------------------------------------------------------------------
     const { scenarios, activeScenarioId, scenarioActivatedAt } = useContext(ScenarioContext);
     const [isRetracting, setIsRetracting] = useState(false);
-    const activeScenario = activeScenarioId ? scenarios[activeScenarioId] : undefined;
+    const activeScenario = scenarios.find((s) => s.id === activeScenarioId);
 
     //--------------------------------------------------------------------------
     useEffect(() => {

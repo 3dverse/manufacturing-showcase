@@ -347,7 +347,7 @@ const ChildNode = ({
         node,
         "nav",
     );
-    const { focus } = useContext(ScenarioContext);
+    const { spanData, graphData } = useContext(ScenarioContext);
 
     //--------------------------------------------------------------------------
     // Memos
@@ -357,8 +357,9 @@ const ChildNode = ({
     );
 
     const isScenarioTarget = useMemo(
-        () => (isLine(node) ? node.cells.some((c) => c.hash === focus?.cellHash) : node.hash === focus?.cellHash),
-        [node, focus],
+        () =>
+            isLine(node) ? node.cells.some((c) => c.hash === graphData?.cellHash) : node.hash === graphData?.cellHash,
+        [node, graphData],
     );
 
     //--------------------------------------------------------------------------
@@ -388,7 +389,7 @@ const ChildNode = ({
         <li>
             <button
                 data-scenario={
-                    isScenarioTarget && focus?.kind === "predictive" ? "predictive-maintenance-step-2" : undefined
+                    isScenarioTarget && spanData?.kind === "predictive" ? "predictive-maintenance-step-2" : undefined
                 }
                 className={cn(
                     "relative px-2 py-1 text-xs capitalize whitespace-nowrap border rounded-md cursor-pointer transition-colors duration-200",
@@ -423,7 +424,7 @@ const ChildNode = ({
                         <Icon icon={faExclamationTriangle} size="xs" className="text-warning-100" />
                     </span>
                 )}
-                {!hasDowntime && isScenarioTarget && focus?.kind === "predictive" && (
+                {!hasDowntime && isScenarioTarget && spanData?.kind === "predictive" && (
                     <span className="absolute -top-2 right-px w-4 aspect-square bg-amber-400 rounded-full">
                         <Icon icon={faWrench} size="xs" className="text-amber-900" />
                     </span>
