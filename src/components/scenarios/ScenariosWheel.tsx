@@ -8,7 +8,7 @@ import { ScenarioContext } from "@/contexts/ScenariosContext";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-export const ScenariosWheel = () => {
+export const ScenariosWheel = ({ isOpen = false, onSelect }: { isOpen?: boolean; onSelect?: () => void }) => {
     //--------------------------------------------------------------------------
     const { scenarios, activeScenarioId, activateScenario, clearActiveScenario } = useContext(ScenarioContext);
 
@@ -18,13 +18,19 @@ export const ScenariosWheel = () => {
             clearActiveScenario();
         } else {
             activateScenario(scenarioId);
+            onSelect?.();
         }
     };
 
     //--------------------------------------------------------------------------
     return (
         <div className="relative flex justify-center items-center w-full h-full">
-            <div className="absolute bottom-0 w-full max-w-70 aspect-2/1 grid grid-cols-3 items-center text-center rounded-t-full bg-ground border border-b-0 border-slate-100 overflow-hidden translate-y-24 group-hover:translate-y-2 transition-transform duration-220">
+            <div
+                className={cn(
+                    "absolute bottom-0 w-full max-w-70 aspect-2/1 grid grid-cols-3 items-center text-center rounded-t-full bg-ground border border-b-0 border-slate-100 overflow-hidden transition-transform duration-220",
+                    isOpen ? "translate-y-2" : "translate-y-24 group-hover:translate-y-2",
+                )}
+            >
                 {scenarios.map((scenario, index) => (
                     <button
                         key={scenario.id}

@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 //------------------------------------------------------------------------------
 import { ScenariosWheel } from "./ScenariosWheel";
@@ -8,12 +8,15 @@ import { ScenarioContext } from "@/contexts/ScenariosContext";
 //------------------------------------------------------------------------------
 import { CONTACT_URL, LANDING_3DVERSE_URL } from "@/content/routes";
 import { METADATA } from "@/content/metadata";
+import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 export const MainGuidance = () => {
     //--------------------------------------------------------------------------
     const { scenarios, activeScenarioId, scenarioActivatedAt } = useContext(ScenarioContext);
     const [isRetracting, setIsRetracting] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const asideRef = useRef<HTMLElement>(null);
     const activeScenario = scenarios.find((s) => s.id === activeScenarioId);
 
     //--------------------------------------------------------------------------
@@ -21,14 +24,28 @@ export const MainGuidance = () => {
         if (!scenarioActivatedAt) return;
 
         setIsRetracting(true);
+        setIsOpen(false);
         const timeout = window.setTimeout(() => setIsRetracting(false), 500);
 
         return () => window.clearTimeout(timeout);
     }, [scenarioActivatedAt]);
 
     //--------------------------------------------------------------------------
+    useEffect(() => {
+        if (!isOpen) return;
+        const handler = (e: PointerEvent) => {
+            if (asideRef.current && !asideRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("pointerdown", handler);
+        return () => document.removeEventListener("pointerdown", handler);
+    }, [isOpen]);
+
+    //--------------------------------------------------------------------------
     return (
         <aside
+            ref={asideRef}
             data-scenario="tour-guide-7"
             data-theme="dark"
             className={`
@@ -39,10 +56,11 @@ export const MainGuidance = () => {
             {...(activeScenario && { "data-current-scenario": true })}
         >
             <div
-                className={`
-                    absolute bottom-0 left-0 h-18 w-screen grid grid-cols-3 items-center px-4 bg-slate-0 text-default
-                    translate-y-full group-hover:translate-y-0 group-focus:translate-y-0 group-focus-within:translate-y-0 transition-transform duration-200
-                `}
+                className={cn(
+                    "absolute bottom-0 left-0 h-18 w-screen grid grid-cols-3 items-center px-4 bg-slate-0 text-default",
+                    "translate-y-full group-hover:translate-y-0 group-focus:translate-y-0 group-focus-within:translate-y-0 transition-transform duration-200",
+                    isOpen && "translate-y-0",
+                )}
             >
                 <div className="flex flex-col">
                     <a
@@ -61,7 +79,13 @@ export const MainGuidance = () => {
                     </a>
                 </div>
 
-                <ScenariosWheel />
+                <ScenariosWheel
+                    isOpen={isOpen}
+                    onSelect={() => {
+                        setIsOpen(false);
+                        (document.activeElement as HTMLElement)?.blur();
+                    }}
+                />
 
                 <div className="flex justify-end">
                     <a
@@ -75,6 +99,8 @@ export const MainGuidance = () => {
                 </div>
             </div>
             <header
+                onClick={() => setIsOpen((v) => !v)}
+                aria-expanded={isOpen}
                 className={`
                     fixed bottom-0 left-1/2 -translate-x-1/2 flex items-center w-fit justify-between gap-2 p-2 pb-1 bg-slate-0 rounded-t-[1.9rem] [corner-shape:round] cursor-pointer
                     before:content-[''] before:absolute before:bottom-0 before:left-0 before:-translate-x-full before:w-5 before:h-5 before:bg-slate-50 before:rounded-tl-4xl before:[corner-shape:scoop]

@@ -6,6 +6,7 @@ import {
     useCallback,
     useState,
     type MouseEvent as ReactMouseEvent,
+    type TouchEvent as ReactTouchEvent,
     type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
@@ -1110,6 +1111,31 @@ export function Timeline() {
     );
 
     //--------------------------------------------------------------------------
+    const handleTrackTouchStart = useCallback(
+        (e: ReactTouchEvent) => {
+            const touch = e.touches[0];
+            if (!touch) return;
+            e.preventDefault();
+            isDragging.current = true;
+            setTooltip(null);
+            seek(touch.clientX);
+            const onMove = (ev: TouchEvent) => {
+                const t = ev.touches[0];
+                if (t) seek(t.clientX);
+                ev.preventDefault();
+            };
+            const onEnd = () => {
+                isDragging.current = false;
+                window.removeEventListener("touchmove", onMove);
+                window.removeEventListener("touchend", onEnd);
+            };
+            window.addEventListener("touchmove", onMove, { passive: false });
+            window.addEventListener("touchend", onEnd);
+        },
+        [seek],
+    );
+
+    //--------------------------------------------------------------------------
     // Tooltip
     const showTooltip = useCallback((entityType: EntityType, id: string, e: ReactMouseEvent) => {
         if (!isDragging.current) setTooltip({ entityType, id, x: e.clientX, y: e.clientY });
@@ -1190,6 +1216,7 @@ export function Timeline() {
                         onMouseDown={handleTrackMouseDown}
                         onMouseMove={trackMouseMove}
                         onMouseLeave={hideTooltip}
+                        onTouchStart={handleTrackTouchStart}
                     >
                         {/* Bands — wrapped in mx-1 to align with swimlane margins; top offset skips the axis row */}
                         <div className="absolute inset-x-0 bottom-0 mx-1" style={{ top: AXIS_H }}>
