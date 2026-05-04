@@ -60,7 +60,7 @@ export const plannedMaintenance: ScenarioDefinition = {
             {
                 id: "step_1",
                 route: cellRoute,
-                shroud: { selector: "[data-scenario=planned-maintenance-step-1]" },
+                shroud: { selector: "[data-scenario~=planned-maintenance-step-1]" },
                 message: {
                     title: "The problem machine",
                     description: (
@@ -74,7 +74,7 @@ export const plannedMaintenance: ScenarioDefinition = {
             {
                 id: "step_2",
                 route: cellRoute,
-                shroud: { selector: "[data-scenario=planned-maintenance-step-2]" },
+                shroud: { selector: "[data-scenario~=planned-maintenance-step-2]" },
                 message: {
                     title: "The before — downtime history",
                     description: (
@@ -95,7 +95,7 @@ export const plannedMaintenance: ScenarioDefinition = {
             {
                 id: "step_3",
                 route: cellRoute,
-                shroud: { selector: "[data-scenario=planned-maintenance-step-3]" },
+                shroud: { selector: "[data-scenario~=planned-maintenance-step-3]" },
                 message: {
                     title: "The inflection point",
                     description: (
@@ -109,7 +109,7 @@ export const plannedMaintenance: ScenarioDefinition = {
             {
                 id: "step_4",
                 route: cellRoute,
-                shroud: { selector: "[data-scenario=planned-maintenance-step-4]" },
+                shroud: { selector: "[data-scenario~=planned-maintenance-step-4]" },
                 message: {
                     title: "OEE and MTBF recovery",
                     description: (
@@ -124,7 +124,7 @@ export const plannedMaintenance: ScenarioDefinition = {
                 id: "step_5",
                 skip: true,
                 route: cellRoute,
-                shroud: { selector: "[data-scenario=planned-maintenance-step-5]" },
+                shroud: { selector: "[data-scenario~=planned-maintenance-step-5]" },
                 message: {
                     title: "The maintenance plan",
                     description: (
@@ -144,7 +144,7 @@ export const plannedMaintenance: ScenarioDefinition = {
             {
                 id: "step_6",
                 route: cellRoute,
-                shroud: { selector: "[data-scenario=planned-maintenance-step-6]" },
+                shroud: { selector: "[data-scenario~=planned-maintenance-step-6]" },
                 message: {
                     title: "Current timeline: clean",
                     description: (
@@ -158,7 +158,7 @@ export const plannedMaintenance: ScenarioDefinition = {
             {
                 id: "step_7",
                 route: cellRoute,
-                shroud: { selector: "[data-scenario=planned-maintenance-step-7]" },
+                shroud: { selector: "[data-scenario~=planned-maintenance-step-7]" },
                 message: {
                     title: "Business impact",
                     description: (

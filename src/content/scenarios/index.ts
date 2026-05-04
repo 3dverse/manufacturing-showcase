@@ -1,13 +1,14 @@
 //------------------------------------------------------------------------------
 import { correctiveMaintenance } from "./corrective-maintenance/corrective-maintenance";
-import { hypervisionPlaceholder, predictiveMaintenancePlacehoder } from "./placeHolders";
+import { predictiveMaintenancePlacehoder } from "./placeHolders";
+import { tourGuide } from "./tour-guide/tour-guide";
 
 //------------------------------------------------------------------------------
 import type { ScenarioDefinition } from "./types";
 
 //------------------------------------------------------------------------------
 export const FEATURED_SCENARIOS: ScenarioDefinition[] = [
-    hypervisionPlaceholder,
+    tourGuide,
     correctiveMaintenance,
     predictiveMaintenancePlacehoder,
 ];

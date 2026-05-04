@@ -68,7 +68,7 @@ export const DesktopLayout = () => {
                     >
                         <MainHeader />
                         <div
-                            data-scenario="corrective-maintenance-step-3 predictive-maintenance-step-1"
+                            data-scenario="corrective-maintenance-step-3 predictive-maintenance-step-1 tour-guide-3"
                             className="hidden md:flex w-full justify-around px-2 pt-3 pb-1 bg-accent-700 backdrop-blur-sm rounded-b overflow-hidden starting:-translate-y-3 -translate-y-2 starting:opacity-0 opacity-100 transition-all duration-200 delay-900 shadow-2xl -z-10"
                         >
                             <KeyStatusIndicators keyStatus={data.keyStatus} />
@@ -76,12 +76,13 @@ export const DesktopLayout = () => {
                         <GlobalOrderPanel />
                     </div>
                     {!activeScenarioId && <Daytime />}
-                    <div className="w-full max-w-96 flex flex-col items-end gap-3">
+                    <div data-scenario="tour-guide-6" className="w-full max-w-96 flex flex-col items-end gap-3">
                         <InvitePanel />
                     </div>
                 </div>
 
                 <div
+                    data-scenario="tour-guide-4"
                     className={cn(
                         "flex flex-col justify-end items-center grow p-2 md:p-3 transition-all duration-200",
                         isIncidentRoute && "translate-y-full opacity-0 pointer-events-none",

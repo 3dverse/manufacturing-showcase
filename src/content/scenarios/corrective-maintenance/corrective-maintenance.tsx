@@ -70,11 +70,11 @@ export const correctiveMaintenance: ScenarioDefinition = {
                     setAsOf(undefined);
                 },
                 shroud: {
-                    selector: "[data-scenario=corrective-maintenance-step-1]",
+                    selector: "[data-scenario~=corrective-maintenance-step-1]",
                     size: 300,
                 },
                 message: {
-                    selector: "[data-scenario=corrective-maintenance-step-1]",
+                    selector: "[data-scenario~=corrective-maintenance-step-1]",
                     title: "Production at a glance",
                     description: (
                         <p>
@@ -104,11 +104,11 @@ export const correctiveMaintenance: ScenarioDefinition = {
                       }
                     : undefined,
                 shroud: {
-                    selector: "[data-scenario=corrective-maintenance-step-2]",
+                    selector: "[data-scenario~=corrective-maintenance-step-2]",
                     size: 500,
                 },
                 message: {
-                    selector: "[data-scenario=corrective-maintenance-step-2]",
+                    selector: "[data-scenario~=corrective-maintenance-step-2]",
                     offset: { x: -100, y: 60 },
                     title: "Incident alert",
                     description: f?.orderNumber ? (
@@ -140,12 +140,12 @@ export const correctiveMaintenance: ScenarioDefinition = {
                     setPresent(timeAtTwoThirds);
                 },
                 shroud: {
-                    selector: "[data-scenario=corrective-maintenance-step-5]",
+                    selector: "[data-scenario~=corrective-maintenance-step-5]",
                     waitForCamera: true,
                     size: 700,
                 },
                 message: {
-                    selector: "[data-scenario=corrective-maintenance-step-5]",
+                    selector: "[data-scenario~=corrective-maintenance-step-5]",
                     waitForCamera: true,
                     title: "Production interrupted",
                     description: (
@@ -172,12 +172,12 @@ export const correctiveMaintenance: ScenarioDefinition = {
                       }
                     : undefined,
                 shroud: {
-                    selector: "[data-scenario=corrective-maintenance-step-4]",
+                    selector: "[data-scenario~=corrective-maintenance-step-4]",
                     waitForCamera: true,
                     size: 500,
                 },
                 message: {
-                    selector: "[data-scenario=corrective-maintenance-step-4]",
+                    selector: "[data-scenario~=corrective-maintenance-step-4]",
                     waitForCamera: true,
                     offset: { x: -350, y: 50 },
                     title: "Inspect the downtime",

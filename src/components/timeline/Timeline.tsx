@@ -1151,7 +1151,7 @@ export function Timeline() {
     return (
         <>
             <aside
-                data-scenario="corrective-maintenance-step-6 predictive-maintenance-step-6"
+                data-scenario="corrective-maintenance-step-6 predictive-maintenance-step-6 tour-guide-5"
                 className={cn(
                     "flex flex-col pointer-events-auto border-b border-slate-200 select-none",
                     PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",

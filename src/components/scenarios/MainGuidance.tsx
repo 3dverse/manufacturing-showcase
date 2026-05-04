@@ -29,6 +29,7 @@ export const MainGuidance = () => {
     //--------------------------------------------------------------------------
     return (
         <aside
+            data-scenario="tour-guide-7"
             data-theme="dark"
             className={`
                 group fixed bottom-0
@@ -40,7 +41,7 @@ export const MainGuidance = () => {
             <div
                 className={`
                     absolute bottom-0 left-0 h-18 w-screen grid grid-cols-3 items-center px-4 bg-slate-0 text-default
-                    translate-y-full group-hover:translate-y-0 transition-transform duration-200
+                    translate-y-full group-hover:translate-y-0 group-focus:translate-y-0 group-focus-within:translate-y-0 transition-transform duration-200
                 `}
             >
                 <div className="flex flex-col">

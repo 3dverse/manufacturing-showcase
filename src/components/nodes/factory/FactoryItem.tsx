@@ -105,7 +105,7 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                             </h2>
                             <div className="grow flex flex-col lg:flex-row items-start lg:items-baseline justify-between gap-x-3 gap-y-2">
                                 <div className="flex items-center mt-2 text-sm text-accent">
-                                    <ConnectedSystemsBadge className="mr-3" />
+                                    <ConnectedSystemsBadge data-scenario="tour-guide-2" className="mr-3" />
                                     <Icon icon={faMapMarkerAlt} size="sm" className="mr-1" />
                                     <span className="text-xs">{factoryItem.location}</span>
                                 </div>

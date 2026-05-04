@@ -39,7 +39,7 @@ export const predictiveMaintenance: ScenarioDefinition = {
             {
                 id: "step_1",
                 route: "/phone-factory",
-                shroud: { selector: "[data-scenario=predictive-maintenance-step-1]" },
+                shroud: { selector: "[data-scenario~=predictive-maintenance-step-1]" },
                 message: {
                     title: "Factory health — amber signal",
                     description: (
@@ -53,7 +53,7 @@ export const predictiveMaintenance: ScenarioDefinition = {
             {
                 id: "step_2",
                 route: cellRoute,
-                shroud: { selector: "[data-scenario=predictive-maintenance-step-2]" },
+                shroud: { selector: "[data-scenario~=predictive-maintenance-step-2]" },
                 message: {
                     title: "Navigate to the at-risk cell",
                     description: (
@@ -67,7 +67,7 @@ export const predictiveMaintenance: ScenarioDefinition = {
             {
                 id: "step_3",
                 route: cellRoute,
-                shroud: { selector: "[data-scenario=predictive-maintenance-step-3]" },
+                shroud: { selector: "[data-scenario~=predictive-maintenance-step-3]" },
                 message: {
                     title: "OEE degradation trend",
                     description: (
@@ -81,7 +81,7 @@ export const predictiveMaintenance: ScenarioDefinition = {
             {
                 id: "step_5",
                 route: cellRoute,
-                shroud: { selector: "[data-scenario=predictive-maintenance-step-5]" },
+                shroud: { selector: "[data-scenario~=predictive-maintenance-step-5]" },
                 message: {
                     title: "Scheduled on the timeline",
                     description: (
@@ -95,7 +95,7 @@ export const predictiveMaintenance: ScenarioDefinition = {
             {
                 id: "step_6",
                 route: cellRoute,
-                shroud: { selector: "[data-scenario=predictive-maintenance-step-6]" },
+                shroud: { selector: "[data-scenario~=predictive-maintenance-step-6]" },
                 message: {
                     title: "Production continuity confirmed",
                     description: (

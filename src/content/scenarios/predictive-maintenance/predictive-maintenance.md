@@ -34,7 +34,7 @@
 
 ## Implementation Notes
 
-**Step 2 (Navigation badge):** The cell pill in `Navigation.tsx` gets `data-scenario="predictive-maintenance-step-2"` dynamically when `focus.kind === "predictive"` and `node.hash === focus.cellHash`. An amber wrench badge is also rendered.
+**Step 2 (Navigation badge):** The cell pill in `Navigation.tsx` gets `data-scenario~="predictive-maintenance-step-2"` dynamically when `focus.kind === "predictive"` and `node.hash === focus.cellHash`. An amber wrench badge is also rendered.
 
 **Step 4 (`skip: true`):** The EAM work order detail panel with maintenance guide/steps does not exist yet. Remove `skip: true` and add `predictive-maintenance-step-4` to the panel when built.
 
