@@ -21,7 +21,7 @@ import { useAreaOEE } from "@/hooks/useAreaOEE";
 import { useOEEHistory } from "@/hooks/useOEEHistory";
 import { cn } from "@/utils/cn";
 import { useTimelineStore } from "@/store/useTimelineStore";
-import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
+import { downtimeAtAsOf, workOrderAtAsOf } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
 import type { SceneGraphNode, AreaNode, CellNode, LineNode, AisleNode, RackNode } from "@/content/type";
@@ -50,6 +50,15 @@ export const Navigation = ({ className }: { className?: string }) => {
             [...span.downtimeEvents.values()]
                 .filter((e) => downtimeAtAsOf(e, asOf || present))
                 .map((e) => e.workCenterId),
+        );
+    }, [span, asOf, present]);
+
+    const workOrderMachineIds = useMemo(() => {
+        if (!span) return new Set<string>();
+        return new Set(
+            [...span.eamWorkOrders.values()]
+                .filter((wo) => workOrderAtAsOf(wo, asOf || present))
+                .map((wo) => wo.assetId),
         );
     }, [span, asOf, present]);
 
@@ -163,6 +172,7 @@ export const Navigation = ({ className }: { className?: string }) => {
                             isFirst={index === 0}
                             index={index}
                             downtimeCellIds={downtimeCellIds}
+                            workOrderMachineIds={workOrderMachineIds}
                         />
                     ))}
                 </ul>
@@ -246,11 +256,13 @@ const AreaNav = ({
     isFirst,
     index,
     downtimeCellIds,
+    workOrderMachineIds,
 }: {
     area: AreaNode;
     isFirst: boolean;
     index: number;
     downtimeCellIds: Set<string>;
+    workOrderMachineIds: Set<string>;
 }) => {
     //--------------------------------------------------------------------------
     // Hooks
@@ -321,6 +333,7 @@ const AreaNav = ({
                         isLast={index === children.length - 1}
                         node={child}
                         downtimeCellIds={downtimeCellIds}
+                        workOrderMachineIds={workOrderMachineIds}
                     />
                 ))}
             </ul>
@@ -335,11 +348,13 @@ const ChildNode = ({
     isFirst,
     isLast,
     downtimeCellIds,
+    workOrderMachineIds,
 }: {
     node: LineNode | CellNode | AisleNode | RackNode;
     isFirst: boolean;
     isLast: boolean;
     downtimeCellIds: Set<string>;
+    workOrderMachineIds: Set<string>;
 }) => {
     //--------------------------------------------------------------------------
     // Hooks
@@ -354,6 +369,14 @@ const ChildNode = ({
     const hasDowntime = useMemo(
         () => (isLine(node) ? node.cells.some((c) => downtimeCellIds.has(c.hash)) : downtimeCellIds.has(node.hash)),
         [node, downtimeCellIds],
+    );
+
+    const hasWorkOrder = useMemo(
+        () =>
+            isLine(node)
+                ? node.cells.some((c) => c.machines.some((m) => workOrderMachineIds.has(m.hash)))
+                : "machines" in node && node.machines.some((m) => workOrderMachineIds.has(m.hash)),
+        [node, workOrderMachineIds],
     );
 
     const isScenarioTarget = useMemo(
@@ -424,7 +447,12 @@ const ChildNode = ({
                         <Icon icon={faExclamationTriangle} size="xs" className="text-warning-100" />
                     </span>
                 )}
-                {!hasDowntime && isScenarioTarget && spanData?.kind === "predictive" && (
+                {!hasDowntime && hasWorkOrder && (
+                    <span className="absolute -top-2 right-px w-4 aspect-square bg-amber-400 rounded-full">
+                        <Icon icon={faWrench} size="xs" className="text-amber-900" />
+                    </span>
+                )}
+                {!hasDowntime && !hasWorkOrder && isScenarioTarget && spanData?.kind === "predictive" && (
                     <span className="absolute -top-2 right-px w-4 aspect-square bg-amber-400 rounded-full">
                         <Icon icon={faWrench} size="xs" className="text-amber-900" />
                     </span>
