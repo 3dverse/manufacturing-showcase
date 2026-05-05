@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
+import { tourGuide } from "./tour-guide/tour-guide";
 import { correctiveMaintenance } from "./corrective-maintenance/corrective-maintenance";
 import { predictiveMaintenancePlacehoder } from "./placeHolders";
-import { tourGuide } from "./tour-guide/tour-guide";
 
 //------------------------------------------------------------------------------
 import type { ScenarioDefinition } from "./types";

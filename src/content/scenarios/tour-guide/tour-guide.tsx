@@ -66,14 +66,15 @@ export const tourGuide: ScenarioDefinition = {
         },
         {
             id: "step_4",
-            route: "/phone-factory",
+            // TODO: make it work
+            route: "/phone-factory/8c97d140",
             shroud: {
                 selector: "[data-scenario~=tour-guide-4]",
-                size: 520,
+                size: 820,
             },
             message: {
                 selector: "[data-scenario~=tour-guide-4]",
-                offset: { x: -260, y: -120 },
+                offset: { x: -460, y: -320 },
                 title: "Explore the factory virtually",
                 description: (
                     <p>
@@ -93,7 +94,7 @@ export const tourGuide: ScenarioDefinition = {
             },
             message: {
                 selector: "[data-scenario~=tour-guide-5]",
-                offset: { x: -180, y: -160 },
+                offset: { x: -180, y: -320 },
                 title: "Follow orders and replay decisions",
                 description: (
                     <p>

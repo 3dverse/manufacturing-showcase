@@ -42,12 +42,9 @@ export const ScenarioStepper = () => {
         prevStep,
         nextStep,
         clearActiveScenario,
+        isScenarioAutoplaying,
+        setScenarioAutoplaying,
     } = useContext(ScenarioContext);
-    const [isScenarioAutoplaying, setScenarioAutoplaying] = useState(false);
-
-    useEffect(() => {
-        setScenarioAutoplaying(false);
-    }, [activeScenarioId]);
     const overlayRef = useRef<HTMLDivElement>(null);
     const popoverRef = useRef<HTMLElement>(null);
     const [autoplayProgress, setAutoplayProgress] = useState(0);
@@ -59,27 +56,27 @@ export const ScenarioStepper = () => {
     const activeStepIndex = visibleSteps.findIndex((step) => step.id === activeStep?.id);
     const isFirstStep = activeStepIndex <= 0;
     const nextScenario = scenarios[activeScenarioIndex + 1];
+    const hasEnabledNextScenario = Boolean(nextScenario && !nextScenario.disabled);
     const isLastStep = Boolean(visibleSteps.length && activeStepIndex === visibleSteps.length - 1);
-    const nextButtonLabel = isLastStep ? (nextScenario ? nextScenario.title : "Close") : "Next";
 
     //--------------------------------------------------------------------------
     const popoverPosition = messageTargetPosition
         ? {
-              x: clamp(
-                  messageTargetPosition.x - overlayBounds.x + (activeStep?.message?.offset?.x ?? 0),
-                  POPOVER_MARGIN,
-                  Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
-              ),
-              y: clamp(
-                  messageTargetPosition.y - overlayBounds.y + (activeStep?.message?.offset?.y ?? 0),
-                  POPOVER_MARGIN,
-                  Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
-              ),
-          }
+            x: clamp(
+                messageTargetPosition.x - overlayBounds.x + (activeStep?.message?.offset?.x ?? 0),
+                POPOVER_MARGIN,
+                Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
+            ),
+            y: clamp(
+                messageTargetPosition.y - overlayBounds.y + (activeStep?.message?.offset?.y ?? 0),
+                POPOVER_MARGIN,
+                Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
+            ),
+        }
         : {
-              x: Math.max(POPOVER_MARGIN, (overlayBounds.width - popoverSize.width) / 2),
-              y: Math.max(POPOVER_MARGIN, (overlayBounds.height - popoverSize.height) / 2),
-          };
+            x: Math.max(POPOVER_MARGIN, (overlayBounds.width - popoverSize.width) / 2),
+            y: Math.max(POPOVER_MARGIN, (overlayBounds.height - popoverSize.height) / 2),
+        };
 
     //--------------------------------------------------------------------------
     const updateOverlayMeasurements = useCallback(() => {
@@ -164,7 +161,7 @@ export const ScenarioStepper = () => {
             <section
                 ref={popoverRef}
                 data-theme="dark"
-                className="absolute w-[min(calc(100vw-2rem),24rem)] rounded-lg bg-slate-0 px-5 pt-3 pb-4 text-default shadow-xl starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400"
+                className="absolute w-[min(calc(100vw-2rem),24rem)] rounded-lg bg-slate-0 px-5 pt-3 pb-4 text-default text-pretty shadow-xl starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400"
                 style={
                     {
                         left: `${popoverPosition.x}px`,
@@ -174,7 +171,7 @@ export const ScenarioStepper = () => {
             >
                 <div className="flex justify-between items-center mb-2">
                     <p className="grow text-2xs uppercase tracking-wide text-guidance-600">
-                        {activeScenario?.title}. Step {activeStepIndex + 1}
+                        {activeScenario?.title} <span className="ml-1 tracking-[.5ex]">{activeStepIndex + 1}/{visibleSteps.length}</span>
                     </p>
                     <Button
                         variant="ghost"
@@ -201,28 +198,41 @@ export const ScenarioStepper = () => {
                             <Icon icon={faAngleLeft} size="sm" />
                         </Button>
                     )}
-                    <Button
-                        type="button"
-                        colorScheme="guidance"
-                        size="sm"
-                        className={cn(
-                            "relative w-full overflow-hidden text-left",
-                            isLastStep && nextScenario && "justify-start",
-                        )}
-                        onClick={nextStep}
-                    >
-                        <span
-                            aria-hidden
-                            className="absolute inset-y-0 left-0 bg-guidance-600"
-                            style={{ width: `${autoplayProgress}%` }}
-                        />
-                        <span className="relative">
-                            {isLastStep && nextScenario && (
-                                <span className="text-xs block font-semibold">Next scenario</span>
-                            )}
-                            <span>{nextButtonLabel}</span>
-                        </span>
-                    </Button>
+                    {isLastStep && !hasEnabledNextScenario ? (
+                        <Button
+                            type="button"
+                            colorScheme="guidance"
+                            size="sm"
+                            className="relative w-full overflow-hidden py-3"
+                            onClick={clearActiveScenario}
+                        >
+                            Close
+                        </Button>
+                    ) : (
+                        <Button
+                            type="button"
+                            colorScheme="guidance"
+                            size="sm"
+                            className={cn("relative w-full overflow-hidden text-left", isLastStep && hasEnabledNextScenario && "justify-start")}
+                            onClick={nextStep}
+                        >
+                            <span
+                                aria-hidden
+                                className="absolute inset-y-0 left-0 bg-guidance-600"
+                                style={{ width: `${autoplayProgress}%` }}
+                            />
+                            <span className="relative">
+                                {isLastStep && hasEnabledNextScenario ? (
+                                    <>
+                                        <span className="text-xs block font-normal">Next scenario</span>
+                                        <span className="font-semibold">{nextScenario.title}</span>
+                                    </>
+                                ) : (
+                                    <>Next</>
+                                )}
+                            </span>
+                        </Button>
+                    )}
                 </div>
             </section>
         </div>,

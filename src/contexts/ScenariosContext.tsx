@@ -6,7 +6,9 @@ import {
     useMemo,
     useRef,
     useState,
+    type Dispatch,
     type ReactNode,
+    type SetStateAction,
 } from "react";
 
 //------------------------------------------------------------------------------
@@ -36,6 +38,8 @@ export type ScenarioContextType = {
     scenarioActivatedAt: number | undefined;
     shroudTargetPosition: { x: number; y: number } | undefined;
     messageTargetPosition: { x: number; y: number } | undefined;
+    isScenarioAutoplaying: boolean;
+    setScenarioAutoplaying: Dispatch<SetStateAction<boolean>>;
     setGraphData: (scenarioId: string, data: ScenarioGraphData | null) => void;
     activateScenario: (scenarioId: string) => void;
     prevStep: () => void;
@@ -128,6 +132,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
     const [scenarioActivatedAt, setScenarioActivatedAt] = useState<number | undefined>(() =>
         hasGuidanceQuery() ? Date.now() : undefined,
     );
+    const [isScenarioAutoplaying, setScenarioAutoplaying] = useState(false);
 
     //--------------------------------------------------------------------------
     // Hooks
@@ -245,6 +250,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
     //--------------------------------------------------------------------------
     const activateScenario = useCallback(
         (scenarioId: string) => {
+            setScenarioAutoplaying(false);
             useTimelineStore.getState().pause();
             goToScenario(scenarioId);
         },
@@ -256,6 +262,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
         const tl = useTimelineStore.getState();
         tl.play();
         tl.setZoom("1W");
+        setScenarioAutoplaying(false);
         setActiveScenarioId(undefined);
         setActiveStepId(undefined);
         setScenarioActivatedAt(undefined);
@@ -294,6 +301,8 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
             scenarioActivatedAt,
             shroudTargetPosition,
             messageTargetPosition,
+            isScenarioAutoplaying,
+            setScenarioAutoplaying,
             setGraphData,
             activateScenario,
             prevStep,
@@ -310,6 +319,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
             scenarioActivatedAt,
             shroudTargetPosition,
             messageTargetPosition,
+            isScenarioAutoplaying,
             setGraphData,
             activateScenario,
             prevStep,
