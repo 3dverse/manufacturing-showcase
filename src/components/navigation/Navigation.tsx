@@ -443,7 +443,7 @@ const ChildNode = ({
                 )}
                 {node.name} {isLine(node) && "Line"}
                 {hasDowntime && (
-                    <span className="absolute -top-2 right-px w-4 aspect-square bg-warning rounded-full">
+                    <span className="absolute -top-2 right-px w-4 aspect-square bg-warning-600 rounded-full">
                         <Icon icon={faExclamationTriangle} size="xs" className="text-warning-100" />
                     </span>
                 )}

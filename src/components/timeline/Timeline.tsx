@@ -478,7 +478,7 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
                     <div>
                         <span className="text-slate-500">Status </span>
                         <span className="capitalize">{so.status.replace("_", " ")}</span>
-                        {so.projected.isOverdue && <span className="ml-1.5 text-red-400">overdue</span>}
+                        {so.projected.isOverdue && <span className="ml-1.5 text-negative-400">overdue</span>}
                     </div>
                     <div>
                         <span className="text-slate-500">Order date </span>
@@ -567,9 +567,9 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
             if (!dt) return null;
             return (
                 <div className="space-y-1.5">
-                    <div className="font-semibold text-red-300">
+                    <div className="font-semibold text-warning-400">
                         {dt.reasonCode}
-                        {dt.projected.isOngoing && <span className="ml-1.5 text-[10px] text-red-400/80">ongoing</span>}
+                        {dt.projected.isOngoing && <span className="ml-1.5 text-[10px] text-warning-400/80">ongoing</span>}
                     </div>
                     {dt.reasonDescription && <div className="text-slate-400 text-[11px]">{dt.reasonDescription}</div>}
                     <div>
@@ -938,7 +938,7 @@ export function Timeline() {
         if (tooltip) {
             return createPortal(
                 <div
-                    className="fixed z-[9999] pointer-events-none"
+                    className="fixed z-9999 pointer-events-none"
                     style={{
                         ...(tooltip.x > window.innerWidth * 0.6
                             ? { right: window.innerWidth - tooltip.x + 14 }

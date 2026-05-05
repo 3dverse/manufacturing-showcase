@@ -125,10 +125,10 @@ function ItemViewPanelInner({ selected }: { selected: FocusedEntity }) {
     const colors = ENTITY_COLORS[selected.type];
 
     return createPortal(
-        <aside className="fixed top-0 right-0 bottom-0 w-1/2 max-w-md flex flex-col bg-slate-0/95 backdrop-blur-sm border-l border-slate-200/70 shadow-3xl z-100 starting:-translate-x-full translate-x-0 transition-all duration-200">
-            <header className={cn("shrink-0 pl-6 pr-3 pt-3 pb-3 backdrop-blur-sm", colors.header)}>
+        <aside className="fixed top-0 right-0 bottom-0 w-1/2 max-w-md flex flex-col bg-slate-0/95 backdrop-blur-sm border-l border-slate-200/70 shadow-3xl z-100 starting:translate-x-full translate-x-0 transition-transform duration-200">
+            <header className={cn("shrink-0 p-2 pl-6 backdrop-blur-sm", colors.header)}>
                 <div className="flex items-center justify-between">
-                    {title && <h2 className="text-lg font-semibold leading-tight text-white">{title}</h2>}
+                    {title && <h2 className="text-base font-semibold leading-tight text-white">{title}</h2>}
                     <Button
                         variant="ghost"
                         colorScheme="neutral"

@@ -18,11 +18,8 @@ export function DowntimeView({ item, projection, correlated }: Props) {
     return (
         <div data-scenario="corrective-maintenance-step-4" className="flex flex-col gap-4">
             <div>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                        <p className="text-base font-semibold">{item.reasonCode}</p>
-                        <p className="text-xs text-muted">{item.reasonDescription ?? "No description"}</p>
-                    </div>
+                <div className="flex items-start justify-between gap-2 mb-4">
+                    <p className="text-xl font-semibold">{item.reasonDescription}</p>
                     {item.projected.isOngoing && <OngoingBadge />}
                 </div>
                 <Divider />

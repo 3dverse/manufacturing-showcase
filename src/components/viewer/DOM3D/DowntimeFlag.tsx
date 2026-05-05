@@ -39,20 +39,20 @@ export function DowntimeFlag({ cell, downtimeId }: { cell: CellNode; downtimeId:
                 face="bottom"
                 className="flex justify-center items-end pointer-events-none!"
             >
-                <div className="rounded-full border-3 border-warning-500 w-10 h-10 translate-y-1/2" />
+                <div className="rounded-full border-3 border-warning-700 w-10 h-10 translate-y-1/2" />
             </BoundingBoxFaceProjection>
             <BoundingBoxFaceProjection
                 entity={cell.entity}
                 face="front"
                 className="flex justify-center items-end pointer-events-none!"
             >
-                <div className="h-full w-[3px] bg-warning-500" />
+                <div className="h-full w-[3px] bg-warning-700" />
             </BoundingBoxFaceProjection>
             <BoundingBoxFaceProjection entity={cell.entity} face="top" className="flex items-end justify-center">
                 <div
                     className={cn(
-                        "translate-y-1/2 flex flex-col items-center gap-2 bg-warning-500 text-warning-100 rounded-3xl [corner-shape:bevel] py-4 px-7 outline-4 outline-warning-500/50 outline-offset-8 cursor-pointer",
-                        "hover:outline-offset-12 hover:outline-warning-500/80 transition-all duration-200",
+                        "translate-y-1/2 flex flex-col items-center gap-2 bg-warning-700 text-warning-100 rounded-3xl [corner-shape:bevel] py-4 px-7 outline-4 outline-warning-700/50 outline-offset-8 cursor-pointer",
+                        "hover:outline-offset-12 hover:outline-warning-700/80 transition-all duration-200",
                     )}
                     onClick={handleClick}
                 >
