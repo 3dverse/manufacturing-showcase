@@ -7,7 +7,6 @@ import {
     useState,
     type MouseEvent as ReactMouseEvent,
     type TouchEvent as ReactTouchEvent,
-    type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
 
@@ -24,16 +23,32 @@ import { useFocusStore } from "@/store/useFocusStore";
 import { ScenarioContext } from "@/contexts/ScenariosContext";
 
 //------------------------------------------------------------------------------
+import { Router } from "@/core/Router";
+import { isArea } from "@/core/SceneGraph";
 import {
     highlightStateForBar,
     entityTypeFromId,
     buildCorrelatedSnapshot,
     EMPTY_CORRELATED_SET,
-    type EntityType,
-    type HighlightState,
 } from "@/core/Correlation";
-import { Router } from "@/core/Router";
-import { isArea } from "@/core/SceneGraph";
+
+//------------------------------------------------------------------------------
+import { cn } from "@/utils/cn";
+import { fromPct, toPct } from "./timeUtils";
+import { fmtDuration, fmtTs } from "@/utils/helpers-time";
+import { buildClosedIntervals } from "@/core/Calendar";
+
+//------------------------------------------------------------------------------
+import { FooterTabs } from "./FooterTabs";
+import { Band } from "./Band";
+import { Bar } from "./Bar";
+
+//------------------------------------------------------------------------------
+import { PERFORMANCE_MODE, FULL_TIMELINE } from "@/content/3dverse";
+import { ENTITY_COLORS } from "@/content/entityColors";
+
+//------------------------------------------------------------------------------
+import type { EntityType } from "@/core/Correlation";
 import type {
     TimelineLevel,
     AsOfSnapshot,
@@ -48,53 +63,22 @@ import type {
 } from "@/core/Scope";
 
 //------------------------------------------------------------------------------
-import { cn } from "@/utils/cn";
-import { fromPct, toPct } from "./timeUtils";
-import { fmtDuration, fmtTs } from "@/utils/helpers-time";
-import { buildClosedIntervals } from "@/core/Calendar";
-
-//------------------------------------------------------------------------------
-import { PERFORMANCE_MODE, FULL_TIMELINE } from "@/content/3dverse";
-import { ENTITY_COLORS, type EntityColorSet } from "@/content/entityColors";
-import { FooterTabs } from "./FooterTabs";
-
-//------------------------------------------------------------------------------
 // Zoom levels
 //------------------------------------------------------------------------------
-
-import type { ZoomKey } from "@/store/useTimelineStore";
+import {
+    AXIS_H,
+    PLAYBACK_SPEEDS,
+    ROW_GAP,
+    ROW_H,
+    ROW_H_LINE,
+    ZOOMS,
+    type BarItem,
+    type BarStyle,
+    type PlaybackSpeed,
+    type StackingStyle,
+} from "./constants";
 
 type AreaType = "production" | "delivery" | "reception" | "storage" | "quality" | "other";
-
-const ZOOMS: { key: ZoomKey; label: string; days: number }[] = [
-    { key: "1D", label: "1D", days: 1 },
-    { key: "1W", label: "1W", days: 7 },
-    { key: "2W", label: "2W", days: 14 },
-    { key: "1M", label: "1M", days: 30 },
-    { key: "3M", label: "3M", days: 90 },
-    //{ key: "6M", label: "6M", days: 180 },
-];
-
-//------------------------------------------------------------------------------
-// Playback speeds
-//------------------------------------------------------------------------------
-
-const PLAYBACK_SPEEDS = [1, 60, 300] as const;
-type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number];
-
-//------------------------------------------------------------------------------
-// Layout constants
-//------------------------------------------------------------------------------
-
-const AXIS_H = 22;
-const ROW_H = 22;
-const ROW_H_LINE = 8;
-const ROW_GAP = 4;
-const BAR_H = 12;
-
-//------------------------------------------------------------------------------
-// Axis tick generation
-//------------------------------------------------------------------------------
 
 type Tick = { ts: number; label: string; major: boolean };
 
@@ -150,21 +134,6 @@ function buildTicks(winStart: number, winEnd: number, totalDays: number): Tick[]
 //------------------------------------------------------------------------------
 // Bar types
 //------------------------------------------------------------------------------
-
-type BarItem = {
-    id: string;
-    entityType: EntityType;
-    start: number;
-    end: number;
-    colors: EntityColorSet;
-    isPartial?: boolean;
-    /** Shown inside the bar when `barStyle === "bar"` (e.g. manufacturing order number). */
-    inlineLabel?: string;
-};
-
-type BarStyle = "bar" | "line";
-type StackingStyle = "swimlane" | "overlap";
-
 type Story = {
     id: string;
     title: string;
@@ -177,7 +146,6 @@ type Story = {
 //------------------------------------------------------------------------------
 // Lane assignment
 //------------------------------------------------------------------------------
-
 function assignSwimlanes(bars: BarItem[]): BarItem[][] {
     const sorted = [...bars].sort((a, b) => a.start - b.start);
     const lanes: BarItem[][] = [];
@@ -215,6 +183,7 @@ function buildSalesOrdersStory(orders: SalesOrderEntry[]): Story {
     const bars: BarItem[] = orders.map((so) => ({
         id: so.id,
         entityType: "salesOrder" as EntityType,
+        targetNodeHash: so.siteId,
         start: so.orderDate,
         end: so.requestedDeliveryDate,
         colors: ENTITY_COLORS.salesOrder,
@@ -269,6 +238,7 @@ function buildProductionOrdersStories(
         const bars: BarItem[] = (groups.get(label) ?? []).map((po) => ({
             id: po.id,
             entityType: "productionOrder" as EntityType,
+            targetNodeHash: po.locationId || undefined,
             start: po.timing.actualStart ?? po.timing.scheduledStart,
             end: po.timing.actualEnd ?? po.timing.scheduledEnd,
             colors: ENTITY_COLORS.productionOrder,
@@ -289,6 +259,7 @@ function buildOperationsStory(ops: OperationEntry[]): Story {
     const bars: BarItem[] = ops.map((op) => ({
         id: op.id,
         entityType: "operation" as EntityType,
+        targetNodeHash: op.workCenterId || undefined,
         start: op.actualStart ?? op.scheduledStart,
         end: op.actualEnd ?? op.scheduledEnd,
         colors: ENTITY_COLORS.operation,
@@ -315,6 +286,7 @@ function buildReceiptsStory(receipts: ReceiptEntry[], putaways: PutawayTaskEntry
     const bars: BarItem[] = receipts.map((r) => ({
         id: r.id,
         entityType: "receipt" as EntityType,
+        targetNodeHash: r.warehouseId || undefined,
         start: r.receivedDate,
         end: putawayByReceipt.get(r.id) ?? cutOff,
         colors: ENTITY_COLORS.receipt,
@@ -339,6 +311,7 @@ function buildAllocationsStory(
     const bars: BarItem[] = filtered.map((a) => ({
         id: a.id,
         entityType: "allocation" as EntityType,
+        targetNodeHash: a.locationId || undefined,
         start: a.allocatedAt,
         end: a.clearedAt ?? cutOff,
         colors: ENTITY_COLORS.allocation,
@@ -358,6 +331,7 @@ function buildPickTasksStory(tasks: PickTaskEntry[], cutOff: number): Story {
     const bars: BarItem[] = tasks.map((t) => ({
         id: t.id,
         entityType: "pickTask" as EntityType,
+        targetNodeHash: t.sourceLocationId || undefined,
         start: t.startedAt ?? t.createdAt,
         end: t.pickedDate ?? cutOff,
         colors: ENTITY_COLORS.pickTask,
@@ -376,6 +350,7 @@ function buildPutawayTasksStory(tasks: PutawayTaskEntry[], cutOff: number): Stor
     const bars: BarItem[] = tasks.map((t) => ({
         id: t.id,
         entityType: "putawayTask" as EntityType,
+        targetNodeHash: t.sourceLocationId || undefined,
         start: t.startedAt ?? t.createdAt,
         end: t.putawayDate ?? cutOff,
         colors: ENTITY_COLORS.putawayTask,
@@ -481,199 +456,8 @@ function buildStories(
 }
 
 //------------------------------------------------------------------------------
-// Bar component
-//------------------------------------------------------------------------------
-
-const LINE_H = 4;
-
-function Bar({
-    bar,
-    winStart,
-    winEnd,
-    laneIndex,
-    barStyle,
-    effectiveNow,
-    highlightState,
-    onEnter,
-    onLeave,
-}: {
-    bar: BarItem;
-    winStart: number;
-    winEnd: number;
-    laneIndex: number;
-    barStyle: BarStyle;
-    effectiveNow: number;
-    highlightState: HighlightState;
-    onEnter: (entityType: EntityType, id: string, e: ReactMouseEvent) => void;
-    onLeave: () => void;
-}) {
-    //--------------------------------------------------------------------------
-    // Store
-    const { setHovered, setSelected } = useFocusStore();
-
-    //--------------------------------------------------------------------------
-    // Memos
-    const style: CSSProperties | undefined = useMemo(() => {
-        const left = toPct(bar.start, winStart, winEnd);
-        const right = toPct(bar.end, winStart, winEnd);
-        const clampedLeft = Math.max(0, left);
-        const clampedRight = Math.min(100, right);
-        const widthPct = Math.max(0.25, clampedRight - clampedLeft);
-        const h = barStyle === "line" ? LINE_H : BAR_H;
-        const rowHeight = barStyle === "bar" ? ROW_H : ROW_H_LINE;
-        if (right < 0 || left > 100) {
-            return;
-        }
-
-        return {
-            left: `${clampedLeft}%`,
-            width: `${widthPct}%`,
-            top: laneIndex * rowHeight + (rowHeight - h) / 2,
-            height: h,
-        };
-    }, [bar, barStyle, winStart, winEnd, laneIndex]);
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    const mouseEnterHandler = useCallback(
-        (e: ReactMouseEvent) => {
-            e.stopPropagation();
-            onEnter(bar.entityType, bar.id, e);
-            setHovered({ type: bar.entityType, id: bar.id });
-        },
-        [onEnter, bar, setHovered],
-    );
-
-    //--------------------------------------------------------------------------
-    const mouseLeaveHandler = useCallback(
-        (e: ReactMouseEvent) => {
-            e.stopPropagation();
-            onLeave();
-            setHovered(null);
-        },
-        [onLeave, setHovered],
-    );
-
-    //--------------------------------------------------------------------------
-    const mouseDownHandler = useCallback((e: ReactMouseEvent) => {
-        e.stopPropagation();
-    }, []);
-
-    //--------------------------------------------------------------------------
-    const mouseClickHandler = useCallback(
-        (e: ReactMouseEvent) => {
-            e.stopPropagation();
-            setSelected({ type: bar.entityType, id: bar.id });
-            const { factorySlug, nodeSlug } = Router.currentRoute();
-            if (factorySlug) {
-                Router.replace({ factorySlug, nodeSlug, itemSlug: bar.id });
-            }
-        },
-        [bar, setSelected],
-    );
-
-    //--------------------------------------------------------------------------
-    if (!style) return null;
-
-    //--------------------------------------------------------------------------
-    return (
-        <div
-            className={cn(
-                "absolute cursor-pointer pointer-events-auto transition-[shadow,opacity]",
-                barStyle === "line" ? "rounded-full" : "rounded-sm",
-                barStyle === "bar" &&
-                    bar.inlineLabel &&
-                    "text-sm flex items-center justify-start overflow-hidden px-2 py-3",
-                bar.colors.barHighlight,
-                bar.start > effectiveNow
-                    ? bar.colors.barFuture
-                    : bar.end >= effectiveNow
-                      ? bar.colors.barCurrent
-                      : bar.colors.bar,
-                bar.isPartial && "opacity-50",
-                highlightState === "dimmed" && "opacity-20",
-            )}
-            style={style}
-            onMouseEnter={mouseEnterHandler}
-            onMouseLeave={mouseLeaveHandler}
-            onMouseDown={mouseDownHandler}
-            onClick={mouseClickHandler}
-        >
-            {barStyle === "bar" && bar.inlineLabel ? (
-                <span className="truncate text-[9px] font-semibold leading-none text-white drop-shadow-sm pointer-events-none select-none">
-                    {bar.inlineLabel}
-                </span>
-            ) : null}
-        </div>
-    );
-}
-
-//------------------------------------------------------------------------------
-// Band component — full-height background overlay for bands (downtime, work orders)
-//------------------------------------------------------------------------------
-function Band({
-    colors,
-    isInScope,
-    entityType,
-    id,
-    start,
-    end,
-    winStart,
-    winEnd,
-    onEnter,
-    onLeave,
-    highlightState,
-    effectiveNow,
-}: {
-    colors: EntityColorSet;
-    isInScope: boolean;
-    entityType: EntityType;
-    id: string;
-    start: number;
-    end: number;
-    winStart: number;
-    winEnd: number;
-    onEnter: (entityType: EntityType, id: string, e: ReactMouseEvent) => void;
-    onLeave: () => void;
-    highlightState: HighlightState;
-    effectiveNow: number;
-}) {
-    const { setHovered, setSelected } = useFocusStore();
-    const left = toPct(start, winStart, winEnd);
-    const width = toPct(end, winStart, winEnd) - left;
-
-    return (
-        <div
-            className={cn(
-                "absolute top-0 bottom-0 cursor-pointer transition-opacity",
-                isInScope ? colors.band : colors.bandDimmed,
-                start <= effectiveNow && effectiveNow <= end && colors.bandCurrent,
-                highlightState === "dimmed" && "opacity-20",
-            )}
-            style={{ left: `${left}%`, width: `${width}%`, minWidth: "2px" }}
-            onMouseEnter={(e) => {
-                onEnter(entityType, id, e);
-                setHovered({ type: entityType, id });
-            }}
-            onMouseLeave={() => {
-                onLeave();
-                setHovered(null);
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-                e.stopPropagation();
-                setSelected({ type: entityType, id });
-                const { factorySlug, nodeSlug } = Router.currentRoute();
-                if (factorySlug) Router.replace({ factorySlug, nodeSlug, itemSlug: id });
-            }}
-        />
-    );
-}
-
-//------------------------------------------------------------------------------
 // Tooltip content — projects only the single hovered entity
 //------------------------------------------------------------------------------
-
 function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: string }) {
     const snapshot = useSpanSnapshot();
     const focused = useMemo(() => ({ type: entityType, id }), [entityType, id]);
@@ -1238,12 +1022,15 @@ export function Timeline() {
                                 {workOrderBands.map(({ wo, start, end }) => (
                                     <Band
                                         key={wo.id}
-                                        colors={ENTITY_COLORS.workOrder}
+                                        bar={{
+                                            id: wo.id,
+                                            entityType: "workOrder",
+                                            targetNodeHash: wo.assetId || undefined,
+                                            start,
+                                            end,
+                                            colors: ENTITY_COLORS.workOrder,
+                                        }}
                                         isInScope={scopedWorkOrderIds.has(wo.id)}
-                                        entityType="workOrder"
-                                        id={wo.id}
-                                        start={start}
-                                        end={end}
                                         winStart={winStart}
                                         winEnd={winEnd}
                                         onEnter={showTooltip}
@@ -1263,12 +1050,15 @@ export function Timeline() {
                             {downtimeBands.map(({ dt, start, end }) => (
                                 <Band
                                     key={dt.id}
-                                    colors={ENTITY_COLORS.downtime}
+                                    bar={{
+                                        id: dt.id,
+                                        entityType: "downtime",
+                                        targetNodeHash: dt.workCenterId,
+                                        start,
+                                        end,
+                                        colors: ENTITY_COLORS.downtime,
+                                    }}
                                     isInScope={scopedDowntimeIds.has(dt.id)}
-                                    entityType="downtime"
-                                    id={dt.id}
-                                    start={start}
-                                    end={end}
                                     winStart={winStart}
                                     winEnd={winEnd}
                                     onEnter={showTooltip}
