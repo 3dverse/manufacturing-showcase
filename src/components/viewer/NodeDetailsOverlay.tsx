@@ -169,6 +169,7 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
     const productionOrderId = correlated?.productionOrders.values().next().value;
     const productionOrder = projection?.productionOrders.find((po) => po.id === productionOrderId);
     const machineDetails = getMachineDocumentation(cellNode.machines[0].name);
+
     //--------------------------------------------------------------------------
     // Memos
     const outs = useMemo(() => {
@@ -182,15 +183,7 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
         return (
             productionOrder &&
             operation &&
-            operationDowntime && (
-                <CellIncident
-                    cell={cellNode}
-                    downtimeEvent={operationDowntime}
-                    manufacturingOrder={productionOrder}
-                    operation={operation}
-                    machineDetails={machineDetails}
-                />
-            )
+            operationDowntime && <CellIncident cell={cellNode} downtimeEvent={operationDowntime} />
         );
     }, [cellNode, operationDowntime, productionOrder, operation, machineDetails]);
 

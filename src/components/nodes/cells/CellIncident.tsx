@@ -1,60 +1,43 @@
 //------------------------------------------------------------------------------
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, type MouseEvent as ReactMouseEvent } from "react";
 import { faAngleRight } from "@fortawesome/sharp-regular-svg-icons";
 import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
+import { Router } from "@/core/Router";
 import Button from "@/components/common/Button";
 import { PanelTitle } from "@/components/common/panel";
 
 //------------------------------------------------------------------------------
-import { ScadaEventsModal } from "@/components/scadaEvents/ScadaEventsModal";
-
-//------------------------------------------------------------------------------
 import type { CellNode } from "@/content/type";
-import { type MachineDetails } from "@/content/machine";
-import type { ProjectedDowntime, ProjectedOperation, ProjectedProductionOrder } from "@/core/Projection";
+import type { ProjectedDowntime } from "@/core/Projection";
+import { useFocusStore } from "@/store/useFocusStore";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const CellIncident = ({
-    cell,
-    downtimeEvent,
-    manufacturingOrder,
-    operation,
-    machineDetails,
-}: {
-    cell: CellNode;
-    downtimeEvent: ProjectedDowntime;
-    manufacturingOrder: ProjectedProductionOrder;
-    operation: ProjectedOperation;
-    machineDetails: MachineDetails;
-}) => {
-    const [scadaModalOpen, setScadaModalOpen] = useState(false);
+export const CellIncident = ({ cell, downtimeEvent }: { cell: CellNode; downtimeEvent: ProjectedDowntime }) => {
+    //--------------------------------------------------------------------------
+    // Store
+    const { setSelected } = useFocusStore();
 
-    const reportData = useMemo(
-        () => ({
-            downtime: downtimeEvent,
-            machineName: machineDetails.name,
-            workCenterId: cell.hash,
-            productionOrder: manufacturingOrder,
-            operation,
-        }),
-        [cell.hash, downtimeEvent, machineDetails.name, manufacturingOrder, operation],
-    );
-
-    const openScadaModal = useCallback(() => setScadaModalOpen(true), []);
+    //--------------------------------------------------------------------------
+    // Handlers
+    const openScadaModal = useCallback((e: ReactMouseEvent) => {
+        e.stopPropagation();
+        setSelected({ type: "downtime", id: downtimeEvent.id });
+        const { factorySlug, nodeSlug } = Router.currentRoute();
+        if (factorySlug)
+            Router.replace({
+                factorySlug,
+                nodeSlug: cell.hash || nodeSlug,
+                itemSlug: downtimeEvent.id,
+            });
+    }, []);
 
     //--------------------------------------------------------------------------
     return (
         <>
-            <ScadaEventsModal
-                open={scadaModalOpen}
-                onClose={() => setScadaModalOpen(false)}
-                reportData={reportData}
-                machineDetails={machineDetails}
-            />
             <PanelTitle className="capitalize text-warning-100">
                 <Icon
                     icon={faExclamationTriangle}
