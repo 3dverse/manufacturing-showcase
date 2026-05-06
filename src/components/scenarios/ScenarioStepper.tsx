@@ -63,21 +63,21 @@ export const ScenarioStepper = () => {
     //--------------------------------------------------------------------------
     const popoverPosition = messageTargetPosition
         ? {
-              x: clamp(
-                  messageTargetPosition.x - overlayBounds.x + (activeStep?.message?.offset?.x ?? 0),
-                  POPOVER_MARGIN,
-                  Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
-              ),
-              y: clamp(
-                  messageTargetPosition.y - overlayBounds.y + (activeStep?.message?.offset?.y ?? 0),
-                  POPOVER_MARGIN,
-                  Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
-              ),
-          }
+            x: clamp(
+                messageTargetPosition.x - overlayBounds.x + (activeStep?.message?.offset?.x ?? 0),
+                POPOVER_MARGIN,
+                Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
+            ),
+            y: clamp(
+                messageTargetPosition.y - overlayBounds.y + (activeStep?.message?.offset?.y ?? 0),
+                POPOVER_MARGIN,
+                Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
+            ),
+        }
         : {
-              x: Math.max(POPOVER_MARGIN, (overlayBounds.width - popoverSize.width) / 2),
-              y: Math.max(POPOVER_MARGIN, (overlayBounds.height - popoverSize.height) / 2),
-          };
+            x: Math.max(POPOVER_MARGIN, (overlayBounds.width - popoverSize.width) / 2),
+            y: Math.max(POPOVER_MARGIN, (overlayBounds.height - popoverSize.height) / 2),
+        };
 
     //--------------------------------------------------------------------------
     const updateOverlayMeasurements = useCallback(() => {
@@ -156,11 +156,11 @@ export const ScenarioStepper = () => {
     //--------------------------------------------------------------------------
     if (!activeScenarioId || !activeStep) return null;
     return createPortal(
-        <div ref={overlayRef} className="absolute inset-0 z-200">
+        <div ref={overlayRef} className="absolute inset-0 pointer-events-none z-200">
             <div
                 aria-hidden
                 className={cn(
-                    "fixed -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_9999px_color-mix(in_oklch,var(--color-slate-1000)_15%,transparent)] pointer-events-auto starting:opacity-0 starting:scale-200 scale-100 duration-400",
+                    "fixed -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_9999px_color-mix(in_oklch,var(--color-slate-1000)_15%,transparent)] starting:opacity-0 starting:scale-200 scale-100 duration-400",
                     shroudPositionPending ? "opacity-0 transition-none" : "opacity-100 transition-all",
                 )}
                 style={{
@@ -175,6 +175,7 @@ export const ScenarioStepper = () => {
                 data-theme="dark"
                 className={cn(
                     "absolute w-[min(calc(100vw-2rem),24rem)] rounded-lg bg-slate-0 px-5 pt-3 pb-4 text-default text-pretty shadow-xl starting:opacity-0 starting:translate-y-2 translate-y-0 duration-400",
+                    "pointer-events-auto",
                     messagePositionPending
                         ? "opacity-0 pointer-events-none transition-none"
                         : "opacity-100 transition-all",

@@ -38,10 +38,10 @@ export const ScenariosWheel = ({ isOpen = false, onSelect }: { isOpen?: boolean;
                             "relative flex justify-center items-center h-full text-xs text-slate-200 border transition-colors duration-300",
                             "before:content-[''] before:absolute before:bottom-0 before:w-[160%] before:h-[160%] before:transition-colors before:duration-300",
                             index === 0 &&
-                                "pb-12 -rotate-30 translate-x-1/2 origin-bottom-right before:right-0 [&_p]:-rotate-20",
+                            "pb-12 -rotate-30 translate-x-1/2 origin-bottom-right before:right-0 [&_p]:-rotate-20",
                             index === 1 && "pb-12 -z-10",
                             index === 2 &&
-                                "pb-12 rotate-30 -translate-x-1/2 origin-bottom-left before:left-0 [&_p]:rotate-20",
+                            "pb-12 rotate-30 -translate-x-1/2 origin-bottom-left before:left-0 [&_p]:rotate-20",
                             scenario.disabled
                                 ? "cursor-not-allowed before:bg-slate-600 text-slate-400"
                                 : "cursor-pointer before:bg-guidance-600 hover:before:bg-guidance",
@@ -50,7 +50,7 @@ export const ScenariosWheel = ({ isOpen = false, onSelect }: { isOpen?: boolean;
                         onClick={() => toggleScenario(scenario.id)}
                         disabled={scenario.disabled}
                     >
-                        <p className="relative z-10">{scenario.title}</p>
+                        <p className="relative z-10 max-w-[10ch]">{scenario.title}</p>
                     </button>
                 ))}
             </div>
