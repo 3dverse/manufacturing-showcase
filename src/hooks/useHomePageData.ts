@@ -18,6 +18,7 @@ export type HomeDowntimeEvent = {
     type: "stop" | "maintenance";
     label: string;
     details: string;
+    reasonCode: string;
     startMs: number;
     endMs: number;
 };
@@ -159,6 +160,7 @@ export function useHomePageData(siteId: string): {
                         type: "stop" as const,
                         label: dt.workCenterId,
                         details: dt.reasonDescription ?? dt.reasonCode,
+                        reasonCode: dt.reasonCode,
                         startMs: dt.startedAt * 1000,
                         endMs: (dt.projected.isOngoing ? refTs : dt.endedAt!) * 1000,
                     })),

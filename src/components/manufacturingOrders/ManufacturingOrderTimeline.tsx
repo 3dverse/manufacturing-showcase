@@ -226,8 +226,13 @@ export const ManufacturingOrderTimeline = ({
                         <Tooltip
                             content={
                                 <div className="flex flex-col gap-1 px-1.5 py-1">
-                                    <p className="text-xs text-muted capitalize">{wo.workType.replace("_", " ")}</p>
-                                    <p className="text-sm font-medium">{wo.workOrderNumber}</p>
+                                    <p className="text-sm font-medium">
+                                        Maintenance{" "}
+                                        <span className="font-normal text-muted capitalize text-xs">
+                                            {wo.workType.replace("_", " ")}
+                                        </span>
+                                    </p>
+                                    <p className="text-sm text-muted">{wo.workOrderNumber}</p>
                                     {wo.projected.isOverdue && <p className="text-xs text-warning">Overdue</p>}
                                     <p className="text-xs text-muted">
                                         {new Date((wo.actualStart ?? wo.scheduledStart) * 1000).toLocaleString(
@@ -348,9 +353,11 @@ const TimelineEventOverlay = ({ eventColumn }: TimelineEventOverlayProps) => {
             <Tooltip
                 content={
                     <div className="flex flex-col gap-1 px-1.5 py-1">
-                        <p className="text-xs text-muted">{eventTypeText}</p>
-                        <p className="text-sm font-medium">{eventColumn.machine}</p>
-                        <p className="text-sm ">{eventColumn.details}</p>
+                        <p className="text-sm font-medium">
+                            {eventTypeText}{" "}
+                            <span className="font-normal text-muted text-xs">{eventColumn.machine}</span>
+                        </p>
+                        <p className="text-sm text-muted">{eventColumn.details}</p>
                         <p className="text-xs text-muted">
                             {formattedStart} → {formattedEnd} ({durationText})
                         </p>

@@ -31,7 +31,6 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
     //--------------------------------------------------------------------------
     // Refs
     const viewerInitialized = useRef<boolean>(false);
-    const initialNodeSlug = useRef<string>(undefined);
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -71,27 +70,19 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
     //--------------------------------------------------------------------------
     const routeChangeHandler = useCallback(
         (event: RouteChangeEvent) => {
-            switch (event.source) {
-                case "init":
-                    if (event.route.factorySlug === factory.slug) {
-                        initialNodeSlug.current = event.route.nodeSlug;
-                    }
-                    break;
-                case "replace":
-                case "pop":
-                    if (event.route?.nodeSlug) {
-                        const nodeSlug = event.route.nodeSlug;
-                        const node = nodeList.find((n) => n.hash.startsWith(nodeSlug)) || nodeGraph;
-                        _setSelectedNode(node);
-                        if (node) cameraHandler(node);
-                    } else if (nodeGraph) {
-                        _setSelectedNode(nodeGraph);
-                        cameraHandler(nodeGraph);
-                    }
-                    break;
+            if (event.source !== "replace" && event.source !== "pop") return;
+
+            if (event.route?.nodeSlug) {
+                const nodeSlug = event.route.nodeSlug;
+                const node = nodeList.find((n) => n.hash.startsWith(nodeSlug)) || nodeGraph;
+                _setSelectedNode(node);
+                if (node) cameraHandler(node);
+            } else if (nodeGraph) {
+                _setSelectedNode(nodeGraph);
+                cameraHandler(nodeGraph);
             }
         },
-        [factory.slug, nodeGraph, nodeList, cameraHandler],
+        [nodeGraph, nodeList, cameraHandler],
     );
 
     //--------------------------------------------------------------------------
@@ -111,10 +102,10 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
                 cameraEntity
             ) {
                 viewerInitialized.current = true;
+                const route = Router.currentRoute();
                 let node: SceneGraphNode = nodeGraph;
-                if (initialNodeSlug.current) {
-                    const nodeSlug = initialNodeSlug.current;
-                    node = nodeList.find((n) => n.hash.startsWith(nodeSlug)) || nodeGraph;
+                if (route.factorySlug === factory.slug && route.nodeSlug) {
+                    node = nodeList.find((n) => n.hash.startsWith(route.nodeSlug!)) || nodeGraph;
                 }
                 _setSelectedNode(node);
                 cameraHandler(node);

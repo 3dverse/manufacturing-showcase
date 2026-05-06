@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 
 //------------------------------------------------------------------------------
 import { FactoriesContext } from "@/contexts/FactoriesContext";
@@ -12,6 +12,7 @@ import { ClientProductLogo } from "@/components/common/icons/ClientProductLogo";
 //------------------------------------------------------------------------------
 import { DevMode } from "@/content/3dverse";
 import { useTimelineStore } from "@/store/useTimelineStore";
+import type { StoppageEvent } from "@/components/scadaEvents/StoppageCallout";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -19,12 +20,25 @@ export default function HomePage() {
     //--------------------------------------------------------------------------
     const { factories } = useContext(FactoriesContext);
     const loadSpan = useTimelineStore((s) => s.loadSpan);
+    const [stoppages, setStoppages] = useState<Map<string, StoppageEvent | null>>(new Map());
 
     useEffect(() => {
         for (const factory of factories) {
             if (factory.enabled) loadSpan(factory.scene_id);
         }
     }, [factories, loadSpan]);
+
+    const makeStoppageHandler = useCallback(
+        (siteId: string) => (stoppage: StoppageEvent | null) => {
+            setStoppages((prev) => {
+                if (prev.get(siteId) === stoppage) return prev;
+                const next = new Map(prev);
+                next.set(siteId, stoppage);
+                return next;
+            });
+        },
+        [],
+    );
 
     //--------------------------------------------------------------------------
     // Render
@@ -58,10 +72,13 @@ export default function HomePage() {
                             key={factoryItem.slug}
                             data-scenario={index === 0 ? "corrective-maintenance-step-1" : undefined}
                         >
-                            <FactoryItem factoryItem={factoryItem} />
+                            <FactoryItem factoryItem={factoryItem} stoppage={stoppages.get(factoryItem.scene_id)} />
                             {factoryItem.enabled && (
                                 <div data-scenario="tour-guide-1" className="bg-slate-50 -mt-2 pt-5 p-3 rounded-b-md">
-                                    <ManufacturingOrderPlanning siteId={factoryItem.scene_id} />
+                                    <ManufacturingOrderPlanning
+                                        siteId={factoryItem.scene_id}
+                                        onActiveStoppage={makeStoppageHandler(factoryItem.scene_id)}
+                                    />
                                 </div>
                             )}
                         </li>

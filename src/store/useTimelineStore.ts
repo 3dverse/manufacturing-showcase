@@ -17,6 +17,8 @@ export type ZoomKey = "1D" | "1W" | "2W" | "1M" | "3M" | "6M";
 export type TimelineWindow = { kind: "zoom"; key: ZoomKey } | { kind: "custom"; from: number; to: number };
 
 interface TimelineStore {
+    nodeListBySiteId: Map<string, SceneGraphNode[]>;
+    setNodeList: (siteId: string, list: SceneGraphNode[]) => void;
     span: TimelineSpan | null;
     loadedKeys: Set<string>;
     isLoading: boolean;
@@ -60,6 +62,8 @@ const defaultWindow = spanWindow(Math.floor(Date.now() / 1000));
 
 //------------------------------------------------------------------------------
 export const useTimelineStore = create<TimelineStore>((set, get) => ({
+    nodeListBySiteId: new Map(),
+    setNodeList: (siteId, list) => set((s) => ({ nodeListBySiteId: new Map(s.nodeListBySiteId).set(siteId, list) })),
     span: null,
     loadedKeys: new Set<string>(),
     isLoading: false,

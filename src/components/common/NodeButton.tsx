@@ -4,21 +4,23 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 import { isBin } from "@/core/SceneGraph";
 
-type Props = {
-    nodeId: string | null | undefined;
-    className?: string;
-};
-
-export function NodeButton({ nodeId, className }: Props) {
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+export function NodeButton({ nodeId, className }: { nodeId: string | null | undefined; className?: string }) {
+    //--------------------------------------------------------------------------
+    // Context
     const { nodeList } = useContext(FactoryContext);
     const { setSelectedNode } = useContext(SelectionContext);
 
+    //--------------------------------------------------------------------------
+    // Memos
     const node = useMemo(() => (nodeId ? (nodeList.find((n) => n.hash === nodeId) ?? null) : null), [nodeList, nodeId]);
+    const label = useMemo(() => (node ? (isBin(node) ? `bin-${node.hash}` : node?.name) : undefined), [node]);
 
+    //--------------------------------------------------------------------------
+    // Render
     if (!nodeId) return null;
     if (!node) return <span className="text-xs">{nodeId}</span>;
-
-    const label = isBin(node) ? `bin-${node.hash}` : node.name;
 
     return (
         <button

@@ -1,4 +1,4 @@
-import { useContext, useMemo } from "react";
+import { useMemo } from "react";
 import { faMapMarkerAlt } from "@fortawesome/sharp-regular-svg-icons";
 
 //------------------------------------------------------------------------------
@@ -7,10 +7,10 @@ import { Triangle } from "@/components/common/icons/Triangle";
 import { BadgeOEE } from "@/components/common/BadgeOEE";
 import { KeyStatusIndicators } from "@/components/nodes/factory/StatusIndicators";
 import { ConnectedSystemsBadge } from "@/components/connectedSystems/ConnectedSystemsBadge";
-import { ScadaEventsCallout } from "@/components/scadaEvents/ScadaEventsCallout";
+import { StoppageCallout } from "@/components/scadaEvents/StoppageCallout";
+import type { StoppageEvent } from "@/components/scadaEvents/StoppageCallout";
 
 //------------------------------------------------------------------------------
-import { ScenarioContext } from "@/contexts/ScenariosContext";
 import { useFactoryItemOEE } from "@/hooks/useFactoryItemOEE";
 import { useNavigationStore } from "@/store/useNavigationStore";
 
@@ -23,13 +23,11 @@ import type { Factory } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
+export const FactoryItem = ({ factoryItem, stoppage }: { factoryItem: Factory; stoppage?: StoppageEvent | null }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const oee = useFactoryItemOEE(factoryItem.scene_id);
     const navigate = useNavigationStore((state) => state.navigate);
-    const { activeStep } = useContext(ScenarioContext);
-    const incident = activeStep?.message?.incident;
     const isMobile = useMediaQuery(MEDIA_QUERIES.MOBILE);
 
     //--------------------------------------------------------------------------
@@ -112,7 +110,14 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                             </div>
                         </div>
 
-                        {incident && <ScadaEventsCallout incident={incident} className="max-w-70" />}
+                        {stoppage && (
+                            <StoppageCallout
+                                event={stoppage}
+                                factorySlug={factoryItem.slug}
+                                siteId={factoryItem.scene_id}
+                                className="max-w-70"
+                            />
+                        )}
                     </div>
                 </div>
                 <div className="flex">

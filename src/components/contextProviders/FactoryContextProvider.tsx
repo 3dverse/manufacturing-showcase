@@ -32,6 +32,7 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
     //--------------------------------------------------------------------------
     // Store
     const loadSpan = useTimelineStore((s) => s.loadSpan);
+    const setNodeListInStore = useTimelineStore((s) => s.setNodeList);
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -40,6 +41,7 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
             .then(({ graph, list }) => {
                 setNodeGraph(graph);
                 setNodeList(list);
+                setNodeListInStore(factory.scene_id, list);
             })
             .catch(() => {
                 console.warn("error loading entities");
