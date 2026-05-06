@@ -39,6 +39,7 @@ export const ScenarioStepper = () => {
         activeSteps,
         shroudTargetPosition,
         messageTargetPosition,
+        isCameraSettled,
         prevStep,
         nextStep,
         clearActiveScenario,
@@ -62,21 +63,21 @@ export const ScenarioStepper = () => {
     //--------------------------------------------------------------------------
     const popoverPosition = messageTargetPosition
         ? {
-            x: clamp(
-                messageTargetPosition.x - overlayBounds.x + (activeStep?.message?.offset?.x ?? 0),
-                POPOVER_MARGIN,
-                Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
-            ),
-            y: clamp(
-                messageTargetPosition.y - overlayBounds.y + (activeStep?.message?.offset?.y ?? 0),
-                POPOVER_MARGIN,
-                Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
-            ),
-        }
+              x: clamp(
+                  messageTargetPosition.x - overlayBounds.x + (activeStep?.message?.offset?.x ?? 0),
+                  POPOVER_MARGIN,
+                  Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
+              ),
+              y: clamp(
+                  messageTargetPosition.y - overlayBounds.y + (activeStep?.message?.offset?.y ?? 0),
+                  POPOVER_MARGIN,
+                  Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
+              ),
+          }
         : {
-            x: Math.max(POPOVER_MARGIN, (overlayBounds.width - popoverSize.width) / 2),
-            y: Math.max(POPOVER_MARGIN, (overlayBounds.height - popoverSize.height) / 2),
-        };
+              x: Math.max(POPOVER_MARGIN, (overlayBounds.width - popoverSize.width) / 2),
+              y: Math.max(POPOVER_MARGIN, (overlayBounds.height - popoverSize.height) / 2),
+          };
 
     //--------------------------------------------------------------------------
     const updateOverlayMeasurements = useCallback(() => {
@@ -145,12 +146,23 @@ export const ScenarioStepper = () => {
     }, [isScenarioAutoplaying, activeStep, nextStep]);
 
     //--------------------------------------------------------------------------
+    const shroudPositionPending =
+        (!!activeStep?.shroud?.waitForCamera && !isCameraSettled) ||
+        (!!activeStep?.shroud?.selector && !shroudTargetPosition);
+    const messagePositionPending =
+        (!!(activeStep?.shroud?.waitForCamera || activeStep?.message?.waitForCamera) && !isCameraSettled) ||
+        (!!(activeStep?.shroud?.selector || activeStep?.message?.selector) && !messageTargetPosition);
+
+    //--------------------------------------------------------------------------
     if (!activeScenarioId || !activeStep) return null;
     return createPortal(
         <div ref={overlayRef} className="absolute inset-0 z-200">
             <div
                 aria-hidden
-                className="fixed -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_9999px_color-mix(in_oklch,var(--color-slate-1000)_15%,transparent)] pointer-events-auto starting:opacity-0 opacity-100 starting:scale-200 scale-100 transition-all duration-400"
+                className={cn(
+                    "fixed -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_9999px_color-mix(in_oklch,var(--color-slate-1000)_15%,transparent)] pointer-events-auto starting:opacity-0 starting:scale-200 scale-100 duration-400",
+                    shroudPositionPending ? "opacity-0 transition-none" : "opacity-100 transition-all",
+                )}
                 style={{
                     left: shroudTargetPosition?.x ?? 0,
                     top: shroudTargetPosition?.y ?? 0,
@@ -161,7 +173,12 @@ export const ScenarioStepper = () => {
             <section
                 ref={popoverRef}
                 data-theme="dark"
-                className="absolute w-[min(calc(100vw-2rem),24rem)] rounded-lg bg-slate-0 px-5 pt-3 pb-4 text-default text-pretty shadow-xl starting:opacity-0 starting:translate-y-2 opacity-100 translate-y-0 transition-all duration-400"
+                className={cn(
+                    "absolute w-[min(calc(100vw-2rem),24rem)] rounded-lg bg-slate-0 px-5 pt-3 pb-4 text-default text-pretty shadow-xl starting:opacity-0 starting:translate-y-2 translate-y-0 duration-400",
+                    messagePositionPending
+                        ? "opacity-0 pointer-events-none transition-none"
+                        : "opacity-100 transition-all",
+                )}
                 style={
                     {
                         left: `${popoverPosition.x}px`,
@@ -171,7 +188,10 @@ export const ScenarioStepper = () => {
             >
                 <div className="flex justify-between items-center mb-2">
                     <p className="grow text-2xs uppercase tracking-wide text-guidance-600">
-                        {activeScenario?.title} <span className="ml-1 tracking-[.5ex]">{activeStepIndex + 1}/{visibleSteps.length}</span>
+                        {activeScenario?.title}{" "}
+                        <span className="ml-1 tracking-[.5ex]">
+                            {activeStepIndex + 1}/{visibleSteps.length}
+                        </span>
                     </p>
                     <Button
                         variant="ghost"
@@ -213,7 +233,10 @@ export const ScenarioStepper = () => {
                             type="button"
                             colorScheme="guidance"
                             size="sm"
-                            className={cn("relative w-full overflow-hidden text-left", isLastStep && hasEnabledNextScenario && "justify-start")}
+                            className={cn(
+                                "relative w-full overflow-hidden text-left",
+                                isLastStep && hasEnabledNextScenario && "justify-start",
+                            )}
                             onClick={nextStep}
                         >
                             <span

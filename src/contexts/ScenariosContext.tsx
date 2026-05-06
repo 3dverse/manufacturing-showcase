@@ -38,6 +38,7 @@ export type ScenarioContextType = {
     scenarioActivatedAt: number | undefined;
     shroudTargetPosition: { x: number; y: number } | undefined;
     messageTargetPosition: { x: number; y: number } | undefined;
+    isCameraSettled: boolean;
     isScenarioAutoplaying: boolean;
     setScenarioAutoplaying: Dispatch<SetStateAction<boolean>>;
     setGraphData: (scenarioId: string, data: ScenarioGraphData | null) => void;
@@ -113,6 +114,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
     //--------------------------------------------------------------------------
     // Refs
     const cameraHasSettled = useRef<boolean>(true);
+    const [isCameraSettled, setIsCameraSettled] = useState(true);
     const focusResolvedAtRef = useRef<number | null>(null);
     const activeStepIdRef = useRef<string | null>(null);
 
@@ -192,10 +194,19 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
     // Effects
     useLayoutEffect(() => {
         updateTargetPositions();
-        const hasSelector = !!(activeStep?.shroud?.selector || activeStep?.message?.selector);
-        if (!hasSelector) return;
-        const id = setTimeout(updateTargetPositions, 1000);
-        return () => clearTimeout(id);
+
+        const selectors = [activeStep?.shroud?.selector, activeStep?.message?.selector].filter(Boolean) as string[];
+        if (selectors.length === 0) return;
+        if (selectors.every((s) => document.querySelector(s))) return;
+
+        const observer = new MutationObserver(() => {
+            if (selectors.every((s) => document.querySelector(s))) {
+                updateTargetPositions();
+                observer.disconnect();
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        return () => observer.disconnect();
     }, [updateTargetPositions, activeStep?.shroud?.selector, activeStep?.message?.selector]);
 
     //--------------------------------------------------------------------------
@@ -210,9 +221,11 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
     useEffect(() => {
         const cameraMovingHandler = () => {
             cameraHasSettled.current = false;
+            setIsCameraSettled(false);
         };
         const cameraSettledHandler = () => {
             cameraHasSettled.current = true;
+            setIsCameraSettled(true);
             updateTargetPositions();
         };
         const repositionHanlder = () => {
@@ -301,6 +314,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
             scenarioActivatedAt,
             shroudTargetPosition,
             messageTargetPosition,
+            isCameraSettled,
             isScenarioAutoplaying,
             setScenarioAutoplaying,
             setGraphData,
@@ -319,6 +333,7 @@ export const ScenarioContextProvider = ({ children }: { children: ReactNode }) =
             scenarioActivatedAt,
             shroudTargetPosition,
             messageTargetPosition,
+            isCameraSettled,
             isScenarioAutoplaying,
             setGraphData,
             activateScenario,
