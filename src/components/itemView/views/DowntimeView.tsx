@@ -1,20 +1,52 @@
+//------------------------------------------------------------------------------
+import { useContext, useMemo } from "react";
+
+//------------------------------------------------------------------------------
 import { Field, OngoingBadge, OverdueBadge, Divider } from "@/components/correlation/SectionWrapper";
 import { ViewSection, MiniProgress } from "@/components/itemView/ViewSection";
 import { NodeButton } from "@/components/common/NodeButton";
+
+//------------------------------------------------------------------------------
+import { FactoryContext } from "@/contexts/FactoryContext";
+
+//------------------------------------------------------------------------------
 import { fmtTs, fmtDuration } from "@/utils/helpers-time";
+
+//------------------------------------------------------------------------------
 import type { ProjectedDowntime } from "@/core/Projection";
 import type { ViewProps } from "@/components/itemView/ItemViewContent";
+import type { CellNode, MachineNode } from "@/content/type";
+import { getDowntimeDocumentation, getMachineDocumentation } from "@/content/machine";
+import { fmtHistoryDate, resolveVideoPresentation } from "@/components/scadaEvents/modal/format";
 
+//------------------------------------------------------------------------------
 type Props = ViewProps<ProjectedDowntime>;
 
+//------------------------------------------------------------------------------
 export function DowntimeView({ item, projection, correlated }: Props) {
+    //--------------------------------------------------------------------------
+    // Context
+    const { nodeList } = useContext(FactoryContext);
+
+    //--------------------------------------------------------------------------
     if (!item) return <p className="text-sm text-muted text-center py-6">Not in current scope.</p>;
 
+    //--------------------------------------------------------------------------
+    // Memos
     const productionOrder = correlated
         ? projection.productionOrders.find((po) => correlated.productionOrders.has(po.id))
         : null;
     const salesOrder = correlated ? projection.salesOrders.find((so) => correlated.salesOrders.has(so.id)) : null;
 
+    const { workCenterId } = item;
+    const node = useMemo(() => (workCenterId ? (nodeList.find((n) => n.hash === workCenterId) ?? null) : null), [nodeList, workCenterId]);
+    const machine = (node as CellNode)?.machines[0] ?? null;
+    const downtimeDocs = useMemo(
+        () => machine ? getDowntimeDocumentation(getMachineDocumentation(machine.name), item.reasonCode) : null,
+        [machine, item.reasonCode],
+    );
+
+    //--------------------------------------------------------------------------
     return (
         <div data-scenario="corrective-maintenance-step-4" className="flex flex-col gap-4">
             <div>
@@ -22,6 +54,8 @@ export function DowntimeView({ item, projection, correlated }: Props) {
                     <p className="text-xl font-semibold">{item.reasonDescription}</p>
                     {item.projected.isOngoing && <OngoingBadge />}
                 </div>
+                {downtimeDocs?.video && <><Divider /><Video video={downtimeDocs.video} /></>}
+                {downtimeDocs?.history && <><Divider /><History history={downtimeDocs.history} /></>}
                 <Divider />
                 <div className="space-y-1">
                     <Field label="Work Center" value={<NodeButton nodeId={item.workCenterId} />} />
@@ -57,5 +91,75 @@ export function DowntimeView({ item, projection, correlated }: Props) {
                 </ViewSection>
             )}
         </div>
+    );
+}
+
+
+//------------------------------------------------------------------------------
+const Video = ({ video }: { video: string }) => {
+
+    //--------------------------------------------------------------------------
+    // Memos
+    const videoPresentation = useMemo(
+        () => (video ? resolveVideoPresentation(video) : null),
+        [video],
+    );
+
+    //--------------------------------------------------------------------------
+    return (
+        <section className="pb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">How to fix</h3>
+            {videoPresentation &&
+                (videoPresentation.kind === "youtube" ? (
+                    <div className="aspect-video w-full overflow-hidden rounded-md bg-slate-900">
+                        <iframe
+                            title={`Reference video`}
+                            src={videoPresentation.embedUrl}
+                            className="size-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        />
+                    </div>
+                ) : videoPresentation.kind === "direct" ? (
+                    <div className="aspect-video w-full overflow-hidden rounded-md bg-slate-900">
+                        <video src={videoPresentation.src} controls className="size-full object-contain" />
+                    </div>
+                ) : (
+                    <a
+                        href={videoPresentation.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary-600 underline underline-offset-2"
+                    >
+                        Open reference video
+                    </a>
+                ))}
+        </section>
+    );
+};
+
+//------------------------------------------------------------------------------
+export function History({ history }: { history: { date: Date; description: string; author: string }[] }) {
+    return (
+        <section className="pb-4">
+            {history.length > 0 && (
+                <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">History</h3>
+                    <ul className="flex flex-col">
+                        {history.map((entry, index) => (
+                            <li
+                                key={`history-${index}`}
+                                className="first:rounded-t-md last:rounded-b-md border-x border-t last:border-b border-slate-200/70 bg-slate-50/80 px-3 py-2"
+                            >
+                                <p className="text-[11px] text-muted">
+                                    {fmtHistoryDate(entry.date)} · {entry.author}
+                                </p>
+                                <p className="text-xs text-slate-800 mt-1">{entry.description}</p>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </section>
     );
 }

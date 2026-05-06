@@ -172,15 +172,14 @@ export const correctiveMaintenance: ScenarioDefinition = {
                     title: "Downtime Details",
                     description: (
                         <p>
-                            The downtime record provides full context
-                            {f?.downtime.reasonCode && (
+                            The downtime record provides full context linked to
+                            {/* {f?.downtime.reasonCode && (
                                 <>
                                     {" — "}reason code <strong>{f.downtime.reasonCode}</strong>
                                 </>
-                            )}
-                            linked to
+                            )} */}
                             {f?.orderNumber && (
-                                <><br /><strong>{f.orderNumber}</strong></>
+                                <strong>{f.orderNumber}.</strong>
                             )}
                             Start time, duration, and work center are all captured.
                         </p>

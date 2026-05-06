@@ -42,8 +42,7 @@ function getFocusedLabel(focused: FocusedEntity, projection: AsOfProjection): st
             return `Operation${e ? ` — ${e.operationCode}` : ""}`;
         }
         case "downtime": {
-            const e = projection.downtimeEvents.find((d) => d.id === focused.id);
-            return `Downtime${e ? ` — ${e.reasonCode}` : ""}`;
+            return `Downtime event`;
         }
         case "workOrder": {
             const e = projection.eamWorkOrders.find((w) => w.id === focused.id);

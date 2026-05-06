@@ -11,7 +11,7 @@ export type MachineDetails = {
     }[];
     downtime_documentations?: Record<string, {
         video: string;
-        history: { date: Date; description: string; author: string }[];
+        history?: { date: Date; description: string; author: string }[];
     }>;
 };
 
@@ -60,6 +60,12 @@ export const machinesDocumentation: MachineDetails[] = [
         image: "",
         technical_documentations: ["https://www.sekiguchi-mfg.co.jp/en/press_machine/ssd1000-dsf/"],
         downtime_documentations: {
+            "MATERIAL_JAM": {
+                video: "https://www.youtube.com/watch?v=3qzVjBSnIGA",
+            },
+            "POWER_FLUCTUATION": {
+                video: "https://www.youtube.com/watch?v=3qzVjBSnIGA",
+            },
             "COOLANT_LEAK": {
                 video: "https://www.youtube.com/watch?v=3qzVjBSnIGA",
                 history: [
@@ -89,6 +95,12 @@ export const machinesDocumentation: MachineDetails[] = [
         image: "",
         technical_documentations: ["https://yantradesign.co.in/cnc-drilling-machine.php"],
         downtime_documentations: {
+            "MATERIAL_JAM": {
+                video: "https://www.youtube.com/watch?v=3qzVjBSnIGA",
+            },
+            "POWER_FLUCTUATION": {
+                video: "https://www.youtube.com/watch?v=3qzVjBSnIGA",
+            },
             "COOLANT_LEAK": {
                 video: "https://www.youtube.com/watch?v=3qzVjBSnIGA",
                 history: [
