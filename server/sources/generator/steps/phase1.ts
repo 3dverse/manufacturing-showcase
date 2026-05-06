@@ -146,14 +146,14 @@ const RAW_MATERIALS = [
 ];
 
 const CUSTOMER_POOL = [
-    { name: "Apex Dynamics Ltd.", code: "CUST-001", country: "USA", paymentTermsDays: 30 },
-    { name: "Meridian Industrial Corp.", code: "CUST-002", country: "USA", paymentTermsDays: 30 },
-    { name: "Vortex Systems Inc.", code: "CUST-003", country: "Canada", paymentTermsDays: 45 },
-    { name: "Titan Engineering GmbH", code: "CUST-004", country: "Germany", paymentTermsDays: 60 },
-    { name: "Nova Automation S.A.", code: "CUST-005", country: "France", paymentTermsDays: 60 },
-    { name: "Crestline Manufacturing LLC", code: "CUST-006", country: "USA", paymentTermsDays: 30 },
-    { name: "Orbital Precision Inc.", code: "CUST-007", country: "USA", paymentTermsDays: 45 },
-    { name: "Summit Industrial Group", code: "CUST-008", country: "Canada", paymentTermsDays: 30 },
+    { name: "Apex Ltd.", code: "CUST-001", country: "USA", paymentTermsDays: 30 },
+    { name: "Meridian Corp.", code: "CUST-002", country: "USA", paymentTermsDays: 30 },
+    { name: "Vortex Inc.", code: "CUST-003", country: "Canada", paymentTermsDays: 45 },
+    { name: "Titan GmbH", code: "CUST-004", country: "Germany", paymentTermsDays: 60 },
+    { name: "Nova S.A.", code: "CUST-005", country: "France", paymentTermsDays: 60 },
+    { name: "Crestline LLC", code: "CUST-006", country: "USA", paymentTermsDays: 30 },
+    { name: "Orbital Inc.", code: "CUST-007", country: "USA", paymentTermsDays: 45 },
+    { name: "Summit Group", code: "CUST-008", country: "Canada", paymentTermsDays: 30 },
 ];
 
 const SUPPLIER_POOL = [

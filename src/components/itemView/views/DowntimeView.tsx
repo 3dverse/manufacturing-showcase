@@ -5,9 +5,13 @@ import { useContext, useMemo } from "react";
 import { Field, OngoingBadge, OverdueBadge, Divider } from "@/components/correlation/SectionWrapper";
 import { ViewSection, MiniProgress } from "@/components/itemView/ViewSection";
 import { NodeButton } from "@/components/common/NodeButton";
+import { fmtHistoryDate, resolveVideoPresentation } from "@/components/scadaEvents/modal/format";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
+
+//------------------------------------------------------------------------------
+import { getDowntimeDocumentation, getMachineDocumentation } from "@/content/machine";
 
 //------------------------------------------------------------------------------
 import { fmtTs, fmtDuration } from "@/utils/helpers-time";
@@ -15,9 +19,7 @@ import { fmtTs, fmtDuration } from "@/utils/helpers-time";
 //------------------------------------------------------------------------------
 import type { ProjectedDowntime } from "@/core/Projection";
 import type { ViewProps } from "@/components/itemView/ItemViewContent";
-import type { CellNode, MachineNode } from "@/content/type";
-import { getDowntimeDocumentation, getMachineDocumentation } from "@/content/machine";
-import { fmtHistoryDate, resolveVideoPresentation } from "@/components/scadaEvents/modal/format";
+import type { CellNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 type Props = ViewProps<ProjectedDowntime>;
@@ -29,23 +31,22 @@ export function DowntimeView({ item, projection, correlated }: Props) {
     const { nodeList } = useContext(FactoryContext);
 
     //--------------------------------------------------------------------------
-    if (!item) return <p className="text-sm text-muted text-center py-6">Not in current scope.</p>;
-
-    //--------------------------------------------------------------------------
     // Memos
     const productionOrder = correlated
         ? projection.productionOrders.find((po) => correlated.productionOrders.has(po.id))
         : null;
     const salesOrder = correlated ? projection.salesOrders.find((so) => correlated.salesOrders.has(so.id)) : null;
 
-    const { workCenterId } = item;
-    const node = useMemo(() => (workCenterId ? (nodeList.find((n) => n.hash === workCenterId) ?? null) : null), [nodeList, workCenterId]);
+    const { workCenterId } = item ?? {};
+    const node = useMemo(() => nodeList.find((n) => n.hash === workCenterId), [nodeList, workCenterId]);
     const machine = (node as CellNode)?.machines[0] ?? null;
     const downtimeDocs = useMemo(
-        () => machine ? getDowntimeDocumentation(getMachineDocumentation(machine.name), item.reasonCode) : null,
-        [machine, item.reasonCode],
+        () => getDowntimeDocumentation(getMachineDocumentation(machine.name), item?.reasonCode ?? ""),
+        [machine, item],
     );
 
+    //--------------------------------------------------------------------------
+    if (!item) return <p className="text-sm text-muted text-center py-6">Not in current scope.</p>;
     //--------------------------------------------------------------------------
     return (
         <div data-scenario="corrective-maintenance-step-4" className="flex flex-col gap-4">
@@ -54,8 +55,18 @@ export function DowntimeView({ item, projection, correlated }: Props) {
                     <p className="text-xl font-semibold">{item.reasonDescription}</p>
                     {item.projected.isOngoing && <OngoingBadge />}
                 </div>
-                {downtimeDocs?.video && <><Divider /><Video video={downtimeDocs.video} /></>}
-                {downtimeDocs?.history && <><Divider /><History history={downtimeDocs.history} /></>}
+                {downtimeDocs?.video && (
+                    <>
+                        <Divider />
+                        <Video video={downtimeDocs.video} />
+                    </>
+                )}
+                {downtimeDocs?.history && (
+                    <>
+                        <Divider />
+                        <History history={downtimeDocs.history} />
+                    </>
+                )}
                 <Divider />
                 <div className="space-y-1">
                     <Field label="Work Center" value={<NodeButton nodeId={item.workCenterId} />} />
@@ -94,16 +105,11 @@ export function DowntimeView({ item, projection, correlated }: Props) {
     );
 }
 
-
 //------------------------------------------------------------------------------
 const Video = ({ video }: { video: string }) => {
-
     //--------------------------------------------------------------------------
     // Memos
-    const videoPresentation = useMemo(
-        () => (video ? resolveVideoPresentation(video) : null),
-        [video],
-    );
+    const videoPresentation = useMemo(() => (video ? resolveVideoPresentation(video) : null), [video]);
 
     //--------------------------------------------------------------------------
     return (

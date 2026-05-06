@@ -569,7 +569,9 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
                 <div className="space-y-1.5">
                     <div className="font-semibold text-warning-400">
                         {dt.reasonCode}
-                        {dt.projected.isOngoing && <span className="ml-1.5 text-[10px] text-warning-400/80">ongoing</span>}
+                        {dt.projected.isOngoing && (
+                            <span className="ml-1.5 text-[10px] text-warning-400/80">ongoing</span>
+                        )}
                     </div>
                     {dt.reasonDescription && <div className="text-slate-400 text-[11px]">{dt.reasonDescription}</div>}
                     <div>
@@ -971,7 +973,7 @@ export function Timeline() {
                 <div className="flex grow">
                     {/* Label column */}
                     <div
-                        className="shrink-0 w-24 border-r border-slate-200/30 flex flex-col"
+                        className="shrink-0 w-30 border-r border-slate-200/30 flex flex-col"
                         style={{ paddingTop: AXIS_H + ROW_GAP }}
                     >
                         {stories.map((story) => (

@@ -10,7 +10,7 @@ type Props = {
 export function ScadaReferenceDocumentationSection({ reasonCode, videoPresentation }: Props) {
     return (
         <section className="pb-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Video solution</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">How to fix</h3>
             {videoPresentation &&
                 (videoPresentation.kind === "youtube" ? (
                     <div className="aspect-video w-full overflow-hidden rounded-md bg-slate-900">
