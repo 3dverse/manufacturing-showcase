@@ -180,12 +180,8 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
 
     //--------------------------------------------------------------------------
     const incident = useMemo(() => {
-        return (
-            productionOrder &&
-            operation &&
-            operationDowntime && <CellIncident cell={cellNode} downtimeEvent={operationDowntime} />
-        );
-    }, [cellNode, operationDowntime, productionOrder, operation, machineDetails]);
+        return operationDowntime && <CellIncident downtimeEvent={operationDowntime} />;
+    }, [cellNode, operationDowntime, machineDetails]);
 
     //--------------------------------------------------------------------------
     const extra = useMemo(() => {

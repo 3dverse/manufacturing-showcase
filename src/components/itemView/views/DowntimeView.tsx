@@ -40,6 +40,8 @@ export function DowntimeView({ item, projection, correlated }: Props) {
     const { workCenterId } = item ?? {};
     const node = useMemo(() => nodeList.find((n) => n.hash === workCenterId), [nodeList, workCenterId]);
     const machine = (node as CellNode)?.machines[0] ?? null;
+
+    //--------------------------------------------------------------------------
     const downtimeDocs = useMemo(
         () => getDowntimeDocumentation(getMachineDocumentation(machine.name), item?.reasonCode ?? ""),
         [machine, item],
@@ -81,7 +83,7 @@ export function DowntimeView({ item, projection, correlated }: Props) {
                     <div className="space-y-1">
                         <Field label="Order" value={productionOrder.orderNumber} />
                         <Field label="Item" value={productionOrder.itemCode} />
-                        <Field label="Location" value={productionOrder.locationId} />
+                        <Field label="Location" value={<NodeButton nodeId={productionOrder.locationId} />} />
                         <MiniProgress pct={productionOrder.projected.progressPercent} />
                     </div>
                 </ViewSection>

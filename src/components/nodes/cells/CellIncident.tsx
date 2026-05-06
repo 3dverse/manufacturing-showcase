@@ -10,27 +10,26 @@ import Button from "@/components/common/Button";
 import { PanelTitle } from "@/components/common/panel";
 
 //------------------------------------------------------------------------------
-import type { CellNode } from "@/content/type";
 import type { ProjectedDowntime } from "@/core/Projection";
 import { useFocusStore } from "@/store/useFocusStore";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const CellIncident = ({ cell, downtimeEvent }: { cell: CellNode; downtimeEvent: ProjectedDowntime }) => {
+export const CellIncident = ({ downtimeEvent }: { downtimeEvent: ProjectedDowntime }) => {
     //--------------------------------------------------------------------------
     // Store
     const { setSelected } = useFocusStore();
 
     //--------------------------------------------------------------------------
     // Handlers
-    const openScadaModal = useCallback((e: ReactMouseEvent) => {
+    const clickHandler = useCallback((e: ReactMouseEvent) => {
         e.stopPropagation();
         setSelected({ type: "downtime", id: downtimeEvent.id });
-        const { factorySlug, nodeSlug } = Router.currentRoute();
+        const { factorySlug } = Router.currentRoute();
         if (factorySlug)
             Router.replace({
                 factorySlug,
-                nodeSlug: cell.hash || nodeSlug,
+                nodeSlug: downtimeEvent.workCenterId,
                 itemSlug: downtimeEvent.id,
             });
     }, []);
@@ -50,7 +49,7 @@ export const CellIncident = ({ cell, downtimeEvent }: { cell: CellNode; downtime
                     size="xs"
                     variant="outline"
                     className="button bg-warning-100 text-warning-600 hover:bg-warning-50 border-0 -translate-z-[.1px] hover:translate-z-0"
-                    onClick={openScadaModal}
+                    onClick={clickHandler}
                 >
                     <Icon icon={faAngleRight} className="mr-2 text-xs" />
                     Take action
