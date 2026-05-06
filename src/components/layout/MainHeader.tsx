@@ -76,17 +76,17 @@ export const MainHeader = ({ className }: { className?: string }) => {
                 )}
             >
                 <div className={cn("flex flex-col gap--1 justify-center px-3 py-2")} onClick={factoryClickHandler}>
-                    <h2 className="font-semibold text-base group-hover:text-slate-100 transition-colors duration-200">
+                    <h2 className="font-semibold text-base">
                         {factory?.name}
                     </h2>
-                    <div className="flex items-center gap-x-2 gap-y-2 text-xs opacity-70">
+                    <div className="flex items-center gap-x-2 gap-y-2 text-xs text-accent-200">
                         <p className="text-[95%]">{factory?.location}</p>
                         <span>
                             <Icon icon={faClock} size="sm" /> 11:30
                         </span>
                     </div>
                 </div>
-                {oee !== null && <BadgeOEE oee={oee} className="text-xl m-1 px-3 py-2" />}
+                {oee !== null && <BadgeOEE oee={oee} className="text-2xl m-1 px-2 py-1" />}
             </ViewerPanel>
         </header>
     );

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { cn } from "@/utils/cn";
-import type { Phase } from "@/core/Projection";
+import type { ProjectedStatus } from "@/core/Projection";
+import Button from "../common/Button";
+import { Icon } from "../common/Icon";
+import { faAngleDown, faAngleLeft, faAngleRight } from "@fortawesome/pro-light-svg-icons";
 
 // ---------------------------------------------------------------------------
 // Shared field-level primitives used by every sheet
@@ -15,15 +18,15 @@ export function Field({ label, value }: { label: string; value: React.ReactNode 
     );
 }
 
-export function PhaseBadge({ phase }: { phase: Phase }) {
-    const cls: Record<Phase, string> = {
-        active: "text-emerald-700 bg-emerald-50 border border-emerald-200",
+export function StatusBadge({ status }: { status: ProjectedStatus }) {
+    const cls: Record<ProjectedStatus, string> = {
+        in_progress: "text-emerald-700 bg-emerald-50 border border-emerald-200",
         completed: "text-slate-500 bg-slate-100 border border-slate-200",
-        future: "text-blue-600 bg-blue-50 border border-blue-200",
+        planned: "text-blue-600 bg-blue-50 border border-blue-200",
     };
     return (
-        <span className={cn("inline-block text-[10px] px-1.5 py-px rounded-sm font-medium capitalize", cls[phase])}>
-            {phase}
+        <span className={cn("inline-block text-[10px] px-1.5 py-px rounded-sm font-medium capitalize", cls[status])}>
+            {status.replace("_", " ")}
         </span>
     );
 }
@@ -66,9 +69,17 @@ type SectionWrapperProps<T> = {
     focusedId: string | null;
     getId: (item: T) => string;
     renderItem: (item: T, isFocused: boolean) => React.ReactNode;
+    focusedClassName?: string;
 };
 
-export function SectionWrapper<T>({ label, items, focusedId, getId, renderItem }: SectionWrapperProps<T>) {
+export function SectionWrapper<T>({
+    label,
+    items,
+    focusedId,
+    getId,
+    renderItem,
+    focusedClassName,
+}: SectionWrapperProps<T>) {
     const initialPage = Math.max(
         0,
         items.findIndex((i) => getId(i) === focusedId),
@@ -83,37 +94,38 @@ export function SectionWrapper<T>({ label, items, focusedId, getId, renderItem }
     return (
         <div className="border border-slate-200/70 rounded-lg overflow-hidden">
             {/* Header */}
-            <button
-                type="button"
-                className="w-full flex items-center gap-2 px-3 py-2.5 bg-slate-50/80 hover:bg-slate-100/70 transition-colors text-left"
+            <div
+                className="w-full flex items-center gap-2 px-3 py-2.5 bg-slate-50/80 hover:bg-slate-100/70 transition-colors text-left cursor-pointer"
                 onClick={() => setCollapsed((c) => !c)}
             >
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 flex-1">
-                    {label}
-                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-accent flex-1">{label}</span>
 
                 {/* Pagination controls (only when expanded and multiple items) */}
                 {!collapsed && count > 1 && (
-                    <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-                        <button
-                            type="button"
-                            className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded transition-colors"
+                    <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                            variant="ghost"
+                            colorScheme="neutral"
+                            size="xs"
+                            className="px-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60"
                             onClick={() => setPage((p) => (p - 1 + count) % count)}
                             aria-label="Previous"
                         >
-                            ‹
-                        </button>
+                            <Icon icon={faAngleLeft} />
+                        </Button>
                         <span className="text-[10px] text-slate-400 tabular-nums w-8 text-center">
                             {page + 1} / {count}
                         </span>
-                        <button
-                            type="button"
-                            className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded transition-colors"
+                        <Button
+                            variant="ghost"
+                            colorScheme="neutral"
+                            size="xs"
+                            className="px-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60"
                             onClick={() => setPage((p) => (p + 1) % count)}
                             aria-label="Next"
                         >
-                            ›
-                        </button>
+                            <Icon icon={faAngleRight} />
+                        </Button>
                     </div>
                 )}
 
@@ -132,13 +144,13 @@ export function SectionWrapper<T>({ label, items, focusedId, getId, renderItem }
                     )}
                     aria-hidden
                 >
-                    ⌄
+                    <Icon icon={faAngleDown} size="xs" />
                 </span>
-            </button>
+            </div>
 
             {/* Body */}
             {!collapsed && current && (
-                <div className={cn("px-3 py-3", isFocused && "border-l-2 border-l-accent")}>
+                <div className={cn("px-3 py-3", isFocused && cn("border-l-2", focusedClassName ?? "border-l-accent"))}>
                     {renderItem(current, isFocused)}
                 </div>
             )}

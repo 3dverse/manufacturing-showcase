@@ -14,6 +14,7 @@ import type { Order } from "@/content/type";
 type ManufacturingOrderProgressBarProps = {
     order: Order;
     size?: "md" | "lg";
+    solid?: boolean;
     showClientName?: boolean;
     showDuration?: boolean;
     className?: string;
@@ -25,6 +26,7 @@ type ManufacturingOrderProgressBarProps = {
 export const ManufacturingOrderProgressBar = ({
     order,
     size = "md",
+    solid = false,
     showClientName = false,
     showDuration = false,
     className,
@@ -34,18 +36,27 @@ export const ManufacturingOrderProgressBar = ({
     const progress_prct = order.unitsPlanned > 0 ? Math.round((order.unitsCompleted / order.unitsPlanned) * 100) : 0;
 
     //--------------------------------------------------------------------------
-    const barColor =
-        order.status.name === orderStatus.completed.name
-            ? "bg-positive-500/70 text-positive-50"
+    const barColor = solid
+        ? order.status.name === orderStatus.completed.name
+            ? "bg-positive-500 text-positive-50"
             : order.status.name === orderStatus.inProgress.name
-              ? "bg-accent-500/60 text-accent-50"
+              ? "bg-accent-500 text-accent-50"
               : order.status.name === orderStatus.cancelled.name
-                ? "bg-negative-500/50 text-negative-800"
-                : "bg-neutral-400/40 text-neutral-900";
+                ? "bg-negative-500 text-negative-800"
+                : "bg-neutral-200 text-neutral-800"
+        : order.status.name === orderStatus.completed.name
+          ? "bg-positive-500/70 text-positive-50"
+          : order.status.name === orderStatus.inProgress.name
+            ? "bg-accent-500/60 text-accent-50"
+            : order.status.name === orderStatus.cancelled.name
+              ? "bg-negative-500/50 text-negative-800"
+              : "bg-neutral-200/40 text-neutral-800";
 
     const progressColor =
         order.status.name === orderStatus.completed.name
-            ? "bg-positive-700/70"
+            ? solid
+                ? "bg-positive-700"
+                : "bg-positive-700/70"
             : order.status.name === orderStatus.inProgress.name
               ? "bg-accent-600 stripes [--color:var(--color-accent-900)]"
               : "bg-neutral-500";

@@ -11,7 +11,7 @@ export type IncidentReportData = {
     downtime: ProjectedDowntime;
     machineName: string;
     workCenterId: string;
-    productionOrder?: Pick<ProjectedProductionOrder, "orderNumber" | "itemCode" | "phase"> | null;
+    productionOrder?: Pick<ProjectedProductionOrder, "orderNumber" | "itemCode"> | null;
     operation?: Pick<ProjectedOperation, "operationCode" | "operationDescription" | "quantities"> | null;
 };
 
@@ -89,7 +89,7 @@ export function generateIncidentReport(data: IncidentReportData): void {
     y = 40;
 
     // ── Status badge ─────────────────────────────────────────────────────────
-    const isOngoing = data.downtime.isOngoing;
+    const isOngoing = data.downtime.projected.isOngoing;
     const badgeText = isOngoing ? "ONGOING" : "RESOLVED";
     const badgeColor = isOngoing ? RED : "#16a34a";
     const badgeBg = isOngoing ? "#fef2f2" : "#f0fdf4";
@@ -166,7 +166,7 @@ export function generateIncidentReport(data: IncidentReportData): void {
             }),
         );
     }
-    row("Duration", fmtDuration(data.downtime.durationAtAsOf));
+    row("Duration", fmtDuration(data.downtime.projected.durationAtAsOf));
     row("Status", isOngoing ? "Ongoing — machine halted" : "Resolved");
 
     // ── Production impact ─────────────────────────────────────────────────────

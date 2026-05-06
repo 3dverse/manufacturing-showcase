@@ -150,3 +150,21 @@
         stroke-dashoffset: 0;
     }
 }
+
+@keyframes band-scroll {
+    from { background-position: 28px 0; }
+    to   { background-position: 0 0; }
+}
+
+/* Scrolling diagonal stripe overlay — composites over any solid bg-* color */
+.band-current {
+    background-image: repeating-linear-gradient(
+        -55deg,
+        transparent           0px,
+        transparent           4px,
+        rgba(255,255,255,0.5) 4px,
+        rgba(255,255,255,0.5) 6px
+    );
+    background-size: 200% 100%;
+    animation: band-scroll 1.5s linear infinite;
+}

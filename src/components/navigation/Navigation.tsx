@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 import React, { useContext, useEffect, useMemo, useRef } from "react";
 import { faArrowTurnDownRight, faHome } from "@fortawesome/sharp-light-svg-icons";
-import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
+import { faExclamationTriangle, faWrench } from "@fortawesome/sharp-solid-svg-icons";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
@@ -12,17 +12,22 @@ import { BadgeOEE } from "@/components/common/BadgeOEE";
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
+import { ScenarioContext } from "@/contexts/ScenariosContext";
 
 //------------------------------------------------------------------------------
 import { isArea, isFactory, isLine, sortNode } from "@/core/SceneGraph";
 import { useNavNode } from "./hooks";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
+import { useOEEHistory } from "@/hooks/useOEEHistory";
 import { cn } from "@/utils/cn";
 import { useTimelineStore } from "@/store/useTimelineStore";
-import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
+import { downtimeAtAsOf, workOrderAtAsOf } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
 import type { SceneGraphNode, AreaNode, CellNode, LineNode, AisleNode, RackNode } from "@/content/type";
+
+//------------------------------------------------------------------------------
+const SHOW_FLOW_BUTTON = false;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -45,6 +50,15 @@ export const Navigation = ({ className }: { className?: string }) => {
             [...span.downtimeEvents.values()]
                 .filter((e) => downtimeAtAsOf(e, asOf || present))
                 .map((e) => e.workCenterId),
+        );
+    }, [span, asOf, present]);
+
+    const workOrderMachineIds = useMemo(() => {
+        if (!span) return new Set<string>();
+        return new Set(
+            [...span.eamWorkOrders.values()]
+                .filter((wo) => workOrderAtAsOf(wo, asOf || present))
+                .map((wo) => wo.assetId),
         );
     }, [span, asOf, present]);
 
@@ -158,6 +172,7 @@ export const Navigation = ({ className }: { className?: string }) => {
                             isFirst={index === 0}
                             index={index}
                             downtimeCellIds={downtimeCellIds}
+                            workOrderMachineIds={workOrderMachineIds}
                         />
                     ))}
                 </ul>
@@ -241,11 +256,13 @@ const AreaNav = ({
     isFirst,
     index,
     downtimeCellIds,
+    workOrderMachineIds,
 }: {
     area: AreaNode;
     isFirst: boolean;
     index: number;
     downtimeCellIds: Set<string>;
+    workOrderMachineIds: Set<string>;
 }) => {
     //--------------------------------------------------------------------------
     // Hooks
@@ -256,6 +273,7 @@ const AreaNav = ({
 
     //--------------------------------------------------------------------------
     const oee = useAreaOEE(area);
+    const oeeHistory = useOEEHistory(area);
 
     //--------------------------------------------------------------------------
     // Memos
@@ -277,8 +295,6 @@ const AreaNav = ({
         }
         return "bg-slate/50 border-transparent md:bg-muted/5 md:border-muted/50";
     }, [isSelected, isChildSelected, isHovered]);
-
-    const SHOW_FLOW_BUTTON = false;
 
     //--------------------------------------------------------------------------
     // Render
@@ -305,7 +321,9 @@ const AreaNav = ({
             {SHOW_FLOW_BUTTON && index === 0 && <FlowNode isSelected={isSelected} />}
             <div className="flex justify-between gap-1">
                 <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
-                {area.name === "production" && oee !== undefined && <BadgeOEE oee={oee} hideLabel />}
+                {area.name === "production" && oee !== undefined && (
+                    <BadgeOEE oee={oee} oeeHistory={oeeHistory} hideLabel />
+                )}
             </div>
             <ul className="flex overflow-visible">
                 {children.map((child, index) => (
@@ -315,6 +333,7 @@ const AreaNav = ({
                         isLast={index === children.length - 1}
                         node={child}
                         downtimeCellIds={downtimeCellIds}
+                        workOrderMachineIds={workOrderMachineIds}
                     />
                 ))}
             </ul>
@@ -329,11 +348,13 @@ const ChildNode = ({
     isFirst,
     isLast,
     downtimeCellIds,
+    workOrderMachineIds,
 }: {
     node: LineNode | CellNode | AisleNode | RackNode;
     isFirst: boolean;
     isLast: boolean;
     downtimeCellIds: Set<string>;
+    workOrderMachineIds: Set<string>;
 }) => {
     //--------------------------------------------------------------------------
     // Hooks
@@ -341,6 +362,7 @@ const ChildNode = ({
         node,
         "nav",
     );
+    const { spanData, graphData } = useContext(ScenarioContext);
 
     //--------------------------------------------------------------------------
     // Memos
@@ -349,13 +371,27 @@ const ChildNode = ({
         [node, downtimeCellIds],
     );
 
+    const hasWorkOrder = useMemo(
+        () =>
+            isLine(node)
+                ? node.cells.some((c) => c.machines.some((m) => workOrderMachineIds.has(m.hash)))
+                : "machines" in node && node.machines.some((m) => workOrderMachineIds.has(m.hash)),
+        [node, workOrderMachineIds],
+    );
+
+    const isScenarioTarget = useMemo(
+        () =>
+            isLine(node) ? node.cells.some((c) => c.hash === graphData?.cellHash) : node.hash === graphData?.cellHash,
+        [node, graphData],
+    );
+
     //--------------------------------------------------------------------------
     const stateClassName = useMemo(() => {
         if (isActive) {
             if (isHovered) {
                 return "bg-slate-100 border-slate-100 text-accent";
             }
-            return "bg-accent md:bg-slate-0 border-slate-0 md:text-accent z-10";
+            return "bg-accent md:bg-slate-0 border-slate-0 md:text-accent";
         }
         if (isParentActive) {
             if (isHovered) {
@@ -375,6 +411,9 @@ const ChildNode = ({
     return (
         <li>
             <button
+                data-scenario={
+                    isScenarioTarget && spanData?.kind === "predictive" ? "predictive-maintenance-step-2" : undefined
+                }
                 className={cn(
                     "relative px-2 py-1 text-xs capitalize whitespace-nowrap border rounded-md cursor-pointer transition-colors duration-200",
                     stateClassName,
@@ -404,8 +443,18 @@ const ChildNode = ({
                 )}
                 {node.name} {isLine(node) && "Line"}
                 {hasDowntime && (
-                    <span className="absolute -top-2 right-px w-4 aspect-square bg-warning rounded-full">
+                    <span className="absolute -top-2 right-px w-4 aspect-square bg-warning-600 rounded-full">
                         <Icon icon={faExclamationTriangle} size="xs" className="text-warning-100" />
+                    </span>
+                )}
+                {!hasDowntime && hasWorkOrder && (
+                    <span className="absolute -top-2 right-px w-4 aspect-square bg-amber-400 rounded-full">
+                        <Icon icon={faWrench} size="xs" className="text-amber-900" />
+                    </span>
+                )}
+                {!hasDowntime && !hasWorkOrder && isScenarioTarget && spanData?.kind === "predictive" && (
+                    <span className="absolute -top-2 right-px w-4 aspect-square bg-amber-400 rounded-full">
+                        <Icon icon={faWrench} size="xs" className="text-amber-900" />
                     </span>
                 )}
             </button>

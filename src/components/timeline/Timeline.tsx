@@ -6,38 +6,31 @@ import {
     useCallback,
     useState,
     type MouseEvent as ReactMouseEvent,
-    type CSSProperties,
+    type TouchEvent as ReactTouchEvent,
 } from "react";
 import { createPortal } from "react-dom";
 
 //------------------------------------------------------------------------------
-import { CorrelationModal } from "@/components/correlation/CorrelationModal";
 
 //------------------------------------------------------------------------------
 import { useScope } from "@/hooks/useScope";
+import { useSpanSnapshot } from "@/hooks/useSpanSnapshot";
 import { useProjection } from "@/hooks/useProjection";
-import { useSpanProjection } from "@/hooks/useSpanProjection";
 import { useCorrelation } from "@/hooks/useCorrelation";
 import { SelectionContext } from "@/contexts/SelectionContext";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { useFocusStore } from "@/store/useFocusStore";
+import { ScenarioContext } from "@/contexts/ScenariosContext";
 
 //------------------------------------------------------------------------------
-import { highlightStateForBar, entityTypeFromId, type EntityType, type HighlightState } from "@/core/Correlation";
 import { Router } from "@/core/Router";
 import { isArea } from "@/core/SceneGraph";
-import type { TimelineLevel } from "@/core/Scope";
-import type {
-    AsOfProjection,
-    ProjectedSalesOrder,
-    ProjectedProductionOrder,
-    ProjectedOperation,
-    ProjectedReceipt,
-    ProjectedAllocation,
-    ProjectedPickTask,
-    ProjectedPutawayTask,
-    ProjectedPurchaseOrder,
-} from "@/core/Projection";
+import {
+    highlightStateForBar,
+    entityTypeFromId,
+    buildCorrelatedSnapshot,
+    EMPTY_CORRELATED_SET,
+} from "@/core/Correlation";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -46,46 +39,46 @@ import { fmtDuration, fmtTs } from "@/utils/helpers-time";
 import { buildClosedIntervals } from "@/core/Calendar";
 
 //------------------------------------------------------------------------------
+import { FooterTabs } from "./FooterTabs";
+import { Band } from "./Band";
+import { Bar } from "./Bar";
+
+//------------------------------------------------------------------------------
 import { PERFORMANCE_MODE, FULL_TIMELINE } from "@/content/3dverse";
-import { FooterTabs } from "../common/FooterTabs";
+import { ENTITY_COLORS } from "@/content/entityColors";
+
+//------------------------------------------------------------------------------
+import type { EntityType } from "@/core/Correlation";
+import type {
+    TimelineLevel,
+    AsOfSnapshot,
+    SalesOrderEntry,
+    ProductionOrderEntry,
+    OperationEntry,
+    ReceiptEntry,
+    AllocationEntry,
+    PickTaskEntry,
+    PutawayTaskEntry,
+    PurchaseOrderEntry,
+} from "@/core/Scope";
 
 //------------------------------------------------------------------------------
 // Zoom levels
 //------------------------------------------------------------------------------
-
-type ZoomKey = "1D" | "1W" | "2W" | "1M" | "3M" | "6M";
+import {
+    AXIS_H,
+    PLAYBACK_SPEEDS,
+    ROW_GAP,
+    ROW_H,
+    ROW_H_LINE,
+    ZOOMS,
+    type BarItem,
+    type BarStyle,
+    type PlaybackSpeed,
+    type StackingStyle,
+} from "./constants";
 
 type AreaType = "production" | "delivery" | "reception" | "storage" | "quality" | "other";
-
-const ZOOMS: { key: ZoomKey; label: string; days: number }[] = [
-    { key: "1D", label: "1D", days: 1 },
-    { key: "1W", label: "1W", days: 7 },
-    { key: "2W", label: "2W", days: 14 },
-    { key: "1M", label: "1M", days: 30 },
-    { key: "3M", label: "3M", days: 90 },
-    //{ key: "6M", label: "6M", days: 180 },
-];
-
-//------------------------------------------------------------------------------
-// Playback speeds
-//------------------------------------------------------------------------------
-
-const PLAYBACK_SPEEDS = [1, 60, 300] as const;
-type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number];
-
-//------------------------------------------------------------------------------
-// Layout constants
-//------------------------------------------------------------------------------
-
-const AXIS_H = 22;
-const ROW_H = 22;
-const ROW_H_LINE = 8;
-const ROW_GAP = 4;
-const BAR_H = 12;
-
-//------------------------------------------------------------------------------
-// Axis tick generation
-//------------------------------------------------------------------------------
 
 type Tick = { ts: number; label: string; major: boolean };
 
@@ -141,19 +134,6 @@ function buildTicks(winStart: number, winEnd: number, totalDays: number): Tick[]
 //------------------------------------------------------------------------------
 // Bar types
 //------------------------------------------------------------------------------
-
-type BarItem = {
-    id: string;
-    entityType: EntityType;
-    start: number;
-    end: number;
-    className: string;
-    tooltip: React.ReactNode;
-};
-
-type BarStyle = "bar" | "line";
-type StackingStyle = "swimlane" | "overlap";
-
 type Story = {
     id: string;
     title: string;
@@ -166,7 +146,6 @@ type Story = {
 //------------------------------------------------------------------------------
 // Lane assignment
 //------------------------------------------------------------------------------
-
 function assignSwimlanes(bars: BarItem[]): BarItem[][] {
     const sorted = [...bars].sort((a, b) => a.start - b.start);
     const lanes: BarItem[][] = [];
@@ -200,34 +179,14 @@ function buildLanes(bars: BarItem[], stacking: StackingStyle): BarItem[][] {
 // Story builders — receive projected entries, read fields directly
 //------------------------------------------------------------------------------
 
-function buildSalesOrdersStory(orders: ProjectedSalesOrder[]): Story {
+function buildSalesOrdersStory(orders: SalesOrderEntry[]): Story {
     const bars: BarItem[] = orders.map((so) => ({
         id: so.id,
         entityType: "salesOrder" as EntityType,
+        targetNodeHash: so.siteId,
         start: so.orderDate,
         end: so.requestedDeliveryDate,
-        className: cn(
-            "hover:ring-2 hover:ring-offset-0 hover:ring-accent/50",
-            so.phase === "active" ? "bg-accent" : so.phase === "completed" ? "bg-accent" : "bg-accent",
-        ),
-        tooltip: (
-            <div className="space-y-1.5">
-                <div className="font-semibold text-white">{so.orderNumber}</div>
-                <div>
-                    <span className="text-slate-500">Status </span>
-                    <span className="capitalize">{so.status.replace("_", " ")}</span>
-                    {so.isOverdue && <span className="ml-1.5 text-red-400">overdue</span>}
-                </div>
-                <div>
-                    <span className="text-slate-500">Order date </span>
-                    {fmtTs(so.orderDate)}
-                </div>
-                <div>
-                    <span className="text-slate-500">Delivery </span>
-                    {fmtTs(so.requestedDeliveryDate)}
-                </div>
-            </div>
-        ),
+        colors: ENTITY_COLORS.salesOrder,
     }));
     return {
         id: "sales",
@@ -239,24 +198,307 @@ function buildSalesOrdersStory(orders: ProjectedSalesOrder[]): Story {
     };
 }
 
-function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
-    const bars: BarItem[] = orders.map((po) => {
-        const slip =
-            po.timing.actualEnd && po.timing.actualEnd > po.timing.scheduledEnd
-                ? po.timing.actualEnd - po.timing.scheduledEnd
-                : 0;
-        return {
+function clientLabelForProductionOrder(po: ProductionOrderEntry, soById: Map<string, SalesOrderEntry>): string {
+    if (!po.erpSalesOrderId) return "Unlinked orders";
+    const so = soById.get(po.erpSalesOrderId);
+    if (!so) return "Unknown client";
+    const name = so.customerName?.trim();
+    if (name) return name;
+    return so.customerId || "Unknown client";
+}
+
+function buildProductionOrdersStories(
+    productionOrders: ProductionOrderEntry[],
+    salesOrders: SalesOrderEntry[],
+): Story[] {
+    if (productionOrders.length === 0) return [];
+    const soById = new Map(salesOrders.map((s) => [s.id, s]));
+
+    const groups = new Map<string, ProductionOrderEntry[]>();
+    for (const po of productionOrders) {
+        const key = clientLabelForProductionOrder(po, soById);
+        const g = groups.get(key) ?? [];
+        g.push(po);
+        groups.set(key, g);
+    }
+
+    const rank = (k: string) => (k === "Unknown client" || k === "Unlinked orders" ? 1 : 0);
+    const sortedKeys = [...groups.keys()].sort((a, b) => {
+        const d = rank(a) - rank(b);
+        if (d !== 0) return d;
+        return a.localeCompare(b);
+    });
+
+    return sortedKeys.map((label, index) => {
+        const slug =
+            label
+                .replace(/[^a-zA-Z0-9]+/g, "-")
+                .replace(/^-|-$/g, "")
+                .slice(0, 48) || "client";
+        const bars: BarItem[] = (groups.get(label) ?? []).map((po) => ({
             id: po.id,
             entityType: "productionOrder" as EntityType,
-            start: po.effectiveStart,
-            end: po.effectiveEnd,
-            className:
-                po.phase === "completed"
-                    ? "bg-emerald-500 border border-emerald-400/40 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50"
-                    : po.phase === "future"
-                      ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
-                      : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
-            tooltip: (
+            targetNodeHash: po.locationId || undefined,
+            start: po.timing.actualStart ?? po.timing.scheduledStart,
+            end: po.timing.actualEnd ?? po.timing.scheduledEnd,
+            colors: ENTITY_COLORS.productionOrder,
+            inlineLabel: po.orderNumber,
+        }));
+        return {
+            id: `production-${index}-${slug}`,
+            title: label,
+            label,
+            lanes: buildLanes(bars, "swimlane"),
+            barStyle: "bar" as const,
+            stackingStyle: "swimlane" as const,
+        };
+    });
+}
+
+function buildOperationsStory(ops: OperationEntry[]): Story {
+    const bars: BarItem[] = ops.map((op) => ({
+        id: op.id,
+        entityType: "operation" as EntityType,
+        targetNodeHash: op.workCenterId || undefined,
+        start: op.actualStart ?? op.scheduledStart,
+        end: op.actualEnd ?? op.scheduledEnd,
+        colors: ENTITY_COLORS.operation,
+    }));
+    return {
+        id: "operations",
+        title: "Operations",
+        label: "OP",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "bar",
+        stackingStyle: "swimlane",
+    };
+}
+
+function buildReceiptsStory(receipts: ReceiptEntry[], putaways: PutawayTaskEntry[], cutOff: number): Story {
+    const putawayByReceipt = new Map<string, number>();
+    for (const pt of putaways) {
+        if (!pt.receiptId) continue;
+        const existing = putawayByReceipt.get(pt.receiptId);
+        const end = pt.putawayDate ?? cutOff;
+        if (existing === undefined || end > existing) putawayByReceipt.set(pt.receiptId, end);
+    }
+
+    const bars: BarItem[] = receipts.map((r) => ({
+        id: r.id,
+        entityType: "receipt" as EntityType,
+        targetNodeHash: r.warehouseId || undefined,
+        start: r.receivedDate,
+        end: putawayByReceipt.get(r.id) ?? cutOff,
+        colors: ENTITY_COLORS.receipt,
+    }));
+    return {
+        id: "receipts",
+        label: "RCP",
+        title: "Receipts",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "bar",
+        stackingStyle: "swimlane",
+    };
+}
+
+function buildAllocationsStory(
+    allocs: AllocationEntry[],
+    demandType: "production_order" | "sales_order",
+    cutOff: number,
+): Story {
+    const filtered = allocs.filter((a) => a.demandType === demandType);
+    const isRM = demandType === "production_order";
+    const bars: BarItem[] = filtered.map((a) => ({
+        id: a.id,
+        entityType: "allocation" as EntityType,
+        targetNodeHash: a.locationId || undefined,
+        start: a.allocatedAt,
+        end: a.clearedAt ?? cutOff,
+        colors: ENTITY_COLORS.allocation,
+        isPartial: a.status === "partial",
+    }));
+    return {
+        id: isRM ? "alloc-rm" : "alloc-fg",
+        title: isRM ? "Raw Material Allocations" : "Final Good Allocations",
+        label: isRM ? "RM alloc" : "FG alloc",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "line",
+        stackingStyle: "swimlane",
+    };
+}
+
+function buildPickTasksStory(tasks: PickTaskEntry[], cutOff: number): Story {
+    const bars: BarItem[] = tasks.map((t) => ({
+        id: t.id,
+        entityType: "pickTask" as EntityType,
+        targetNodeHash: t.sourceLocationId || undefined,
+        start: t.startedAt ?? t.createdAt,
+        end: t.pickedDate ?? cutOff,
+        colors: ENTITY_COLORS.pickTask,
+    }));
+    return {
+        id: "pick-tasks",
+        label: "Pickup",
+        title: "Pickup tasks",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "bar",
+        stackingStyle: "swimlane",
+    };
+}
+
+function buildPutawayTasksStory(tasks: PutawayTaskEntry[], cutOff: number): Story {
+    const bars: BarItem[] = tasks.map((t) => ({
+        id: t.id,
+        entityType: "putawayTask" as EntityType,
+        targetNodeHash: t.sourceLocationId || undefined,
+        start: t.startedAt ?? t.createdAt,
+        end: t.putawayDate ?? cutOff,
+        colors: ENTITY_COLORS.putawayTask,
+    }));
+    return {
+        id: "putaway-tasks",
+        label: "Putaway",
+        title: "Putaway Tasks",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "bar",
+        stackingStyle: "swimlane",
+    };
+}
+
+function buildPurchaseOrdersStory(pos: PurchaseOrderEntry[], cutOff: number): Story {
+    const bars: BarItem[] = pos.map((po) => {
+        const end = po.receivedAt ?? po.expectedDeliveryDate ?? cutOff;
+        return {
+            id: po.id,
+            entityType: "purchaseOrder" as EntityType,
+            start: po.orderDate,
+            end: end > po.orderDate ? end : po.orderDate + 3600,
+            colors: ENTITY_COLORS.purchaseOrder,
+        };
+    });
+    return {
+        id: "purchase-orders",
+        label: "PO",
+        title: "Purchase orders",
+        lanes: buildLanes(bars, "swimlane"),
+        barStyle: "line",
+        stackingStyle: "swimlane",
+    };
+}
+
+//------------------------------------------------------------------------------
+// Story selection
+//------------------------------------------------------------------------------
+
+function buildStories(
+    level: TimelineLevel,
+    scope: AsOfSnapshot | null,
+    origin: number,
+    areatype?: AreaType,
+    nodeHash?: string,
+): Story[] {
+    const so = scope?.salesOrders ?? [];
+    const po = scope?.productionOrders ?? [];
+    const ops = scope?.operations ?? [];
+
+    const rcp = scope?.receipts ?? [];
+    const alloc = scope?.allocations ?? [];
+    const picks = (scope?.pickTasks ?? []).filter((t) => {
+        if (!nodeHash) return true;
+        if (areatype === "storage") return t.warehouseId === nodeHash;
+        if (areatype === "delivery") return t.warehouseId === nodeHash;
+        return true;
+    });
+    const putaways = (scope?.putawayTasks ?? []).filter((t) => {
+        if (!nodeHash) return true;
+        if (areatype === "storage") return t.warehouseId === nodeHash;
+        if (areatype === "reception") return t.sourceLocationId?.startsWith(nodeHash) ?? false;
+        return true;
+    });
+    const purchaseOrders = scope?.purchaseOrders ?? [];
+
+    switch (level) {
+        case "area":
+            switch (areatype) {
+                case "production":
+                    return buildProductionOrdersStories(po, so);
+                case "delivery":
+                    return [
+                        buildSalesOrdersStory(so),
+                        buildAllocationsStory(alloc, "sales_order", origin),
+                        ...(FULL_TIMELINE ? [buildPickTasksStory(picks, origin)] : []),
+                    ];
+                case "reception":
+                    return [
+                        buildPurchaseOrdersStory(purchaseOrders, origin),
+                        buildReceiptsStory(rcp, putaways, origin),
+                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, origin)] : []),
+                    ];
+                case "storage":
+                    return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order", origin)];
+                case "quality":
+                    return [
+                        buildSalesOrdersStory(so),
+                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, origin)] : []),
+                    ];
+                default:
+                    return [buildSalesOrdersStory(so)];
+            }
+        case "line":
+            return [...buildProductionOrdersStories(po, so), ...(FULL_TIMELINE ? [buildOperationsStory(ops)] : [])];
+        case "cell":
+        case "machine":
+            return [...buildProductionOrdersStories(po, so), ...(FULL_TIMELINE ? [buildOperationsStory(ops)] : [])];
+        case "factory":
+        default:
+            return [buildSalesOrdersStory(so), ...buildProductionOrdersStories(po, so)];
+    }
+}
+
+//------------------------------------------------------------------------------
+// Tooltip content — projects only the single hovered entity
+//------------------------------------------------------------------------------
+function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: string }) {
+    const snapshot = useSpanSnapshot();
+    const focused = useMemo(() => ({ type: entityType, id }), [entityType, id]);
+    const entitySnapshot = useMemo(
+        () => (snapshot ? buildCorrelatedSnapshot(snapshot, focused, EMPTY_CORRELATED_SET) : null),
+        [snapshot, focused],
+    );
+    const projection = useProjection(entitySnapshot);
+    if (!projection) return <p className="animate-pulse text-slate-400">Loading…</p>;
+
+    switch (entityType) {
+        case "salesOrder": {
+            const so = projection.salesOrders.find((s) => s.id === id);
+            if (!so) return null;
+            return (
+                <div className="space-y-1.5">
+                    <div className="font-semibold text-white">{so.orderNumber}</div>
+                    <div>
+                        <span className="text-slate-500">Status </span>
+                        <span className="capitalize">{so.status.replace("_", " ")}</span>
+                        {so.projected.isOverdue && <span className="ml-1.5 text-negative-400">overdue</span>}
+                    </div>
+                    <div>
+                        <span className="text-slate-500">Order date </span>
+                        {fmtTs(so.orderDate)}
+                    </div>
+                    <div>
+                        <span className="text-slate-500">Delivery </span>
+                        {fmtTs(so.requestedDeliveryDate)}
+                    </div>
+                </div>
+            );
+        }
+        case "productionOrder": {
+            const po = projection.productionOrders.find((p) => p.id === id);
+            if (!po) return null;
+            const slip =
+                po.timing.actualEnd && po.timing.actualEnd > po.timing.scheduledEnd
+                    ? po.timing.actualEnd - po.timing.scheduledEnd
+                    : 0;
+            return (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{po.orderNumber}</div>
                     <div className="text-slate-400 text-[11px]">{po.itemCode}</div>
@@ -278,40 +520,21 @@ function buildProductionOrdersStory(orders: ProjectedProductionOrder[]): Story {
                     <div>
                         <span className="text-slate-500">Qty </span>
                         {po.quantities.producedQuantity} / {po.quantities.plannedQuantity} {po.quantities.uom}
-                        {po.phase === "active" && (
-                            <span className="ml-1 text-slate-400">({Math.round(po.estimatedProgress * 100)}%)</span>
+                        {po.status === "in_progress" && (
+                            <span className="ml-1 text-slate-400">
+                                ({Math.round(po.projected.estimatedProgress * 100)}%)
+                            </span>
                         )}
                     </div>
                     {slip > 0 && <div className="text-amber-400">Slip +{fmtDuration(slip)}</div>}
                 </div>
-            ),
-        };
-    });
-    return {
-        id: "production",
-        title: "Manufacturing orders",
-        label: "MO",
-        lanes: buildLanes(bars, "swimlane"),
-        barStyle: "bar",
-        stackingStyle: "swimlane",
-    };
-}
-
-function buildOperationsStory(ops: ProjectedOperation[]): Story {
-    const bars: BarItem[] = ops.map((op) => {
-        const slip = op.actualEnd && op.actualEnd > op.scheduledEnd ? op.actualEnd - op.scheduledEnd : 0;
-        return {
-            id: op.id,
-            entityType: "operation" as EntityType,
-            start: op.effectiveStart,
-            end: op.effectiveEnd,
-            className:
-                op.phase === "completed"
-                    ? "bg-slate-400 border border-slate-300/40 hover:ring-2 hover:ring-offset-0 hover:ring-slate-400/50"
-                    : op.phase === "future"
-                      ? "bg-blue-400 border border-blue-400/60 border-dashed hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50"
-                      : "bg-emerald-500 border border-emerald-400/70 hover:ring-2 hover:ring-offset-0 hover:ring-emerald-500/50",
-            tooltip: (
+            );
+        }
+        case "operation": {
+            const op = projection.operations.find((o) => o.id === id);
+            if (!op) return null;
+            const slip = op.actualEnd && op.actualEnd > op.scheduledEnd ? op.actualEnd - op.scheduledEnd : 0;
+            return (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{op.operationCode}</div>
                     <div>
@@ -329,44 +552,69 @@ function buildOperationsStory(ops: ProjectedOperation[]): Story {
                             {op.actualEnd ? ` → ${fmtTs(op.actualEnd)}` : " (ongoing)"}
                         </div>
                     )}
-                    {op.phase === "active" && (
+                    {op.status === "in_progress" && (
                         <div>
                             <span className="text-slate-500">Progress </span>
-                            {Math.round(op.estimatedProgress * 100)}%
+                            {Math.round(op.projected.estimatedProgress * 100)}%
                         </div>
                     )}
                     {slip > 0 && <div className="text-amber-400">Slip +{fmtDuration(slip)}</div>}
                 </div>
-            ),
-        };
-    });
-    return {
-        id: "operations",
-        title: "Operations",
-        label: "OP",
-        lanes: buildLanes(bars, "swimlane"),
-        barStyle: "bar",
-        stackingStyle: "swimlane",
-    };
-}
-
-function buildReceiptsStory(receipts: ProjectedReceipt[], present: number): Story {
-    const bars: BarItem[] = receipts.map((r) => {
-        const end = r.putawayDate ?? present;
-        return {
-            id: r.id,
-            entityType: "receipt" as EntityType,
-            start: r.receivedDate,
-            end: end > r.receivedDate ? end : r.receivedDate + 3600,
-            className: cn(
-                "hover:ring-2 hover:ring-offset-0 hover:ring-sky-500/50",
-                r.phase === "completed"
-                    ? "bg-sky-500 border border-sky-400/50"
-                    : r.phase === "future"
-                      ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                      : "bg-amber-400 border border-amber-300/60",
-            ),
-            tooltip: (
+            );
+        }
+        case "downtime": {
+            const dt = projection.downtimeEvents.find((d) => d.id === id);
+            if (!dt) return null;
+            return (
+                <div className="space-y-1.5">
+                    <div className="font-semibold text-warning-400">
+                        {dt.reasonCode}
+                        {dt.projected.isOngoing && (
+                            <span className="ml-1.5 text-[10px] text-warning-400/80">ongoing</span>
+                        )}
+                    </div>
+                    {dt.reasonDescription && <div className="text-slate-400 text-[11px]">{dt.reasonDescription}</div>}
+                    <div>
+                        <span className="text-slate-500">Start </span>
+                        {fmtTs(dt.startedAt)}
+                    </div>
+                    <div>
+                        <span className="text-slate-500">Duration </span>
+                        {fmtDuration(dt.projected.durationAtAsOf)}
+                    </div>
+                </div>
+            );
+        }
+        case "workOrder": {
+            const wo = projection.eamWorkOrders.find((w) => w.id === id);
+            if (!wo) return null;
+            return (
+                <div className="space-y-1.5">
+                    <div className="font-semibold text-white">{wo.workOrderNumber}</div>
+                    <div className="text-slate-400 text-[11px] capitalize">{wo.workType}</div>
+                    <div>
+                        <span className="text-slate-500">Status </span>
+                        <span className="capitalize">{wo.status.replace("_", " ")}</span>
+                        {wo.projected.isOverdue && <span className="ml-1.5 text-red-400">overdue</span>}
+                    </div>
+                    <div>
+                        <span className="text-slate-500">Planned </span>
+                        {fmtTs(wo.scheduledStart)} → {fmtTs(wo.scheduledEnd)}
+                    </div>
+                    {wo.actualStart && (
+                        <div>
+                            <span className="text-slate-500">Actual </span>
+                            {fmtTs(wo.actualStart)}
+                            {wo.actualEnd ? ` → ${fmtTs(wo.actualEnd)}` : " (ongoing)"}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        case "receipt": {
+            const r = projection.receipts.find((r) => r.id === id);
+            if (!r) return null;
+            return (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{r.id}</div>
                     <div className="text-slate-400 text-[11px]">{r.itemId}</div>
@@ -382,181 +630,90 @@ function buildReceiptsStory(receipts: ProjectedReceipt[], present: number): Stor
                         <span className="text-slate-500">Received </span>
                         {fmtTs(r.receivedDate)}
                     </div>
-                    {r.putawayDate && (
+                    {r.projected.putawayDate && (
                         <div>
                             <span className="text-slate-500">Putaway </span>
-                            {fmtTs(r.putawayDate)}
+                            {fmtTs(r.projected.putawayDate)}
                         </div>
                     )}
                 </div>
-            ),
-        };
-    });
-    return {
-        id: "receipts",
-        label: "RCP",
-        title: "Receipts",
-        lanes: buildLanes(bars, "swimlane"),
-        barStyle: "bar",
-        stackingStyle: "swimlane",
-    };
-}
-
-function buildAllocationsStory(
-    allocs: ProjectedAllocation[],
-    demandType: "production_order" | "sales_order",
-    present: number,
-): Story {
-    const filtered = allocs.filter((a) => a.demandType === demandType);
-    const isRM = demandType === "production_order";
-    const bars: BarItem[] = filtered.map((a) => ({
-        id: a.id,
-        entityType: "allocation" as EntityType,
-        start: a.allocatedAt,
-        end: a.clearedAt ?? present,
-        className: cn(
-            "hover:ring-2 hover:ring-offset-0 hover:ring-blue-400/50",
-            a.status === "partial"
-                ? "bg-blue-400 border border-blue-400/50 border-dashed"
-                : "bg-blue-400 border border-blue-400/60",
-        ),
-        tooltip: (
-            <div className="space-y-1.5">
-                <div className="font-semibold text-white">{a.id}</div>
-                <div className="text-slate-400 text-[11px]">{a.itemId}</div>
-                <div>
-                    <span className="text-slate-500">Allocated </span>
-                    {a.quantityAllocated} / {a.quantityRequired} {a.uom}
-                    {a.status === "partial" && <span className="ml-1.5 text-amber-400">partial</span>}
-                </div>
-                <div>
-                    <span className="text-slate-500">From </span>
-                    {fmtTs(a.allocatedAt)}
-                </div>
-                <div>
-                    <span className="text-slate-500">Until </span>
-                    {a.clearedAt ? fmtTs(a.clearedAt) : "—"}
-                </div>
-            </div>
-        ),
-    }));
-    return {
-        id: isRM ? "alloc-rm" : "alloc-fg",
-        title: isRM ? "Raw Material Allocations" : "Final Good Allocations",
-        label: isRM ? "RM alloc" : "FG alloc",
-        lanes: buildLanes(bars, "swimlane"),
-        barStyle: "line",
-        stackingStyle: "swimlane",
-    };
-}
-
-function buildPickTasksStory(tasks: ProjectedPickTask[], present: number): Story {
-    const bars: BarItem[] = tasks.map((t) => ({
-        id: t.id,
-        entityType: "pickTask" as EntityType,
-        start: t.startedAt ?? t.createdAt,
-        end: t.pickedDate ?? present,
-        className: cn(
-            "hover:ring-2 hover:ring-offset-0 hover:ring-amber-400/50",
-            t.phase === "completed"
-                ? "bg-amber-400 border border-amber-300/50"
-                : t.phase === "future"
-                  ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                  : "bg-amber-300 border border-amber-300/50",
-        ),
-        tooltip: (
-            <div className="space-y-1.5">
-                <div className="font-semibold text-white">{t.id}</div>
-                <div className="text-slate-400 text-[11px]">{t.itemId}</div>
-                <div>
-                    <span className="text-slate-500">Status </span>
-                    <span className="capitalize">{t.status}</span>
-                </div>
-                <div>
-                    <span className="text-slate-500">Qty </span>
-                    {t.quantity} {t.uom}
-                </div>
-                {t.pickedDate && (
+            );
+        }
+        case "allocation": {
+            const a = projection.allocations.find((a) => a.id === id);
+            if (!a) return null;
+            return (
+                <div className="space-y-1.5">
+                    <div className="font-semibold text-white">{a.id}</div>
+                    <div className="text-slate-400 text-[11px]">{a.itemId}</div>
                     <div>
-                        <span className="text-slate-500">Picked </span>
-                        {fmtTs(t.pickedDate)}
+                        <span className="text-slate-500">Allocated </span>
+                        {a.quantityAllocated} / {a.quantityRequired} {a.uom}
+                        {a.status === "partial" && <span className="ml-1.5 text-amber-400">partial</span>}
                     </div>
-                )}
-            </div>
-        ),
-    }));
-    return {
-        id: "pick-tasks",
-        label: "Pickup",
-        title: "Pickup tasks",
-        lanes: buildLanes(bars, "swimlane"),
-        barStyle: "bar",
-        stackingStyle: "swimlane",
-    };
-}
-
-function buildPutawayTasksStory(tasks: ProjectedPutawayTask[], present: number): Story {
-    const bars: BarItem[] = tasks.map((t) => ({
-        id: t.id,
-        entityType: "putawayTask" as EntityType,
-        start: t.startedAt ?? t.createdAt,
-        end: t.putawayDate ?? present,
-        className: cn(
-            "hover:ring-2 hover:ring-offset-0 hover:ring-emerald-400/50",
-            t.phase === "completed"
-                ? "bg-emerald-500 border border-emerald-400/50"
-                : t.phase === "future"
-                  ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                  : "bg-emerald-400 border border-emerald-300/50",
-        ),
-        tooltip: (
-            <div className="space-y-1.5">
-                <div className="font-semibold text-white">{t.id}</div>
-                <div className="text-slate-400 text-[11px]">{t.itemId}</div>
-                <div>
-                    <span className="text-slate-500">Status </span>
-                    <span className="capitalize">{t.status}</span>
-                </div>
-                <div>
-                    <span className="text-slate-500">Qty </span>
-                    {t.quantity}
-                </div>
-                {t.putawayDate && (
                     <div>
-                        <span className="text-slate-500">Putaway </span>
-                        {fmtTs(t.putawayDate)}
+                        <span className="text-slate-500">From </span>
+                        {fmtTs(a.allocatedAt)}
                     </div>
-                )}
-            </div>
-        ),
-    }));
-    return {
-        id: "putaway-tasks",
-        label: "Putaway",
-        title: "Putaway Tasks",
-        lanes: buildLanes(bars, "swimlane"),
-        barStyle: "bar",
-        stackingStyle: "swimlane",
-    };
-}
-
-function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[], present: number): Story {
-    const bars: BarItem[] = pos.map((po) => {
-        const end = po.receivedAt ?? po.expectedDeliveryDate ?? present;
-        return {
-            id: po.id,
-            entityType: "purchaseOrder" as EntityType,
-            start: po.orderDate,
-            end: end > po.orderDate ? end : po.orderDate + 3600,
-            className: cn(
-                "hover:ring-2 hover:ring-offset-0 hover:ring-violet-500/50",
-                po.phase === "completed"
-                    ? "bg-violet-500 border border-violet-400/50"
-                    : po.phase === "future"
-                      ? "bg-slate-400 border border-slate-400/40 border-dashed"
-                      : "bg-violet-400 border border-violet-300/50",
-            ),
-            tooltip: (
+                    <div>
+                        <span className="text-slate-500">Until </span>
+                        {a.clearedAt ? fmtTs(a.clearedAt) : "—"}
+                    </div>
+                </div>
+            );
+        }
+        case "pickTask": {
+            const t = projection.pickTasks.find((t) => t.id === id);
+            if (!t) return null;
+            return (
+                <div className="space-y-1.5">
+                    <div className="font-semibold text-white">{t.id}</div>
+                    <div className="text-slate-400 text-[11px]">{t.itemId}</div>
+                    <div>
+                        <span className="text-slate-500">Status </span>
+                        <span className="capitalize">{t.status}</span>
+                    </div>
+                    <div>
+                        <span className="text-slate-500">Qty </span>
+                        {t.quantity} {t.uom}
+                    </div>
+                    {t.pickedDate && (
+                        <div>
+                            <span className="text-slate-500">Picked </span>
+                            {fmtTs(t.pickedDate)}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        case "putawayTask": {
+            const t = projection.putawayTasks.find((t) => t.id === id);
+            if (!t) return null;
+            return (
+                <div className="space-y-1.5">
+                    <div className="font-semibold text-white">{t.id}</div>
+                    <div className="text-slate-400 text-[11px]">{t.itemId}</div>
+                    <div>
+                        <span className="text-slate-500">Status </span>
+                        <span className="capitalize">{t.status}</span>
+                    </div>
+                    <div>
+                        <span className="text-slate-500">Qty </span>
+                        {t.quantity}
+                    </div>
+                    {t.putawayDate && (
+                        <div>
+                            <span className="text-slate-500">Putaway </span>
+                            {fmtTs(t.putawayDate)}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        case "purchaseOrder": {
+            const po = projection.purchaseOrders.find((p) => p.id === id);
+            if (!po) return null;
+            return (
                 <div className="space-y-1.5">
                     <div className="font-semibold text-white">{po.orderNumber}</div>
                     <div className="text-slate-400 text-[11px]">{po.itemId}</div>
@@ -585,208 +742,22 @@ function buildPurchaseOrdersStory(pos: ProjectedPurchaseOrder[], present: number
                         </div>
                     )}
                 </div>
-            ),
-        };
-    });
-    return {
-        id: "purchase-orders",
-        label: "PO",
-        title: "Purchase orders",
-        lanes: buildLanes(bars, "swimlane"),
-        barStyle: "line",
-        stackingStyle: "swimlane",
-    };
-}
-
-//------------------------------------------------------------------------------
-// Story selection
-//------------------------------------------------------------------------------
-
-function buildStories(
-    level: TimelineLevel,
-    projection: AsOfProjection | null,
-    effectiveNow: number,
-    areatype?: AreaType,
-    nodeHash?: string,
-): Story[] {
-    const so = projection?.salesOrders ?? [];
-    const po = projection?.productionOrders ?? [];
-    const ops = projection?.operations ?? [];
-
-    const rcp = projection?.receipts ?? [];
-    const alloc = projection?.allocations ?? [];
-    const picks = (projection?.pickTasks ?? []).filter((t) => {
-        if (!nodeHash) return true;
-        if (areatype === "storage") return t.warehouseId === nodeHash;
-        if (areatype === "delivery") return t.warehouseId === nodeHash;
-        return true;
-    });
-    const putaways = (projection?.putawayTasks ?? []).filter((t) => {
-        if (!nodeHash) return true;
-        if (areatype === "storage") return t.warehouseId === nodeHash;
-        if (areatype === "reception") return t.sourceLocationId?.startsWith(nodeHash) ?? false;
-        return true;
-    });
-    const purchaseOrders = projection?.purchaseOrders ?? [];
-
-    switch (level) {
-        case "factory":
-            return [buildSalesOrdersStory(so)];
-        case "area":
-            switch (areatype) {
-                case "production":
-                    return [buildSalesOrdersStory(so), buildProductionOrdersStory(po)];
-                case "delivery":
-                    return [
-                        buildSalesOrdersStory(so),
-                        buildAllocationsStory(alloc, "sales_order", effectiveNow),
-                        ...(FULL_TIMELINE ? [buildPickTasksStory(picks, effectiveNow)] : []),
-                    ];
-                case "reception":
-                    return [
-                        buildPurchaseOrdersStory(purchaseOrders, effectiveNow),
-                        buildReceiptsStory(rcp, effectiveNow),
-                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, effectiveNow)] : []),
-                    ];
-                case "storage":
-                    return [buildSalesOrdersStory(so), buildAllocationsStory(alloc, "production_order", effectiveNow)];
-                case "quality":
-                    return [
-                        buildSalesOrdersStory(so),
-                        ...(FULL_TIMELINE ? [buildPutawayTasksStory(putaways, effectiveNow)] : []),
-                    ];
-                default:
-                    return [buildSalesOrdersStory(so)];
-            }
-        case "line":
-        case "cell":
-        case "machine":
-            return [buildProductionOrdersStory(po), buildOperationsStory(ops)];
-    }
-}
-
-//------------------------------------------------------------------------------
-// Bar component
-//------------------------------------------------------------------------------
-
-const LINE_H = 4;
-
-function Bar({
-    bar,
-    winStart,
-    winEnd,
-    laneIndex,
-    barStyle,
-    highlightState,
-    onEnter,
-    onLeave,
-}: {
-    bar: BarItem;
-    winStart: number;
-    winEnd: number;
-    laneIndex: number;
-    barStyle: BarStyle;
-    highlightState: HighlightState;
-    onEnter: (content: React.ReactNode, e: ReactMouseEvent) => void;
-    onLeave: () => void;
-}) {
-    //--------------------------------------------------------------------------
-    // Store
-    const { setHovered, setSelected } = useFocusStore();
-
-    //--------------------------------------------------------------------------
-    // Memos
-    const style: CSSProperties | undefined = useMemo(() => {
-        const left = toPct(bar.start, winStart, winEnd);
-        const right = toPct(bar.end, winStart, winEnd);
-        const clampedLeft = Math.max(0, left);
-        const clampedRight = Math.min(100, right);
-        const widthPct = Math.max(0.25, clampedRight - clampedLeft);
-        const h = barStyle === "line" ? LINE_H : BAR_H;
-        const rowHeight = barStyle === "bar" ? ROW_H : ROW_H_LINE;
-        if (right < 0 || left > 100) {
-            return;
+            );
         }
-
-        return {
-            left: `${clampedLeft}%`,
-            width: `${widthPct}%`,
-            top: laneIndex * rowHeight + (rowHeight - h) / 2,
-            height: h,
-        };
-    }, [bar, barStyle, winStart, winEnd, laneIndex]);
-
-    //--------------------------------------------------------------------------
-    // Handlers
-    const mouseEnterHandler = useCallback(
-        (e: ReactMouseEvent) => {
-            e.stopPropagation();
-            onEnter(bar.tooltip, e);
-            setHovered({ type: bar.entityType, id: bar.id });
-        },
-        [onEnter, bar, setHovered],
-    );
-
-    //--------------------------------------------------------------------------
-    const mouseLeaveHandler = useCallback(
-        (e: ReactMouseEvent) => {
-            e.stopPropagation();
-            onLeave();
-            setHovered(null);
-        },
-        [onLeave, setHovered],
-    );
-
-    //--------------------------------------------------------------------------
-    const mouseDownHandler = useCallback((e: ReactMouseEvent) => {
-        e.stopPropagation();
-    }, []);
-
-    //--------------------------------------------------------------------------
-    const mouseClickHandler = useCallback(
-        (e: ReactMouseEvent) => {
-            e.stopPropagation();
-            setSelected({ type: bar.entityType, id: bar.id });
-            const { factorySlug, nodeSlug } = Router.currentRoute();
-            if (factorySlug) {
-                Router.replace({ factorySlug, nodeSlug, itemSlug: bar.id });
-            }
-        },
-        [bar, setSelected],
-    );
-
-    //--------------------------------------------------------------------------
-    if (!style) return null;
-
-    //--------------------------------------------------------------------------
-    return (
-        <div
-            className={cn(
-                "absolute cursor-pointer pointer-events-auto transition-[shadow,opacity]",
-                barStyle === "line" ? "rounded-full" : "rounded-sm",
-                highlightState === "dimmed" && "opacity-20",
-                bar.className,
-            )}
-            style={style}
-            onMouseEnter={mouseEnterHandler}
-            onMouseLeave={mouseLeaveHandler}
-            onMouseDown={mouseDownHandler}
-            onClick={mouseClickHandler}
-        />
-    );
+    }
 }
 
 //------------------------------------------------------------------------------
 // Main component
 //------------------------------------------------------------------------------
-export function Timeline({ className }: { className?: string }) {
-    //--------------------------------------------------------------------------
-    // Context
+export function Timeline() {
     const { selectedNode } = useContext(SelectionContext);
 
     //--------------------------------------------------------------------------
-    const { hovered, setHovered, setSelected } = useFocusStore();
-    const { asOf, setAsOf, present, isPlaying, play, pause, playbackSpeed, setPlaybackSpeed } = useTimelineStore();
+    const { hovered, setSelected } = useFocusStore();
+    const { asOf, setAsOf, present, isPlaying, play, pause, playbackSpeed, setPlaybackSpeed, timelineWindow, setZoom } =
+        useTimelineStore();
+    const { activeScenarioId } = useContext(ScenarioContext);
 
     useEffect(() => {
         const { itemSlug } = Router.currentRoute();
@@ -795,8 +766,7 @@ export function Timeline({ className }: { className?: string }) {
         if (type) setSelected({ type, id: itemSlug });
     }, [setSelected]);
     const { scope, level, isLoading } = useScope(selectedNode ?? null);
-    const projection = useProjection(scope);
-    const spanProjection = useSpanProjection();
+    const span = useTimelineStore((s) => s.span);
 
     //--------------------------------------------------------------------------
     const areaType: AreaType | undefined = useMemo(() => {
@@ -820,7 +790,7 @@ export function Timeline({ className }: { className?: string }) {
 
     //--------------------------------------------------------------------------
     const activeFocus = correlationEnabled ? hovered : null;
-    const correlated = useCorrelation(projection, activeFocus);
+    const correlated = useCorrelation(scope, activeFocus);
 
     // Tick at each second boundary on the wall clock.
     // Uses getState() to avoid stale closure — no deps needed.
@@ -838,46 +808,51 @@ export function Timeline({ className }: { className?: string }) {
         return () => clearTimeout(timeoutId);
     }, []);
 
-    const [zoom, setZoom] = useState<ZoomKey>("1W");
-    const [tooltip, setTooltip] = useState<{ content: React.ReactNode; x: number; y: number } | null>(null);
+    const [tooltip, setTooltip] = useState<{ entityType: EntityType; id: string; x: number; y: number } | null>(null);
 
     const trackRef = useRef<HTMLDivElement>(null);
     const isDragging = useRef(false);
 
     //--------------------------------------------------------------------------
-    const zoomDef = ZOOMS.find((z) => z.key === zoom)!;
-    const halfSecs = (zoomDef.days * 86400) / 2;
-    const winStart = present - zoomDef.days * 86400;
-    const winEnd = present + halfSecs;
+    const zoomDef = timelineWindow.kind === "zoom" ? ZOOMS.find((z) => z.key === timelineWindow.key)! : null;
+    const winStart = timelineWindow.kind === "zoom" ? present - zoomDef!.days * 86400 : timelineWindow.from;
+    const winEnd = timelineWindow.kind === "zoom" ? present + (zoomDef!.days * 86400) / 2 : timelineWindow.to;
     const effectiveNow = asOf ?? present;
 
     //--------------------------------------------------------------------------
     const stories = useMemo(
-        () => (level ? buildStories(level, projection, effectiveNow, areaType, selectedNode?.hash) : []),
-        [level, projection, effectiveNow, areaType, selectedNode],
+        () => (level && span ? buildStories(level, scope, span.window.origin, areaType, selectedNode?.hash) : []),
+        [level, scope, span, areaType, selectedNode],
     );
 
+    const showMaintenanceBands = level !== "area" || areaType === "production";
+
     const downtimeBands = useMemo(() => {
-        if (!spanProjection) return [];
-        return spanProjection.downtimeEvents
+        if (!span || !showMaintenanceBands) return [];
+        return [...span.downtimeEvents.values()]
             .map((dt) => ({
                 dt,
                 start: Math.max(dt.startedAt, winStart),
                 end: Math.min(dt.endedAt ?? effectiveNow, winEnd),
             }))
             .filter(({ start, end }) => start < end);
-    }, [spanProjection, winStart, winEnd, effectiveNow]);
+    }, [span, winStart, winEnd, effectiveNow, showMaintenanceBands]);
 
     const workOrderBands = useMemo(() => {
-        if (!spanProjection) return [];
-        return spanProjection.eamWorkOrders
-            .map((wo) => ({ wo, start: Math.max(wo.effectiveStart, winStart), end: Math.min(wo.effectiveEnd, winEnd) }))
+        if (!span || !showMaintenanceBands) return [];
+        return [...span.eamWorkOrders.values()]
+            .map((wo) => ({
+                wo,
+                start: Math.max(wo.actualStart ?? wo.scheduledStart, winStart),
+                end: Math.min(wo.actualEnd ?? wo.scheduledEnd, winEnd),
+            }))
             .filter(({ start, end }) => start < end);
-    }, [spanProjection, winStart, winEnd]);
+    }, [span, winStart, winEnd, showMaintenanceBands]);
 
-    const scopedDowntimeIds = useMemo(() => new Set(projection?.downtimeEvents.map((dt) => dt.id) ?? []), [projection]);
-    const scopedWorkOrderIds = useMemo(() => new Set(projection?.eamWorkOrders.map((wo) => wo.id) ?? []), [projection]);
-    const ticks = useMemo(() => buildTicks(winStart, winEnd, zoomDef.days), [winStart, winEnd, zoomDef.days]);
+    const scopedDowntimeIds = useMemo(() => new Set(scope?.downtimeEvents.map((dt) => dt.id) ?? []), [scope]);
+    const scopedWorkOrderIds = useMemo(() => new Set(scope?.eamWorkOrders.map((wo) => wo.id) ?? []), [scope]);
+    const tickDays = zoomDef?.days ?? Math.ceil((winEnd - winStart) / 86400);
+    const ticks = useMemo(() => buildTicks(winStart, winEnd, tickDays), [winStart, winEnd, tickDays]);
     const closedIntervals = useMemo(() => buildClosedIntervals(winStart, winEnd), [winStart, winEnd]);
     const presentPct = toPct(present, winStart, winEnd);
     const playheadPct = Math.max(0, Math.min(100, toPct(asOf || present, winStart, winEnd)));
@@ -922,9 +897,34 @@ export function Timeline({ className }: { className?: string }) {
     );
 
     //--------------------------------------------------------------------------
+    const handleTrackTouchStart = useCallback(
+        (e: ReactTouchEvent) => {
+            const touch = e.touches[0];
+            if (!touch) return;
+            e.preventDefault();
+            isDragging.current = true;
+            setTooltip(null);
+            seek(touch.clientX);
+            const onMove = (ev: TouchEvent) => {
+                const t = ev.touches[0];
+                if (t) seek(t.clientX);
+                ev.preventDefault();
+            };
+            const onEnd = () => {
+                isDragging.current = false;
+                window.removeEventListener("touchmove", onMove);
+                window.removeEventListener("touchend", onEnd);
+            };
+            window.addEventListener("touchmove", onMove, { passive: false });
+            window.addEventListener("touchend", onEnd);
+        },
+        [seek],
+    );
+
+    //--------------------------------------------------------------------------
     // Tooltip
-    const showTooltip = useCallback((content: React.ReactNode, e: ReactMouseEvent) => {
-        if (!isDragging.current) setTooltip({ content, x: e.clientX, y: e.clientY });
+    const showTooltip = useCallback((entityType: EntityType, id: string, e: ReactMouseEvent) => {
+        if (!isDragging.current) setTooltip({ entityType, id, x: e.clientX, y: e.clientY });
     }, []);
 
     //--------------------------------------------------------------------------
@@ -940,7 +940,7 @@ export function Timeline({ className }: { className?: string }) {
         if (tooltip) {
             return createPortal(
                 <div
-                    className="fixed z-[9999] pointer-events-none"
+                    className="fixed z-9999 pointer-events-none"
                     style={{
                         ...(tooltip.x > window.innerWidth * 0.6
                             ? { right: window.innerWidth - tooltip.x + 14 }
@@ -951,7 +951,7 @@ export function Timeline({ className }: { className?: string }) {
                     }}
                 >
                     <div className="bg-slate-900/95 border border-slate-700/60 rounded-lg px-3 py-2.5 shadow-xl text-slate-300 text-xs max-w-64">
-                        {tooltip.content}
+                        <TimelineTooltip entityType={tooltip.entityType} id={tooltip.id} />
                     </div>
                 </div>,
                 document.body,
@@ -963,17 +963,17 @@ export function Timeline({ className }: { className?: string }) {
     return (
         <>
             <aside
+                data-scenario="corrective-maintenance-step-6 predictive-maintenance-step-6 tour-guide-5"
                 className={cn(
-                    "flex flex-col pointer-events-auto min-h-40 border-t border-slate-200/15 select-none",
+                    "flex flex-col pointer-events-auto border-b border-slate-200 select-none",
                     PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
-                    className,
                 )}
             >
                 {/* Body */}
-                <div className="flex flex-grow">
+                <div className="flex grow">
                     {/* Label column */}
                     <div
-                        className="shrink-0 w-18 border-r border-slate-200/30 flex flex-col"
+                        className="shrink-0 w-30 border-r border-slate-200/30 flex flex-col"
                         style={{ paddingTop: AXIS_H + ROW_GAP }}
                     >
                         {stories.map((story) => (
@@ -1002,6 +1002,7 @@ export function Timeline({ className }: { className?: string }) {
                         onMouseDown={handleTrackMouseDown}
                         onMouseMove={trackMouseMove}
                         onMouseLeave={hideTooltip}
+                        onTouchStart={handleTrackTouchStart}
                     >
                         {/* Bands — wrapped in mx-1 to align with swimlane margins; top offset skips the axis row */}
                         <div className="absolute inset-x-0 bottom-0 mx-1" style={{ top: AXIS_H }}>
@@ -1019,113 +1020,55 @@ export function Timeline({ className }: { className?: string }) {
                             })}
 
                             {/* Work order bands */}
-                            {workOrderBands.map(({ wo, start, end }) => {
-                                const left = toPct(start, winStart, winEnd);
-                                const width = toPct(end, winStart, winEnd) - left;
-                                const tooltip = (
-                                    <div className="space-y-1.5">
-                                        <div className="font-semibold text-white">{wo.workOrderNumber}</div>
-                                        <div className="text-slate-400 text-[11px] capitalize">{wo.workType}</div>
-                                        <div>
-                                            <span className="text-slate-500">Status </span>
-                                            <span className="capitalize">{wo.status.replace("_", " ")}</span>
-                                            {wo.isOverdue && <span className="ml-1.5 text-red-400">overdue</span>}
-                                        </div>
-                                        <div>
-                                            <span className="text-slate-500">Planned </span>
-                                            {fmtTs(wo.scheduledStart)} → {fmtTs(wo.scheduledEnd)}
-                                        </div>
-                                        {wo.actualStart && (
-                                            <div>
-                                                <span className="text-slate-500">Actual </span>
-                                                {fmtTs(wo.actualStart)}
-                                                {wo.actualEnd ? ` → ${fmtTs(wo.actualEnd)}` : " (ongoing)"}
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                                return (
-                                    <div
+                            <div data-scenario="predictive-maintenance-step-5" className="contents">
+                                {workOrderBands.map(({ wo, start, end }) => (
+                                    <Band
                                         key={wo.id}
-                                        className={cn(
-                                            "absolute top-0 bottom-0 cursor-pointer",
-                                            scopedWorkOrderIds.has(wo.id) ? "bg-amber-200" : "bg-amber-200",
+                                        bar={{
+                                            id: wo.id,
+                                            entityType: "workOrder",
+                                            targetNodeHash: wo.assetId || undefined,
+                                            start,
+                                            end,
+                                            colors: ENTITY_COLORS.workOrder,
+                                        }}
+                                        isInScope={scopedWorkOrderIds.has(wo.id)}
+                                        winStart={winStart}
+                                        winEnd={winEnd}
+                                        onEnter={showTooltip}
+                                        onLeave={hideTooltip}
+                                        effectiveNow={effectiveNow}
+                                        highlightState={highlightStateForBar(
+                                            wo.id,
+                                            "workOrder",
+                                            activeFocus,
+                                            correlated,
                                         )}
-                                        style={{ left: `${left}%`, width: `${width}%`, minWidth: "2px" }}
-                                        onMouseEnter={(e) => {
-                                            showTooltip(tooltip, e);
-                                            setHovered({ type: "workOrder", id: wo.id });
-                                        }}
-                                        onMouseLeave={() => {
-                                            hideTooltip();
-                                            setHovered(null);
-                                        }}
-                                        onMouseDown={(e) => e.stopPropagation()}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelected({ type: "workOrder", id: wo.id });
-                                            const { factorySlug, nodeSlug } = Router.currentRoute();
-                                            if (factorySlug) {
-                                                Router.replace({ factorySlug, nodeSlug, itemSlug: wo.id });
-                                            }
-                                        }}
                                     />
-                                );
-                            })}
+                                ))}
+                            </div>
 
                             {/* Downtime bands */}
-                            {downtimeBands.map(({ dt, start, end }) => {
-                                const left = toPct(start, winStart, winEnd);
-                                const width = toPct(end, winStart, winEnd) - left;
-                                const tooltip = (
-                                    <div className="space-y-1.5">
-                                        <div className="font-semibold text-red-300">
-                                            {dt.reasonCode}
-                                            {dt.isOngoing && (
-                                                <span className="ml-1.5 text-[10px] text-red-400/80">ongoing</span>
-                                            )}
-                                        </div>
-                                        {dt.reasonDescription && (
-                                            <div className="text-slate-400 text-[11px]">{dt.reasonDescription}</div>
-                                        )}
-                                        <div>
-                                            <span className="text-slate-500">Start </span>
-                                            {fmtTs(dt.startedAt)}
-                                        </div>
-                                        <div>
-                                            <span className="text-slate-500">Duration </span>
-                                            {fmtDuration(dt.durationAtAsOf)}
-                                        </div>
-                                    </div>
-                                );
-                                return (
-                                    <div
-                                        key={dt.id}
-                                        className={cn(
-                                            "absolute top-0 bottom-0 cursor-pointer",
-                                            scopedDowntimeIds.has(dt.id) ? "bg-red-300" : "bg-red-600",
-                                        )}
-                                        style={{ left: `${left}%`, width: `${width}%`, minWidth: "2px" }}
-                                        onMouseEnter={(e) => {
-                                            showTooltip(tooltip, e);
-                                            setHovered({ type: "downtime", id: dt.id });
-                                        }}
-                                        onMouseLeave={() => {
-                                            hideTooltip();
-                                            setHovered(null);
-                                        }}
-                                        onMouseDown={(e) => e.stopPropagation()}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelected({ type: "downtime", id: dt.id });
-                                            const { factorySlug, nodeSlug } = Router.currentRoute();
-                                            if (factorySlug) {
-                                                Router.replace({ factorySlug, nodeSlug, itemSlug: dt.id });
-                                            }
-                                        }}
-                                    />
-                                );
-                            })}
+                            {downtimeBands.map(({ dt, start, end }) => (
+                                <Band
+                                    key={dt.id}
+                                    bar={{
+                                        id: dt.id,
+                                        entityType: "downtime",
+                                        targetNodeHash: dt.workCenterId,
+                                        start,
+                                        end,
+                                        colors: ENTITY_COLORS.downtime,
+                                    }}
+                                    isInScope={scopedDowntimeIds.has(dt.id)}
+                                    winStart={winStart}
+                                    winEnd={winEnd}
+                                    onEnter={showTooltip}
+                                    onLeave={hideTooltip}
+                                    effectiveNow={effectiveNow}
+                                    highlightState={highlightStateForBar(dt.id, "downtime", activeFocus, correlated)}
+                                />
+                            ))}
                         </div>
                         {/* end bands wrapper */}
 
@@ -1181,6 +1124,7 @@ export function Timeline({ className }: { className?: string }) {
                                             winEnd={winEnd}
                                             laneIndex={laneIdx}
                                             barStyle={story.barStyle}
+                                            effectiveNow={effectiveNow}
                                             highlightState={highlightStateForBar(
                                                 bar.id,
                                                 bar.entityType,
@@ -1196,7 +1140,7 @@ export function Timeline({ className }: { className?: string }) {
                         ))}
 
                         {/* Future zone tint */}
-                        {presentPct >= 0 && presentPct <= 100 && (
+                        {!activeScenarioId && presentPct >= 0 && presentPct <= 100 && (
                             <div
                                 className="absolute top-0 bottom-0 bg-white/[0.025] pointer-events-none"
                                 style={{ left: `${presentPct}%`, right: 0 }}
@@ -1216,14 +1160,16 @@ export function Timeline({ className }: { className?: string }) {
                         )}
 
                         {/* Playhead */}
-                        <div
-                            className="absolute top-0 bottom-0 z-20 cursor-ew-resize"
-                            style={{ left: `${playheadPct}%` }}
-                            onMouseDown={handleTrackMouseDown}
-                        >
-                            <div className="absolute top-1 -translate-x-1/2 w-3 h-3 rounded-full bg-accent border-2 border-white/90 shadow-md" />
-                            <div className="absolute top-3.5 bottom-0 w-px -translate-x-1/2 bg-accent shadow-[0_0_6px_var(--color-accent)]" />
-                        </div>
+                        {!activeScenarioId && (
+                            <div
+                                className="absolute top-0 bottom-0 z-20 cursor-ew-resize"
+                                style={{ left: `${playheadPct}%` }}
+                                onMouseDown={handleTrackMouseDown}
+                            >
+                                <div className="absolute top-1 -translate-x-1/2 w-3 h-3 rounded-full bg-accent border-2 border-white/90 shadow-md" />
+                                <div className="absolute top-3.5 bottom-0 w-px -translate-x-1/2 bg-accent shadow-[0_0_6px_var(--color-accent)]" />
+                            </div>
+                        )}
 
                         {/* Loading overlay */}
                         {isLoading && (
@@ -1235,10 +1181,7 @@ export function Timeline({ className }: { className?: string }) {
                 </div>
 
                 {/* Header */}
-                <div className="flex items-center pr-3 h-8 border-b border-slate-200/10">
-                    <div className="w-18 px-2 border-r border-slate-200/30">
-                        <FooterTabs />
-                    </div>
+                <div className="flex items-center pr-3 h-8">
                     <div className="flex items-center gap-0.5">
                         {ZOOMS.map((z) => (
                             <button
@@ -1246,14 +1189,16 @@ export function Timeline({ className }: { className?: string }) {
                                 onClick={() => setZoom(z.key)}
                                 className={cn(
                                     "px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide transition-colors",
-                                    zoom === z.key ? "bg-accent/20 text-accent" : "text-slate-400 hover:text-slate-200",
+                                    timelineWindow.kind === "zoom" && timelineWindow.key === z.key
+                                        ? "bg-accent/20 text-accent"
+                                        : "text-slate-400 hover:text-slate-200",
                                 )}
                             >
                                 {z.label}
                             </button>
                         ))}
                     </div>
-                    <div className="flex-grow" />
+                    <div className="grow" />
                     <div className="flex items-center gap-2">
                         {/* Play / pause */}
                         <button
@@ -1308,9 +1253,9 @@ export function Timeline({ className }: { className?: string }) {
                             })}
                         </span>
                     </div>
+                    <FooterTabs className="ml-2" />
                 </div>
             </aside>
-            <CorrelationModal />
             {tooltipContent}
         </>
     );

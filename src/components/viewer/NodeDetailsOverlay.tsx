@@ -10,14 +10,17 @@ import { CellIncident } from "../nodes/cells/CellIncident";
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
+import { useOEEHistory } from "@/hooks/useOEEHistory";
 import { BadgeOEE } from "../common/BadgeOEE";
 import { AnchoredPanel } from "./DOM3D/AnchoredPanel";
 import { StorageOverlay } from "./StorageOverlay";
 import { UnitOutPanel } from "./DOM3D/UnitOutPanel";
 import { InfoPanel } from "./DOM3D/InfoPanel";
 import { CellSummary } from "../nodes/cells/CellSummary";
-import { useSpanProjection } from "@/hooks/useSpanProjection";
+import { useSpanSnapshot } from "@/hooks/useSpanSnapshot";
+import { useProjection } from "@/hooks/useProjection";
 import { useCorrelation } from "@/hooks/useCorrelation";
+import { buildCorrelatedSnapshot } from "@/core/Correlation";
 import { getMachineDocumentation } from "@/content/machine";
 
 //------------------------------------------------------------------------------
@@ -53,6 +56,7 @@ const AreaDetailsOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const oee = useAreaOEE(areaNode);
+    const oeeHistory = useOEEHistory(areaNode);
 
     //--------------------------------------------------------------------------
     const kpi = useMemo(() => {
@@ -61,11 +65,12 @@ const AreaDetailsOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
             <div className="starting:opacity-0 starting:translate-y-4 opacity-100 translate-y-0 transition-all duration-300 delay-1700 transform-3d">
                 <BadgeOEE
                     oee={oee}
+                    oeeHistory={oeeHistory}
                     className="text-2xl -translate-y-8 px-3 py-2 shadow-xl transform-3d backdrop-blur-3xl"
                 />
             </div>
         );
-    }, [oee]);
+    }, [oee, oeeHistory]);
 
     //--------------------------------------------------------------------------
     const content = useMemo(() => {
@@ -128,28 +133,43 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
     const asOf = useTimelineStore((t) => t.asOf);
     const present = useTimelineStore((t) => t.present);
     const targetAsOf = asOf || present;
-    const projection = useSpanProjection();
-    const operation = useMemo(() => {
-        return projection?.operations
-            .filter((op) => op.workCenterId === cellNode.hash && op.actualStart && op.actualStart < targetAsOf)
-            .sort((a, b) => (a.actualStart || 0) - (b.actualStart || 0))
-            .pop();
-    }, [cellNode, projection, targetAsOf]);
-    const correlated = useCorrelation(projection, { type: "operation" as const, id: operation?.id || "" });
+
+    const snapshot = useSpanSnapshot();
+
+    // Find the current raw operation for this cell (time-dependent lookup on raw data)
+    const rawOperation = useMemo(() => {
+        return (
+            snapshot?.operations
+                .filter((op) => op.workCenterId === cellNode.hash && op.actualStart && op.actualStart < targetAsOf)
+                .sort((a, b) => (a.actualStart || 0) - (b.actualStart || 0))
+                .pop() ?? null
+        );
+    }, [snapshot, cellNode, targetAsOf]);
+
+    const focused = useMemo(
+        () => (rawOperation ? { type: "operation" as const, id: rawOperation.id } : null),
+        [rawOperation],
+    );
+    const correlated = useCorrelation(snapshot, focused);
+
+    // Project only the focused operation and its correlated entities
+    const correlatedSnapshot = useMemo(
+        () => (snapshot && focused && correlated ? buildCorrelatedSnapshot(snapshot, focused, correlated) : null),
+        [snapshot, focused, correlated],
+    );
+    const projection = useProjection(correlatedSnapshot);
+
+    const operation = projection?.operations.find((op) => op.id === rawOperation?.id);
     const operationDowntime = useMemo(() => {
         return projection?.downtimeEvents
-            .filter(
-                (d) =>
-                    correlated?.downtimeEvents.has(d.id) &&
-                    d.workCenterId === cellNode.hash &&
-                    d.startedAt < targetAsOf,
-            )
+            .filter((d) => d.workCenterId === cellNode.hash && d.startedAt < targetAsOf)
             .sort((a, b) => a.startedAt - b.startedAt)
             .pop();
-    }, [cellNode, projection, correlated, targetAsOf]);
+    }, [cellNode, projection, targetAsOf]);
     const productionOrderId = correlated?.productionOrders.values().next().value;
     const productionOrder = projection?.productionOrders.find((po) => po.id === productionOrderId);
-    const machineDetails = getMachineDocumentation(cellNode.name);
+    const machineDetails = getMachineDocumentation(cellNode.machines[0].name);
+
     //--------------------------------------------------------------------------
     // Memos
     const outs = useMemo(() => {
@@ -160,20 +180,8 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
 
     //--------------------------------------------------------------------------
     const incident = useMemo(() => {
-        return (
-            productionOrder &&
-            operation &&
-            operationDowntime && (
-                <CellIncident
-                    cell={cellNode}
-                    downtimeEvent={operationDowntime}
-                    manufacturingOrder={productionOrder}
-                    operation={operation}
-                    machineDetails={machineDetails}
-                />
-            )
-        );
-    }, [cellNode, operationDowntime, productionOrder, operation, machineDetails]);
+        return operationDowntime && <CellIncident downtimeEvent={operationDowntime} />;
+    }, [cellNode, operationDowntime, machineDetails]);
 
     //--------------------------------------------------------------------------
     const extra = useMemo(() => {
@@ -191,6 +199,7 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
         <>
             <InfoPanel node={cellNode} incident={incident} extra={extra}>
                 <CellSummary
+                    cell={cellNode}
                     manufacturingOrder={productionOrder}
                     operation={operation}
                     machineDetails={machineDetails}

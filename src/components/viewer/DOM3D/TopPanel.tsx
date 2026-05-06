@@ -4,6 +4,7 @@ import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 //------------------------------------------------------------------------------
 import { BadgeOEE } from "@/components/common/BadgeOEE";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
+import { useOEEHistory } from "@/hooks/useOEEHistory";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -24,6 +25,7 @@ export const TopPanel = ({
 }) => {
     //--------------------------------------------------------------------------
     const oee = useAreaOEE(node);
+    const oeeHistory = useOEEHistory(node);
 
     //--------------------------------------------------------------------------
     // Render
@@ -45,6 +47,7 @@ export const TopPanel = ({
                 {oee !== undefined && (
                     <BadgeOEE
                         oee={oee}
+                        oeeHistory={oeeHistory}
                         className="mt-8 text-[10rem] leading-35 px-10 py-8 shadow-2xl rounded-4xl backdrop-blur-lg transform-3d"
                     />
                 )}

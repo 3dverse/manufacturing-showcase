@@ -1,4 +1,4 @@
-import { SectionWrapper, Field, PhaseBadge, Divider } from "@/components/correlation/SectionWrapper";
+import { SectionWrapper, Field, StatusBadge, Divider } from "@/components/correlation/SectionWrapper";
 import { NodeLink } from "@/components/correlation/NodeLink";
 import { fmtTs } from "@/utils/helpers-time";
 import type { ProjectedPutawayTask } from "@/core/Projection";
@@ -6,14 +6,16 @@ import type { ProjectedPutawayTask } from "@/core/Projection";
 type Props = {
     items: ProjectedPutawayTask[];
     focusedId: string | null;
+    focusedClassName?: string;
 };
 
-export function PutawayTaskSheet({ items, focusedId }: Props) {
+export function PutawayTaskSheet({ items, focusedId, focusedClassName }: Props) {
     return (
         <SectionWrapper
             label="Putaway Tasks"
             items={items}
             focusedId={focusedId}
+            focusedClassName={focusedClassName}
             getId={(e) => e.id}
             renderItem={(t) => (
                 <div>
@@ -23,7 +25,7 @@ export function PutawayTaskSheet({ items, focusedId }: Props) {
                             <p className="text-xs text-muted">{t.itemId}</p>
                         </div>
                         <div className="shrink-0 pt-px">
-                            <PhaseBadge phase={t.phase} />
+                            <StatusBadge status={t.status} />
                         </div>
                     </div>
                     <Divider />

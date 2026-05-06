@@ -2,7 +2,7 @@ import type { Client, Entity, Vec3 } from "@3dverse/livelink";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type { StationId } from "./stations/enum";
 import type { NodeTypes } from "./enums";
-import type { ScenarioIncidentAction } from "./scenarios/scenarios";
+import type { ScenarioIncidentAction } from "./scenarios/types";
 
 //------------------------------------------------------------------------------
 export type Avatar = {
@@ -127,23 +127,38 @@ export type Scenario = {
 };
 
 //------------------------------------------------------------------------------
-export type ScenarioStep = {
-    id: string;
+export type ScenarioStepShroud = {
+    selector: string;
+    offset?: { x?: number; y?: number };
+    waitForCamera?: boolean;
+    size?: number;
+};
+
+export type ScenarioStepMessage = {
+    selector?: string;
+    offset?: { x?: number; y?: number };
+    waitForCamera?: boolean;
     title: string;
     description: React.ReactNode | string;
-    route: string;
-    selector: string;
     incident?: ScenarioIncident;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
+};
+
+export type ScenarioStep = {
+    id: string;
+    skip?: boolean;
+    route: string;
+    beforeRoute?: () => string | void;
+    afterRoute?: () => void;
+    shroud?: ScenarioStepShroud;
+    message: ScenarioStepMessage;
 };
 
 //------------------------------------------------------------------------------
 export type ScenarioIncident = {
     message: string;
+    title?: string;
+    warningMessage?: string | false;
     actions: ScenarioIncidentAction[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
 };
 
 //------------------------------------------------------------------------------

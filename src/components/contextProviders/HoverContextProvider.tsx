@@ -25,10 +25,7 @@ export function HoverContextProvider({ children }: { children: ReactNode }) {
     // Handlers
     const setHoveredNode = useCallback(
         (node: SceneGraphNode | undefined, source: "nav" | "dom3d") => {
-            if (selectedNode === node) {
-                setHoverSource(undefined);
-                _setHoveredNode(undefined);
-            } else {
+            if (selectedNode !== node) {
                 setHoverSource(source);
                 _setHoveredNode(node);
             }

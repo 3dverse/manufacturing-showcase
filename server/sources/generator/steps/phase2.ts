@@ -11,7 +11,7 @@
 import type { RNG } from "../rng";
 import type { GeneratorConfig } from "../config";
 import { getProductionLocations } from "../graph";
-import { nextShiftStart, clampToShift, addMinutes, addDays, addWorkingMinutes, workingMinutes } from "../shifts";
+import { nextShiftStart, clampToShift, addDays, addWorkingMinutes, workingMinutes } from "../shifts";
 import type { POTemplate, DowntimeTemplate, MaintenancePlanTemplate } from "./phase1";
 
 // ---------------------------------------------------------------------------
@@ -87,6 +87,9 @@ function injectDowntimes(
     templates: DowntimeTemplate[],
     rng: RNG,
     nextId: (prefix: string) => string,
+    shifts: GeneratorConfig["shifts"],
+    workDays: GeneratorConfig["workDays"],
+    exclusionIntervals: Array<{ start: Date; end: Date }>,
 ): void {
     // 1-in-4 chance of at least one event
     if (!rng.bool(0.25)) return;
@@ -94,17 +97,23 @@ function injectDowntimes(
     const addEvent = () => {
         const tmpl = rng.pick(templates);
         const duration = rng.nextInt(tmpl.minDurationMinutes, tmpl.maxDurationMinutes);
-        const opSpan = (op.end.getTime() - op.start.getTime()) / 60_000;
+        // Use working-time span so the offset never lands in nights or weekends
+        const opSpan = workingMinutes(op.start, op.end, shifts, workDays);
         if (duration >= opSpan) return;
 
         const maxOffset = opSpan - duration;
         const offset = rng.nextFloat(0, maxOffset);
-        const start = addMinutes(op.start, offset);
-        const end = addMinutes(start, duration);
+        const start = addWorkingMinutes(op.start, offset, shifts, workDays);
+        const end = addWorkingMinutes(start, duration, shifts, workDays);
 
-        // Skip if overlapping an existing event on this operation
+        // Skip if overlapping an existing downtime on this operation
         for (const existing of op.downtimes) {
             if (start < existing.end && end > existing.start) return;
+        }
+
+        // Skip if overlapping a maintenance work order
+        for (const wo of exclusionIntervals) {
+            if (start < wo.end && end > wo.start) return;
         }
 
         op.downtimes.push({
@@ -211,10 +220,6 @@ export function placeTimeline(
                 };
             });
 
-            for (const op of ops) {
-                injectDowntimes(op, downtimeTemplates, rng, nextId);
-            }
-
             const po: PlacedPO = {
                 id: poId,
                 locationId: loc.hash,
@@ -227,7 +232,7 @@ export function placeTimeline(
                 targetWorkingMinutes,
             };
 
-            // ---- Inject maintenance WOs inside this PO's span ----
+            // ---- Inject maintenance WOs first so downtime placement can avoid them ----
             // Any PM that becomes due before po.end is placed at the next shift
             // start at or after its due date (clamped to within the PO span).
             if (hasPMs) {
@@ -239,12 +244,20 @@ export function placeTimeline(
                         const woStart = clampToShift(effectiveDue, config.shifts, config.workDays);
                         if (woStart >= po.end) break; // doesn't fit — leave for next PO
 
-                        const woEnd = addWorkingMinutes(
+                        // WO must start and end within a single operation
+                        const containingOp = ops.find((op) => woStart >= op.start && woStart < op.end);
+                        if (!containingOp) {
+                            pm.nextDue = addDays(pm.nextDue, pm.frequencyDays);
+                            continue;
+                        }
+
+                        const woEndUnclamped = addWorkingMinutes(
                             woStart,
                             pm.pmDurationHours * 60,
                             config.shifts,
                             config.workDays,
                         );
+                        const woEnd = woEndUnclamped < containingOp.end ? woEndUnclamped : containingOp.end;
 
                         const wo: PlacedMaintenanceWO = {
                             id: nextId("WO"),
@@ -271,10 +284,15 @@ export function placeTimeline(
                 }
             }
 
+            // Inject downtimes after WOs so they can be excluded from WO intervals
+            const posWOs = wosByPO.get(po.id) ?? [];
+            for (const op of ops) {
+                injectDowntimes(op, downtimeTemplates, rng, nextId, config.shifts, config.workDays, posWOs);
+            }
+
             // Extend op and PO ends to account for WO time: WOs pause the entire
             // production line, so the PO needs extra wall-clock time to complete
             // its targetWorkingMinutes of net productive work.
-            const posWOs = wosByPO.get(po.id) ?? [];
             if (posWOs.length > 0) {
                 const totalWoWorkingMins = posWOs.reduce(
                     (s, wo) => s + workingMinutes(wo.start, wo.end, config.shifts, config.workDays),

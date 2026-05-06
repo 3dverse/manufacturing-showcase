@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 
 //------------------------------------------------------------------------------
 import { FactoriesContext } from "@/contexts/FactoriesContext";
@@ -11,12 +11,34 @@ import { ClientProductLogo } from "@/components/common/icons/ClientProductLogo";
 
 //------------------------------------------------------------------------------
 import { DevMode } from "@/content/3dverse";
+import { useTimelineStore } from "@/store/useTimelineStore";
+import type { StoppageEvent } from "@/components/scadaEvents/StoppageCallout";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export default function HomePage() {
     //--------------------------------------------------------------------------
     const { factories } = useContext(FactoriesContext);
+    const loadSpan = useTimelineStore((s) => s.loadSpan);
+    const [stoppages, setStoppages] = useState<Map<string, StoppageEvent | null>>(new Map());
+
+    useEffect(() => {
+        for (const factory of factories) {
+            if (factory.enabled) loadSpan(factory.scene_id);
+        }
+    }, [factories, loadSpan]);
+
+    const makeStoppageHandler = useCallback(
+        (siteId: string) => (stoppage: StoppageEvent | null) => {
+            setStoppages((prev) => {
+                if (prev.get(siteId) === stoppage) return prev;
+                const next = new Map(prev);
+                next.set(siteId, stoppage);
+                return next;
+            });
+        },
+        [],
+    );
 
     //--------------------------------------------------------------------------
     // Render
@@ -25,7 +47,7 @@ export default function HomePage() {
             <div className="container flex flex-col grow mx-auto">
                 <header className="relative flex items-start gap-4 py-4 md:py-8 lg:py-10 px-4 2xl:px-0">
                     <ClientProductLogo className="-translate-y-px" />
-                    <h1 className="text-accent-900 text-xl font-bold">PPL Industry</h1>
+                    <h1 className="text-accent-900 text-xl font-bold">PPL Company Inc.</h1>
                     {DevMode.active && (
                         <a
                             href="/dataset"
@@ -46,11 +68,17 @@ export default function HomePage() {
 
                 <ul className="flex flex-col gap-3 lg:gap-6 bg-slate-100 px-4 md:px-8 lg:px-10 py-4 md:py-6 lg:py-9 rounded-t-xl lg:rounded-t-3xl grow overflow-y-auto">
                     {factories.map((factoryItem, index) => (
-                        <li key={factoryItem.slug} data-scenario={index === 0 && "incident-step-1"}>
-                            <FactoryItem factoryItem={factoryItem} />
+                        <li
+                            key={factoryItem.slug}
+                            data-scenario={index === 0 ? "corrective-maintenance-step-1" : undefined}
+                        >
+                            <FactoryItem factoryItem={factoryItem} stoppage={stoppages.get(factoryItem.scene_id)} />
                             {factoryItem.enabled && (
-                                <div className="bg-slate-50 -mt-2 pt-5 p-3 rounded-b-md">
-                                    <ManufacturingOrderPlanning />
+                                <div data-scenario="tour-guide-1" className="bg-slate-50 -mt-2 pt-5 p-3 rounded-b-md">
+                                    <ManufacturingOrderPlanning
+                                        siteId={factoryItem.scene_id}
+                                        onActiveStoppage={makeStoppageHandler(factoryItem.scene_id)}
+                                    />
                                 </div>
                             )}
                         </li>

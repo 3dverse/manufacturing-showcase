@@ -16,6 +16,7 @@ import {
     type PutawayTaskEntry,
     type PurchaseOrderEntry,
     type AllocationEntry,
+    type OEEBucketEntry,
 } from "@/core/Scope";
 import { isArea } from "@/core/SceneGraph";
 import type { SceneGraphNode } from "@/content/type";
@@ -152,6 +153,26 @@ function mapOp(op: OperationDetail): OperationEntry {
     };
 }
 
+function mapOEEBucket(b: {
+    shiftStart: number;
+    shiftEnd: number;
+    plannedMinutes: number;
+    runtimeMinutes: number;
+    goodQuantity: number;
+    producedQuantity: number;
+    oeePercent: number;
+}): OEEBucketEntry {
+    return {
+        shiftStart: b.shiftStart,
+        shiftEnd: b.shiftEnd,
+        plannedMinutes: b.plannedMinutes,
+        runtimeMinutes: b.runtimeMinutes,
+        goodQuantity: b.goodQuantity,
+        producedQuantity: b.producedQuantity,
+        oeePercent: b.oeePercent,
+    };
+}
+
 function mapDowntime(dt: DowntimeEvent): DowntimeEntry {
     return {
         id: dt.id,
@@ -169,6 +190,7 @@ function mapSalesOrder(so: SalesOrder): SalesOrderEntry {
         id: so.id,
         orderNumber: so.orderNumber,
         customerId: so.customerId,
+        customerName: so.customerName ?? undefined,
         status: so.status,
         orderDate: so.orderDate,
         requestedDeliveryDate: so.requestedDeliveryDate ?? 0,
@@ -274,73 +296,116 @@ function mapPurchaseOrder(po: PurchaseOrder): PurchaseOrderEntry {
 // Fetch
 // ---------------------------------------------------------------------------
 
-export async function fetchSpan(node: SceneGraphNode, siteId: string, window: Window): Promise<TimelineSpan> {
+export async function fetchSpan(siteId: string, window: Window, node?: SceneGraphNode): Promise<TimelineSpan> {
     const span = emptySpan(window.origin);
-    const locationIds = locationIdsFromNode(node);
-    const workCenterIds = workCenterIdsFromNode(node);
+    const locationIds = node ? locationIdsFromNode(node) : [];
+    const workCenterIds = node ? workCenterIdsFromNode(node) : [];
 
-    // Production orders — one request per location
-    const poPages = await Promise.all(
-        locationIds.map((locId) =>
-            MES.listProductionOrders({
-                siteId,
-                locationId: locId,
-                scheduledFrom: window.from,
-                scheduledTo: window.to,
-                pageSize: PAGE_SIZE,
-            }).then((r) => r.data.data),
-        ),
-    );
+    // Production orders — per location when scoped, site-wide otherwise
+    const poPages = locationIds.length
+        ? await Promise.all(
+              locationIds.map((locId) =>
+                  MES.listProductionOrders({
+                      siteId,
+                      locationId: locId,
+                      scheduledFrom: window.from,
+                      scheduledTo: window.to,
+                      pageSize: PAGE_SIZE,
+                  }).then((r) => r.data.data),
+              ),
+          )
+        : [
+              await MES.listProductionOrders({
+                  siteId,
+                  scheduledFrom: window.from,
+                  scheduledTo: window.to,
+                  pageSize: PAGE_SIZE,
+              }).then((r) => r.data.data),
+          ];
     for (const po of poPages.flat()) span.productionOrders.set(po.id, mapPO(po));
 
-    // Operations — one request per work center
-    const opPages = await Promise.all(
-        workCenterIds.map((wcId) =>
-            MES.listOperations({
-                siteId,
-                workCenterId: wcId,
-                scheduledFrom: window.from,
-                scheduledTo: window.to,
-                pageSize: PAGE_SIZE,
-            }).then((r) => r.data.data),
-        ),
-    );
-    for (const op of opPages.flat()) span.operations.set(op.id, mapOp(op));
+    // Operations — only when scoped (API requires workCenterId)
+    if (workCenterIds.length) {
+        const opPages = await Promise.all(
+            workCenterIds.map((wcId) =>
+                MES.listOperations({
+                    siteId,
+                    workCenterId: wcId,
+                    scheduledFrom: window.from,
+                    scheduledTo: window.to,
+                    pageSize: PAGE_SIZE,
+                }).then((r) => r.data.data),
+            ),
+        );
+        for (const op of opPages.flat()) span.operations.set(op.id, mapOp(op));
+    }
 
-    // Downtime — always fetched for all work centers in scope
-    const dtPages = await Promise.all(
-        workCenterIds.map((wcId) =>
-            MES.listDowntimeEvents({
-                siteId,
-                workCenterId: wcId,
-                startedFrom: window.from,
-                startedTo: window.to,
-                pageSize: PAGE_SIZE,
-            }).then((r) => r.data.data),
-        ),
-    );
+    // Downtime — per work center when scoped, site-wide otherwise
+    const dtPages = workCenterIds.length
+        ? await Promise.all(
+              workCenterIds.map((wcId) =>
+                  MES.listDowntimeEvents({
+                      siteId,
+                      workCenterId: wcId,
+                      startedFrom: window.from,
+                      startedTo: window.to,
+                      pageSize: PAGE_SIZE,
+                  }).then((r) => r.data.data),
+              ),
+          )
+        : [
+              await MES.listDowntimeEvents({
+                  siteId,
+                  startedFrom: window.from,
+                  startedTo: window.to,
+                  pageSize: PAGE_SIZE,
+              }).then((r) => r.data.data),
+          ];
     for (const dt of dtPages.flat()) span.downtimeEvents.set(dt.id, mapDowntime(dt));
+
+    // OEE timeseries — only when scoped (API requires workCenterId)
+    if (workCenterIds.length) {
+        const oeePages = await Promise.all(
+            workCenterIds.map((wcId) =>
+                MES.getPerformanceTimeseries({ siteId, workCenterId: wcId, from: window.from, to: window.to })
+                    .then((r) => ({ wcId, buckets: r.data.data }))
+                    .catch(() => ({ wcId, buckets: [] })),
+            ),
+        );
+        for (const { wcId, buckets } of oeePages) {
+            span.oeeByWorkCenter.set(wcId, buckets.map(mapOEEBucket));
+        }
+    }
 
     // Sales orders — site-wide, no time filter
     const soResp = await ERP.getSalesOrders({ siteId, pageSize: PAGE_SIZE });
     for (const so of soResp.data.data) span.salesOrders.set(so.id, mapSalesOrder(so));
 
-    // EAM work orders — one request per location, indexed by location and asset
-    const woPages = await Promise.all(
-        locationIds.map((locId) =>
-            EAM.getWorkOrders({
-                siteId,
-                locationId: locId,
-                scheduledFrom: window.from,
-                scheduledTo: window.to,
-                pageSize: PAGE_SIZE,
-            }).then((r) => r.data.data ?? []),
-        ),
-    );
+    // EAM work orders — per location when scoped, site-wide otherwise
+    const woPages = locationIds.length
+        ? await Promise.all(
+              locationIds.map((locId) =>
+                  EAM.getWorkOrders({
+                      siteId,
+                      locationId: locId,
+                      scheduledFrom: window.from,
+                      scheduledTo: window.to,
+                      pageSize: PAGE_SIZE,
+                  }).then((r) => r.data.data ?? []),
+              ),
+          )
+        : [
+              await EAM.getWorkOrders({
+                  siteId,
+                  scheduledFrom: window.from,
+                  scheduledTo: window.to,
+                  pageSize: PAGE_SIZE,
+              }).then((r) => r.data.data ?? []),
+          ];
     for (const wo of woPages.flat()) span.eamWorkOrders.set(wo.id, mapWorkOrder(wo));
 
     // Pick tasks + FG allocations — only fetched when navigating to a Delivery area node
-    if (isArea(node) && node.name.toLowerCase() === "delivery") {
+    if (node && isArea(node) && node.name.toLowerCase() === "delivery") {
         const [ptResp, allocResp] = await Promise.all([
             WMS.getPickTasks({ siteId, fromDate: window.from, toDate: window.to }),
             WMSInventory.getAllocations({ siteId, warehouseId: node.hash }),
@@ -350,7 +415,7 @@ export async function fetchSpan(node: SceneGraphNode, siteId: string, window: Wi
     }
 
     // Receipts + putaway tasks + purchase orders — only fetched when navigating to a Reception area node
-    if (isArea(node) && node.name.toLowerCase() === "reception") {
+    if (node && isArea(node) && node.name.toLowerCase() === "reception") {
         const [rcptResp, putResp, poResp] = await Promise.all([
             WMSInbound.getReceipts({ siteId, fromDate: window.from, toDate: window.to }),
             WMSInbound.getPutawayTasks({ siteId, fromDate: window.from, toDate: window.to }),
@@ -362,7 +427,7 @@ export async function fetchSpan(node: SceneGraphNode, siteId: string, window: Wi
     }
 
     // Storage area: putaway tasks (inbound) + stock allocations (RM + FG pre-QC)
-    if (isArea(node) && node.name.toLowerCase() === "storage") {
+    if (node && isArea(node) && node.name.toLowerCase() === "storage") {
         const [putResp, allocResp] = await Promise.all([
             WMSInbound.getPutawayTasks({ siteId, fromDate: window.from, toDate: window.to }),
             WMSInventory.getAllocations({ siteId, warehouseId: node.hash }),

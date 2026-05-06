@@ -1,18 +1,20 @@
-import { SectionWrapper, Field, PhaseBadge, Divider } from "@/components/correlation/SectionWrapper";
+import { SectionWrapper, Field, StatusBadge, Divider } from "@/components/correlation/SectionWrapper";
 import { fmtTs } from "@/utils/helpers-time";
 import type { ProjectedReceipt } from "@/core/Projection";
 
 type Props = {
     items: ProjectedReceipt[];
     focusedId: string | null;
+    focusedClassName?: string;
 };
 
-export function ReceiptSheet({ items, focusedId }: Props) {
+export function ReceiptSheet({ items, focusedId, focusedClassName }: Props) {
     return (
         <SectionWrapper
             label="Receipts"
             items={items}
             focusedId={focusedId}
+            focusedClassName={focusedClassName}
             getId={(e) => e.id}
             renderItem={(r) => (
                 <div>
@@ -22,7 +24,7 @@ export function ReceiptSheet({ items, focusedId }: Props) {
                             <p className="text-xs text-muted">{r.itemId}</p>
                         </div>
                         <div className="shrink-0 pt-px">
-                            <PhaseBadge phase={r.phase} />
+                            <StatusBadge status={r.status} />
                         </div>
                     </div>
                     <Divider />
@@ -33,7 +35,7 @@ export function ReceiptSheet({ items, focusedId }: Props) {
                         />
                         <Field label="Qty" value={r.quantity} />
                         <Field label="Received" value={fmtTs(r.receivedDate)} />
-                        {r.putawayDate && <Field label="Putaway" value={fmtTs(r.putawayDate)} />}
+                        {r.projected.putawayDate && <Field label="Putaway" value={fmtTs(r.projected.putawayDate)} />}
                         <Field label="Warehouse" value={r.warehouseId} />
                     </div>
                 </div>

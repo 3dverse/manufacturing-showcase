@@ -1,31 +1,93 @@
-import { createContext, useEffect, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
+import {
+    createContext,
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+    type Dispatch,
+    type ReactNode,
+    type SetStateAction,
+} from "react";
 
-import { FIRST_SCENARIO_ID, SCENARIOS } from "@/content/scenarios/scenarios";
+//------------------------------------------------------------------------------
 import { useNavigationStore } from "@/store/useNavigationStore";
-import type { ScenarioStep } from "@/content/type";
+import { useTimelineStore } from "@/store/useTimelineStore";
+import { Router } from "@/core/Router";
 
-type ScenarioContextType = {
-    isGuidanceVisible: boolean;
-    tutorialMode: boolean;
-    scenarios: typeof SCENARIOS;
-    activeScenarioId?: string;
-    activeStepId?: string;
-    activeStep?: ScenarioStep;
-    scenarioActivatedAt?: number;
-    pendingIncidentFocusScenarioId?: string;
+//------------------------------------------------------------------------------
+import { FEATURED_SCENARIOS } from "@/content/scenarios";
+
+//------------------------------------------------------------------------------
+import type { ScenarioStep } from "@/content/type";
+import type { ScenarioGraphData, ScenarioSpanData } from "@/content/scenarios/types";
+
+//------------------------------------------------------------------------------
+// Types
+//------------------------------------------------------------------------------
+
+export type ScenarioContextType = {
+    scenarios: typeof FEATURED_SCENARIOS;
+    activeScenarioId: string | undefined;
+    activeStepId: string | undefined;
+    activeStep: ScenarioStep | undefined;
+    activeSteps: ScenarioStep[];
+    spanData: ScenarioSpanData | null;
+    graphData: ScenarioGraphData | null;
+    scenarioActivatedAt: number | undefined;
+    shroudTargetPosition: { x: number; y: number } | undefined;
+    messageTargetPosition: { x: number; y: number } | undefined;
+    isCameraSettled: boolean;
     isScenarioAutoplaying: boolean;
-    setGuidanceVisible: (visible: boolean) => void;
-    setTutorialMode: (active: boolean) => void;
     setScenarioAutoplaying: Dispatch<SetStateAction<boolean>>;
-    toggleGuidanceVisibility: () => void;
-    toggleTutorialMode: () => void;
+    setGraphData: (scenarioId: string, data: ScenarioGraphData | null) => void;
     activateScenario: (scenarioId: string) => void;
     prevStep: () => void;
     nextStep: () => void;
     clearActiveScenario: () => void;
-    requestIncidentFocus: (scenarioId?: string) => void;
-    clearIncidentFocusRequest: () => void;
 };
+
+//------------------------------------------------------------------------------
+// Helpers
+//------------------------------------------------------------------------------
+
+const hasGuidanceQuery = () => new URLSearchParams(window.location.search).has("guidance");
+
+const resolveSteps = (
+    scenarioId?: string,
+    spanData: ScenarioSpanData | null = null,
+    graphData?: ScenarioGraphData,
+): ScenarioStep[] => {
+    if (!scenarioId) return [];
+    const scenario = FEATURED_SCENARIOS.find((s) => s.id === scenarioId);
+    if (!scenario) return [];
+    return typeof scenario.steps === "function" ? scenario.steps(spanData, graphData) : scenario.steps;
+};
+
+const getFirstScenarioStepId = (scenarioId?: string) => resolveSteps(scenarioId).find((s) => !s.skip)?.id;
+
+const getNextScenarioId = (scenarioId?: string) => {
+    if (!scenarioId) return undefined;
+    const idx = FEATURED_SCENARIOS.findIndex((s) => s.id === scenarioId);
+    return FEATURED_SCENARIOS[idx + 1]?.id;
+};
+
+const pushRoute = (route: string) => {
+    useNavigationStore.getState().navigate(route);
+    const [, factorySlug, nodeSlug, itemSlug] = route.split("/");
+    if (factorySlug) Router.replace({ factorySlug, nodeSlug, itemSlug });
+};
+
+const navigateToStepRoute = (step: ScenarioStep) => {
+    if (step.route && window.location.pathname !== step.route) pushRoute(step.route);
+    const override = step.beforeRoute?.();
+    if (typeof override === "string" && override && window.location.pathname !== override) pushRoute(override);
+};
+
+//------------------------------------------------------------------------------
+// Context
+//------------------------------------------------------------------------------
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const ScenarioContext = createContext(
@@ -36,147 +98,248 @@ export const ScenarioContext = createContext(
     }),
 );
 
-const hasGuidanceQuery = () => new URLSearchParams(window.location.search).has("guidance");
-const getFirstScenarioStepId = (scenarioId?: string) => (scenarioId ? SCENARIOS[scenarioId]?.steps[0]?.id : undefined);
-const getNextScenarioId = (scenarioId?: string) => {
-    if (!scenarioId) return undefined;
+//------------------------------------------------------------------------------
+const queryCenter = (selector: string) => {
+    const el = document.querySelector(selector);
+    if (!el) return undefined;
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+};
 
-    const scenarioIds = Object.keys(SCENARIOS);
-    const scenarioIndex = scenarioIds.indexOf(scenarioId);
-    return scenarioIds[scenarioIndex + 1];
-};
-const navigateToStepRoute = (step?: ScenarioStep) => {
-    if (!step?.route || window.location.pathname === step.route) return;
-    useNavigationStore.getState().navigate(step.route);
-};
+//------------------------------------------------------------------------------
+// Provider
+//------------------------------------------------------------------------------
 
 export const ScenarioContextProvider = ({ children }: { children: ReactNode }) => {
-    const [isGuidanceVisible, setGuidanceVisible] = useState(() => hasGuidanceQuery());
-    const [tutorialMode, setTutorialMode] = useState(true);
+    //--------------------------------------------------------------------------
+    // Refs
+    const cameraHasSettled = useRef<boolean>(true);
+    const [isCameraSettled, setIsCameraSettled] = useState(true);
+    const focusResolvedAtRef = useRef<number | null>(null);
+    const activeStepIdRef = useRef<string | null>(null);
+
+    //--------------------------------------------------------------------------
+    // State
+    const [shroudTargetPosition, setShroudTargetPosition] = useState<{ x: number; y: number } | undefined>();
+    const [messageTargetPosition, setMessageTargetPosition] = useState<{ x: number; y: number } | undefined>();
+
+    const [graphDataMap, setGraphDataMap] = useState<Record<string, ScenarioGraphData | null>>({});
+
     const [activeScenarioId, setActiveScenarioId] = useState<string | undefined>(() =>
-        hasGuidanceQuery() ? FIRST_SCENARIO_ID : undefined,
+        hasGuidanceQuery() ? FEATURED_SCENARIOS.find((s) => !s.disabled)?.id : undefined,
     );
     const [activeStepId, setActiveStepId] = useState<string | undefined>(() =>
-        hasGuidanceQuery() ? getFirstScenarioStepId(FIRST_SCENARIO_ID) : undefined,
+        hasGuidanceQuery() ? getFirstScenarioStepId(FEATURED_SCENARIOS.find((s) => !s.disabled)?.id) : undefined,
     );
     const [scenarioActivatedAt, setScenarioActivatedAt] = useState<number | undefined>(() =>
         hasGuidanceQuery() ? Date.now() : undefined,
     );
-    const [pendingIncidentFocusScenarioId, setPendingIncidentFocusScenarioId] = useState<string | undefined>();
     const [isScenarioAutoplaying, setScenarioAutoplaying] = useState(false);
-    const activeScenario = activeScenarioId ? SCENARIOS[activeScenarioId] : undefined;
-    const activeStep = activeScenario?.steps.find((step) => step.id === activeStepId);
 
+    //--------------------------------------------------------------------------
+    // Hooks
+    const span = useTimelineStore((s) => s.span);
+
+    //--------------------------------------------------------------------------
+    // Memos
+    const graphData = useMemo(
+        () => (activeScenarioId ? (graphDataMap[activeScenarioId] ?? null) : null),
+        [graphDataMap, activeScenarioId],
+    );
+
+    //--------------------------------------------------------------------------
+    const spanData = useMemo(() => {
+        if (!activeScenarioId || !span) return null;
+        return FEATURED_SCENARIOS.find((s) => s.id === activeScenarioId)?.resolveSpan?.(span) ?? null;
+    }, [activeScenarioId, span]);
+
+    //--------------------------------------------------------------------------
+    const activeSteps = useMemo(
+        () => resolveSteps(activeScenarioId, spanData, graphData ?? undefined),
+        [activeScenarioId, spanData, graphData],
+    );
+
+    //--------------------------------------------------------------------------
+    const activeStep = useMemo(() => activeSteps.find((s) => s.id === activeStepId), [activeSteps, activeStepId]);
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    const setGraphData = useCallback(
+        (scenarioId: string, data: ScenarioGraphData | null) =>
+            setGraphDataMap((prev) => ({ ...prev, [scenarioId]: data })),
+        [],
+    );
+
+    //--------------------------------------------------------------------------
+    const updateTargetPositions = useCallback(() => {
+        const shroudPosition =
+            !activeStep?.shroud?.waitForCamera || cameraHasSettled.current
+                ? activeStep?.shroud?.selector
+                    ? queryCenter(activeStep.shroud.selector)
+                    : undefined
+                : undefined;
+
+        const messagePosition =
+            !activeStep?.message?.waitForCamera || cameraHasSettled.current
+                ? activeStep?.message?.selector
+                    ? (queryCenter(activeStep.message.selector) ?? shroudPosition)
+                    : shroudPosition
+                : undefined;
+
+        setShroudTargetPosition(shroudPosition);
+        setMessageTargetPosition(messagePosition);
+    }, [activeStep]);
+
+    //--------------------------------------------------------------------------
+    // Effects
+    useLayoutEffect(() => {
+        updateTargetPositions();
+
+        const selectors = [activeStep?.shroud?.selector, activeStep?.message?.selector].filter(Boolean) as string[];
+        if (selectors.length === 0) return;
+        if (selectors.every((s) => document.querySelector(s))) return;
+
+        const observer = new MutationObserver(() => {
+            if (selectors.every((s) => document.querySelector(s))) {
+                updateTargetPositions();
+                observer.disconnect();
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        return () => observer.disconnect();
+    }, [updateTargetPositions, activeStep?.shroud?.selector, activeStep?.message?.selector]);
+
+    //--------------------------------------------------------------------------
     useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key.toLowerCase() !== "g") return;
+        if (!activeScenarioId || !spanData) return;
+        if (focusResolvedAtRef.current === scenarioActivatedAt) return;
+        focusResolvedAtRef.current = scenarioActivatedAt ?? null;
+        FEATURED_SCENARIOS.find((s) => s.id === activeScenarioId)?.onFocusResolved?.(spanData, graphData ?? undefined);
+    }, [activeScenarioId, spanData, graphData, scenarioActivatedAt]);
 
-            const target = event.target as HTMLElement | null;
-            const isTypingTarget =
-                target instanceof HTMLInputElement ||
-                target instanceof HTMLTextAreaElement ||
-                target instanceof HTMLSelectElement ||
-                Boolean(target?.isContentEditable);
-
-            if (isTypingTarget) return;
-            setGuidanceVisible((current) => !current);
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        const cameraMovingHandler = () => {
+            cameraHasSettled.current = false;
+            setIsCameraSettled(false);
         };
+        const cameraSettledHandler = () => {
+            cameraHasSettled.current = true;
+            setIsCameraSettled(true);
+            updateTargetPositions();
+        };
+        const repositionHanlder = () => {
+            updateTargetPositions();
+        };
+        window.addEventListener("cameraSettled", cameraSettledHandler);
+        window.addEventListener("cameraMoving", cameraMovingHandler);
+        window.addEventListener("resize", repositionHanlder);
+        window.addEventListener("scroll", repositionHanlder, true);
+        return () => {
+            window.removeEventListener("cameraSettled", cameraSettledHandler);
+            window.removeEventListener("cameraMoving", cameraMovingHandler);
+            window.removeEventListener("resize", repositionHanlder);
+            window.removeEventListener("scroll", repositionHanlder, true);
+        };
+    }, [updateTargetPositions]);
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        if (!activeStep || activeStep.id === activeStepIdRef.current) return;
+        activeStepIdRef.current = activeStep.id;
+        navigateToStepRoute(activeStep);
+        activeStep.afterRoute?.();
+        updateTargetPositions();
+    }, [activeStep, updateTargetPositions]);
+
+    //--------------------------------------------------------------------------
+    // Actions
+    const goToScenario = useCallback((scenarioId: string) => {
+        setActiveScenarioId(scenarioId);
+        setActiveStepId(getFirstScenarioStepId(scenarioId));
+        setScenarioActivatedAt(Date.now());
     }, []);
 
+    //--------------------------------------------------------------------------
+    const activateScenario = useCallback(
+        (scenarioId: string) => {
+            setScenarioAutoplaying(false);
+            useTimelineStore.getState().pause();
+            goToScenario(scenarioId);
+        },
+        [goToScenario],
+    );
+
+    //--------------------------------------------------------------------------
+    const clearActiveScenario = useCallback(() => {
+        const tl = useTimelineStore.getState();
+        tl.play();
+        tl.setZoom("1W");
+        setScenarioAutoplaying(false);
+        setActiveScenarioId(undefined);
+        setActiveStepId(undefined);
+        setScenarioActivatedAt(undefined);
+    }, []);
+
+    //--------------------------------------------------------------------------
+    const prevStep = useCallback(() => {
+        const currentIndex = activeSteps.findIndex((s) => s.id === activeStepId);
+        const prev = [...activeSteps.slice(0, currentIndex)].reverse().find((s) => !s.skip);
+        if (prev) setActiveStepId(prev.id);
+    }, [activeSteps, activeStepId]);
+
+    //--------------------------------------------------------------------------
+    const nextStep = useCallback(() => {
+        const currentIndex = activeSteps.findIndex((s) => s.id === activeStepId);
+        const next = activeSteps.slice(currentIndex + 1).find((s) => !s.skip);
+        if (next) {
+            setActiveStepId(next.id);
+            return;
+        }
+        const nextScenarioId = getNextScenarioId(activeScenarioId);
+        if (nextScenarioId) goToScenario(nextScenarioId);
+        else clearActiveScenario();
+    }, [activeSteps, activeStepId, activeScenarioId, goToScenario, clearActiveScenario]);
+
+    //--------------------------------------------------------------------------
     const value = useMemo(
         () => ({
-            isGuidanceVisible,
-            tutorialMode,
-            scenarios: SCENARIOS,
+            scenarios: FEATURED_SCENARIOS,
             activeScenarioId,
             activeStepId,
             activeStep,
+            activeSteps,
+            spanData,
+            graphData,
             scenarioActivatedAt,
-            pendingIncidentFocusScenarioId,
+            shroudTargetPosition,
+            messageTargetPosition,
+            isCameraSettled,
             isScenarioAutoplaying,
-            setGuidanceVisible,
-            setTutorialMode,
             setScenarioAutoplaying,
-            toggleGuidanceVisibility: () => setGuidanceVisible((current) => !current),
-            toggleTutorialMode: () => setTutorialMode((current) => !current),
-            activateScenario: (scenarioId: string) => {
-                setActiveScenarioId(scenarioId);
-                setActiveStepId(getFirstScenarioStepId(scenarioId));
-                setScenarioActivatedAt(Date.now());
-            },
-            prevStep: () => {
-                if (!activeScenarioId) return;
-
-                const steps = SCENARIOS[activeScenarioId]?.steps;
-                if (!steps?.length) {
-                    setActiveStepId(undefined);
-                    return;
-                }
-
-                const currentStepIndex = steps.findIndex((step) => step.id === activeStepId);
-                const prevStep = steps[currentStepIndex - 1];
-                if (!prevStep) return;
-
-                navigateToStepRoute(prevStep);
-                setActiveStepId(prevStep.id);
-            },
-            nextStep: () => {
-                if (!activeScenarioId) return;
-
-                const steps = SCENARIOS[activeScenarioId]?.steps;
-                if (!steps?.length) {
-                    setActiveStepId(undefined);
-                    return;
-                }
-
-                const currentStepIndex = steps.findIndex((step) => step.id === activeStepId);
-                const nextStep = steps[currentStepIndex + 1];
-                if (nextStep) {
-                    navigateToStepRoute(nextStep);
-                    setActiveStepId(nextStep.id);
-                    return;
-                }
-
-                const nextScenarioId = getNextScenarioId(activeScenarioId);
-                if (!nextScenarioId) {
-                    setActiveScenarioId(undefined);
-                    setActiveStepId(undefined);
-                    setScenarioActivatedAt(undefined);
-                    setPendingIncidentFocusScenarioId(undefined);
-                    setScenarioAutoplaying(false);
-                    return;
-                }
-                const firstNextScenarioStep = SCENARIOS[nextScenarioId]?.steps[0];
-
-                navigateToStepRoute(firstNextScenarioStep);
-                setActiveScenarioId(nextScenarioId);
-                setActiveStepId(firstNextScenarioStep?.id);
-                setScenarioActivatedAt(Date.now());
-            },
-            clearActiveScenario: () => {
-                setActiveScenarioId(undefined);
-                setActiveStepId(undefined);
-                setScenarioActivatedAt(undefined);
-                setPendingIncidentFocusScenarioId(undefined);
-                setScenarioAutoplaying(false);
-            },
-            requestIncidentFocus: (scenarioId?: string) => {
-                setPendingIncidentFocusScenarioId(scenarioId ?? activeScenarioId);
-            },
-            clearIncidentFocusRequest: () => setPendingIncidentFocusScenarioId(undefined),
+            setGraphData,
+            activateScenario,
+            prevStep,
+            nextStep,
+            clearActiveScenario,
         }),
         [
-            isGuidanceVisible,
-            tutorialMode,
             activeScenarioId,
             activeStepId,
             activeStep,
+            activeSteps,
+            spanData,
+            graphData,
             scenarioActivatedAt,
-            pendingIncidentFocusScenarioId,
+            shroudTargetPosition,
+            messageTargetPosition,
+            isCameraSettled,
             isScenarioAutoplaying,
+            setGraphData,
+            activateScenario,
+            prevStep,
+            nextStep,
+            clearActiveScenario,
         ],
     );
 

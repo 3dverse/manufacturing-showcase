@@ -15,7 +15,7 @@ import type { BOMNodeData, MESRoutingItem } from "./type";
 import { findNodeByWorkCenter } from "./utils";
 import { BOMFlow } from "./BomFlow";
 import { BOMDetails } from "./BOMDetails";
-import { FooterTabs } from "../common/FooterTabs";
+import { FooterTabs } from "../timeline/FooterTabs";
 import { PERFORMANCE_MODE } from "@/content/3dverse";
 
 //------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ const SHOW_DETAILS = false;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export function BOMPanel({ className }: { className?: string }) {
+export function BOMPanel() {
     //--------------------------------------------------------------------------
     // State
     const [routings, setRoutings] = useState<MESRoutingItem[]>([]);
@@ -160,9 +160,8 @@ export function BOMPanel({ className }: { className?: string }) {
     return (
         <div
             className={cn(
-                "pointer-events-auto border-t border-slate-200/15",
+                "flex flex-col-reverse border-b border-slate-200 pointer-events-auto",
                 PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
-                className,
             )}
         >
             {loading ? (
@@ -193,7 +192,7 @@ export function BOMPanel({ className }: { className?: string }) {
                     )}
                 </>
             )}
-            <div className="flex items-center justify-between gap-4 px-2 h-8 border-b border-slate-200/10">
+            <div className="flex justify-end items-center gap-4 px-2 h-8 border-b border-slate-200/10">
                 <FooterTabs />
             </div>
         </div>

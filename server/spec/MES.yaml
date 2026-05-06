@@ -373,6 +373,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/RoutingListResponse'
 
+  /performance/timeseries:
+    get:
+      tags: [MES]
+      operationId: getPerformanceTimeseries
+      summary: Get OEE timeseries buckets
+      description: >
+        Returns shift-level OEE buckets for a given work center and time window.
+        Each bucket covers one shift and includes availability, quality, and OEE
+        percentages. Intended for trend charts and sparklines.
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - name: workCenterId
+          in: query
+          required: true
+          description: The work center to fetch OEE history for.
+          schema:
+            type: string
+        - name: from
+          in: query
+          description: Start of the reporting window (Unix timestamp).
+          schema:
+            type: integer
+        - name: to
+          in: query
+          description: End of the reporting window (Unix timestamp).
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Shift-level OEE buckets for the requested work center.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceTimeseriesResponse'
+
   /performance:
     get:
       tags: [MES]
@@ -1099,6 +1134,79 @@ components:
         - startedAt
         - durationMinutes
         - reasonCode
+
+    OEEBucket:
+      type: object
+      additionalProperties: false
+      properties:
+        workCenterId:
+          type: string
+        shiftStart:
+          type: integer
+          description: Unix timestamp (seconds) of shift start.
+        shiftEnd:
+          type: integer
+          description: Unix timestamp (seconds) of shift end.
+        shiftName:
+          type: string
+        plannedMinutes:
+          type: number
+          format: double
+        runtimeMinutes:
+          type: number
+          format: double
+        downtimeMinutes:
+          type: number
+          format: double
+        producedQuantity:
+          type: number
+          format: double
+        goodQuantity:
+          type: number
+          format: double
+        scrapQuantity:
+          type: number
+          format: double
+        uom:
+          type: string
+        availabilityPercent:
+          type: number
+          format: double
+        performancePercent:
+          type: number
+          format: double
+        qualityPercent:
+          type: number
+          format: double
+        oeePercent:
+          type: number
+          format: double
+      required:
+        - workCenterId
+        - shiftStart
+        - shiftEnd
+        - shiftName
+        - plannedMinutes
+        - runtimeMinutes
+        - downtimeMinutes
+        - producedQuantity
+        - goodQuantity
+        - scrapQuantity
+        - uom
+        - availabilityPercent
+        - performancePercent
+        - qualityPercent
+        - oeePercent
+
+    PerformanceTimeseriesResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OEEBucket'
+      required: [data]
 
     PerformanceMetrics:
       type: object

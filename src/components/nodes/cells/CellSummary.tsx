@@ -1,12 +1,13 @@
 //------------------------------------------------------------------------------
-import { useMemo, useState } from "react";
-import { faChartLine, faCheckToSlot } from "@fortawesome/sharp-regular-svg-icons";
+import { useMemo } from "react";
+import { faCheckToSlot } from "@fortawesome/sharp-regular-svg-icons";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
-import Button from "@/components/common/Button";
 import { DataContainer, DataLabel, DataValue } from "@/components/common/panel/DataLabel";
 import { Triangle } from "@/components/common/icons/Triangle";
+import { MiniSparkline } from "@/components/common/metrics/MetricBlock";
+import { useCellKpis } from "@/components/nodes/cells/useCellKpis";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -15,20 +16,23 @@ import { fmtDuration } from "@/utils/helpers-time";
 //------------------------------------------------------------------------------
 import type { ProjectedOperation, ProjectedProductionOrder } from "@/core/Projection";
 import type { MachineDetails } from "@/content/machine";
+import type { CellNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const CellSummary = ({
+    cell,
     operation,
     manufacturingOrder,
     machineDetails,
 }: {
+    cell: CellNode;
     operation?: ProjectedOperation;
     manufacturingOrder?: ProjectedProductionOrder;
     machineDetails: MachineDetails;
 }) => {
     //--------------------------------------------------------------------------
-    const [isMESDashboardVisible, setIsMESDashboardVisible] = useState(false);
+    const { oeeHistory } = useCellKpis(cell);
 
     //--------------------------------------------------------------------------
     const { orderNumber, itemCode } = manufacturingOrder ?? { orderNumber: "", itemCode: "" };
@@ -52,7 +56,7 @@ export const CellSummary = ({
             <p className="px-2 capitalize text-sm font-semibold text-slate-800 border-b border-slate-200/80 pb-2">
                 {machineDetails.name}
             </p>
-            <div className="flex flex-col gap-2">
+            <div data-scenario="corrective-maintenance-step-5" className="flex flex-col gap-2">
                 <div className="grid grid-cols-2 gap-2">
                     <DataContainer className="gap-0 justify-between bg-positive-500/10">
                         <DataLabel>
@@ -69,6 +73,11 @@ export const CellSummary = ({
                                 <span className="text-slate-300 font-light text-2xl">N/A</span>
                             )}
                         </DataValue>
+                        <MiniSparkline
+                            data={oeeHistory}
+                            color="var(--color-positive-500)"
+                            className="mt-1 opacity-70"
+                        />
                     </DataContainer>
                     <DataContainer className="gap-0 justify-between">
                         <DataLabel className="flex items-center gap-2 text-positive-700 ">
@@ -83,9 +92,11 @@ export const CellSummary = ({
                     <DataContainer className="gap-2">
                         <div className="flex items-baseline justify-between gap-2">
                             <DataLabel>
-                                {operation.phase === "completed" ? "Last operation" : "Current operation"}
+                                {operation.status === "completed" ? "Last operation" : "Current operation"}
                             </DataLabel>
-                            <span className="text-xs tabular-nums text-muted">{operation.progressPercent}%</span>
+                            <span className="text-xs tabular-nums text-muted">
+                                {operation.projected.progressPercent}%
+                            </span>
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-slate-800 leading-tight">
@@ -100,9 +111,9 @@ export const CellSummary = ({
                             <div
                                 className={cn(
                                     "h-full rounded-full transition-all duration-500",
-                                    operation.phase === "completed" ? "bg-slate-400" : "bg-emerald-500",
+                                    operation.status === "completed" ? "bg-slate-400" : "bg-emerald-500",
                                 )}
-                                style={{ width: `${operation.progressPercent}%` }}
+                                style={{ width: `${operation.projected.progressPercent}%` }}
                             />
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted">
@@ -156,15 +167,6 @@ export const CellSummary = ({
                         <p className="text-sm text-muted/50">No operation data</p>
                     </DataContainer>
                 )}
-                <Button
-                    size="2xs"
-                    variant="ghost"
-                    className="flex w-fit justify-start gap-2"
-                    onClick={() => setIsMESDashboardVisible(!isMESDashboardVisible)}
-                >
-                    <Icon icon={faChartLine} />
-                    MES Dashboard
-                </Button>
             </div>
         </>
     );

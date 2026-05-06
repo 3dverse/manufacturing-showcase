@@ -156,7 +156,7 @@ function AppLayout() {
         <FactoriesContext.Provider value={{ factories }}>
             <ScenarioContextProvider>
                 {content}
-                {!isMobile && UserMode.presentation && <MainGuidance />}
+                {!isMobile && <MainGuidance />}
                 <IntroductionModal isOpen={isIntroductionModalOpen} onClose={() => setIsIntroductionModalOpen(false)} />
             </ScenarioContextProvider>
         </FactoriesContext.Provider>

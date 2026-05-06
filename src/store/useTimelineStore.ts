@@ -12,11 +12,17 @@ import type { SceneGraphNode } from "@/content/type";
 // Types
 //------------------------------------------------------------------------------
 
+export type ZoomKey = "1D" | "1W" | "2W" | "1M" | "3M" | "6M";
+
+export type TimelineWindow = { kind: "zoom"; key: ZoomKey } | { kind: "custom"; from: number; to: number };
+
 interface TimelineStore {
+    nodeListBySiteId: Map<string, SceneGraphNode[]>;
+    setNodeList: (siteId: string, list: SceneGraphNode[]) => void;
     span: TimelineSpan | null;
     loadedKeys: Set<string>;
     isLoading: boolean;
-    loadSpan: (node: SceneGraphNode, siteId: string) => Promise<void>;
+    loadSpan: (siteId: string, node?: SceneGraphNode) => Promise<void>;
     window: Window; // Time window of the data set
     present: number; // Real-time "now", advancing with the wall clock
     setPresent: (t: number) => void;
@@ -27,6 +33,9 @@ interface TimelineStore {
     play: () => void; // snaps present to actual now, then resumes ticking
     pause: () => void;
     setPlaybackSpeed: (speed: number) => void;
+    timelineWindow: TimelineWindow;
+    setZoom: (key: ZoomKey) => void;
+    setCustomWindow: (from: number, to: number) => void;
 }
 
 //------------------------------------------------------------------------------
@@ -53,16 +62,25 @@ const defaultWindow = spanWindow(Math.floor(Date.now() / 1000));
 
 //------------------------------------------------------------------------------
 export const useTimelineStore = create<TimelineStore>((set, get) => ({
+    nodeListBySiteId: new Map(),
+    setNodeList: (siteId, list) => set((s) => ({ nodeListBySiteId: new Map(s.nodeListBySiteId).set(siteId, list) })),
     span: null,
     loadedKeys: new Set<string>(),
     isLoading: false,
-    loadSpan: async (node, siteId) => {
+    loadSpan: async (siteId, node?) => {
         const window = get().window;
 
-        const fetchNode = toAreaOrAbove(node);
-        const wcKey = scopeKey(workCenterIdsFromNode(fetchNode));
-        // WMS zone areas have no work centers — include the node hash to differentiate zones
-        const nodeKey = wcKey === "" && isArea(fetchNode) ? fetchNode.hash : wcKey;
+        let fetchNode: SceneGraphNode | undefined;
+        let nodeKey: string;
+        if (node) {
+            fetchNode = toAreaOrAbove(node);
+            const wcKey = scopeKey(workCenterIdsFromNode(fetchNode));
+            // WMS zone areas have no work centers — include the node hash to differentiate zones
+            nodeKey = wcKey === "" && isArea(fetchNode) ? fetchNode.hash : wcKey;
+        } else {
+            fetchNode = undefined;
+            nodeKey = "factory";
+        }
         const key = `${siteId}:${nodeKey}:${window.from}:${window.to}`;
 
         if (get().loadedKeys.has(key)) return; // already loaded, stays loaded
@@ -72,7 +90,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
         set({ isLoading: true });
 
         try {
-            const incoming = await fetchSpan(fetchNode, siteId, window);
+            const incoming = await fetchSpan(siteId, window, fetchNode);
             if (!_activeKeys.has(key)) return; // cancelled
 
             const existing = get().span;
@@ -97,4 +115,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     play: () => set({ isPlaying: true, present: Math.floor(Date.now() / 1000) }),
     pause: () => set({ isPlaying: false }),
     setPlaybackSpeed: (speed) => set({ playbackSpeed: speed }),
+    timelineWindow: { kind: "zoom", key: "1W" },
+    setZoom: (key) => set({ timelineWindow: { kind: "zoom", key } }),
+    setCustomWindow: (from, to) => set({ timelineWindow: { kind: "custom", from, to } }),
 }));

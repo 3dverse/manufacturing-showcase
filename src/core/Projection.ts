@@ -1,4 +1,5 @@
 import { USE_PROJECTION } from "@/content/3dverse";
+import { buildClosedIntervals } from "@/core/Calendar";
 import type {
     SalesOrderEntry,
     ProductionOrderEntry,
@@ -18,66 +19,75 @@ import type {
 // Types
 // ---------------------------------------------------------------------------
 
-export type Phase = "completed" | "active" | "future";
+export type ProjectedStatus = "planned" | "in_progress" | "completed";
 
-export type ProjectedSalesOrder = SalesOrderEntry & {
-    phase: Phase; // completed if shipped, active if asOf within window, future otherwise
-    isOverdue: boolean;
-};
-
-export type ProjectedProductionOrder = Omit<ProductionOrderEntry, "quantities"> & {
-    phase: Phase;
-    effectiveStart: number;
-    effectiveEnd: number;
-    estimatedProgress: number; // 0–1, linear interpolation at asOf
-    progressPercent: number; // replaces API value: round(estimatedProgress * 100)
-    quantities: ProductionOrderEntry["quantities"] & {
-        producedQuantity: number; // replaces API value: plannedQuantity * estimatedProgress
+export type ProjectedSalesOrder = Omit<SalesOrderEntry, "status"> & {
+    status: ProjectedStatus;
+    projected: {
+        isOverdue: boolean;
     };
 };
 
-export type ProjectedOperation = Omit<OperationEntry, "quantities"> & {
-    phase: Phase;
-    effectiveStart: number;
-    effectiveEnd: number;
-    estimatedProgress: number; // 0–1
-    progressPercent: number; // replaces API value: round(estimatedProgress * 100)
+export type ProjectedProductionOrder = Omit<ProductionOrderEntry, "quantities" | "status"> & {
+    status: ProjectedStatus;
+    projected: {
+        estimatedProgress: number; // 0–1, linear interpolation at asOf
+        progressPercent: number;
+    };
+    quantities: ProductionOrderEntry["quantities"] & {
+        producedQuantity: number;
+    };
+};
+
+export type ProjectedOperation = Omit<OperationEntry, "quantities" | "status"> & {
+    status: ProjectedStatus;
+    projected: {
+        estimatedProgress: number; // 0–1
+        progressPercent: number;
+    };
     quantities: OperationEntry["quantities"] & {
-        producedQuantity: number; // replaces API value: plannedQuantity * estimatedProgress
+        producedQuantity: number;
     };
 };
 
 export type ProjectedDowntime = DowntimeEntry & {
-    durationAtAsOf: number; // seconds elapsed as of asOf
-    isOngoing: boolean; // no endedAt, or endedAt is after asOf
+    status: ProjectedStatus;
+    projected: {
+        durationAtAsOf: number; // seconds elapsed as of asOf
+        isOngoing: boolean; // no endedAt, or endedAt is after asOf
+    };
 };
 
-export type ProjectedWorkOrder = WorkOrderEntry & {
-    phase: Phase;
-    effectiveStart: number;
-    effectiveEnd: number;
-    isOverdue: boolean; // past scheduledEnd and not completed
+export type ProjectedWorkOrder = Omit<WorkOrderEntry, "status"> & {
+    status: ProjectedStatus;
+    projected: {
+        isOverdue: boolean;
+    };
 };
 
-export type ProjectedPickTask = PickTaskEntry & {
-    phase: Phase; // completed if pickedDate <= asOf, future if createdAt > asOf, else active
+export type ProjectedPickTask = Omit<PickTaskEntry, "status"> & {
+    status: ProjectedStatus;
 };
 
-export type ProjectedReceipt = ReceiptEntry & {
-    phase: Phase; // completed if putawayDate <= asOf, active if receivedDate <= asOf, else future
-    putawayDate: number | null; // denormalized from linked putaway task
+export type ProjectedReceipt = Omit<ReceiptEntry, "status"> & {
+    status: ProjectedStatus;
+    projected: {
+        putawayDate: number | null; // denormalized from linked putaway task
+    };
 };
 
-export type ProjectedPutawayTask = PutawayTaskEntry & {
-    phase: Phase; // completed if putawayDate <= asOf, future if createdAt > asOf, else active
-    estimatedProgress: number; // 0–1; interpolated between createdAt and putawayDate when both are known
-    progressPercent: number;
+export type ProjectedPutawayTask = Omit<PutawayTaskEntry, "status"> & {
+    status: ProjectedStatus;
+    projected: {
+        estimatedProgress: number; // 0–1
+        progressPercent: number;
+    };
 };
 
-export type ProjectedAllocation = AllocationEntry; // point-in-time; no time-based projection needed
+export type ProjectedAllocation = AllocationEntry; // "allocated" | "partial" — domain status, not time-projected
 
-export type ProjectedPurchaseOrder = PurchaseOrderEntry & {
-    phase: Phase; // completed if receivedAt <= asOf, future if orderDate > asOf, else active
+export type ProjectedPurchaseOrder = Omit<PurchaseOrderEntry, "status"> & {
+    status: ProjectedStatus;
 };
 
 export type AsOfProjection = {
@@ -102,25 +112,66 @@ function clamp(v: number, min: number, max: number): number {
     return Math.min(max, Math.max(min, v));
 }
 
-function classifyPhase(
+function classifyStatus(
     scheduledStart: number,
     _scheduledEnd: number,
     actualStart: number | undefined,
     actualEnd: number | undefined,
     asOf: number,
-): Phase {
+): ProjectedStatus {
     if (actualEnd !== undefined && actualEnd <= asOf) return "completed";
-    if (actualStart !== undefined && actualStart <= asOf) return "active";
-    if (scheduledStart <= asOf) return "active";
-    return "future";
+    if (actualStart !== undefined && actualStart <= asOf) return "in_progress";
+    if (scheduledStart <= asOf) return "in_progress";
+    return "planned";
 }
 
-function interpolateProgress(effectiveStart: number, effectiveEnd: number, phase: Phase, asOf: number): number {
-    if (phase === "completed") return 1;
-    if (phase === "future") return 0;
-    const span = effectiveEnd - effectiveStart;
-    if (span <= 0) return 1;
-    return clamp((asOf - effectiveStart) / span, 0, 1);
+type Interval = { start: number; end: number };
+
+export function mergeIntervals(intervals: Interval[]): Interval[] {
+    if (intervals.length === 0) return [];
+    const sorted = [...intervals].sort((a, b) => a.start - b.start);
+    const merged: Interval[] = [{ ...sorted[0] }];
+    for (let i = 1; i < sorted.length; i++) {
+        const last = merged[merged.length - 1];
+        if (sorted[i].start <= last.end) {
+            last.end = Math.max(last.end, sorted[i].end);
+        } else {
+            merged.push({ ...sorted[i] });
+        }
+    }
+    return merged;
+}
+
+/** Seconds within [start, end] not covered by any stoppage interval. */
+export function computeAvailableSeconds(start: number, end: number, stoppages: Interval[]): number {
+    if (end <= start) return 0;
+    let blocked = 0;
+    for (const s of mergeIntervals(stoppages)) {
+        const oStart = Math.max(s.start, start);
+        const oEnd = Math.min(s.end, end);
+        if (oStart < oEnd) blocked += oEnd - oStart;
+    }
+    return Math.max(0, end - start - blocked);
+}
+
+function stoppageAwareInterpolate(
+    effectiveStart: number,
+    effectiveEnd: number,
+    status: ProjectedStatus,
+    asOf: number,
+    calendarStoppages: Interval[],
+    actualStoppages: Interval[],
+): number {
+    if (status === "completed") return 1;
+    if (status === "planned") return 0;
+    const totalAvailable = computeAvailableSeconds(effectiveStart, effectiveEnd, calendarStoppages);
+    if (totalAvailable <= 0) return 1;
+    const elapsedEnd = Math.min(asOf, effectiveEnd);
+    const elapsedAvailable = computeAvailableSeconds(effectiveStart, elapsedEnd, [
+        ...calendarStoppages,
+        ...actualStoppages,
+    ]);
+    return clamp(elapsedAvailable / totalAvailable, 0, 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -128,32 +179,55 @@ function interpolateProgress(effectiveStart: number, effectiveEnd: number, phase
 // ---------------------------------------------------------------------------
 
 function projectSalesOrder(e: SalesOrderEntry, asOf: number): ProjectedSalesOrder {
-    const phase: Phase = asOf > e.requestedDeliveryDate ? "completed" : asOf >= e.orderDate ? "active" : "future";
+    const status: ProjectedStatus =
+        asOf > e.requestedDeliveryDate ? "completed" : asOf >= e.orderDate ? "in_progress" : "planned";
     return {
         ...e,
-        phase,
-        isOverdue: asOf > e.requestedDeliveryDate && e.status !== "shipped",
+        status,
+        projected: {
+            isOverdue: asOf > e.requestedDeliveryDate && e.status !== "shipped",
+        },
     };
 }
 
-function projectProductionOrder(e: ProductionOrderEntry, asOf: number): ProjectedProductionOrder {
+function projectProductionOrder(
+    e: ProductionOrderEntry,
+    asOf: number,
+    downtimes: DowntimeEntry[],
+    workOrders: WorkOrderEntry[],
+): ProjectedProductionOrder {
     const effectiveStart = e.timing.actualStart ?? e.timing.scheduledStart;
     const effectiveEnd = e.timing.actualEnd ?? e.timing.scheduledEnd;
-    const phase = classifyPhase(
+    const status = classifyStatus(
         e.timing.scheduledStart,
         e.timing.scheduledEnd,
         e.timing.actualStart,
         e.timing.actualEnd,
         asOf,
     );
-    const estimatedProgress = interpolateProgress(effectiveStart, effectiveEnd, phase, asOf);
-    return {
-        ...e,
-        phase,
+    const calendarStoppages = buildClosedIntervals(effectiveStart, effectiveEnd);
+    const actualStoppages: Interval[] = [
+        ...downtimes.map((dt) => ({ start: dt.startedAt, end: dt.endedAt ?? asOf })),
+        ...workOrders.map((wo) => ({
+            start: wo.actualStart ?? wo.scheduledStart,
+            end: wo.actualEnd ?? wo.scheduledEnd,
+        })),
+    ];
+    const estimatedProgress = stoppageAwareInterpolate(
         effectiveStart,
         effectiveEnd,
-        estimatedProgress,
-        progressPercent: Math.round(estimatedProgress * 100),
+        status,
+        asOf,
+        calendarStoppages,
+        actualStoppages,
+    );
+    return {
+        ...e,
+        status,
+        projected: {
+            estimatedProgress,
+            progressPercent: Math.round(estimatedProgress * 100),
+        },
         quantities: {
             ...e.quantities,
             producedQuantity: Math.round(e.quantities.plannedQuantity * estimatedProgress),
@@ -161,81 +235,108 @@ function projectProductionOrder(e: ProductionOrderEntry, asOf: number): Projecte
     };
 }
 
-function projectOperation(e: OperationEntry, asOf: number): ProjectedOperation {
+function projectOperation(
+    e: OperationEntry,
+    asOf: number,
+    downtimes: DowntimeEntry[],
+    workOrders: WorkOrderEntry[],
+): ProjectedOperation {
     const effectiveStart = e.actualStart ?? e.scheduledStart;
     const effectiveEnd = e.actualEnd ?? e.scheduledEnd;
-    const phase = classifyPhase(e.scheduledStart, e.scheduledEnd, e.actualStart, e.actualEnd, asOf);
-    const estimatedProgress = interpolateProgress(effectiveStart, effectiveEnd, phase, asOf);
-    const isFuture = phase === "future";
-
-    const output = {
-        ...e,
-        phase,
+    const status = classifyStatus(e.scheduledStart, e.scheduledEnd, e.actualStart, e.actualEnd, asOf);
+    const calendarStoppages = buildClosedIntervals(effectiveStart, effectiveEnd);
+    const relevantDowntimes = downtimes.filter((dt) => dt.workCenterId === e.workCenterId);
+    const actualStoppages: Interval[] = [
+        ...relevantDowntimes.map((dt) => ({ start: dt.startedAt, end: dt.endedAt ?? asOf })),
+        ...workOrders.map((wo) => ({
+            start: wo.actualStart ?? wo.scheduledStart,
+            end: wo.actualEnd ?? wo.scheduledEnd,
+        })),
+    ];
+    const estimatedProgress = stoppageAwareInterpolate(
         effectiveStart,
         effectiveEnd,
-        estimatedProgress,
-        progressPercent: Math.round(estimatedProgress * 100),
+        status,
+        asOf,
+        calendarStoppages,
+        actualStoppages,
+    );
+    const isPlanned = status === "planned";
+    return {
+        ...e,
+        status,
+        projected: {
+            estimatedProgress,
+            progressPercent: Math.round(estimatedProgress * 100),
+        },
         quantities: {
             ...e.quantities,
             producedQuantity: Math.round(e.quantities.plannedQuantity * estimatedProgress),
-            goodQuantity: isFuture ? 0 : Math.round(e.quantities.goodQuantity * estimatedProgress),
-            scrapQuantity: isFuture ? 0 : Math.round(e.quantities.scrapQuantity * estimatedProgress),
+            goodQuantity: isPlanned ? 0 : Math.round(e.quantities.goodQuantity * estimatedProgress),
+            scrapQuantity: isPlanned ? 0 : Math.round(e.quantities.scrapQuantity * estimatedProgress),
         },
     };
-    return output;
 }
 
 function projectDowntime(e: DowntimeEntry, asOf: number): ProjectedDowntime {
     const isOngoing = e.endedAt === undefined || e.endedAt > asOf;
+    const status: ProjectedStatus = isOngoing ? "in_progress" : "completed";
     const durationAtAsOf = (isOngoing ? asOf : e.endedAt!) - e.startedAt;
-    return { ...e, durationAtAsOf, isOngoing };
+    return {
+        ...e,
+        status,
+        projected: { isOngoing, durationAtAsOf },
+    };
 }
 
 function projectWorkOrder(e: WorkOrderEntry, asOf: number): ProjectedWorkOrder {
-    const effectiveStart = e.actualStart ?? e.scheduledStart;
-    const effectiveEnd = e.actualEnd ?? e.scheduledEnd;
-    const phase = classifyPhase(e.scheduledStart, e.scheduledEnd, e.actualStart, e.actualEnd, asOf);
-    const isOverdue = phase !== "completed" && asOf > e.scheduledEnd;
-    return { ...e, phase, effectiveStart, effectiveEnd, isOverdue };
+    const status = classifyStatus(e.scheduledStart, e.scheduledEnd, e.actualStart, e.actualEnd, asOf);
+    return {
+        ...e,
+        status,
+        projected: { isOverdue: status !== "completed" && asOf > e.scheduledEnd },
+    };
 }
 
 function projectPickTask(e: PickTaskEntry, asOf: number): ProjectedPickTask {
     const startRef = e.startedAt ?? e.createdAt;
-    const phase: Phase =
-        e.pickedDate != null && e.pickedDate <= asOf ? "completed" : startRef > asOf ? "future" : "active";
-    return { ...e, phase };
+    const status: ProjectedStatus =
+        e.pickedDate != null && e.pickedDate <= asOf ? "completed" : startRef > asOf ? "planned" : "in_progress";
+    return { ...e, status };
 }
 
 function projectReceipt(e: ReceiptEntry, putawayDate: number | null, asOf: number): ProjectedReceipt {
-    const phase: Phase =
-        putawayDate != null && putawayDate <= asOf ? "completed" : e.receivedDate > asOf ? "future" : "active";
-    return { ...e, phase, putawayDate };
+    const status: ProjectedStatus =
+        putawayDate != null && putawayDate <= asOf ? "completed" : e.receivedDate > asOf ? "planned" : "in_progress";
+    return { ...e, status, projected: { putawayDate } };
 }
 
 function projectPutawayTask(e: PutawayTaskEntry, asOf: number): ProjectedPutawayTask {
     const startRef = e.startedAt ?? e.createdAt;
-    const phase: Phase =
-        e.putawayDate != null && e.putawayDate <= asOf ? "completed" : startRef > asOf ? "future" : "active";
+    const status: ProjectedStatus =
+        e.putawayDate != null && e.putawayDate <= asOf ? "completed" : startRef > asOf ? "planned" : "in_progress";
     const estimatedProgress =
-        phase === "completed"
+        status === "completed"
             ? 1
-            : phase === "future"
+            : status === "planned"
               ? 0
               : e.putawayDate != null
                 ? clamp((asOf - startRef) / (e.putawayDate - startRef), 0, 1)
-                : 0; // active with no putawayDate — can't interpolate
+                : 0;
     return {
         ...e,
-        phase,
-        estimatedProgress,
-        progressPercent: Math.round(estimatedProgress * 100),
-    } satisfies ProjectedPutawayTask;
+        status,
+        projected: {
+            estimatedProgress,
+            progressPercent: Math.round(estimatedProgress * 100),
+        },
+    };
 }
 
 function projectPurchaseOrder(e: PurchaseOrderEntry, asOf: number): ProjectedPurchaseOrder {
-    const phase: Phase =
-        e.receivedAt != null && e.receivedAt <= asOf ? "completed" : e.orderDate > asOf ? "future" : "active";
-    return { ...e, phase };
+    const status: ProjectedStatus =
+        e.receivedAt != null && e.receivedAt <= asOf ? "completed" : e.orderDate > asOf ? "planned" : "in_progress";
+    return { ...e, status };
 }
 
 //------------------------------------------------------------------------------
@@ -243,17 +344,20 @@ function projectPurchaseOrder(e: PurchaseOrderEntry, asOf: number): ProjectedPur
 //------------------------------------------------------------------------------
 
 export function projectSnapshot(snapshot: AsOfSnapshot, asOf: number): AsOfProjection {
-    // Build a receipt-id → putawayDate lookup for denormalising onto receipts
     const putawayDateByReceipt = new Map<string, number>();
     for (const pt of snapshot.putawayTasks) {
         if (pt.receiptId && pt.putawayDate != null) putawayDateByReceipt.set(pt.receiptId, pt.putawayDate);
     }
-    if (!USE_PROJECTION) return snapshot as AsOfProjection;
+    if (!USE_PROJECTION) return snapshot as unknown as AsOfProjection;
     return {
         level: snapshot.level,
         salesOrders: snapshot.salesOrders.map((e) => projectSalesOrder(e, asOf)),
-        productionOrders: snapshot.productionOrders.map((e) => projectProductionOrder(e, asOf)),
-        operations: snapshot.operations.map((e) => projectOperation(e, asOf)),
+        productionOrders: snapshot.productionOrders.map((e) =>
+            projectProductionOrder(e, asOf, snapshot.downtimeEvents, snapshot.eamWorkOrders),
+        ),
+        operations: snapshot.operations.map((e) =>
+            projectOperation(e, asOf, snapshot.downtimeEvents, snapshot.eamWorkOrders),
+        ),
         downtimeEvents: snapshot.downtimeEvents.map((e) => projectDowntime(e, asOf)),
         eamWorkOrders: snapshot.eamWorkOrders.map((e) => projectWorkOrder(e, asOf)),
         pickTasks: snapshot.pickTasks.map((e) => projectPickTask(e, asOf)),

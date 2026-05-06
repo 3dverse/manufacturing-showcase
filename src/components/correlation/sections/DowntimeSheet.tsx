@@ -11,14 +11,16 @@ import type { ProjectedDowntime } from "@/core/Projection";
 type Props = {
     items: ProjectedDowntime[];
     focusedId: string | null;
+    focusedClassName?: string;
 };
 
-export function DowntimeSheet({ items, focusedId }: Props) {
+export function DowntimeSheet({ items, focusedId, focusedClassName }: Props) {
     return (
         <SectionWrapper
             label="Downtime Events"
             items={items}
             focusedId={focusedId}
+            focusedClassName={focusedClassName}
             getId={(e) => e.id}
             renderItem={(dt) => (
                 <div>
@@ -27,7 +29,7 @@ export function DowntimeSheet({ items, focusedId }: Props) {
                             <p className="text-sm font-semibold leading-tight text-red-700">{dt.reasonCode}</p>
                             {dt.reasonDescription && <p className="text-xs text-muted">{dt.reasonDescription}</p>}
                         </div>
-                        <div className="shrink-0 pt-px">{dt.isOngoing && <OngoingBadge />}</div>
+                        <div className="shrink-0 pt-px">{dt.projected.isOngoing && <OngoingBadge />}</div>
                     </div>
                     <Divider />
                     <div className="space-y-1">
@@ -36,7 +38,7 @@ export function DowntimeSheet({ items, focusedId }: Props) {
                             label="Ended"
                             value={dt.endedAt ? fmtTs(dt.endedAt) : <span className="text-orange-600">ongoing</span>}
                         />
-                        <Field label="Duration" value={fmtDuration(dt.durationAtAsOf)} />
+                        <Field label="Duration" value={fmtDuration(dt.projected.durationAtAsOf)} />
                         <Field label="Work center" value={dt.workCenterId} />
                     </div>
                 </div>

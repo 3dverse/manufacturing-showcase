@@ -21,7 +21,7 @@ export function useScope(node: SceneGraphNode | null): {
     const loadSpan = useTimelineStore((s) => s.loadSpan);
 
     useEffect(() => {
-        if (node && siteId) loadSpan(node, siteId);
+        if (node && siteId) loadSpan(siteId, node);
     }, [node, siteId, loadSpan]);
 
     const scope = useMemo(() => (node && span ? scopeFromNode(node, span) : null), [node, span]);

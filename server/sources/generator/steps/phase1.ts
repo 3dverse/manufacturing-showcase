@@ -14,7 +14,15 @@
 
 import type { RNG } from "../rng";
 import type { GeneratorConfig } from "../config";
-import { getProductionLocations, getWMSZones, getStorageBins, getDeliveryBins, flattenWorkCenters } from "../graph";
+import {
+    getProductionLocations,
+    getWMSZones,
+    getReceptionBins,
+    getStorageBins,
+    getSupplyBins,
+    getDeliveryBins,
+    flattenWorkCenters,
+} from "../graph";
 import { addDays } from "../shifts";
 
 // ---------------------------------------------------------------------------
@@ -138,14 +146,14 @@ const RAW_MATERIALS = [
 ];
 
 const CUSTOMER_POOL = [
-    { name: "Apex Dynamics Ltd.", code: "CUST-001", country: "USA", paymentTermsDays: 30 },
-    { name: "Meridian Industrial Corp.", code: "CUST-002", country: "USA", paymentTermsDays: 30 },
-    { name: "Vortex Systems Inc.", code: "CUST-003", country: "Canada", paymentTermsDays: 45 },
-    { name: "Titan Engineering GmbH", code: "CUST-004", country: "Germany", paymentTermsDays: 60 },
-    { name: "Nova Automation S.A.", code: "CUST-005", country: "France", paymentTermsDays: 60 },
-    { name: "Crestline Manufacturing LLC", code: "CUST-006", country: "USA", paymentTermsDays: 30 },
-    { name: "Orbital Precision Inc.", code: "CUST-007", country: "USA", paymentTermsDays: 45 },
-    { name: "Summit Industrial Group", code: "CUST-008", country: "Canada", paymentTermsDays: 30 },
+    { name: "Apex Ltd.", code: "CUST-001", country: "USA", paymentTermsDays: 30 },
+    { name: "Meridian Corp.", code: "CUST-002", country: "USA", paymentTermsDays: 30 },
+    { name: "Vortex Inc.", code: "CUST-003", country: "Canada", paymentTermsDays: 45 },
+    { name: "Titan GmbH", code: "CUST-004", country: "Germany", paymentTermsDays: 60 },
+    { name: "Nova S.A.", code: "CUST-005", country: "France", paymentTermsDays: 60 },
+    { name: "Crestline LLC", code: "CUST-006", country: "USA", paymentTermsDays: 30 },
+    { name: "Orbital Inc.", code: "CUST-007", country: "USA", paymentTermsDays: 45 },
+    { name: "Summit Group", code: "CUST-008", country: "Canada", paymentTermsDays: 30 },
 ];
 
 const SUPPLIER_POOL = [
@@ -751,7 +759,16 @@ export function generateEntities(config: GeneratorConfig, rng: RNG): Phase1Resul
             status: "active",
         });
 
-        const sceneBins = key === "storage" ? getStorageBins(site) : key === "delivery" ? getDeliveryBins(site) : [];
+        const sceneBins =
+            key === "reception"
+                ? getReceptionBins(site)
+                : key === "storage"
+                  ? getStorageBins(site)
+                  : key === "supply"
+                    ? getSupplyBins(site)
+                    : key === "delivery"
+                      ? getDeliveryBins(site)
+                      : [];
         if (sceneBins.length > 0) {
             // Create one Location record per actual bin from the 3D scene
             const binIds: string[] = [];
@@ -770,15 +787,16 @@ export function generateEntities(config: GeneratorConfig, rng: RNG): Phase1Resul
             }
             wmsLocationsByWarehouse.set(zone.hash, binIds);
         } else {
-            // Fallback if scene has no bin entities for this zone
-            const binId = `${zone.hash}-BIN-01`;
+            // Fallback: zone has no bin entities in the scene — use the zone hash itself
+            // so generated location IDs resolve to a real navigatable scene node.
+            const binId = zone.hash;
             wmsLocations.set(binId, {
                 id: binId,
                 warehouseId: zone.hash,
-                code: binId,
-                name: "Bin 01",
+                code: zone.name,
+                name: zone.name,
                 zone: zoneType,
-                locationType: "bin",
+                locationType: "zone",
                 status: "active",
             });
             wmsLocationList.push(binId);

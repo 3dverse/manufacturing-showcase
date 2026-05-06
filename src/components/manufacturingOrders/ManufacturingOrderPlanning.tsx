@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useState } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { faList, faTimeline } from "@fortawesome/pro-light-svg-icons";
 
 //------------------------------------------------------------------------------
@@ -10,14 +10,43 @@ import { ManufacturingOrderList } from "./ManufacturingOrderList";
 import { ManufacturingOrderTimeline } from "./ManufacturingOrderTimeline";
 
 //------------------------------------------------------------------------------
+import { useHomePageData } from "@/hooks/useHomePageData";
+import type { StoppageEvent } from "@/components/scadaEvents/StoppageCallout";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
 type ViewMode = "list" | "timeline";
 
 //------------------------------------------------------------------------------
-export const ManufacturingOrderPlanning = () => {
+export const ManufacturingOrderPlanning = ({
+    siteId,
+    onActiveStoppage,
+}: {
+    siteId: string;
+    onActiveStoppage?: (stoppage: StoppageEvent | null) => void;
+}) => {
     const [mode, setMode] = useState<ViewMode>("timeline");
+    const { orders, downtimeEvents, eamWorkOrders, isLoading, refTs } = useHomePageData(siteId);
+
+    const activeStoppage = useMemo((): StoppageEvent | null => {
+        const refMs = refTs * 1000;
+        const activeDowntime = downtimeEvents.find((e) => e.startMs <= refMs && e.endMs >= refMs) ?? null;
+        if (activeDowntime) return activeDowntime;
+        return (
+            eamWorkOrders.find((wo) => {
+                const startMs = (wo.actualStart ?? wo.scheduledStart) * 1000;
+                const endMs = (wo.actualEnd ?? wo.scheduledEnd) * 1000;
+                return startMs <= refMs && endMs >= refMs;
+            }) ?? null
+        );
+    }, [downtimeEvents, eamWorkOrders, refTs]);
+
+    const onActiveStoppageRef = useRef(onActiveStoppage);
+    onActiveStoppageRef.current = onActiveStoppage;
+
+    useEffect(() => {
+        onActiveStoppageRef.current?.(activeStoppage);
+    }, [activeStoppage]);
 
     //--------------------------------------------------------------------------
     return (
@@ -56,7 +85,17 @@ export const ManufacturingOrderPlanning = () => {
                 </div>
             </header>
 
-            {mode === "list" ? <ManufacturingOrderList /> : <ManufacturingOrderTimeline />}
+            {mode === "list" ? (
+                <ManufacturingOrderList orders={orders} isLoading={isLoading} />
+            ) : (
+                <ManufacturingOrderTimeline
+                    orders={orders}
+                    downtimeEvents={downtimeEvents}
+                    eamWorkOrders={eamWorkOrders}
+                    isLoading={isLoading}
+                    refTs={refTs}
+                />
+            )}
             <footer className="w-full flex justify-between items-center mt-1 px-px">
                 <p className="flex items-center gap-1 text-2xs text-muted/80">
                     <img src="/logo/sap.svg" alt="SAP" className="h-3" />

@@ -6,10 +6,11 @@ import Tooltip from "@/components/common/Tooltip/Tooltip";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import { orders, orderStatus } from "@/content/orders";
+import { orderStatus } from "@/content/orders";
+import type { Order } from "@/content/type";
 
 //------------------------------------------------------------------------------
-export const ManufacturingOrderList = () => {
+export const ManufacturingOrderList = ({ orders, isLoading }: { orders: Order[]; isLoading: boolean }) => {
     return (
         <div>
             <div className="grid grid-cols-3 @sm:grid-cols-5 text-2xs text-muted px-2 pb-1">
@@ -20,6 +21,7 @@ export const ManufacturingOrderList = () => {
                 <p className="text-right">Status</p>
             </div>
             <ul className="bg-neutral-0/50 rounded divide-y divide-muted border border-muted">
+                {isLoading && <li className="px-2 py-3 text-xs text-muted">Loading...</li>}
                 {orders.map((order) => (
                     <li key={order.ref}>
                         <Tooltip

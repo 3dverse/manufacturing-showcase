@@ -1,4 +1,4 @@
-import { useContext, useMemo } from "react";
+import { useMemo } from "react";
 import { faMapMarkerAlt } from "@fortawesome/sharp-regular-svg-icons";
 
 //------------------------------------------------------------------------------
@@ -7,10 +7,10 @@ import { Triangle } from "@/components/common/icons/Triangle";
 import { BadgeOEE } from "@/components/common/BadgeOEE";
 import { KeyStatusIndicators } from "@/components/nodes/factory/StatusIndicators";
 import { ConnectedSystemsBadge } from "@/components/connectedSystems/ConnectedSystemsBadge";
-import { IncidentCallout } from "@/components/incidents/IncidentCallout";
+import { StoppageCallout } from "@/components/scadaEvents/StoppageCallout";
+import type { StoppageEvent } from "@/components/scadaEvents/StoppageCallout";
 
 //------------------------------------------------------------------------------
-import { ScenarioContext } from "@/contexts/ScenariosContext";
 import { useFactoryItemOEE } from "@/hooks/useFactoryItemOEE";
 import { useNavigationStore } from "@/store/useNavigationStore";
 
@@ -23,13 +23,11 @@ import type { Factory } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
+export const FactoryItem = ({ factoryItem, stoppage }: { factoryItem: Factory; stoppage?: StoppageEvent | null }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const oee = useFactoryItemOEE(factoryItem.scene_id);
     const navigate = useNavigationStore((state) => state.navigate);
-    const { activeStep } = useContext(ScenarioContext);
-    const incident = activeStep?.incident;
     const isMobile = useMediaQuery(MEDIA_QUERIES.MOBILE);
 
     //--------------------------------------------------------------------------
@@ -105,14 +103,21 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                             </h2>
                             <div className="grow flex flex-col lg:flex-row items-start lg:items-baseline justify-between gap-x-3 gap-y-2">
                                 <div className="flex items-center mt-2 text-sm text-accent">
-                                    <ConnectedSystemsBadge className="mr-3" />
+                                    <ConnectedSystemsBadge data-scenario="tour-guide-2" className="mr-3" />
                                     <Icon icon={faMapMarkerAlt} size="sm" className="mr-1" />
                                     <span className="text-xs">{factoryItem.location}</span>
                                 </div>
                             </div>
                         </div>
 
-                        {incident && <IncidentCallout incident={incident} />}
+                        {stoppage && (
+                            <StoppageCallout
+                                event={stoppage}
+                                factorySlug={factoryItem.slug}
+                                siteId={factoryItem.scene_id}
+                                className="max-w-70"
+                            />
+                        )}
                     </div>
                 </div>
                 <div className="flex">
@@ -134,9 +139,10 @@ export const FactoryItem = ({ factoryItem }: { factoryItem: Factory }) => {
                                 {oee ?? "—"}
                                 <span className="text-base opacity-80 ml-px">{oee !== null ? "%" : ""}</span>
                             </p>
-                            <p>
+                            <p className="flex items-center gap-1">
                                 OEE <Triangle />
                             </p>
+                            <p className="text-xs text-positive-700/70 -mt-0.5">This week</p>
                         </div>
                     </div>
                 </div>

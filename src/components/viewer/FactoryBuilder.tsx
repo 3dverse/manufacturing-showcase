@@ -1,25 +1,24 @@
-import { Fragment, useContext, useMemo } from "react";
+import { useContext, useMemo } from "react";
 
 //------------------------------------------------------------------------------
 import { FloatingLabel } from "./DOM3D/FloatingLabel";
-import { FloorRegion } from "./DOM3D/FloorRegion";
 import { FloorOutline } from "./DOM3D/FloorOutline";
+import { FloorRegion } from "./DOM3D/FloorRegion";
 import { FlowSpline } from "./DOM3D/FlowSpline";
-import { MachineOutline } from "./DOM3D/MachineOutline";
-import { MachineLabel } from "./DOM3D/MachineLabel";
-import { IncidentInfoPanel } from "./DOM3D/IncidentInfoPanel";
+import { DowntimeFlag } from "./DOM3D/DowntimeFlag";
+import { WorkOrderFlag } from "./DOM3D/WorkOrderFlag";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
 import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
-import { isFactory, isArea, isLine, isCell } from "@/core/SceneGraph";
+import { isFactory, isArea, isLine, isCell, isMachine } from "@/core/SceneGraph";
 import { useTimelineStore } from "@/store/useTimelineStore";
-import { downtimeAtAsOf } from "@/components/timeline/timeUtils";
+import { downtimeAtAsOf, workOrderAtAsOf } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
-import type { CellNode, LineNode } from "@/content/type";
+import type { CellNode, LineNode, MachineNode } from "@/content/type";
 import { NodeTypes } from "@/content/enums";
 
 //------------------------------------------------------------------------------
@@ -68,13 +67,7 @@ const FactoryBuilder = () => {
     const shownCells = useMemo(() => {
         switch (selectedNode?.type) {
             case NodeTypes.factory:
-                return selectedNode.areas.reduce((acc: CellNode[], area) => {
-                    acc.push(...area.cells);
-                    for (const line of area.lines) {
-                        acc.push(...line.cells);
-                    }
-                    return acc;
-                }, []);
+                return [];
             case NodeTypes.area:
                 return selectedNode.cells;
             case NodeTypes.line:
@@ -87,14 +80,49 @@ const FactoryBuilder = () => {
     }, [selectedNode]);
 
     //--------------------------------------------------------------------------
-    const downtimeCells: CellNode[] = useMemo(() => {
+    const downtimeCells: { cell: CellNode; downtimeId: string }[] = useMemo(() => {
         if (!span) return [];
-        const currentlyDownCellIds = [...span.downtimeEvents.values()]
+        const idByCell = new Map<string, string>();
+        for (const e of span.downtimeEvents.values()) {
+            if (!downtimeAtAsOf(e, asOf || present)) continue;
+            if (!selectedNode) {
+                idByCell.set(e.workCenterId, e.id);
+                continue;
+            }
+            switch (selectedNode.type) {
+                case NodeTypes.cell:
+                    if (selectedNode.hash === e.workCenterId) continue;
+                    break;
+                case NodeTypes.machine:
+                    if (selectedNode.parent.hash === e.workCenterId) continue;
+                    break;
+                case NodeTypes.aisle:
+                case NodeTypes.rack:
+                case NodeTypes.bin:
+                    continue;
+            }
+            if (!idByCell.has(e.workCenterId)) idByCell.set(e.workCenterId, e.id);
+        }
+        return nodeList.filter(isCell).flatMap((n) => {
+            const id = idByCell.get(n.hash);
+            return id ? [{ cell: n, downtimeId: id }] : [];
+        });
+    }, [span, asOf, present, nodeList, selectedNode]);
 
-            .filter((e) => downtimeAtAsOf(e, asOf || present))
-            .map((e) => e.workCenterId);
-        return nodeList.filter(isCell).filter((n) => currentlyDownCellIds.includes(n.hash));
-    }, [span, asOf, present, nodeList]);
+    //--------------------------------------------------------------------------
+    const workOrderMachines: { machine: MachineNode; workOrderId: string }[] = useMemo(() => {
+        if (!span) return [];
+        const idByMachine = new Map<string, string>();
+        for (const wo of span.eamWorkOrders.values()) {
+            if (!workOrderAtAsOf(wo, asOf || present)) continue;
+            if (selectedNode?.type === NodeTypes.machine && selectedNode.hash === wo.assetId) continue;
+            if (!idByMachine.has(wo.assetId)) idByMachine.set(wo.assetId, wo.id);
+        }
+        return nodeList.filter(isMachine).flatMap((n) => {
+            const id = idByMachine.get(n.hash);
+            return id ? [{ machine: n, workOrderId: id }] : [];
+        });
+    }, [span, asOf, present, nodeList, selectedNode]);
 
     //--------------------------------------------------------------------------
     // Render
@@ -112,33 +140,21 @@ const FactoryBuilder = () => {
             {shownLines.map((line) => (
                 <FloorRegion key={line.hash} node={line} />
             ))}
-
-            {shownCells.map((cell) => (
-                <CellBuilderItem key={cell.hash} cell={cell} />
+            {downtimeCells.map(({ cell, downtimeId }) => (
+                <DowntimeFlag key={cell.hash} cell={cell} downtimeId={downtimeId} />
             ))}
-            {selectedNode && isCell(selectedNode) && selectedNode.machines.length > 0 && (
-                <>
-                    {selectedNode.machines.map((machine) => (
-                        <Fragment key={machine.hash}>
-                            <MachineOutline machine={machine} />
-                            <MachineLabel machine={machine} />
-                        </Fragment>
-                    ))}
-                </>
+            {workOrderMachines.map(({ machine, workOrderId }) => (
+                <WorkOrderFlag key={machine.hash} machine={machine} workOrderId={workOrderId} />
+            ))}
+            {shownCells.map((cell) =>
+                isArea(cell.parent) ? (
+                    <FloorRegion key={cell.hash} node={cell} />
+                ) : (
+                    <FloatingLabel key={cell.hash} node={cell} />
+                ),
             )}
-            {downtimeCells.map((cell) => (
-                <IncidentInfoPanel key={cell.hash} cell={cell} />
-            ))}
         </>
     );
-};
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-const CellBuilderItem = ({ cell }: { cell: CellNode }) => {
-    //--------------------------------------------------------------------------
-    // Render
-    return <>{isArea(cell.parent) ? <FloorRegion node={cell} /> : <FloatingLabel node={cell} />}</>;
 };
 
 export default FactoryBuilder;

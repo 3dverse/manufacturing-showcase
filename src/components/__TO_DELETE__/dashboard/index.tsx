@@ -104,7 +104,7 @@ export const LiveDashboard: React.FC = () => {
                     <ProductionAreaSummary />
                 </article>
                 <article className={cn("py-4 pr-4", paddingLeftClassName)}>
-                    <ManufacturingOrderPlanning />
+                    <ManufacturingOrderPlanning siteId="" />
                 </article>
                 <article className="flex flex-col gap-5 py-4 pl-15 pr-4">
                     <ProductionPanel

@@ -21,7 +21,10 @@ export function CellPanel({ cell }: { cell: CellNode }) {
                     <p className="text-right text-2xs leading-tight text-muted/80">No incidents reported</p>
                 </PanelWrapper>
 
-                <section className="flex justify-between gap-4 px-3 pt-4 pb-2">
+                <section
+                    data-scenario="predictive-maintenance-step-3"
+                    className="flex justify-between gap-4 px-3 pt-4 pb-2"
+                >
                     <Gauge value={kpis.oee} className="w-32!" />
                     <div className="grow">
                         <PanelLabel>OEE</PanelLabel>

@@ -32,6 +32,7 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
     //--------------------------------------------------------------------------
     // Store
     const loadSpan = useTimelineStore((s) => s.loadSpan);
+    const setNodeListInStore = useTimelineStore((s) => s.setNodeList);
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -40,6 +41,7 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
             .then(({ graph, list }) => {
                 setNodeGraph(graph);
                 setNodeList(list);
+                setNodeListInStore(factory.scene_id, list);
             })
             .catch(() => {
                 console.warn("error loading entities");
@@ -51,7 +53,7 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
     useEffect(() => {
         if (!nodeGraph) return;
         const productionArea = nodeGraph.areas.find((a) => a.name.toLowerCase() === "production");
-        if (productionArea) loadSpan(productionArea, factory.scene_id);
+        if (productionArea) loadSpan(factory.scene_id, productionArea);
     }, [nodeGraph, factory.scene_id, loadSpan]);
 
     //--------------------------------------------------------------------------
