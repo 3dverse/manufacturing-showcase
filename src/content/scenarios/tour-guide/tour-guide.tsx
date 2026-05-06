@@ -2,7 +2,7 @@ import type { ScenarioDefinition } from "../types";
 
 export const tourGuide: ScenarioDefinition = {
     id: "tour_guide",
-    title: "Tour guide",
+    title: "Guided Mode",
     description:
         "A business-oriented walkthrough of the digital twin: connected factories, live operational context, order visibility, and collaboration.",
     steps: [
@@ -16,11 +16,10 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-1]",
                 offset: { x: 80, y: 40 },
-                title: "Factory portfolio at a glance",
+                title: "Global factory overview",
                 description: (
                     <p>
-                        Start from an executive view of every site. Each factory carries its own order timeline, so
-                        capacity, schedule risk, and delivery confidence are visible before anyone enters the 3D twin.
+                        Start with a high-level real-time view across all sites. Each factory is connected to its order timeline, giving immediate visibility into capacity, scheduling risk, and delivery confidence before entering a specific digital twin.
                     </p>
                 ),
             },
@@ -35,11 +34,10 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-2]",
                 offset: { x: 80, y: 60 },
-                title: "Connected systems, not another silo",
+                title: "Connected Systems",
                 description: (
                     <p>
-                        The twin is fed by business and operational systems already in place. ERP, MES, EAM, and SCADA
-                        context come together so decisions are based on one shared operational picture.
+                        The twin integrates with your existing systems like ERP, MES, EAM, and SCADA. Their data becomes available within the 3D environment, forming a single real-time operational view.
                     </p>
                 ),
             },
@@ -54,12 +52,10 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-3]",
                 offset: { x: 90, y: 70 },
-                title: "Operational health in seconds",
+                title: "Key operational indicators",
                 description: (
                     <p>
-                        Key indicators summarize whether the site is efficient, producing quality output, tracking
-                        orders, and maintaining assets. Leaders can spot the right conversation without reading a
-                        dashboard wall.
+                        Track efficiency, quality, order progress, and maintenance status in real-time. These indicators provide a quick view of site performance.
                     </p>
                 ),
             },
@@ -75,12 +71,10 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-4]",
                 offset: { x: -460, y: -320 },
-                title: "Explore the factory virtually",
+                title: "Navigate the 3D environment",
                 description: (
                     <p>
-                        Navigate the plant by area, line, and cell directly in the 3D environment. This makes remote
-                        reviews, operational briefings, and supplier conversations concrete without waiting for a site
-                        visit.
+                        Move through the factory by area, line, and cell. Access operational data directly in context.
                     </p>
                 ),
             },
@@ -95,12 +89,10 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-5]",
                 offset: { x: -180, y: -320 },
-                title: "Follow orders and replay decisions",
+                title: "Operational timeline",
                 description: (
                     <p>
-                        Sales orders, manufacturing orders, maintenance windows, and downtime share the same timeline.
-                        Replaying the sequence turns operational history into a decision record for customer commitments
-                        and continuous improvement.
+                        Sales orders, manufacturing orders, maintenance, and downtime are synchronized on a single timeline. Use it to review execution and analyze events over time.
                     </p>
                 ),
             },
@@ -115,11 +107,10 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-6]",
                 offset: { x: -280, y: 70 },
-                title: "Bring stakeholders into the same view",
+                title: "Share with collaborators ",
                 description: (
                     <p>
-                        Invite collaborators into the live twin so operations, maintenance, engineering, and customer
-                        teams can align on the same facts instead of trading screenshots and spreadsheets.
+                        Invite team members into the digital twin. All users work from the same shared view across operations, maintenance, and engineering.
                     </p>
                 ),
             },
@@ -134,11 +125,10 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-7]",
                 offset: { x: -120, y: -220 },
-                title: "Move from tour to business scenarios",
+                title: "Explore operational scenarios",
                 description: (
                     <p>
-                        Use the scenario guide to explore specific value cases: incident response, predictive
-                        maintenance, production continuity, and the operational evidence needed to justify investment.
+                        Use predefined scenarios to analyze operations — incident response, maintenance, and production continuity. Each scenario highlights relevant data and context.
                     </p>
                 ),
             },
