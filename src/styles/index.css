@@ -16,7 +16,6 @@
 @import "./components/scrollable-area.css";
 @import "./components/stripes.css";
 @import "../components/common/Tooltip/tooltip.css";
-@import "../components/common/modal/modal.css";
 
 #root {
     width: 100%;

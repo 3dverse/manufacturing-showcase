@@ -16,12 +16,12 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-1]",
                 offset: { x: 80, y: 40 },
-                title: "Global factory overview",
+                title: "Factory Overview",
                 description: (
                     <p>
-                        Start with a high-level real-time view across all sites. Each factory is connected to its order
-                        timeline, giving immediate visibility into capacity, scheduling risk, and delivery confidence
-                        before entering a specific digital twin.
+                        OEE, open work orders, and schedule risk per site - pulled directly from your systems. Use this
+                        view to identify which factory needs attention and why before you go inside. A site running at
+                        74% OEE with three delayed orders tells a different story than one at 94%.
                     </p>
                 ),
             },
@@ -39,8 +39,10 @@ export const tourGuide: ScenarioDefinition = {
                 title: "Connected Systems",
                 description: (
                     <p>
-                        The twin integrates with your existing systems like ERP, MES, EAM, and SCADA. Their data becomes
-                        available within the 3D environment, forming a single real-time operational view.
+                        Production, maintenance, machine, and order data flow directly into the environment from
+                        existing enterprise and operational systems. When an order changes, a robot stops, or a downtime
+                        event occurs, the operational state is reflected immediately without manual updates or
+                        duplicated workflows.
                     </p>
                 ),
             },
@@ -55,11 +57,11 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-3]",
                 offset: { x: 90, y: 70 },
-                title: "Key operational indicators",
+                title: "Stable or investigate?",
                 description: (
                     <p>
-                        Track efficiency, quality, order progress, and maintenance status in real-time. These indicators
-                        provide a quick view of site performance.
+                        Key indicators answer that question the moment you enter a site. If one indicator is off, you
+                        already know where to look before navigating anywhere on the floor.
                     </p>
                 ),
             },
@@ -75,10 +77,13 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-4]",
                 offset: { x: -460, y: -320 },
-                title: "Navigate the 3D environment",
+                title: "Factory Floor",
                 description: (
                     <p>
-                        Move through the factory by area, line, and cell. Access operational data directly in context.
+                        Navigate by area, line, or cell to review active orders, machine status, and issues directly in
+                        context. Robot and machine states remain synchronized with the operational environment in real
+                        time, allowing teams to understand floor conditions remotely without waiting for site
+                        walkthroughs or operator updates.
                     </p>
                 ),
             },
@@ -93,11 +98,12 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-5]",
                 offset: { x: -180, y: -320 },
-                title: "Operational timeline",
+                title: "Operational Timeline",
                 description: (
                     <p>
-                        Sales orders, manufacturing orders, maintenance, and downtime are synchronized on a single
-                        timeline. Use it to review execution and analyze events over time.
+                        Trace events over time. Scroll through the timeline & click on any event to review the
+                        operational sequence, linked records, and impact. Teams can quickly understand what changed
+                        without waiting for manual investigation or disconnected reporting.
                     </p>
                 ),
             },
@@ -112,11 +118,12 @@ export const tourGuide: ScenarioDefinition = {
             message: {
                 selector: "[data-scenario~=tour-guide-6]",
                 offset: { x: -280, y: 70 },
-                title: "Share with collaborators ",
+                title: "Shared operational review",
                 description: (
                     <p>
-                        Invite team members into the digital twin. All users work from the same shared view across
-                        operations, maintenance, and engineering.
+                        Access production operations remotely from a mobile device, tablet, or desktop. Operational
+                        teams can validate production impact, monitor escalations, and coordinate maintenance or
+                        production decisions using the same synchronized operational state across sites.
                     </p>
                 ),
             },
@@ -134,8 +141,9 @@ export const tourGuide: ScenarioDefinition = {
                 title: "Explore operational scenarios",
                 description: (
                     <p>
-                        Use predefined scenarios to analyze operations — incident response, maintenance, and production
-                        continuity. Each scenario highlights relevant data and context.
+                        The guided tour showed the environment. The scenarios show how it's used. Choose incident
+                        simulation to walk through a real operational situation; the data, the decisions, and the
+                        outcome.
                     </p>
                 ),
             },

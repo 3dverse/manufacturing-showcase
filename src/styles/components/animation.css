@@ -168,3 +168,81 @@
     background-size: 200% 100%;
     animation: band-scroll 1.5s linear infinite;
 }
+
+/* Modal (<dialog>) — keyframes + utilities consumed by Modal.tsx */
+@keyframes modal-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modal-fade-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes modal-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(1rem) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes modal-slide-down {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(1rem) scale(0.95);
+    }
+}
+
+@keyframes modal-slide-up-mobile {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes modal-slide-down-mobile {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+}
+
+@theme {
+    --animate-modal-fade-in: modal-fade-in 0.3s ease;
+    --animate-modal-fade-out: modal-fade-out 0.3s ease;
+    --animate-modal-slide-up: modal-slide-up 0.3s ease;
+    --animate-modal-slide-down: modal-slide-down 0.3s ease;
+    --animate-modal-slide-up-mobile: modal-slide-up-mobile 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    --animate-modal-slide-down-mobile: modal-slide-down-mobile 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
