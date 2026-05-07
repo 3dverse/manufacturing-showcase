@@ -11,7 +11,10 @@ import { ClientProductLogo } from "@/components/common/icons/ClientProductLogo";
 
 //------------------------------------------------------------------------------
 import { DevMode } from "@/content/3dverse";
+import { APP_OWNER_NAME } from "@/content/metadata";
 import { useTimelineStore } from "@/store/useTimelineStore";
+
+//------------------------------------------------------------------------------
 import type { StoppageEvent } from "@/components/scadaEvents/StoppageCallout";
 
 //------------------------------------------------------------------------------
@@ -47,7 +50,7 @@ export default function HomePage() {
             <div className="container flex flex-col grow mx-auto">
                 <header className="relative flex items-start gap-4 py-4 md:py-8 lg:py-10 px-4 2xl:px-0">
                     <ClientProductLogo className="-translate-y-px" />
-                    <h1 className="text-accent-900 text-xl font-bold">PPL Company Inc.</h1>
+                    <h1 className="text-accent-900 text-xl font-bold">{APP_OWNER_NAME}</h1>
                     {DevMode.active && (
                         <a
                             href="/dataset"

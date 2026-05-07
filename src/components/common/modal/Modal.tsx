@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
+import { cn } from "@/utils/cn";
+
 //------------------------------------------------------------------------------
 interface ModalProps {
     isOpen: boolean;
@@ -163,7 +165,15 @@ const Modal = ({
     return (
         <dialog
             ref={dialogRef}
-            className={`modal modal--${variant} ${isClosing ? "modal--closing" : ""} pointer-events-auto`}
+            className={cn(
+                "pointer-events-auto fixed inset-0 z-50 m-0 flex h-full max-h-none w-full max-w-none items-center justify-center border-none bg-transparent p-0",
+                isClosing ? "animate-modal-fade-out" : "animate-modal-fade-in",
+                isBottomSheet && "max-md:items-end max-md:p-0",
+                !isFullScreen &&
+                    "backdrop:bg-[color-mix(in_srgb,var(--color-underground)_90%,transparent)] backdrop:backdrop-blur-sm backdrop:transition-[opacity_0.3s_ease,backdrop-filter_0.3s_ease]",
+                isFullScreen && "backdrop:hidden",
+                isClosing && !isFullScreen && "backdrop:opacity-0 backdrop:backdrop-blur-none",
+            )}
             onClick={(e) => {
                 // Close when clicking on backdrop
                 if (closeOnOverlayClick && e.target === dialogRef.current) {
@@ -173,23 +183,46 @@ const Modal = ({
         >
             <div
                 ref={contentRef}
-                className={`modal__content ${isClosing ? "modal__content--closing" : ""} ${
-                    isDragging ? "modal__content--dragging" : ""
-                } ${isFullScreen ? "animate-none! w-full h-full max-w-none! max-h-none!" : ""} ${contentClassName}`}
+                className={cn(
+                    "relative flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-lg bg-ground shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] transition-[transform_0.2s_ease,opacity_0.2s_ease]",
+                    isDragging && "transition-none",
+                    isBottomSheet
+                        ? isClosing
+                            ? "max-md:animate-modal-slide-down-mobile md:animate-modal-slide-down"
+                            : "max-md:animate-modal-slide-up-mobile md:animate-modal-slide-up"
+                        : isClosing
+                          ? "animate-modal-slide-down"
+                          : "animate-modal-slide-up",
+                    isFullScreen && "h-full! max-h-none! max-w-none! animate-none! w-full",
+                    contentClassName,
+                )}
                 onClick={(e) => e.stopPropagation()}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 onTouchCancel={handleTouchEnd}
             >
-                {isBottomSheet && <div className="modal__drag-handle" />}
+                {isBottomSheet && (
+                    <div className="mx-auto mt-3 hidden h-1 w-10 shrink-0 cursor-grab rounded-full bg-(--color-border-subtle) max-md:block active:cursor-grabbing" />
+                )}
 
                 {/* Header */}
                 {(title || showCloseButton) && (
-                    <div className="modal__header">
-                        {title && <h2 className="modal__title">{title}</h2>}
+                    <div className="flex shrink-0 items-center justify-between border-b border-(--color-border-subtle) p-6">
+                        {title && (
+                            <h2 className="m-0 text-2xl font-semibold leading-normal text-(--color-text-default)">
+                                {title}
+                            </h2>
+                        )}
                         {showCloseButton && (
-                            <button className="modal__close-button" onClick={handleClose} aria-label="Close modal">
+                            <button
+                                className={cn(
+                                    "flex size-8 shrink-0 items-center justify-center rounded-md border-none bg-transparent p-0 text-(--color-text-subtle) transition-[background-color_0.2s_ease,color_0.2s_ease] hover:bg-(--color-bg-ground) hover:text-(--color-text-default) active:scale-[0.95]",
+                                    !title && "ml-auto",
+                                )}
+                                onClick={handleClose}
+                                aria-label="Close modal"
+                            >
                                 <svg
                                     width="24"
                                     height="24"
@@ -208,7 +241,14 @@ const Modal = ({
                     </div>
                 )}
                 {/* Content */}
-                <div className={`modal__body ${bodyClassName}`}>{children}</div>
+                <div
+                    className={cn(
+                        "flex flex-col overflow-y-auto p-6 text-(--color-text-default) [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-(--color-accent) hover:[&::-webkit-scrollbar-thumb]:bg-accent-600",
+                        bodyClassName,
+                    )}
+                >
+                    {children}
+                </div>
             </div>
         </dialog>
     );

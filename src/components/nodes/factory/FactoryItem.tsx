@@ -92,7 +92,7 @@ export const FactoryItem = ({ factoryItem, stoppage }: { factoryItem: Factory; s
                 )}
 
                 <div className="grow flex pl-4 md:pl-7 pr-4 md:pr-3 pt-2 md:pt-5 pb-3">
-                    <div className="grow flex items-start justify-between">
+                    <div className="grow flex flex-col md:flex-row items-start justify-between gap-y-5">
                         <div className="grow flex flex-col gap-y-1 h-full">
                             <h2 className="text-accent-900 text-xl md:text-2xl font-semibold group-hover:text-accent transition-colors">
                                 {factoryItem.name}
@@ -111,7 +111,7 @@ export const FactoryItem = ({ factoryItem, stoppage }: { factoryItem: Factory; s
                                 event={stoppage}
                                 factorySlug={factoryItem.slug}
                                 siteId={factoryItem.scene_id}
-                                className="max-w-70"
+                                className="w-full md:max-w-70"
                             />
                         )}
                     </div>

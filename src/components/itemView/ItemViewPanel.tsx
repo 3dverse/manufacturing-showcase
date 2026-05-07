@@ -208,21 +208,20 @@ function ItemViewPanelInner({ selected }: { selected: FocusedEntity }) {
                 "h-full w-full max-w-md flex flex-col bg-slate-0/95 backdrop-blur-sm border-l border-slate-200/70 shadow-2xl",
             )}
         >
-            <header className={cn("shrink-0 p-2 pl-6 backdrop-blur-sm", colors.header)}>
-                <div className="flex items-center justify-between">
-                    {title && <h2 className="text-base font-semibold leading-tight text-white">{title}</h2>}
+            <header className={cn("shrink-0 py-4 px-2 pl-6 backdrop-blur-sm flex gap-2", colors.header)}>
+                <div className="grow flex flex-col items-start">
+                    {title && <h2 className="mb-2 text-base font-semibold leading-tight text-white">{title}</h2>}
                     {badge}
-                    <div className="flex-grow"></div>
-                    <Button
-                        variant="ghost"
-                        colorScheme="neutral"
-                        size="lg"
-                        className="px-2 shrink-0 text-white/80 hover:text-white hover:bg-white/15"
-                        onClick={handleClose}
-                    >
-                        <Icon icon={faXmark} />
-                    </Button>
                 </div>
+                <Button
+                    variant="ghost"
+                    colorScheme="neutral"
+                    size="lg"
+                    className="px-2 shrink-0 text-white/80 hover:text-white hover:bg-white/15"
+                    onClick={handleClose}
+                >
+                    <Icon icon={faXmark} />
+                </Button>
             </header>
 
             {/* key resets all section states (page, collapsed) when focused entity changes */}

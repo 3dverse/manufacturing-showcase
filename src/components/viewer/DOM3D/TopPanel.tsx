@@ -37,7 +37,8 @@ export const TopPanel = ({
             className={cn("pointer-events-none! transform-3d", className)}
         >
             <div className="p-8 relative w-full h-full border-8 border-accent rounded-3xl pointer-events-none transform-3d">
-                <p className="text-accent font-semibold text-8xl capitalize">{node.name}</p>
+                <span className="block absolute top-20 left-48 -translate-x-1/2 -translate-y-1/2 w-100 h-50 aspect-square bg-white rounded-full blur-[70px]" />
+                <p className="relative text-accent font-semibold text-8xl capitalize">{node.name}</p>
                 {/* <div className="absolute bottom-32 right-32 pl-4 flex items-baseline justify-center text-[4.5rem] text-accent font-semibold">
                     <div className="absolute bottom-[-75%] left-[-50%] w-[200%] h-[300%] bg-[white] rounded-full blur-3xl -z-10" />
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 radial-dashed-circle" />

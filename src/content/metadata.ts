@@ -1,3 +1,4 @@
+//------------------------------------------------------------------------------
 export const METADATA = {
     url: "https://manufacturing.3dverse.dev",
     og_image: "/socials/og-image.png",
@@ -19,3 +20,6 @@ export const METADATA = {
     facebook_url: "https://www.facebook.com/3dverse-110136565279745",
     youtube_url: "https://www.youtube.com/@3dverse",
 };
+
+//------------------------------------------------------------------------------
+export const APP_OWNER_NAME = "PPL Company Inc.";

@@ -67,7 +67,7 @@ export const MainHeader = ({ className }: { className?: string }) => {
         <header className={cn("flex w-full h-fit pointer-events-auto", className)}>
             <ViewerPanel
                 className={cn(
-                    "flex items-start p-2 shadow-none rounded-none rounded-s-md border-0 border-r border-slate-100/20 z-10 transition-all duration-200 text-slate-0 bg-accent-900",
+                    "relative flex items-start p-2 shadow-none rounded-none rounded-s-md border-0 border-r border-slate-100/20 z-10 transition-all duration-200 text-slate-0 bg-accent-900",
                 )}
             >
                 <a

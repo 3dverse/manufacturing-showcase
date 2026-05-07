@@ -20,10 +20,10 @@ export const ConnectedSystemBadge = ({ system, connected, className, ...props }:
         <div
             {...props}
             className={cn(
-                "flex items-center border rounded-full mx-3",
+                "flex items-center rounded-sm",
                 connected === true && "bg-positive-500 border-positive-500/20 text-neutral-600",
                 connected === false && "bg-neutral-700 border-neutral-600/20 text-neutral-400",
-                connected === undefined && "bg-transparent border-2 border-white text-white",
+                connected === undefined && "bg-white/15 text-white/90",
                 className,
             )}
         >
@@ -33,13 +33,14 @@ export const ConnectedSystemBadge = ({ system, connected, className, ...props }:
                     className={cn("text-2xs pl-1.5 pr-5", connected ? "text-positive-50" : "text-neutral-400")}
                 />
             )}
+            <span className="block w-[1.2ch] h-[1.2ch] bg-white/90 ml-1 rounded-lg [corner-shape:scoop]" />
             <span
                 className={cn(
-                    "h-full rounded-full px-1 py-px text-2xs font-semibold pr-2",
-                    connected !== undefined ? "-ml-5 pl-2" : "pl-2",
+                    "h-full rounded-full px-1.5 py-px text-2xs font-medium",
+                    connected !== undefined ? "-ml-5 pl-2" : "",
                 )}
             >
-                {system}
+                {system} Event
             </span>
         </div>
     );

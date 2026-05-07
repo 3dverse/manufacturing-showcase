@@ -78,13 +78,9 @@ export const correctiveMaintenance: ScenarioDefinition = {
                     title: "Production status",
                     description: (
                         <p>
-                            Manufacturing orders are running as scheduled.
-                            {f?.orderNumber && (
-                                <>
-                                    <br />
-                                    <strong>{f.orderNumber}</strong> is in progress with no delays.
-                                </>
-                            )}
+                            {f?.orderNumber && <strong>{f.orderNumber}</strong>}
+                            is active on the line at Tokyo Phone Factory. Units in progress, no delays flagged. This is
+                            the baseline; what normal looks like before an event occurs.
                         </p>
                     ),
                     offset: { x: 50, y: 100 },
@@ -110,8 +106,9 @@ export const correctiveMaintenance: ScenarioDefinition = {
                     title: "Production Alert",
                     description: f?.orderNumber ? (
                         <p>
-                            A coolant leak stopped the machine running during order <strong>{f.orderNumber}</strong>.
-                            Production is interrupted and the order is at risk.
+                            A coolant leak has stopped a machine during manufacturing order{" "}
+                            <strong>{f.orderNumber}</strong>. Production is interrupted, downstream operations may now
+                            be impacted, and delivery commitments are at risk.
                         </p>
                     ) : (
                         <p>
@@ -144,17 +141,13 @@ export const correctiveMaintenance: ScenarioDefinition = {
                 message: {
                     selector: "[data-scenario~=corrective-maintenance-step-5]",
                     waitForCamera: true,
-                    title: "Production interrupted",
+                    title: "State at time of stoppage",
                     description: (
                         <p>
-                            {f?.orderNumber && (
-                                <>
-                                    <strong>{f.orderNumber}</strong> mid-operation
-                                    <br />
-                                </>
-                            )}
-                            The cell shows what was running at the moment of the stop with data pulled from SAP. Units
-                            that were in-progress are now impacted.
+                            The affected cell displays the machine condition, order status, units in progress, and
+                            production state captured at the moment operations stopped. Operational data linked from SAP
+                            remains accessible directly within the environment, allowing teams to assess impact
+                            immediately.
                         </p>
                     ),
                 },
@@ -177,17 +170,18 @@ export const correctiveMaintenance: ScenarioDefinition = {
                     selector: "[data-scenario~=corrective-maintenance-step-4]",
                     waitForCamera: true,
                     offset: { x: -350, y: 50 },
-                    title: "Downtime Details",
+                    title: "Downtime Record",
                     description: (
                         <p>
-                            The downtime record provides full context linked to
+                            The downtime event is linked to manufacturing order{" "}
+                            {f?.orderNumber && <strong>{f.orderNumber}</strong>} with the associated reason code
                             {/* {f?.downtime.reasonCode && (
                                 <>
                                     {" — "}reason code <strong>{f.downtime.reasonCode}</strong>
                                 </>
                             )} */}
-                            {f?.orderNumber && <strong>{f.orderNumber}.</strong>}
-                            Start time, duration, and work center are all captured.
+                            , affected work center, start time, duration, and operational history. The event remains
+                            traceable, timestamped, and connected to the impacted production activity.
                         </p>
                     ),
                 },
@@ -204,11 +198,13 @@ export const correctiveMaintenance: ScenarioDefinition = {
                         : undefined,
                 message: {
                     offset: { x: -100, y: 50 },
-                    title: "Assess impact and take action",
+                    title: "Assess impact and coordinate response",
                     description: (
                         <p>
-                            The twin connects the incident to the affected machine, order, and operations. This context
-                            supports fast, informed decisions.
+                            From the moment the alert fired, Hypervision surfaced the machine, the order, the affected
+                            units, and the customer delivery at risk. Everything needed to escalate, reassign, or raise
+                            a maintenance work order is already here, already linked, already documented. This is what a
+                            connected factory floor changes: not how you see the problem — how fast you can act on it.
                         </p>
                     ),
                 },
