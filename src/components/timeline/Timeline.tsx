@@ -992,7 +992,7 @@ export function Timeline() {
                         {stories.map((story) => (
                             <div
                                 key={story.id}
-                                className="flex items-top px-2 shrink-0 justify-end"
+                                className="flex items-center px-2 shrink-0 justify-end"
                                 style={{
                                     height: story.lanes.length * (story.barStyle === "bar" ? ROW_H : ROW_H_LINE),
                                     marginBottom: ROW_GAP,
