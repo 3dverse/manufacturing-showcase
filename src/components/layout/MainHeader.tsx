@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useCallback, useContext, type MouseEvent } from "react";
+import { useCallback, useContext, useMemo, type MouseEvent } from "react";
 import { faAngleLeft } from "@fortawesome/pro-light-svg-icons";
 import { faClock } from "@fortawesome/sharp-regular-svg-icons";
 
@@ -12,6 +12,8 @@ import { ClientProductLogo } from "../common/icons/ClientProductLogo";
 //------------------------------------------------------------------------------
 import { useNavigationStore } from "@/store/useNavigationStore";
 import { useFactoryOEE } from "@/hooks/useFactoryOEE";
+import { useTimelineStore } from "@/store/useTimelineStore";
+import { downtimeAtAsOf, workOrderAtAsOf } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
 import { SelectionContext } from "@/contexts/SelectionContext";
@@ -31,6 +33,18 @@ export const MainHeader = ({ className }: { className?: string }) => {
     // Hooks
     const oee = useFactoryOEE();
     const { navigate } = useNavigationStore();
+    const span = useTimelineStore((s) => s.span);
+    const asOf = useTimelineStore((s) => s.asOf);
+    const present = useTimelineStore((s) => s.present);
+
+    const hasStoppage = useMemo(() => {
+        if (!span) return false;
+        const t = asOf || present;
+        return (
+            [...span.downtimeEvents.values()].some((e) => downtimeAtAsOf(e, t)) ||
+            [...span.eamWorkOrders.values()].some((wo) => workOrderAtAsOf(wo, t))
+        );
+    }, [span, asOf, present]);
 
     //--------------------------------------------------------------------------
     // Handlers
@@ -76,9 +90,7 @@ export const MainHeader = ({ className }: { className?: string }) => {
                 )}
             >
                 <div className={cn("flex flex-col gap--1 justify-center px-3 py-2")} onClick={factoryClickHandler}>
-                    <h2 className="font-semibold text-base">
-                        {factory?.name}
-                    </h2>
+                    <h2 className="font-semibold text-base">{factory?.name}</h2>
                     <div className="flex items-center gap-x-2 gap-y-2 text-xs text-accent-200">
                         <p className="text-[95%]">{factory?.location}</p>
                         <span>
@@ -86,7 +98,12 @@ export const MainHeader = ({ className }: { className?: string }) => {
                         </span>
                     </div>
                 </div>
-                {oee !== null && <BadgeOEE oee={oee} className="text-2xl m-1 px-2 py-1" />}
+                {oee !== null && (
+                    <div className="relative m-1">
+                        <BadgeOEE oee={oee} hasStoppage={hasStoppage} className="text-2xl px-2 py-1" />
+                        <span className="absolute bottom-0.5 right-1 text-[10px] leading-none text-white/50">7d</span>
+                    </div>
+                )}
             </ViewerPanel>
         </header>
     );

@@ -32,8 +32,8 @@ export const Daytime = () => {
     }
     return (
         <>
-            <div className="absolute -z-11 top-0 left-0 right-0 w-full h-full outline-16 outline-accent-500/40 -outline-offset-16 starting:scale-105 scale-100 transition-all duration-200 pointer-events-none" />
-            <div className="flex flex-col items-center gap-2 min-w-36 pt-2 px-4 -translate-y-2 text-center text-accent-50 bg-accent-500/80 backdrop-blur-lg rounded-b starting:-translate-y-3 starting:opacity-0 opacity-100 transition-all duration-200 delay-50 pointer-events-auto">
+            <div className="absolute -z-11 inset-0 outline-16 outline-accent-500/40 -outline-offset-16 starting:scale-105 scale-100 transition-all duration-200 pointer-events-none" />
+            <div className="absolute top-0 flex flex-col items-center gap-2 w-fit self-center min-w-36 pt-2 px-4 -translate-y-2 text-center text-accent-50 bg-accent-500/80 backdrop-blur-lg rounded-b starting:-translate-y-3 starting:opacity-0 opacity-100 transition-all duration-200 delay-50 pointer-events-auto">
                 <p className="text-sm font-medium tabular-nums">{asOfDate}</p>
                 <Button
                     size="xs"

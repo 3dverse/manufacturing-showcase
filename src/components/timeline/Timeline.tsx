@@ -474,6 +474,7 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
             if (!so) return null;
             return (
                 <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Sales Order</p>
                     <div className="font-semibold text-white">{so.orderNumber}</div>
                     <div>
                         <span className="text-slate-500">Status </span>
@@ -500,6 +501,7 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
                     : 0;
             return (
                 <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Manufacturing Order</p>
                     <div className="font-semibold text-white">{po.orderNumber}</div>
                     <div className="text-slate-400 text-[11px]">{po.itemCode}</div>
                     <div>
@@ -536,6 +538,7 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
             const slip = op.actualEnd && op.actualEnd > op.scheduledEnd ? op.actualEnd - op.scheduledEnd : 0;
             return (
                 <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Operation</p>
                     <div className="font-semibold text-white">{op.operationCode}</div>
                     <div>
                         <span className="text-slate-500">Status </span>
@@ -567,6 +570,7 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
             if (!dt) return null;
             return (
                 <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Downtime Event</p>
                     <div className="font-semibold text-warning-400">
                         {dt.reasonCode}
                         {dt.projected.isOngoing && (
@@ -590,8 +594,12 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
             if (!wo) return null;
             return (
                 <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Work Order</p>
                     <div className="font-semibold text-white">{wo.workOrderNumber}</div>
-                    <div className="text-slate-400 text-[11px] capitalize">{wo.workType}</div>
+                    <div>
+                        <span className="text-slate-500">Type </span>
+                        <span className="capitalize">{wo.workType.replace(/_/g, " ")}</span>
+                    </div>
                     <div>
                         <span className="text-slate-500">Status </span>
                         <span className="capitalize">{wo.status.replace("_", " ")}</span>
@@ -616,6 +624,7 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
             if (!r) return null;
             return (
                 <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Receipt</p>
                     <div className="font-semibold text-white">{r.id}</div>
                     <div className="text-slate-400 text-[11px]">{r.itemId}</div>
                     <div>
@@ -644,6 +653,7 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
             if (!a) return null;
             return (
                 <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Allocation</p>
                     <div className="font-semibold text-white">{a.id}</div>
                     <div className="text-slate-400 text-[11px]">{a.itemId}</div>
                     <div>
@@ -667,6 +677,7 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
             if (!t) return null;
             return (
                 <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Pick Task</p>
                     <div className="font-semibold text-white">{t.id}</div>
                     <div className="text-slate-400 text-[11px]">{t.itemId}</div>
                     <div>
@@ -691,6 +702,7 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
             if (!t) return null;
             return (
                 <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Putaway Task</p>
                     <div className="font-semibold text-white">{t.id}</div>
                     <div className="text-slate-400 text-[11px]">{t.itemId}</div>
                     <div>
@@ -715,6 +727,7 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
             if (!po) return null;
             return (
                 <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Purchase Order</p>
                     <div className="font-semibold text-white">{po.orderNumber}</div>
                     <div className="text-slate-400 text-[11px]">{po.itemId}</div>
                     <div>

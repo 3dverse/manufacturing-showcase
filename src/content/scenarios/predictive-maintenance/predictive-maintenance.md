@@ -20,12 +20,12 @@
 
 | # | Title | Route | DOM tag | File | Status |
 |---|---|---|---|---|---|
-| 1 | **Factory health — amber signal** | `/phone-factory` | `predictive-maintenance-step-1` ¹ | `DesktopLayout.tsx` | ✅ — `Efficiency` = warning, `Maintenance` = ok |
-| 2 | **Navigate to the at-risk cell** | `/phone-factory/<cell>` | `predictive-maintenance-step-2` | `Navigation.tsx` (dynamic) | ✅ |
-| 3 | **OEE degradation trend** | `/phone-factory/<cell>` | `predictive-maintenance-step-3` | `CellPanel.tsx` | ✅ |
-| 4 | **Maintenance work order** | `/phone-factory/<cell>` | `predictive-maintenance-step-4` | — | ⏭ skip |
-| 5 | **Scheduled on the timeline** | `/phone-factory/<cell>` | `predictive-maintenance-step-5` | `Timeline.tsx` (workOrderBands wrapper) | ✅ |
-| 6 | **Production continuity confirmed** | `/phone-factory/<cell>` | `predictive-maintenance-step-6` ² | `Timeline.tsx` | ✅ |
+| 1 | **Factory health — amber signal** | `/tokyo-phone-factory` | `predictive-maintenance-step-1` ¹ | `DesktopLayout.tsx` | ✅ — `Efficiency` = warning, `Maintenance` = ok |
+| 2 | **Navigate to the at-risk cell** | `/tokyo-phone-factory/<cell>` | `predictive-maintenance-step-2` | `Navigation.tsx` (dynamic) | ✅ |
+| 3 | **OEE degradation trend** | `/tokyo-phone-factory/<cell>` | `predictive-maintenance-step-3` | `CellPanel.tsx` | ✅ |
+| 4 | **Maintenance work order** | `/tokyo-phone-factory/<cell>` | `predictive-maintenance-step-4` | — | ⏭ skip |
+| 5 | **Scheduled on the timeline** | `/tokyo-phone-factory/<cell>` | `predictive-maintenance-step-5` | `Timeline.tsx` (workOrderBands wrapper) | ✅ |
+| 6 | **Production continuity confirmed** | `/tokyo-phone-factory/<cell>` | `predictive-maintenance-step-6` ² | `Timeline.tsx` | ✅ |
 
 ¹ Shared element — DOM value: `"corrective-maintenance-step-3 predictive-maintenance-step-1"`
 ² Shared element — DOM value: `"corrective-maintenance-step-6 predictive-maintenance-step-6"`

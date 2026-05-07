@@ -22,17 +22,20 @@ export const CellIncident = ({ downtimeEvent }: { downtimeEvent: ProjectedDownti
 
     //--------------------------------------------------------------------------
     // Handlers
-    const clickHandler = useCallback((e: ReactMouseEvent) => {
-        e.stopPropagation();
-        setSelected({ type: "downtime", id: downtimeEvent.id });
-        const { factorySlug } = Router.currentRoute();
-        if (factorySlug)
-            Router.replace({
-                factorySlug,
-                nodeSlug: downtimeEvent.workCenterId,
-                itemSlug: downtimeEvent.id,
-            });
-    }, []);
+    const clickHandler = useCallback(
+        (e: ReactMouseEvent) => {
+            e.stopPropagation();
+            setSelected({ type: "downtime", id: downtimeEvent.id });
+            const { factorySlug } = Router.currentRoute();
+            if (factorySlug)
+                Router.replace({
+                    factorySlug,
+                    nodeSlug: downtimeEvent.workCenterId,
+                    itemSlug: downtimeEvent.id,
+                });
+        },
+        [setSelected, downtimeEvent],
+    );
 
     //--------------------------------------------------------------------------
     return (

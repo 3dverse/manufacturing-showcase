@@ -12,7 +12,6 @@ import {
 } from "react";
 
 //------------------------------------------------------------------------------
-import { useNavigationStore } from "@/store/useNavigationStore";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { Router } from "@/core/Router";
 
@@ -74,9 +73,12 @@ const getNextScenarioId = (scenarioId?: string) => {
 };
 
 const pushRoute = (route: string) => {
-    useNavigationStore.getState().navigate(route);
     const [, factorySlug, nodeSlug, itemSlug] = route.split("/");
-    if (factorySlug) Router.replace({ factorySlug, nodeSlug, itemSlug });
+    Router.replace({
+        factorySlug: factorySlug || undefined,
+        nodeSlug: nodeSlug || undefined,
+        itemSlug: itemSlug || undefined,
+    });
 };
 
 const navigateToStepRoute = (step: ScenarioStep) => {

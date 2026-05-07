@@ -9,9 +9,11 @@ import { CellIncident } from "../nodes/cells/CellIncident";
 
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
+import { cn } from "@/utils/cn";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
 import { useOEEHistory } from "@/hooks/useOEEHistory";
 import { BadgeOEE } from "../common/BadgeOEE";
+import { downtimeAtAsOf, workOrderAtAsOf } from "@/components/timeline/timeUtils";
 import { AnchoredPanel } from "./DOM3D/AnchoredPanel";
 import { StorageOverlay } from "./StorageOverlay";
 import { UnitOutPanel } from "./DOM3D/UnitOutPanel";
@@ -57,20 +59,51 @@ const AreaDetailsOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
     // Hooks
     const oee = useAreaOEE(areaNode);
     const oeeHistory = useOEEHistory(areaNode);
+    const span = useTimelineStore((s) => s.span);
+    const asOf = useTimelineStore((s) => s.asOf);
+    const present = useTimelineStore((s) => s.present);
+
+    const hasAreaStoppage = useMemo(() => {
+        if (!span) return false;
+        const t = asOf || present;
+        const allCells = [...areaNode.lines.flatMap((l) => l.cells), ...areaNode.cells];
+        const cellHashes = new Set(allCells.map((c) => c.hash));
+        const machineHashes = new Set(allCells.flatMap((c) => c.machines.map((m) => m.hash)));
+        return (
+            [...span.downtimeEvents.values()].some((e) => cellHashes.has(e.workCenterId) && downtimeAtAsOf(e, t)) ||
+            [...span.eamWorkOrders.values()].some((wo) => machineHashes.has(wo.assetId) && workOrderAtAsOf(wo, t))
+        );
+    }, [span, asOf, present, areaNode]);
 
     //--------------------------------------------------------------------------
+    const oeeInterval = "last 7 days";
+
     const kpi = useMemo(() => {
         if (oee === undefined) return;
         return (
-            <div className="starting:opacity-0 starting:translate-y-4 opacity-100 translate-y-0 transition-all duration-300 delay-1700 transform-3d">
-                <BadgeOEE
-                    oee={oee}
-                    oeeHistory={oeeHistory}
-                    className="text-2xl -translate-y-8 px-3 py-2 shadow-xl transform-3d backdrop-blur-3xl"
-                />
+            <div
+                title={`OEE — ${oeeInterval}`}
+                className="starting:opacity-0 starting:translate-y-4 opacity-100 translate-y-0 transition-all duration-300 delay-1700 transform-3d"
+            >
+                <div className="relative -translate-y-8">
+                    <BadgeOEE
+                        oee={oee}
+                        oeeHistory={oeeHistory}
+                        hasStoppage={hasAreaStoppage}
+                        className="text-2xl px-3 py-2 shadow-xl transform-3d backdrop-blur-3xl"
+                    />
+                    <span
+                        className={cn(
+                            "absolute bottom-0.5 right-1 text-[10px] leading-none",
+                            hasAreaStoppage ? "text-warning-400" : "text-positive-400",
+                        )}
+                    >
+                        7d
+                    </span>
+                </div>
             </div>
         );
-    }, [oee, oeeHistory]);
+    }, [oee, oeeHistory, hasAreaStoppage, oeeInterval]);
 
     //--------------------------------------------------------------------------
     const content = useMemo(() => {
@@ -132,9 +165,21 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
     //--------------------------------------------------------------------------
     const asOf = useTimelineStore((t) => t.asOf);
     const present = useTimelineStore((t) => t.present);
+    const span = useTimelineStore((t) => t.span);
     const targetAsOf = asOf || present;
 
     const snapshot = useSpanSnapshot();
+
+    const hasStoppage = useMemo(() => {
+        if (!span) return false;
+        const t = asOf || present;
+        return (
+            [...span.downtimeEvents.values()].some((e) => e.workCenterId === cellNode.hash && downtimeAtAsOf(e, t)) ||
+            [...span.eamWorkOrders.values()].some(
+                (wo) => cellNode.machines.some((m) => m.hash === wo.assetId) && workOrderAtAsOf(wo, t),
+            )
+        );
+    }, [span, asOf, present, cellNode]);
 
     // Find the current raw operation for this cell (time-dependent lookup on raw data)
     const rawOperation = useMemo(() => {
@@ -179,9 +224,9 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
     }, [cellNode]);
 
     //--------------------------------------------------------------------------
-    const incident = useMemo(() => {
+    const downtime = useMemo(() => {
         return operationDowntime && <CellIncident downtimeEvent={operationDowntime} />;
-    }, [cellNode, operationDowntime, machineDetails]);
+    }, [operationDowntime]);
 
     //--------------------------------------------------------------------------
     const extra = useMemo(() => {
@@ -197,12 +242,13 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
     // Render
     return (
         <>
-            <InfoPanel node={cellNode} incident={incident} extra={extra}>
+            <InfoPanel node={cellNode} warning={downtime} extra={extra}>
                 <CellSummary
                     cell={cellNode}
                     manufacturingOrder={productionOrder}
                     operation={operation}
                     machineDetails={machineDetails}
+                    hasStoppage={hasStoppage}
                 />
             </InfoPanel>
             {outs}

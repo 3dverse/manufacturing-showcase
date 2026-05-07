@@ -19,7 +19,9 @@ export const tourGuide: ScenarioDefinition = {
                 title: "Global factory overview",
                 description: (
                     <p>
-                        Start with a high-level real-time view across all sites. Each factory is connected to its order timeline, giving immediate visibility into capacity, scheduling risk, and delivery confidence before entering a specific digital twin.
+                        Start with a high-level real-time view across all sites. Each factory is connected to its order
+                        timeline, giving immediate visibility into capacity, scheduling risk, and delivery confidence
+                        before entering a specific digital twin.
                     </p>
                 ),
             },
@@ -37,14 +39,15 @@ export const tourGuide: ScenarioDefinition = {
                 title: "Connected Systems",
                 description: (
                     <p>
-                        The twin integrates with your existing systems like ERP, MES, EAM, and SCADA. Their data becomes available within the 3D environment, forming a single real-time operational view.
+                        The twin integrates with your existing systems like ERP, MES, EAM, and SCADA. Their data becomes
+                        available within the 3D environment, forming a single real-time operational view.
                     </p>
                 ),
             },
         },
         {
             id: "step_3",
-            route: "/phone-factory",
+            route: "/tokyo-phone-factory",
             shroud: {
                 selector: "[data-scenario~=tour-guide-3]",
                 size: 320,
@@ -55,7 +58,8 @@ export const tourGuide: ScenarioDefinition = {
                 title: "Key operational indicators",
                 description: (
                     <p>
-                        Track efficiency, quality, order progress, and maintenance status in real-time. These indicators provide a quick view of site performance.
+                        Track efficiency, quality, order progress, and maintenance status in real-time. These indicators
+                        provide a quick view of site performance.
                     </p>
                 ),
             },
@@ -63,7 +67,7 @@ export const tourGuide: ScenarioDefinition = {
         {
             id: "step_4",
             // TODO: make it work
-            route: "/phone-factory/8c97d140",
+            route: "/tokyo-phone-factory/8c97d140",
             shroud: {
                 selector: "[data-scenario~=tour-guide-4]",
                 size: 820,
@@ -81,7 +85,7 @@ export const tourGuide: ScenarioDefinition = {
         },
         {
             id: "step_5",
-            route: "/phone-factory",
+            route: "/tokyo-phone-factory",
             shroud: {
                 selector: "[data-scenario~=tour-guide-5]",
                 size: 620,
@@ -92,14 +96,15 @@ export const tourGuide: ScenarioDefinition = {
                 title: "Operational timeline",
                 description: (
                     <p>
-                        Sales orders, manufacturing orders, maintenance, and downtime are synchronized on a single timeline. Use it to review execution and analyze events over time.
+                        Sales orders, manufacturing orders, maintenance, and downtime are synchronized on a single
+                        timeline. Use it to review execution and analyze events over time.
                     </p>
                 ),
             },
         },
         {
             id: "step_6",
-            route: "/phone-factory",
+            route: "/tokyo-phone-factory",
             shroud: {
                 selector: "[data-scenario~=tour-guide-6]",
                 size: 280,
@@ -110,14 +115,15 @@ export const tourGuide: ScenarioDefinition = {
                 title: "Share with collaborators ",
                 description: (
                     <p>
-                        Invite team members into the digital twin. All users work from the same shared view across operations, maintenance, and engineering.
+                        Invite team members into the digital twin. All users work from the same shared view across
+                        operations, maintenance, and engineering.
                     </p>
                 ),
             },
         },
         {
             id: "step_7",
-            route: "/phone-factory",
+            route: "/tokyo-phone-factory",
             shroud: {
                 selector: "[data-scenario~=tour-guide-7]",
                 size: 220,
@@ -128,7 +134,8 @@ export const tourGuide: ScenarioDefinition = {
                 title: "Explore operational scenarios",
                 description: (
                     <p>
-                        Use predefined scenarios to analyze operations — incident response, maintenance, and production continuity. Each scenario highlights relevant data and context.
+                        Use predefined scenarios to analyze operations — incident response, maintenance, and production
+                        continuity. Each scenario highlights relevant data and context.
                     </p>
                 ),
             },

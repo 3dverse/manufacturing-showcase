@@ -20,8 +20,9 @@ export function useFactoryOEE(): number | null {
     return useMemo(() => {
         if (!span) return null;
 
+        const windowStart = targetAsOf - 7 * 86400;
         const completed = [...span.operations.values()].filter(
-            (op) => op.actualEnd !== undefined && op.actualEnd <= targetAsOf,
+            (op) => op.actualEnd !== undefined && op.actualEnd >= windowStart && op.actualEnd <= targetAsOf,
         );
         if (completed.length === 0) return null;
 

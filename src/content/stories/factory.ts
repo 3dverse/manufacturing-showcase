@@ -3,7 +3,7 @@ import type { Factory } from "../type";
 //------------------------------------------------------------------------------
 export const factories: Factory[] = [
     {
-        slug: "phone-factory",
+        slug: "tokyo-phone-factory",
         name: "Phone Factory",
         description: "Lorem ipsm dolor sit amet consectetur adipisicing elit.",
         location: "Paris, France",

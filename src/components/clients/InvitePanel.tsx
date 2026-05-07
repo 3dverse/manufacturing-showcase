@@ -117,6 +117,7 @@ export const InvitePanel = () => {
                 <AvatarList />
                 <div className="relative" ref={menuRef}>
                     <Button
+                        data-scenario="tour-guide-6"
                         colorScheme="accent"
                         variant="soft"
                         size="sm"

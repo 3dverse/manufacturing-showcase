@@ -18,7 +18,6 @@ import { ScenarioContext } from "@/contexts/ScenariosContext";
 import { isArea, isFactory, isLine, sortNode } from "@/core/SceneGraph";
 import { useNavNode } from "./hooks";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
-import { useOEEHistory } from "@/hooks/useOEEHistory";
 import { cn } from "@/utils/cn";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { downtimeAtAsOf, workOrderAtAsOf } from "@/components/timeline/timeUtils";
@@ -273,7 +272,8 @@ const AreaNav = ({
 
     //--------------------------------------------------------------------------
     const oee = useAreaOEE(area);
-    const oeeHistory = useOEEHistory(area);
+
+    const oeeTitle = "OEE — last 7 days";
 
     //--------------------------------------------------------------------------
     // Memos
@@ -281,6 +281,22 @@ const AreaNav = ({
         //return [...area.lines, ...area.cells, ...area.aisles, ...area.racks].sort(sortNode);
         return [...area.lines, ...area.cells].sort(sortNode);
     }, [area]);
+
+    const hasAreaStoppage = useMemo(
+        () =>
+            children.some((child) => {
+                if (isLine(child)) {
+                    return child.cells.some(
+                        (c) => downtimeCellIds.has(c.hash) || c.machines.some((m) => workOrderMachineIds.has(m.hash)),
+                    );
+                }
+                return (
+                    downtimeCellIds.has(child.hash) ||
+                    ("machines" in child && child.machines.some((m) => workOrderMachineIds.has(m.hash)))
+                );
+            }),
+        [children, downtimeCellIds, workOrderMachineIds],
+    );
 
     //--------------------------------------------------------------------------
     const stateClassName = useMemo(() => {
@@ -322,7 +338,9 @@ const AreaNav = ({
             <div className="flex justify-between gap-1">
                 <p className="px-1 text-[70%] uppercase whitespace-nowrap">{area.name} area</p>
                 {area.name === "production" && oee !== undefined && (
-                    <BadgeOEE oee={oee} oeeHistory={oeeHistory} hideLabel />
+                    <span title={oeeTitle}>
+                        <BadgeOEE oee={oee} hideLabel hasStoppage={hasAreaStoppage} />
+                    </span>
                 )}
             </div>
             <ul className="flex overflow-visible">

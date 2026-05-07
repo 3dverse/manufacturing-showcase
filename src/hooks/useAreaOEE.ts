@@ -34,7 +34,11 @@ export function useAreaOEE(node: SceneGraphNode): number | undefined {
             return op ? [op] : [];
         });
 
-        const completed = ops.filter((op) => op.actualEnd !== undefined && op.actualEnd <= (asOf || present));
+        const cutoff = asOf || present;
+        const windowStart = cutoff - 7 * 86400;
+        const completed = ops.filter(
+            (op) => op.actualEnd !== undefined && op.actualEnd >= windowStart && op.actualEnd <= cutoff,
+        );
         if (completed.length === 0) return;
 
         const totalGood = completed.reduce((s, op) => s + (op.quantities.goodQuantity ?? 0), 0);

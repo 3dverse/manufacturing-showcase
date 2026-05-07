@@ -15,6 +15,7 @@ import { getDowntimeDocumentation, getMachineDocumentation } from "@/content/mac
 
 //------------------------------------------------------------------------------
 import { fmtTs, fmtDuration } from "@/utils/helpers-time";
+import { isCell } from "@/core/SceneGraph";
 
 //------------------------------------------------------------------------------
 import type { ProjectedDowntime } from "@/core/Projection";
@@ -37,9 +38,13 @@ export function DowntimeView({ item, projection, correlated }: Props) {
         : null;
     const salesOrder = correlated ? projection.salesOrders.find((so) => correlated.salesOrders.has(so.id)) : null;
 
-    const { workCenterId } = item ?? {};
-    const node = useMemo(() => nodeList.find((n) => n.hash === workCenterId), [nodeList, workCenterId]);
-    const machine = (node as CellNode)?.machines[0] ?? null;
+    //--------------------------------------------------------------------------
+    const node = useMemo(() => {
+        return nodeList.find((n) => n.hash === item?.workCenterId && isCell(n)) as CellNode;
+    }, [nodeList, item?.workCenterId]);
+
+    //--------------------------------------------------------------------------
+    const machine = useMemo(() => node?.machines[0] ?? null, [node]);
 
     //--------------------------------------------------------------------------
     const downtimeDocs = useMemo(

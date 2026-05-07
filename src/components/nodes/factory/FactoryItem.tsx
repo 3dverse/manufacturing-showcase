@@ -91,10 +91,6 @@ export const FactoryItem = ({ factoryItem, stoppage }: { factoryItem: Factory; s
                     />
                 )}
 
-                <div className="block md:hidden group-data-disabled:hidden absolute top-0 right-0 bg-slate-800 m-1 rounded">
-                    <BadgeOEE oee={oee ?? 0} className="text-2xl p-2" />
-                </div>
-
                 <div className="grow flex pl-4 md:pl-7 pr-4 md:pr-3 pt-2 md:pt-5 pb-3">
                     <div className="grow flex items-start justify-between">
                         <div className="grow flex flex-col gap-y-1 h-full">
@@ -133,18 +129,7 @@ export const FactoryItem = ({ factoryItem, stoppage }: { factoryItem: Factory; s
                             />
                         </div>
                     )}
-                    <div className="hidden md:flex stripes [--color:var(--color-positive-300)] flex-col items-center justify-center w-full border-l border-slate-100 overflow-hidden">
-                        <div className="relative z-10 flex flex-col text-left px-6 py-3">
-                            <p className="text-3xl font-semibold text-positive-800">
-                                {oee ?? "—"}
-                                <span className="text-base opacity-80 ml-px">{oee !== null ? "%" : ""}</span>
-                            </p>
-                            <p className="flex items-center gap-1">
-                                OEE <Triangle />
-                            </p>
-                            <p className="text-xs text-positive-700/70 -mt-0.5">This week</p>
-                        </div>
-                    </div>
+                    <FactoryItemOEE oee={oee} hasStoppage={!!stoppage} />
                 </div>
             </div>
 
@@ -153,3 +138,36 @@ export const FactoryItem = ({ factoryItem, stoppage }: { factoryItem: Factory; s
         </As>
     );
 };
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+function FactoryItemOEE({ oee, hasStoppage }: { oee: number | null; hasStoppage: boolean }) {
+    return (
+        <>
+            <div className="block md:hidden group-data-disabled:hidden absolute top-0 right-0 bg-slate-800 m-1 rounded">
+                <BadgeOEE oee={oee ?? 0} className="text-2xl p-2" />
+            </div>
+            <div
+                className={cn(
+                    "hidden md:flex stripes flex-col items-center justify-center w-full border-l overflow-hidden",
+                    hasStoppage
+                        ? "[--color:var(--color-warning-200)] border-warning-100"
+                        : "[--color:var(--color-positive-300)] border-slate-100",
+                )}
+            >
+                <div className="relative z-10 flex flex-col text-left px-6 py-3">
+                    <p className={cn("text-3xl font-semibold", hasStoppage ? "text-warning-800" : "text-positive-800")}>
+                        {oee ?? "—"}
+                        <span className="text-base opacity-80 ml-px">{oee !== null ? "%" : ""}</span>
+                    </p>
+                    <p className="flex items-center gap-1">
+                        OEE <Triangle className={cn(hasStoppage && "rotate-180 bg-warning-600")} />
+                    </p>
+                    <p className={cn("text-xs -mt-0.5", hasStoppage ? "text-warning-700/70" : "text-positive-700/70")}>
+                        This week
+                    </p>
+                </div>
+            </div>
+        </>
+    );
+}

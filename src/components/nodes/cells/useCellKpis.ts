@@ -29,7 +29,7 @@ export type CellKpiData = {
 };
 
 //------------------------------------------------------------------------------
-const SPARKLINE_DAYS = 14;
+const SPARKLINE_DAYS = 7;
 
 //------------------------------------------------------------------------------
 export function useCellKpis(cell: CellNode): CellKpiData {
@@ -55,7 +55,9 @@ export function useCellKpis(cell: CellNode): CellKpiData {
             const x = Math.sin((seed + s) * 12.989) * 43758.5453;
             return min + (x - Math.floor(x)) * (max - min);
         };
-        const oee = oeeHistory.length ? oeeHistory[oeeHistory.length - 1] : Math.round(70 + r(0, 22, 1));
+        const oee = oeeHistory.length
+            ? Math.round(oeeHistory.reduce((sum, v) => sum + v, 0) / oeeHistory.length)
+            : Math.round(70 + r(0, 22, 1));
         const scrapRate = Math.round((1 + r(0, 4, 2)) * 10) / 10;
         const scrapRateHistory = Array.from({ length: 7 }, (_, i) =>
             Math.min(6, Math.max(0.5, scrapRate + Math.cos((seed + i) * 0.5) * 1.2)),
