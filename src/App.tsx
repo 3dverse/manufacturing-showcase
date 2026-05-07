@@ -15,9 +15,9 @@ import ThemePage from "@/pages/ThemePage";
 
 //------------------------------------------------------------------------------
 import { useFactoryStore } from "@/store/useFactoryStore";
-import { useNavigationStore } from "@/store/useNavigationStore";
 import { FactoriesContext } from "@/contexts/FactoriesContext";
 import { ScenarioContextProvider } from "@/contexts/ScenariosContext";
+import { Router } from "@/core/Router";
 
 //------------------------------------------------------------------------------
 import { LOCAL_STORAGE_KEYS, useLocalStorage } from "@/hooks/useLocalStorage";
@@ -56,29 +56,18 @@ function AppLayout() {
         true,
     );
     const { setCurrentFactory, clearCurrentFactory } = useFactoryStore();
-    const setNavigate = useNavigationStore((state) => state.setNavigate);
-    //--------------------------------------------------------------------------
-    // Navigation function that updates both state and URL
-    const navigate = (route: string) => {
-        setCurrentRoute(route);
-        window.history.pushState(null, "", route);
-    };
-
-    //--------------------------------------------------------------------------
-    // Register navigation function globally on mount
-    useEffect(() => {
-        setNavigate(navigate);
-    }, [setNavigate]);
 
     //--------------------------------------------------------------------------
     // Handle browser back/forward buttons
     useEffect(() => {
-        const handlePopState = () => {
-            setCurrentRoute(window.location.pathname);
-        };
-
+        const handlePopState = () => setCurrentRoute(window.location.pathname);
         window.addEventListener("popstate", handlePopState);
         return () => window.removeEventListener("popstate", handlePopState);
+    }, []);
+
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        return Router.onChange(({ route }) => setCurrentRoute(route.pathname));
     }, []);
 
     //--------------------------------------------------------------------------

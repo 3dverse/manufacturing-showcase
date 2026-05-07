@@ -50,7 +50,7 @@ export const correctiveMaintenance: ScenarioDefinition = {
         const f = spanData?.kind === "corrective" ? spanData : null;
 
         const dashRoute = "/";
-        const factoryRoute = "/phone-factory";
+        const factoryRoute = "/tokyo-phone-factory";
         const cellRoute = `${factoryRoute}/${INCIDENT_CELL_HASH}`;
         const dtRoute = `${factoryRoute}/${(graphData as ScenarioGraphData | undefined)?.machineHash ?? INCIDENT_CELL_HASH}/${f?.downtime.id}`;
 
@@ -80,7 +80,10 @@ export const correctiveMaintenance: ScenarioDefinition = {
                         <p>
                             Manufacturing orders are running as scheduled.
                             {f?.orderNumber && (
-                                <><br /><strong>{f.orderNumber}</strong> is in progress with no delays.</>
+                                <>
+                                    <br />
+                                    <strong>{f.orderNumber}</strong> is in progress with no delays.
+                                </>
                             )}
                         </p>
                     ),
@@ -92,10 +95,10 @@ export const correctiveMaintenance: ScenarioDefinition = {
                 route: dashRoute,
                 beforeRoute: f
                     ? () => {
-                        const { setPresent, setAsOf } = useTimelineStore.getState();
-                        setPresent(timeAtOneThird);
-                        setAsOf(undefined);
-                    }
+                          const { setPresent, setAsOf } = useTimelineStore.getState();
+                          setPresent(timeAtOneThird);
+                          setAsOf(undefined);
+                      }
                     : undefined,
                 shroud: {
                     selector: "[data-scenario~=corrective-maintenance-step-2]",
@@ -107,7 +110,8 @@ export const correctiveMaintenance: ScenarioDefinition = {
                     title: "Production Alert",
                     description: f?.orderNumber ? (
                         <p>
-                            A coolant leak stopped the machine running during order <strong>{f.orderNumber}</strong>. Production is interrupted and the order is at risk.
+                            A coolant leak stopped the machine running during order <strong>{f.orderNumber}</strong>.
+                            Production is interrupted and the order is at risk.
                         </p>
                     ) : (
                         <p>
@@ -144,9 +148,13 @@ export const correctiveMaintenance: ScenarioDefinition = {
                     description: (
                         <p>
                             {f?.orderNumber && (
-                                <><strong>{f.orderNumber}</strong> mid-operation<br /></>
+                                <>
+                                    <strong>{f.orderNumber}</strong> mid-operation
+                                    <br />
+                                </>
                             )}
-                            The cell shows what was running at the moment of the stop with data pulled from SAP. Units that were in-progress are now impacted.
+                            The cell shows what was running at the moment of the stop with data pulled from SAP. Units
+                            that were in-progress are now impacted.
                         </p>
                     ),
                 },
@@ -156,9 +164,9 @@ export const correctiveMaintenance: ScenarioDefinition = {
                 route: dtRoute,
                 beforeRoute: f
                     ? () => {
-                        useFocusStore.getState().setSelected({ type: "downtime", id: f.downtime.id });
-                        return `/phone-factory/${(graphData as ScenarioGraphData | undefined)?.machineHash ?? INCIDENT_CELL_HASH}/${f.downtime.id}`;
-                    }
+                          useFocusStore.getState().setSelected({ type: "downtime", id: f.downtime.id });
+                          return `/tokyo-phone-factory/${(graphData as ScenarioGraphData | undefined)?.machineHash ?? INCIDENT_CELL_HASH}/${f.downtime.id}`;
+                      }
                     : undefined,
                 shroud: {
                     selector: "[data-scenario~=corrective-maintenance-step-4]",
@@ -178,9 +186,7 @@ export const correctiveMaintenance: ScenarioDefinition = {
                                     {" — "}reason code <strong>{f.downtime.reasonCode}</strong>
                                 </>
                             )} */}
-                            {f?.orderNumber && (
-                                <strong>{f.orderNumber}.</strong>
-                            )}
+                            {f?.orderNumber && <strong>{f.orderNumber}.</strong>}
                             Start time, duration, and work center are all captured.
                         </p>
                     ),
@@ -192,17 +198,17 @@ export const correctiveMaintenance: ScenarioDefinition = {
                 beforeRoute:
                     f && graphData
                         ? () => {
-                            useFocusStore.getState().setSelected(null);
-                            return undefined;
-                        }
+                              useFocusStore.getState().setSelected(null);
+                              return undefined;
+                          }
                         : undefined,
                 message: {
                     offset: { x: -100, y: 50 },
                     title: "Assess impact and take action",
                     description: (
                         <p>
-                            The twin connects the incident to the affected machine, order, and operations.
-                            This context supports fast, informed decisions.
+                            The twin connects the incident to the affected machine, order, and operations. This context
+                            supports fast, informed decisions.
                         </p>
                     ),
                 },

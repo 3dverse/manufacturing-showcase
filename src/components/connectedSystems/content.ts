@@ -1,15 +1,26 @@
 //------------------------------------------------------------------------------
-export const CONNECTED_SYSTEMS = ["SAP", "ERP", "MES", "EAM", "WMS", "QMS", "APS"] as const;
-export type SystemId = (typeof CONNECTED_SYSTEMS)[number];
+export enum Systems {
+    SAP = "SAP",
+    ERP = "ERP",
+    MES = "MES",
+    EAM = "EAM",
+    WMS = "WMS",
+    QMS = "QMS",
+    APS = "APS",
+}
 
-export type ConnectionState = Record<SystemId, boolean>;
+export type SystemId = Systems;
 
-export const DEFAULT_CONNECTIONS: Record<SystemId, boolean> = {
-    SAP: true,
-    ERP: true,
-    MES: true,
-    EAM: true,
-    WMS: true,
-    QMS: false,
-    APS: false,
-} as const;
+export type ConnectionState = Record<Systems, boolean>;
+
+export const CONNECTED_SYSTEMS = Object.values(Systems);
+
+export const DEFAULT_CONNECTIONS: Record<Systems, boolean> = {
+    [Systems.SAP]: true,
+    [Systems.ERP]: true,
+    [Systems.MES]: true,
+    [Systems.EAM]: true,
+    [Systems.WMS]: true,
+    [Systems.QMS]: false,
+    [Systems.APS]: false,
+};

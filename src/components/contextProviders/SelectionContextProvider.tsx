@@ -59,7 +59,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
             _setSelectedNode(node);
             if (node) cameraHandler(node);
         },
-        [factory, cameraHandler],
+        [factory.slug, cameraHandler],
     );
 
     //--------------------------------------------------------------------------
@@ -87,7 +87,7 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
 
     //--------------------------------------------------------------------------
     useEffect(() => {
-        Router.onChange(routeChangeHandler);
+        return Router.onChange(routeChangeHandler);
     }, [routeChangeHandler]);
 
     //--------------------------------------------------------------------------
@@ -114,7 +114,16 @@ export function SelectionContextProvider({ children }: { children: ReactNode }) 
             }
         }
         check();
-    }, [viewerInitialized, nodeGraph, nodeList, cameraHandler, cameraControllerRef, viewportRef, cameraEntity]);
+    }, [
+        viewerInitialized,
+        nodeGraph,
+        nodeList,
+        cameraHandler,
+        cameraControllerRef,
+        viewportRef,
+        cameraEntity,
+        factory.slug,
+    ]);
 
     //--------------------------------------------------------------------------
     const value = useMemo(

@@ -36,17 +36,20 @@ export const FactoryContextProvider = ({ factory, children }: { factory: Factory
 
     //--------------------------------------------------------------------------
     // Handlers
-    const loadEntities = useCallback((entities: Entity[]) => {
-        buildSceneGraph({ entities })
-            .then(({ graph, list }) => {
-                setNodeGraph(graph);
-                setNodeList(list);
-                setNodeListInStore(factory.scene_id, list);
-            })
-            .catch(() => {
-                console.warn("error loading entities");
-            });
-    }, []);
+    const loadEntities = useCallback(
+        (entities: Entity[]) => {
+            buildSceneGraph({ entities })
+                .then(({ graph, list }) => {
+                    setNodeGraph(graph);
+                    setNodeList(list);
+                    setNodeListInStore(factory.scene_id, list);
+                })
+                .catch(() => {
+                    console.warn("error loading entities");
+                });
+        },
+        [factory.scene_id, setNodeListInStore],
+    );
 
     //--------------------------------------------------------------------------
     // Effects

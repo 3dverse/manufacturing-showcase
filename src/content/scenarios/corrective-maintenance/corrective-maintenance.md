@@ -45,14 +45,14 @@ Duration fallback when `downtimeEndedAt` is null: 2 hours.
 |---|---|---|---|---|---|---|
 | 1 | **Production at a glance** | `/` | `pause()`, `setPresent(startedAt - 1)` | `corrective-maintenance-step-1` | `HomePage.tsx` | ✅ |
 | 2 | **Incident alert** | `/` | `setPresent(+1/3)`, `setAsOf(+1/3)` | `corrective-maintenance-step-2` | `ScadaEventsCallout.tsx` | ✅ |
-| 3 | **Factory health** | `/phone-factory` | — | `corrective-maintenance-step-3` ¹ | `DesktopLayout.tsx` | ✅ |
-| 4 | **Locate the incident** | `/phone-factory/<cell>` | — | `corrective-maintenance-step-4` | `InfoPanel.tsx` | ✅ |
-| 5 | **Production interrupted** | `/phone-factory/<cell>/<downtime-id>` | returns `/phone-factory/<cell>/<downtimeId>` | `corrective-maintenance-step-5` | `CellSummary.tsx` | ✅ |
-| 6 | **Downtime on the timeline** | `/phone-factory/<cell>` | — | `corrective-maintenance-step-6` ² | `Timeline.tsx` | ✅ |
-| 7 | **Trace the order impact** | `/phone-factory/<cell>` | `setSelected({ type: "downtime", id })` — opens correlation panel | `corrective-maintenance-step-7` | — | ⏳ tag needed |
-| 8 | **Affected order and customer** | `/phone-factory/<cell>` | — | `corrective-maintenance-step-8` | `CorrelationModal.tsx` | ✅ |
-| 9 | **Create corrective work order** | `/phone-factory/<cell>` | — | `corrective-maintenance-step-9` | — | ⏳ tag + UI needed |
-| 10 | **From alert to action** | `/phone-factory` | `setSelected(null)`, `setPresent(+2/3)`, `setAsOf(undefined)` | `corrective-maintenance-step-10` | — | ⏳ tag needed |
+| 3 | **Factory health** | `/tokyo-phone-factory` | — | `corrective-maintenance-step-3` ¹ | `DesktopLayout.tsx` | ✅ |
+| 4 | **Locate the incident** | `/tokyo-phone-factory/<cell>` | — | `corrective-maintenance-step-4` | `InfoPanel.tsx` | ✅ |
+| 5 | **Production interrupted** | `/tokyo-phone-factory/<cell>/<downtime-id>` | returns `/tokyo-phone-factory/<cell>/<downtimeId>` | `corrective-maintenance-step-5` | `CellSummary.tsx` | ✅ |
+| 6 | **Downtime on the timeline** | `/tokyo-phone-factory/<cell>` | — | `corrective-maintenance-step-6` ² | `Timeline.tsx` | ✅ |
+| 7 | **Trace the order impact** | `/tokyo-phone-factory/<cell>` | `setSelected({ type: "downtime", id })` — opens correlation panel | `corrective-maintenance-step-7` | — | ⏳ tag needed |
+| 8 | **Affected order and customer** | `/tokyo-phone-factory/<cell>` | — | `corrective-maintenance-step-8` | `CorrelationModal.tsx` | ✅ |
+| 9 | **Create corrective work order** | `/tokyo-phone-factory/<cell>` | — | `corrective-maintenance-step-9` | — | ⏳ tag + UI needed |
+| 10 | **From alert to action** | `/tokyo-phone-factory` | `setSelected(null)`, `setPresent(+2/3)`, `setAsOf(undefined)` | `corrective-maintenance-step-10` | — | ⏳ tag needed |
 
 ¹ Shared — DOM value: `"corrective-maintenance-step-3 predictive-maintenance-step-1"`
 ² Shared — DOM value: `"corrective-maintenance-step-6 predictive-maintenance-step-6"`

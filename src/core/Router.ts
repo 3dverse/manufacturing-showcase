@@ -143,9 +143,9 @@ export class Router {
     }
 
     //--------------------------------------------------------------------------
-    static push(data: { factorySlug?: string; nodeSlug?: string }, state: unknown = {}) {
+    static push(data: { factorySlug?: string; nodeSlug?: string; itemSlug?: string }, state: unknown = {}) {
         Router.activeFactorySlug = data.factorySlug;
-        const pathname = this.buildPath(data.factorySlug, data.nodeSlug);
+        const pathname = this.buildPath(data.factorySlug, data.nodeSlug, data.itemSlug);
 
         history.pushState(
             {
@@ -162,7 +162,7 @@ export class Router {
     }
 
     //--------------------------------------------------------------------------
-    static replace(data: { factorySlug: string; nodeSlug?: string; itemSlug?: string }, state: unknown = {}) {
+    static replace(data: { factorySlug?: string; nodeSlug?: string; itemSlug?: string }, state: unknown = {}) {
         Router.activeFactorySlug = data.factorySlug;
         const pathname = this.buildPath(data.factorySlug, data.nodeSlug, data.itemSlug);
 

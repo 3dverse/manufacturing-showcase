@@ -13,7 +13,7 @@ import { dashboardApi } from "@/services/dashboardApi";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import { CONNECTED_SYSTEMS, DEFAULT_CONNECTIONS } from "./content";
+import { CONNECTED_SYSTEMS, DEFAULT_CONNECTIONS, Systems } from "./content";
 import type { ConnectionState, SystemId } from "./content";
 
 //------------------------------------------------------------------------------
@@ -24,14 +24,14 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
     //--------------------------------------------------------------------------
     // Sync API with Process state (Process disconnected by default)
     useEffect(() => {
-        dashboardApi.setProductionRunning(connections.APS);
-    }, [connections.APS]);
+        dashboardApi.setProductionRunning(connections[Systems.APS]);
+    }, [connections]);
 
     //--------------------------------------------------------------------------
     const toggle = (id: SystemId) => {
         setConnections((prev) => {
             const next = { ...prev, [id]: !prev[id] };
-            if (id === "APS") dashboardApi.setProductionRunning(next.APS);
+            if (id === Systems.APS) dashboardApi.setProductionRunning(next[Systems.APS]);
             return next;
         });
     };

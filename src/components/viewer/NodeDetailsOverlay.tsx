@@ -179,9 +179,9 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
     }, [cellNode]);
 
     //--------------------------------------------------------------------------
-    const incident = useMemo(() => {
+    const downtime = useMemo(() => {
         return operationDowntime && <CellIncident downtimeEvent={operationDowntime} />;
-    }, [cellNode, operationDowntime, machineDetails]);
+    }, [operationDowntime]);
 
     //--------------------------------------------------------------------------
     const extra = useMemo(() => {
@@ -197,7 +197,7 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
     // Render
     return (
         <>
-            <InfoPanel node={cellNode} incident={incident} extra={extra}>
+            <InfoPanel node={cellNode} warning={downtime} extra={extra}>
                 <CellSummary
                     cell={cellNode}
                     manufacturingOrder={productionOrder}

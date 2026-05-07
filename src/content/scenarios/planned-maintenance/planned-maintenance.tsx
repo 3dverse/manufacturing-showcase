@@ -54,7 +54,7 @@ export const plannedMaintenance: ScenarioDefinition = {
     },
 
     steps(_spanData, graphData) {
-        const cellRoute = graphData ? `/phone-factory/${graphData.cellHash}` : "/phone-factory";
+        const cellRoute = graphData ? `/tokyo-phone-factory/${graphData.cellHash}` : "/tokyo-phone-factory";
 
         return [
             {

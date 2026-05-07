@@ -20,13 +20,13 @@
 
 | # | Title | Route | DOM tag | File | Status |
 |---|---|---|---|---|---|
-| 1 | **The problem machine** | `/phone-factory/<cell>` | `planned-maintenance-step-1` | — | ⏳ tag needed |
-| 2 | **The before — downtime history** | `/phone-factory/<cell>` | `planned-maintenance-step-2` | — | ⏳ tag needed |
-| 3 | **The inflection point** | `/phone-factory/<cell>` | `planned-maintenance-step-3` | — | ⏳ tag needed |
-| 4 | **OEE and MTBF recovery** | `/phone-factory/<cell>` | `planned-maintenance-step-4` | — | ⏳ tag needed |
-| 5 | **The maintenance plan** | `/phone-factory/<cell>` | `planned-maintenance-step-5` | — | ⏭ skip |
-| 6 | **Current timeline: clean** | `/phone-factory/<cell>` | `planned-maintenance-step-6` | — | ⏳ tag needed |
-| 7 | **Business impact** | `/phone-factory/<cell>` | `planned-maintenance-step-7` | — | ⏳ tag needed |
+| 1 | **The problem machine** | `/tokyo-phone-factory/<cell>` | `planned-maintenance-step-1` | — | ⏳ tag needed |
+| 2 | **The before — downtime history** | `/tokyo-phone-factory/<cell>` | `planned-maintenance-step-2` | — | ⏳ tag needed |
+| 3 | **The inflection point** | `/tokyo-phone-factory/<cell>` | `planned-maintenance-step-3` | — | ⏳ tag needed |
+| 4 | **OEE and MTBF recovery** | `/tokyo-phone-factory/<cell>` | `planned-maintenance-step-4` | — | ⏳ tag needed |
+| 5 | **The maintenance plan** | `/tokyo-phone-factory/<cell>` | `planned-maintenance-step-5` | — | ⏭ skip |
+| 6 | **Current timeline: clean** | `/tokyo-phone-factory/<cell>` | `planned-maintenance-step-6` | — | ⏳ tag needed |
+| 7 | **Business impact** | `/tokyo-phone-factory/<cell>` | `planned-maintenance-step-7` | — | ⏳ tag needed |
 
 ---
 

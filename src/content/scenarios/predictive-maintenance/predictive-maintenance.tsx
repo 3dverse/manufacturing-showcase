@@ -33,12 +33,12 @@ export const predictiveMaintenance: ScenarioDefinition = {
     },
 
     steps(_spanData, graphData) {
-        const cellRoute = graphData ? `/phone-factory/${graphData.cellHash}` : "/phone-factory";
+        const cellRoute = graphData ? `/tokyo-phone-factory/${graphData.cellHash}` : "/tokyo-phone-factory";
 
         return [
             {
                 id: "step_1",
-                route: "/phone-factory",
+                route: "/tokyo-phone-factory",
                 shroud: { selector: "[data-scenario~=predictive-maintenance-step-1]" },
                 message: {
                     title: "Factory health — amber signal",
