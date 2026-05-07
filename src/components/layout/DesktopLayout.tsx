@@ -119,19 +119,6 @@ export const DesktopLayout = () => {
                     </FooterTabsContext.Provider>
                 </div>
             </div>
-
-            {/* <div className="absolute bottom-0 left-0 flex flex-col w-full h-full pointer-events-none z-50">
-
-                <div className="flex flex-col md:flex-row items-start justify-between gap-2 md:p-2">
-                </div>
-
-                <div
-                
-                >
-                </div>
-
-
-            </div> */}
         </div>
     );
 };

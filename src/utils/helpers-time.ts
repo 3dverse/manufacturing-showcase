@@ -133,3 +133,15 @@ export function formatDuration(min: number): string {
 
 //------------------------------------------------------------------------------
 export const hoursFromNow = (hours: number) => new Date(Date.now() + hours * 60 * 60 * 1000);
+
+//------------------------------------------------------------------------------
+const SHORT_DATE: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+
+/** "Jan 5 – Feb 4" or "Jan 5 – now" when to is undefined / within the last minute. */
+export function fmtInterval(fromSec: number, toSec?: number): string {
+    const now = Date.now() / 1000;
+    const from = new Date(fromSec * 1000).toLocaleDateString(undefined, SHORT_DATE);
+    const isNowOrUndefined = toSec === undefined || now - toSec < 60;
+    const to = isNowOrUndefined ? "now" : new Date(toSec * 1000).toLocaleDateString(undefined, SHORT_DATE);
+    return `${from} – ${to}`;
+}

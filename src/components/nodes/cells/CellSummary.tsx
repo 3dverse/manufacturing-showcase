@@ -1,5 +1,4 @@
 //------------------------------------------------------------------------------
-import { useMemo } from "react";
 import { faCheckToSlot } from "@fortawesome/sharp-regular-svg-icons";
 
 //------------------------------------------------------------------------------
@@ -25,14 +24,16 @@ export const CellSummary = ({
     operation,
     manufacturingOrder,
     machineDetails,
+    hasStoppage = false,
 }: {
     cell: CellNode;
     operation?: ProjectedOperation;
     manufacturingOrder?: ProjectedProductionOrder;
     machineDetails: MachineDetails;
+    hasStoppage?: boolean;
 }) => {
     //--------------------------------------------------------------------------
-    const { oeeHistory } = useCellKpis(cell);
+    const { oee, oeeHistory } = useCellKpis(cell);
 
     //--------------------------------------------------------------------------
     const { orderNumber, itemCode } = manufacturingOrder ?? { orderNumber: "", itemCode: "" };
@@ -45,12 +46,6 @@ export const CellSummary = ({
             : undefined;
 
     //--------------------------------------------------------------------------
-    const oee = useMemo(() => {
-        if (!operation) return undefined;
-        return Math.round((goodQuantity / (goodQuantity + scrapQuantity)) * 100);
-    }, [operation, goodQuantity, scrapQuantity]);
-
-    //--------------------------------------------------------------------------
     return (
         <>
             <p className="px-2 capitalize text-sm font-semibold text-slate-800 border-b border-slate-200/80 pb-2">
@@ -58,26 +53,30 @@ export const CellSummary = ({
             </p>
             <div data-scenario="corrective-maintenance-step-5" className="flex flex-col gap-2">
                 <div className="grid grid-cols-2 gap-2">
-                    <DataContainer className="gap-0 justify-between bg-positive-500/10">
+                    <DataContainer
+                        className={cn(
+                            "gap-0 justify-between",
+                            hasStoppage ? "bg-warning-500/10" : "bg-positive-500/10",
+                        )}
+                    >
                         <DataLabel>
-                            Current OEE
-                            <Triangle className="w-3 ml-2" />
+                            OEE
+                            <Triangle
+                                className={cn("w-3 ml-2", hasStoppage ? "rotate-180 bg-warning-600" : undefined)}
+                            />
                         </DataLabel>
-                        <DataValue className="text-4xl text-positive-700">
-                            {oee != null ? (
-                                <>
-                                    {oee}
-                                    <span className="inline-block ml-1 text-xl -translate-y-3 opacity-80">%</span>
-                                </>
-                            ) : (
-                                <span className="text-slate-300 font-light text-2xl">N/A</span>
-                            )}
+                        <DataValue className={cn("text-4xl", hasStoppage ? "text-warning-700" : "text-positive-700")}>
+                            {oee}
+                            <span className="inline-block ml-1 text-xl -translate-y-3 opacity-80">%</span>
                         </DataValue>
-                        <MiniSparkline
-                            data={oeeHistory}
-                            color="var(--color-positive-500)"
-                            className="mt-1 opacity-70"
-                        />
+                        <div className="flex items-center justify-between mt-1">
+                            <MiniSparkline
+                                data={oeeHistory}
+                                color={hasStoppage ? "var(--color-warning-500)" : "var(--color-positive-500)"}
+                                className="grow opacity-70"
+                            />
+                            <span className="text-[10px] text-muted/60 ml-1 shrink-0">7d</span>
+                        </div>
                     </DataContainer>
                     <DataContainer className="gap-0 justify-between">
                         <DataLabel className="flex items-center gap-2 text-positive-700 ">

@@ -21,7 +21,6 @@ export function WorkOrderView({ item, projection, correlated }: Props) {
                 <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
                         <p className="text-base font-semibold">{item.workOrderNumber}</p>
-                        <p className="text-xs text-muted capitalize">{item.workType.replace(/_/g, " ")}</p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 pt-px">
                         <StatusBadge status={item.status} />
@@ -30,6 +29,10 @@ export function WorkOrderView({ item, projection, correlated }: Props) {
                 </div>
                 <Divider />
                 <div className="space-y-1">
+                    <Field
+                        label="Type"
+                        value={<span className="capitalize">{item.workType.replace(/_/g, " ")}</span>}
+                    />
                     <Field
                         label="Status"
                         value={<span className="capitalize">{item.status.replace(/_/g, " ")}</span>}
