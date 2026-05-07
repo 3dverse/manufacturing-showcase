@@ -62,7 +62,7 @@ export const DesktopLayout = () => {
                     {/* layer 1 */}
                     <div
                         id="layer-1"
-                        className="absolute inset-0 w-full h-full max-h-full pointer-events-none z-50 flex flex-col "
+                        className="absolute inset-0 w-full h-full max-h-full pointer-events-none z-50 flex flex-col md:p-2"
                     >
                         <div className="flex flex-col grow">
                             <div className="flex flex-row grow space-between">
