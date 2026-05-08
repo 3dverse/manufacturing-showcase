@@ -11,8 +11,9 @@ import { StoppageCallout } from "@/components/scadaEvents/StoppageCallout";
 import type { StoppageEvent } from "@/components/scadaEvents/StoppageCallout";
 
 //------------------------------------------------------------------------------
-import { useFactoryItemOEE } from "@/hooks/useFactoryItemOEE";
+import { useFactoryOEE } from "@/hooks/useFactoryOEE";
 import { useNavigationStore } from "@/store/useNavigationStore";
+import { useTimelineStore } from "@/store/useTimelineStore";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -26,7 +27,9 @@ import type { Factory } from "@/content/type";
 export const FactoryItem = ({ factoryItem, stoppage }: { factoryItem: Factory; stoppage?: StoppageEvent | null }) => {
     //--------------------------------------------------------------------------
     // Hooks
-    const oee = useFactoryItemOEE(factoryItem.scene_id);
+    const span = useTimelineStore((s) => s.span);
+    const present = useTimelineStore((s) => s.present);
+    const oee = useFactoryOEE(span, present);
     const navigate = useNavigationStore((state) => state.navigate);
     const isMobile = useMediaQuery(MEDIA_QUERIES.MOBILE);
 
@@ -161,10 +164,16 @@ function FactoryItemOEE({ oee, hasStoppage }: { oee: number | null; hasStoppage:
                         <span className="text-base opacity-80 ml-px">{oee !== null ? "%" : ""}</span>
                     </p>
                     <p className="flex items-center gap-1">
-                        OEE <Triangle className={cn(hasStoppage && "rotate-180 bg-warning-600")} />
-                    </p>
-                    <p className={cn("text-xs -mt-0.5", hasStoppage ? "text-warning-700/70" : "text-positive-700/70")}>
-                        This week
+                        OEE
+                        <span
+                            className={cn(
+                                "text-xs -mt-0.5",
+                                hasStoppage ? "text-warning-700/70" : "text-positive-700/70",
+                            )}
+                        >
+                            7d
+                        </span>
+                        <Triangle className={cn(hasStoppage && "rotate-180 bg-warning-600")} />
                     </p>
                 </div>
             </div>

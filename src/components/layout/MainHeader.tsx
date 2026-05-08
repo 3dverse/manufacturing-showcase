@@ -31,11 +31,11 @@ export const MainHeader = ({ className }: { className?: string }) => {
 
     //--------------------------------------------------------------------------
     // Hooks
-    const oee = useFactoryOEE();
     const { navigate } = useNavigationStore();
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
     const present = useTimelineStore((s) => s.present);
+    const oee = useFactoryOEE(span, asOf ?? present);
 
     const hasStoppage = useMemo(() => {
         if (!span) return false;
