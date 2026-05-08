@@ -58,7 +58,7 @@ export const DesktopLayout = () => {
             <ScenarioStepper />
 
             <div className="absolute inset-0 flex flex-col w-full h-full max-h-full pointer-events-none z-50">
-                <div data-viewport="full" className="relative min-h-0 flex flex-1 flex-row overflow-hidden">
+                <div data-viewport="standard" className="relative min-h-0 flex flex-1 flex-row overflow-hidden">
                     {/* layer 1 */}
                     <div
                         id="layer-1"

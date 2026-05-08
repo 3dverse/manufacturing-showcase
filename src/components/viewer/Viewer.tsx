@@ -26,6 +26,9 @@ import { useAvatarsStore } from "@/store/useAvatarsStore";
 import { SelectionContext } from "@/contexts/SelectionContext";
 import { NodeDetailsOverlay } from "./NodeDetailsOverlay";
 import { NodeChildrensOverlay } from "./NodeChildrenOverlay";
+import { DebugOverlay } from "./overlays/DebugOverlay";
+import { UserMode } from "@/core/UserMode";
+
 
 //------------------------------------------------------------------------------
 // Camera constraints
@@ -124,6 +127,7 @@ export const Viewer = () => {
                     <FactoryBuilder />
                     {selectedNode && <NodeDetailsOverlay node={selectedNode} />}
                     {selectedNode && <NodeChildrensOverlay node={selectedNode} />}
+                    {UserMode.dev && <DebugOverlay />}
                 </DOM3DOverlay>
             </Viewport>
             {/* Light overlay */}
