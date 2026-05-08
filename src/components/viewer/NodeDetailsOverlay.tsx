@@ -11,12 +11,18 @@ import { CellIncident } from "../nodes/cells/CellIncident";
 import { NodeTypes } from "@/content/enums";
 import { cn } from "@/utils/cn";
 import { useAreaOEE } from "@/hooks/useAreaOEE";
-import { useOEEHistory } from "@/hooks/useOEEHistory";
 import { BadgeOEE } from "../common/BadgeOEE";
-import { downtimeAtAsOf, workOrderAtAsOf } from "@/components/timeline/timeUtils";
+import {
+    activeDowntimesAt,
+    activeWorkOrdersAt,
+    downtimeAtAsOf,
+    workOrderAtAsOf,
+} from "@/components/timeline/timeUtils";
 import { AnchoredPanel } from "./DOM3D/AnchoredPanel";
 import { StorageOverlay } from "./StorageOverlay";
 import { UnitOutPanel } from "./DOM3D/UnitOutPanel";
+import { DowntimeFlagFront } from "./DOM3D/DowntimeFlag";
+import { WorkOrderFlagFront } from "./DOM3D/WorkOrderFlag";
 import { InfoPanel } from "./DOM3D/InfoPanel";
 import { CellSummary } from "../nodes/cells/CellSummary";
 import { useSpanSnapshot } from "@/hooks/useSpanSnapshot";
@@ -59,31 +65,38 @@ const AreaDetailsOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
     //--------------------------------------------------------------------------
     // Hooks
     const oee = useAreaOEE(areaNode);
-    const oeeHistory = useOEEHistory(areaNode);
+    //const oeeHistory = useOEEHistory(areaNode);
+    const oeeHistory = undefined;
     const span = useTimelineStore((s) => s.span);
     const asOf = useTimelineStore((s) => s.asOf);
     const present = useTimelineStore((s) => s.present);
 
+    //--------------------------------------------------------------------------
+    const areaCellHashes = useMemo(() => {
+        const allCells = [...areaNode.lines.flatMap((l) => l.cells), ...areaNode.cells];
+        return new Set(allCells.map((c) => c.hash));
+    }, [areaNode]);
+
+    const areaMachineHashes = useMemo(() => {
+        const allCells = [...areaNode.lines.flatMap((l) => l.cells), ...areaNode.cells];
+        return new Set(allCells.flatMap((c) => c.machines.map((m) => m.hash)));
+    }, [areaNode]);
+
     const hasAreaStoppage = useMemo(() => {
         if (!span) return false;
         const t = asOf || present;
-        const allCells = [...areaNode.lines.flatMap((l) => l.cells), ...areaNode.cells];
-        const cellHashes = new Set(allCells.map((c) => c.hash));
-        const machineHashes = new Set(allCells.flatMap((c) => c.machines.map((m) => m.hash)));
         return (
-            [...span.downtimeEvents.values()].some((e) => cellHashes.has(e.workCenterId) && downtimeAtAsOf(e, t)) ||
-            [...span.eamWorkOrders.values()].some((wo) => machineHashes.has(wo.assetId) && workOrderAtAsOf(wo, t))
+            activeDowntimesAt(span, t).some((dt) => areaCellHashes.has(dt.workCenterId)) ||
+            activeWorkOrdersAt(span, t).some((wo) => areaMachineHashes.has(wo.assetId))
         );
-    }, [span, asOf, present, areaNode]);
+    }, [span, asOf, present, areaCellHashes, areaMachineHashes]);
 
     //--------------------------------------------------------------------------
-    const oeeInterval = "last 7 days";
-
     const kpi = useMemo(() => {
         if (oee === undefined) return;
         return (
             <div
-                title={`OEE — ${oeeInterval}`}
+                title={`OEE — "last 7 days"`}
                 className="starting:opacity-0 starting:translate-y-4 opacity-100 translate-y-0 transition-all duration-300 delay-1700 transform-3d"
             >
                 <div className="relative -translate-y-8">
@@ -104,7 +117,7 @@ const AreaDetailsOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
                 </div>
             </div>
         );
-    }, [oee, oeeHistory, hasAreaStoppage, oeeInterval]);
+    }, [oee, oeeHistory, hasAreaStoppage]);
 
     //--------------------------------------------------------------------------
     const content = useMemo(() => {
@@ -148,10 +161,56 @@ const AreaDetailsOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 const LineDetails = ({ lineNode }: { lineNode: LineNode }) => {
-    return lineNode.cells.flatMap((cell) =>
-        cell.outputs.map((out, cellIndex) => (
-            <UnitOutPanel key={out.hash} outNode={out} unitCompleted={96} unitTotal={952} delay={cellIndex} />
-        )),
+    //--------------------------------------------------------------------------
+    // Store
+    const span = useTimelineStore((s) => s.span);
+    const asOf = useTimelineStore((s) => s.asOf);
+    const present = useTimelineStore((s) => s.present);
+    const t = asOf || present;
+
+    //--------------------------------------------------------------------------
+    // Memos
+    const cellHashes = useMemo(() => new Set(lineNode.cells.map((c) => c.hash)), [lineNode]);
+    const machineMap = useMemo(
+        () => new Map(lineNode.cells.flatMap((c) => c.machines.map((m) => [m.hash, { cell: c, machine: m }]))),
+        [lineNode],
+    );
+
+    const activeDowntimes = useMemo(() => {
+        if (!span) return [];
+        return activeDowntimesAt(span, t)
+            .filter((dt) => cellHashes.has(dt.workCenterId))
+            .map((dt) => ({ cell: lineNode.cells.find((c) => c.hash === dt.workCenterId)!, downtimeId: dt.id }));
+    }, [span, t, cellHashes, lineNode]);
+
+    const activeWorkOrders = useMemo(() => {
+        if (!span) return [];
+        return activeWorkOrdersAt(span, t)
+            .filter((wo) => machineMap.has(wo.assetId))
+            .map((wo) => ({ ...machineMap.get(wo.assetId)!, workOrderId: wo.id }));
+    }, [span, t, machineMap]);
+
+    //--------------------------------------------------------------------------
+    // Render
+    return (
+        <>
+            {lineNode.cells.flatMap((cell) =>
+                cell.outputs.map((out, cellIndex) => (
+                    <UnitOutPanel key={out.hash} outNode={out} unitCompleted={96} unitTotal={952} delay={cellIndex} />
+                )),
+            )}
+            {activeDowntimes.map(({ cell, downtimeId }) => (
+                <DowntimeFlagFront key={downtimeId} node={cell} cell={cell} downtimeId={downtimeId} />
+            ))}
+            {activeWorkOrders.map(({ machine, workOrderId }) => (
+                <WorkOrderFlagFront
+                    key={workOrderId}
+                    node={machine.parent}
+                    machine={machine}
+                    workOrderId={workOrderId}
+                />
+            ))}
+        </>
     );
 };
 
@@ -172,6 +231,8 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
 
     const snapshot = useSpanSnapshot();
 
+    //--------------------------------------------------------------------------
+    // Memos
     const hasStoppage = useMemo(() => {
         if (!span) return false;
         const t = asOf || present;
@@ -183,6 +244,7 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
         );
     }, [span, asOf, present, cellNode]);
 
+    //--------------------------------------------------------------------------
     // Find the current raw operation for this cell (time-dependent lookup on raw data)
     const rawOperation = useMemo(() => {
         return (
@@ -193,26 +255,37 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
         );
     }, [snapshot, cellNode, targetAsOf]);
 
+    //--------------------------------------------------------------------------
     const focused = useMemo(
         () => (rawOperation ? { type: "operation" as const, id: rawOperation.id } : null),
         [rawOperation],
     );
+
+    //--------------------------------------------------------------------------
     const correlated = useCorrelation(snapshot, focused);
 
+    //--------------------------------------------------------------------------
     // Project only the focused operation and its correlated entities
     const correlatedSnapshot = useMemo(
         () => (snapshot && focused && correlated ? buildCorrelatedSnapshot(snapshot, focused, correlated) : null),
         [snapshot, focused, correlated],
     );
+
+    //--------------------------------------------------------------------------
     const projection = useProjection(correlatedSnapshot);
 
+    //--------------------------------------------------------------------------
     const operation = projection?.operations.find((op) => op.id === rawOperation?.id);
+
+    //--------------------------------------------------------------------------
     const operationDowntime = useMemo(() => {
         return projection?.downtimeEvents
             .filter((d) => d.workCenterId === cellNode.hash && d.startedAt < targetAsOf)
             .sort((a, b) => a.startedAt - b.startedAt)
             .pop();
     }, [cellNode, projection, targetAsOf]);
+
+    //--------------------------------------------------------------------------
     const productionOrderId = correlated?.productionOrders.values().next().value;
     const productionOrder = projection?.productionOrders.find((po) => po.id === productionOrderId);
     const machineDetails = getMachineDocumentation(cellNode.machines[0].name);

@@ -13,6 +13,17 @@ export function scheduledSeconds(fromSecs: number, toSecs: number): number {
     return toSecs - fromSecs - closedSecs;
 }
 
+// Internal: scheduled secs for one interval given pre-computed closed intervals (sorted by start).
+function scheduledSecsWithClosed(from: number, to: number, closed: { start: number; end: number }[]): number {
+    let closedSecs = 0;
+    for (const ci of closed) {
+        if (ci.start >= to) break;
+        if (ci.end <= from) continue;
+        closedSecs += Math.min(ci.end, to) - Math.max(ci.start, from);
+    }
+    return to - from - closedSecs;
+}
+
 // ---------------------------------------------------------------------------
 // Interval utilities
 // ---------------------------------------------------------------------------
@@ -39,70 +50,110 @@ export function scheduledSecsOfIntervals(intervals: [number, number][]): number 
     return mergeIntervals(intervals).reduce((sum, [s, e]) => sum + scheduledSeconds(s, e), 0);
 }
 
+/**
+ * Clip pre-merged (start-ASC) intervals to [windowStart, targetAsOf].
+ * Input must already be merged and sorted by start ascending.
+ * Output is ready to pass directly to computeOEE without re-merging.
+ */
+export function clipIntervalsToWindow(
+    mergedIntervals: [number, number][],
+    windowStart: number,
+    targetAsOf: number,
+): [number, number][] {
+    const result: [number, number][] = [];
+    for (const [s, e] of mergedIntervals) {
+        if (s >= targetAsOf) break;
+        if (e <= windowStart) continue;
+        result.push([Math.max(s, windowStart), Math.min(e, targetAsOf)]);
+    }
+    return result;
+}
+
 // ---------------------------------------------------------------------------
-// Planned time helpers — callers pick which source to use
+// Single-pass metrics helpers
 // ---------------------------------------------------------------------------
 
-/** Planned intervals derived from production order actual/scheduled timing. */
+/**
+ * Single pass over sorted (end-DESC) production orders: returns both planned
+ * intervals and quality for the window. Avoids iterating the array twice.
+ */
+export function poMetricsForWindow(
+    pos: ProductionOrderEntry[],
+    windowStart: number,
+    targetAsOf: number,
+): { intervals: [number, number][]; quality: number } {
+    const intervals: [number, number][] = [];
+    let totalGood = 0,
+        totalProduced = 0;
+    for (const po of pos) {
+        const end = po.timing.actualEnd ?? po.timing.scheduledEnd;
+        if (end <= windowStart) break;
+        const start = po.timing.actualStart ?? po.timing.scheduledStart;
+        if (start < targetAsOf) {
+            intervals.push([Math.max(start, windowStart), Math.min(end, targetAsOf)]);
+        }
+        if (
+            po.timing.actualEnd !== undefined &&
+            po.timing.actualEnd >= windowStart &&
+            po.timing.actualEnd <= targetAsOf
+        ) {
+            totalGood += po.quantities.goodQuantity ?? 0;
+            totalProduced += (po.quantities.goodQuantity ?? 0) + (po.quantities.scrapQuantity ?? 0);
+        }
+    }
+    return { intervals, quality: totalProduced > 0 ? totalGood / totalProduced : 1 };
+}
+
+/**
+ * Single pass over operations: returns both planned intervals and quality.
+ */
+export function opMetricsForWindow(
+    ops: OperationEntry[],
+    windowStart: number,
+    targetAsOf: number,
+): { intervals: [number, number][]; quality: number } {
+    const intervals: [number, number][] = [];
+    let totalGood = 0,
+        totalProduced = 0;
+    for (const op of ops) {
+        const start = op.actualStart ?? op.scheduledStart;
+        const end = op.actualEnd ?? op.scheduledEnd;
+        if (end <= windowStart || start >= targetAsOf) continue;
+        intervals.push([Math.max(start, windowStart), Math.min(end, targetAsOf)]);
+        if (op.actualEnd !== undefined && op.actualEnd >= windowStart && op.actualEnd <= targetAsOf) {
+            totalGood += op.quantities.goodQuantity ?? 0;
+            totalProduced += op.quantities.producedQuantity ?? 0;
+        }
+    }
+    return { intervals, quality: totalProduced > 0 ? totalGood / totalProduced : 1 };
+}
+
+// ---------------------------------------------------------------------------
+// Kept for backward compatibility / standalone use
+// ---------------------------------------------------------------------------
+
 export function plannedIntervalsFromPOs(
     pos: ProductionOrderEntry[],
     windowStart: number,
     targetAsOf: number,
 ): [number, number][] {
-    const intervals: [number, number][] = [];
-    for (const po of pos) {
-        const start = po.timing.actualStart ?? po.timing.scheduledStart;
-        const end = po.timing.actualEnd ?? po.timing.scheduledEnd;
-        if (start >= targetAsOf || end <= windowStart) continue;
-        intervals.push([Math.max(start, windowStart), Math.min(end, targetAsOf)]);
-    }
-    return intervals;
+    return poMetricsForWindow(pos, windowStart, targetAsOf).intervals;
 }
 
-/** Planned intervals derived from operation actual/scheduled timing. */
 export function plannedIntervalsFromOps(
     ops: OperationEntry[],
     windowStart: number,
     targetAsOf: number,
 ): [number, number][] {
-    const intervals: [number, number][] = [];
-    for (const op of ops) {
-        const start = op.actualStart ?? op.scheduledStart;
-        const end = op.actualEnd ?? op.scheduledEnd;
-        if (start >= targetAsOf || end <= windowStart) continue;
-        intervals.push([Math.max(start, windowStart), Math.min(end, targetAsOf)]);
-    }
-    return intervals;
+    return opMetricsForWindow(ops, windowStart, targetAsOf).intervals;
 }
 
-// ---------------------------------------------------------------------------
-// Quality helpers
-// ---------------------------------------------------------------------------
-
-/** Quality (0–1) from completed production orders: goodQty / (goodQty + scrapQty). */
 export function qualityFromPOs(pos: ProductionOrderEntry[], windowStart: number, targetAsOf: number): number {
-    const completed = pos.filter(
-        (po) =>
-            po.timing.actualEnd !== undefined &&
-            po.timing.actualEnd >= windowStart &&
-            po.timing.actualEnd <= targetAsOf,
-    );
-    const totalGood = completed.reduce((s, po) => s + (po.quantities.goodQuantity ?? 0), 0);
-    const totalProduced = completed.reduce(
-        (s, po) => s + (po.quantities.goodQuantity ?? 0) + (po.quantities.scrapQuantity ?? 0),
-        0,
-    );
-    return totalProduced > 0 ? totalGood / totalProduced : 1;
+    return poMetricsForWindow(pos, windowStart, targetAsOf).quality;
 }
 
-/** Quality (0–1) from completed operations: goodQty / producedQty. */
 export function qualityFromOps(ops: OperationEntry[], windowStart: number, targetAsOf: number): number {
-    const completed = ops.filter(
-        (op) => op.actualEnd !== undefined && op.actualEnd >= windowStart && op.actualEnd <= targetAsOf,
-    );
-    const totalGood = completed.reduce((s, op) => s + (op.quantities.goodQuantity ?? 0), 0);
-    const totalProduced = completed.reduce((s, op) => s + (op.quantities.producedQuantity ?? 0), 0);
-    return totalProduced > 0 ? totalGood / totalProduced : 1;
+    return opMetricsForWindow(ops, windowStart, targetAsOf).quality;
 }
 
 // ---------------------------------------------------------------------------
@@ -113,8 +164,8 @@ export function qualityFromOps(ops: OperationEntry[], windowStart: number, targe
  * Computes OEE (0–100) given pre-computed planned intervals, quality, downtime
  * events, and work orders within [windowStart, targetAsOf].
  *
- * Availability = (planned scheduled time − stoppage scheduled time) / planned scheduled time
- * OEE          = availability × quality × 100
+ * Builds closed intervals once for the window and reuses them for both planned
+ * and stoppage scheduled-seconds calculations.
  *
  * Returns null if plannedIntervals covers zero scheduled seconds.
  */
@@ -126,23 +177,29 @@ export function computeOEE(
     windowStart: number,
     targetAsOf: number,
 ): number | null {
-    const plannedSecs = scheduledSecsOfIntervals(plannedIntervals);
+    // Pre-compute closed intervals once — reused for both planned and stoppage.
+    const closed = buildClosedIntervals(windowStart, targetAsOf);
+
+    const mergedPlanned = mergeIntervals(plannedIntervals);
+    const plannedSecs = mergedPlanned.reduce((sum, [s, e]) => sum + scheduledSecsWithClosed(s, e, closed), 0);
     if (plannedSecs === 0) return null;
 
     const stoppageIntervals: [number, number][] = [];
     for (const dt of downtimes) {
-        const start = dt.startedAt;
         const end = dt.endedAt ?? targetAsOf;
-        if (start >= targetAsOf || end <= windowStart) continue;
-        stoppageIntervals.push([Math.max(start, windowStart), Math.min(end, targetAsOf)]);
+        if (end <= windowStart) break;
+        if (dt.startedAt >= targetAsOf) continue;
+        stoppageIntervals.push([Math.max(dt.startedAt, windowStart), Math.min(end, targetAsOf)]);
     }
     for (const wo of workOrders) {
-        const start = wo.actualStart ?? wo.scheduledStart;
         const end = wo.actualEnd ?? wo.scheduledEnd;
-        if (start >= targetAsOf || end <= windowStart) continue;
+        if (end <= windowStart) break;
+        const start = wo.actualStart ?? wo.scheduledStart;
+        if (start >= targetAsOf) continue;
         stoppageIntervals.push([Math.max(start, windowStart), Math.min(end, targetAsOf)]);
     }
-    const stoppageSecs = scheduledSecsOfIntervals(stoppageIntervals);
+    const mergedStoppage = mergeIntervals(stoppageIntervals);
+    const stoppageSecs = mergedStoppage.reduce((sum, [s, e]) => sum + scheduledSecsWithClosed(s, e, closed), 0);
 
     const availability = Math.max(0, (plannedSecs - stoppageSecs) / plannedSecs);
     return Math.round(availability * quality * 100);

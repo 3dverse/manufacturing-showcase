@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { NodeTypes } from "@/content/enums";
-import { computeOEE, plannedIntervalsFromPOs, qualityFromPOs } from "@/core/oee";
+import { computeOEE, poMetricsForWindow } from "@/core/oee";
 import type { SceneGraphNode } from "@/content/type";
 
 export function useAreaOEE(node: SceneGraphNode): number | undefined {
@@ -10,39 +10,28 @@ export function useAreaOEE(node: SceneGraphNode): number | undefined {
     const present = useTimelineStore((s) => s.present);
     const span = useTimelineStore((s) => s.span);
 
+    const minuteAsOf = Math.floor((asOf || present) / 60) * 60;
+
     return useMemo(() => {
         if (node.type !== NodeTypes.area || node.name !== "production") return undefined;
         if (!span) return undefined;
 
-        const pos = (span.productionOrdersByLocation.get(node.hash) ?? []).flatMap((id) => {
-            const po = span.productionOrders.get(id);
-            return po ? [po] : [];
-        });
+        const windowStart = minuteAsOf - 7 * 86400;
 
-        const wcIds = [...node.lines.flatMap((l) => l.cells.map((c) => c.hash)), ...node.cells.map((c) => c.hash)];
+        const wcIds = new Set([
+            ...node.lines.flatMap((l) => l.cells.map((c) => c.hash)),
+            ...node.cells.map((c) => c.hash),
+        ]);
+        const poIds = new Set(span.productionOrdersByLocation.get(node.hash) ?? []);
 
-        const dtIds = wcIds.flatMap((wcId) => span.downtimeByWorkCenter.get(wcId) ?? []);
-        const downtimes = [...new Set(dtIds)].flatMap((id) => {
-            const dt = span.downtimeEvents.get(id);
-            return dt ? [dt] : [];
-        });
+        const pos = span.sortedProductionOrders.filter((po) => poIds.has(po.id));
+        const { intervals, quality } = poMetricsForWindow(pos, windowStart, minuteAsOf);
 
-        const woIds = span.workOrdersByLocation.get(node.hash) ?? [];
-        const workOrders = woIds.flatMap((id) => {
-            const wo = span.eamWorkOrders.get(id);
-            return wo ? [wo] : [];
-        });
+        const downtimes = span.sortedDowntimes.filter((dt) => wcIds.has(dt.workCenterId));
 
-        const targetAsOf = asOf || present;
-        const windowStart = targetAsOf - 7 * 86400;
-        const result = computeOEE(
-            plannedIntervalsFromPOs(pos, windowStart, targetAsOf),
-            qualityFromPOs(pos, windowStart, targetAsOf),
-            downtimes,
-            workOrders,
-            windowStart,
-            targetAsOf,
-        );
-        return result ?? undefined;
-    }, [span, asOf, present, node]);
+        const woIds = new Set(span.workOrdersByLocation.get(node.hash) ?? []);
+        const workOrders = span.sortedWorkOrders.filter((wo) => woIds.has(wo.id));
+
+        return computeOEE(intervals, quality, downtimes, workOrders, windowStart, minuteAsOf) ?? undefined;
+    }, [span, node, minuteAsOf]);
 }

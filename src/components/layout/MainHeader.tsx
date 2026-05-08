@@ -13,7 +13,7 @@ import { ClientProductLogo } from "../common/icons/ClientProductLogo";
 import { useNavigationStore } from "@/store/useNavigationStore";
 import { useFactoryOEE } from "@/hooks/useFactoryOEE";
 import { useTimelineStore } from "@/store/useTimelineStore";
-import { downtimeAtAsOf, workOrderAtAsOf } from "@/components/timeline/timeUtils";
+import { hasActiveDowntimeAt, hasActiveWorkOrderAt } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
 import { SelectionContext } from "@/contexts/SelectionContext";
@@ -37,13 +37,11 @@ export const MainHeader = ({ className }: { className?: string }) => {
     const present = useTimelineStore((s) => s.present);
     const oee = useFactoryOEE(span, asOf ?? present);
 
+    //--------------------------------------------------------------------------
     const hasStoppage = useMemo(() => {
         if (!span) return false;
         const t = asOf || present;
-        return (
-            [...span.downtimeEvents.values()].some((e) => downtimeAtAsOf(e, t)) ||
-            [...span.eamWorkOrders.values()].some((wo) => workOrderAtAsOf(wo, t))
-        );
+        return hasActiveDowntimeAt(span, t) || hasActiveWorkOrderAt(span, t);
     }, [span, asOf, present]);
 
     //--------------------------------------------------------------------------

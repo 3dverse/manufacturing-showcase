@@ -842,24 +842,26 @@ export function Timeline() {
 
     const downtimeBands = useMemo(() => {
         if (!span || !showMaintenanceBands) return [];
-        return [...span.downtimeEvents.values()]
-            .map((dt) => ({
-                dt,
-                start: Math.max(dt.startedAt, winStart),
-                end: Math.min(dt.endedAt ?? effectiveNow, winEnd),
-            }))
-            .filter(({ start, end }) => start < end);
+        const result = [];
+        for (const dt of span.sortedDowntimes) {
+            const end = dt.endedAt ?? effectiveNow;
+            if (end <= winStart) break;
+            const start = dt.startedAt;
+            if (start < winEnd) result.push({ dt, start: Math.max(start, winStart), end: Math.min(end, winEnd) });
+        }
+        return result;
     }, [span, winStart, winEnd, effectiveNow, showMaintenanceBands]);
 
     const workOrderBands = useMemo(() => {
         if (!span || !showMaintenanceBands) return [];
-        return [...span.eamWorkOrders.values()]
-            .map((wo) => ({
-                wo,
-                start: Math.max(wo.actualStart ?? wo.scheduledStart, winStart),
-                end: Math.min(wo.actualEnd ?? wo.scheduledEnd, winEnd),
-            }))
-            .filter(({ start, end }) => start < end);
+        const result = [];
+        for (const wo of span.sortedWorkOrders) {
+            const end = wo.actualEnd ?? wo.scheduledEnd;
+            if (end <= winStart) break;
+            const start = wo.actualStart ?? wo.scheduledStart;
+            if (start < winEnd) result.push({ wo, start: Math.max(start, winStart), end: Math.min(end, winEnd) });
+        }
+        return result;
     }, [span, winStart, winEnd, showMaintenanceBands]);
 
     const scopedDowntimeIds = useMemo(() => new Set(scope?.downtimeEvents.map((dt) => dt.id) ?? []), [scope]);
