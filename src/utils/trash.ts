@@ -1,5 +1,5 @@
 import type { Quat, Vec3 } from "@3dverse/livelink";
-import type { Padding } from "./camera-v2";
+import type { Padding } from "./camera";
 import { add, rotateVec3ByQuat, scale } from "./math";
 import type { Point, QuadData } from "@/content/type";
 
@@ -22,7 +22,9 @@ export function dirFromAngle(theta: number): Vec3 {
 //------------------------------------------------------------------------------
 // Debug
 //------------------------------------------------------------------------------
-export type DebugElement = { position: Vec3; label?: string | number };
+export type DebugPoint = { position: Vec3; label?: string | number; title?: string };
+export type DebugQuad = { quad: { tl: Vec3; tr: Vec3; br: Vec3; bl: Vec3 }; label?: string | number; title?: string; className?: string };
+export type DebugElement = DebugPoint | DebugQuad;
 
 //------------------------------------------------------------------------------
 export function emitDebug3d(points: DebugElement[]) {
@@ -30,48 +32,35 @@ export function emitDebug3d(points: DebugElement[]) {
 }
 
 //------------------------------------------------------------------------------
+export type PlaneRect = { xMin: number; xMax: number; yMin: number; yMax: number };
+
+//------------------------------------------------------------------------------
 export function renderPlane(
     orientation: Quat,
     position: Vec3,
-    distXneg?: number,
-    distXpos?: number,
-    distYneg?: number,
-    distYpos?: number,
-    distXnegproj?: number,
-    distXposproj?: number,
-    distYnegproj?: number,
-    distYposproj?: number,
+    plane?: PlaneRect,
+    projection?: PlaneRect,
 ): DebugElement[] {
-    const r = 1; // distance from center for axis markers
+    const localRight: Vec3 = [1, 0, 0];
+    const localUp: Vec3 = [0, 1, 0];
 
-    // Plane-local axes (XY plane by default)
-    const localX: Vec3 = [-1, 0, 0];
-    const localY: Vec3 = [0, 1, 0];
-    const localForward: Vec3 = [0, 0, 1]; // forward (+Z)
+    const worldRight = rotateVec3ByQuat(localRight, orientation);
+    const worldUp = rotateVec3ByQuat(localUp, orientation);
 
-    const worldX = rotateVec3ByQuat(localX, orientation);
-    const worldY = rotateVec3ByQuat(localY, orientation);
-    const worldForward = rotateVec3ByQuat(localForward, orientation);
+    const makeQuad = (r: PlaneRect, label: string, className: string): DebugQuad => ({
+        label,
+        className,
+        quad: {
+            tl: add(position, add(scale(worldRight, r.xMin), scale(worldUp, r.yMin))),
+            tr: add(position, add(scale(worldRight, r.xMax), scale(worldUp, r.yMin))),
+            br: add(position, add(scale(worldRight, r.xMax), scale(worldUp, r.yMax))),
+            bl: add(position, add(scale(worldRight, r.xMin), scale(worldUp, r.yMax))),
+        },
+    });
 
-    const items = [
-        { position: position, label: "C" },
-        { position: add(position, scale(worldX, +r)), label: "X" },
-        { position: add(position, scale(worldX, -r)), label: "X" },
-        { position: add(position, scale(worldY, +r)), label: "Y" },
-        { position: add(position, scale(worldY, -r)), label: "Y" },
-        { position: add(position, scale(worldForward, +r)), label: "F" },
-    ];
-
-    if (distXneg) items.push({ position: add(position, scale(worldX, distXneg)), label: "-X" });
-    if (distXpos) items.push({ position: add(position, scale(worldX, distXpos)), label: "+X" });
-    if (distYneg) items.push({ position: add(position, scale(worldY, distYneg)), label: "-Y" });
-    if (distYpos) items.push({ position: add(position, scale(worldY, distYpos)), label: "+Y" });
-
-    if (distXnegproj) items.push({ position: add(position, scale(worldX, distXnegproj)), label: "-X`" });
-    if (distXposproj) items.push({ position: add(position, scale(worldX, distXposproj)), label: "+X`" });
-    if (distYnegproj) items.push({ position: add(position, scale(worldY, distYnegproj)), label: "-Y`" });
-    if (distYposproj) items.push({ position: add(position, scale(worldY, distYposproj)), label: "+Y`" });
-
+    const items: DebugElement[] = [];
+    if (plane) items.push(makeQuad(plane, "plane", "bg-blue-500/20 border-dashed border-2 border-blue-600/80"));
+    if (projection) items.push(makeQuad(projection, "projection", "bg-orange-500/20 border-dashed border-2 border-orange-600/80"));
     return items;
 }
 

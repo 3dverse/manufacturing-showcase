@@ -50,7 +50,7 @@ export const MobileLayout = () => {
                     </a>
                     <InvitePanel />
                 </div>
-                <span className="grow" />
+                <span className="grow" data-viewport="standard" />
                 <ManufacturingOrdersCarousel />
                 <MobileMainHeader>
                     <Navigation />

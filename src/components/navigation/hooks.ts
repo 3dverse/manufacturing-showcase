@@ -7,7 +7,7 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 import { useDragGuard } from "@/hooks/useDragGuard";
 
 //------------------------------------------------------------------------------
-import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2";
+import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera";
 import { isFactory } from "@/core/SceneGraph";
 
 //------------------------------------------------------------------------------

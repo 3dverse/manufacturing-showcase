@@ -9,7 +9,7 @@ import { FactoryContext } from "@/contexts/FactoryContext";
 //------------------------------------------------------------------------------
 import { Router } from "@/core/Router";
 import { isFactory } from "@/core/SceneGraph";
-import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera-v2";
+import { getDefaultOrientationForNodeType, moveCamera } from "@/utils/camera";
 
 //------------------------------------------------------------------------------
 import type { Entity } from "@3dverse/livelink";
