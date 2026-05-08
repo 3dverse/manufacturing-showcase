@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { useContext } from "react";
+import { useCallback, useContext } from "react";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
 import { faExclamationTriangle } from "@fortawesome/sharp-regular-svg-icons";
 
@@ -15,15 +15,21 @@ import { Router } from "@/core/Router";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import type { CellNode } from "@/content/type";
+import type { CellNode, SceneGraphNode } from "@/content/type";
 
+//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export function DowntimeFlag({ cell, downtimeId }: { cell: CellNode; downtimeId: string }) {
     //--------------------------------------------------------------------------
+    // Context
     const { setSelectedNode } = useContext(SelectionContext);
+
+    //--------------------------------------------------------------------------
+    // Store
     const { setSelected } = useFocusStore();
 
     //--------------------------------------------------------------------------
+    // Handlers
     const handleClick = () => {
         setSelectedNode(cell);
         setSelected({ type: "downtime", id: downtimeId });
@@ -32,6 +38,7 @@ export function DowntimeFlag({ cell, downtimeId }: { cell: CellNode; downtimeId:
     };
 
     //--------------------------------------------------------------------------
+    // Render
     return (
         <>
             <BoundingBoxFaceProjection
@@ -61,5 +68,56 @@ export function DowntimeFlag({ cell, downtimeId }: { cell: CellNode; downtimeId:
                 </div>
             </BoundingBoxFaceProjection>
         </>
+    );
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+export function DowntimeFlagFront({
+    node,
+    cell,
+    downtimeId,
+}: {
+    node: SceneGraphNode;
+    cell: CellNode;
+    downtimeId: string;
+}) {
+    //--------------------------------------------------------------------------
+    // Context
+    const { setSelectedNode } = useContext(SelectionContext);
+
+    //--------------------------------------------------------------------------
+    // Store
+    const { setSelected } = useFocusStore();
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    const handleClick = useCallback(() => {
+        setSelectedNode(cell);
+        setSelected({ type: "downtime", id: downtimeId });
+        const { factorySlug } = Router.currentRoute();
+        if (factorySlug) Router.replace({ factorySlug, nodeSlug: cell.hash, itemSlug: downtimeId });
+    }, []);
+
+    //--------------------------------------------------------------------------
+    // Render
+    return (
+        <BoundingBoxFaceProjection
+            entity={node.entity || cell.entity}
+            face="front"
+            className="flex items-end justify-center pointer-events-none!"
+        >
+            <div
+                className={cn(
+                    "translate-y-1/2 flex flex-row items-center gap-2 bg-warning-700 text-warning-100 rounded-3xl [corner-shape:bevel] py-4 px-7 outline-4 outline-warning-700/50 outline-offset-8",
+                    "pointer-events-auto cursor-pointer",
+                    "hover:outline-offset-12 hover:outline-warning-700/80 transition-all duration-200",
+                )}
+                onClick={handleClick}
+            >
+                <Icon icon={faExclamationTriangle} className="text-5xl" />
+                <p className="px-2 capitalize font-semibold text-warning-100">Incident</p>
+            </div>
+        </BoundingBoxFaceProjection>
     );
 }

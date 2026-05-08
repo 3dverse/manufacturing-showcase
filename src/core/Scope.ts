@@ -187,6 +187,10 @@ export type TimelineSpan = {
     allocations: Map<string, AllocationEntry>;
     /** Shift-level OEE buckets keyed by workCenterId, covering the full span window. */
     oeeByWorkCenter: Map<string, OEEBucketEntry[]>;
+    // Sorted arrays for sequential/binary-search access
+    sortedProductionOrders: ProductionOrderEntry[];
+    sortedDowntimes: DowntimeEntry[];
+    sortedWorkOrders: WorkOrderEntry[];
     // Indexes built from the above
     productionOrdersByLocation: Map<string, string[]>;
     productionOrdersByWorkCenter: Map<string, string[]>;
@@ -212,6 +216,9 @@ export function emptySpan(origin: number): TimelineSpan {
         purchaseOrders: new Map(),
         allocations: new Map(),
         oeeByWorkCenter: new Map(),
+        sortedProductionOrders: [],
+        sortedDowntimes: [],
+        sortedWorkOrders: [],
         productionOrdersByLocation: new Map(),
         productionOrdersByWorkCenter: new Map(),
         operationsByWorkCenter: new Map(),
@@ -265,6 +272,16 @@ export function buildSpanIndexes(span: TimelineSpan): void {
     for (const put of span.putawayTasks.values()) {
         if (put.receiptId) appendIndex(span.putawayTasksByReceipt, put.receiptId, put.id);
     }
+
+    span.sortedProductionOrders = [...span.productionOrders.values()].sort(
+        (a, b) => (b.timing.actualEnd ?? b.timing.scheduledEnd) - (a.timing.actualEnd ?? a.timing.scheduledEnd),
+    );
+    span.sortedDowntimes = [...span.downtimeEvents.values()].sort(
+        (a, b) => (b.endedAt ?? Infinity) - (a.endedAt ?? Infinity),
+    );
+    span.sortedWorkOrders = [...span.eamWorkOrders.values()].sort(
+        (a, b) => (b.actualEnd ?? b.scheduledEnd) - (a.actualEnd ?? a.scheduledEnd),
+    );
 }
 
 export function mergeSpan(a: TimelineSpan, b: TimelineSpan): TimelineSpan {

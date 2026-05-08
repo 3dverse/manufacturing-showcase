@@ -10,6 +10,7 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
 import { useFactoryOEE } from "@/hooks/useFactoryOEE";
+import { useTimelineStore } from "@/store/useTimelineStore";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -20,7 +21,10 @@ export const MobileMainHeader = ({ className, children }: { className?: string; 
     // Contexts
     const { setSelectedNode } = useContext(SelectionContext);
     const { nodeGraph, factory } = useContext(FactoryContext);
-    const oee = useFactoryOEE();
+    const span = useTimelineStore((s) => s.span);
+    const asOf = useTimelineStore((s) => s.asOf);
+    const present = useTimelineStore((s) => s.present);
+    const oee = useFactoryOEE(span, asOf ?? present);
 
     //--------------------------------------------------------------------------
     // Handlers
