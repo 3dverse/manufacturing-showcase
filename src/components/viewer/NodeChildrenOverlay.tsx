@@ -1,10 +1,12 @@
+import { MachineLabel } from "./DOM3D/MachineLabel";
+import { MachineOutline } from "./DOM3D/MachineOutline";
 import { NodeSummary } from "./DOM3D/NodeSummary";
 import { TopPanel } from "./DOM3D/TopPanel";
 import { UnitOutPanel } from "./DOM3D/UnitOutPanel";
 
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
-import type { AreaNode, FactoryNode, LineNode, SceneGraphNode } from "@/content/type";
+import type { AreaNode, CellNode, FactoryNode, LineNode, SceneGraphNode } from "@/content/type";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -17,7 +19,7 @@ export const NodeChildrensOverlay = ({ node }: { node: SceneGraphNode }) => {
         case NodeTypes.line:
             return;
         case NodeTypes.cell:
-            return;
+            return <CellChildrensOverlay cellNode={node} />;
         case NodeTypes.machine:
             return;
         case NodeTypes.aisle:
@@ -68,4 +70,19 @@ export const LineChildrensOverlay = ({ lineNode }: { lineNode: LineNode }) => {
             )),
         );
     }
+};
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+const CellChildrensOverlay = ({ cellNode }: { cellNode: CellNode }) => {
+    return (
+        <>
+            {cellNode.machines.map((machine) => (
+                <MachineLabel key={machine.hash} machine={machine} />
+            ))}
+            {cellNode.machines.map((machine) => (
+                <MachineOutline key={machine.hash} machine={machine} />
+            ))}
+        </>
+    );
 };

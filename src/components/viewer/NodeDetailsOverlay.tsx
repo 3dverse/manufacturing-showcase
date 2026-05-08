@@ -28,6 +28,7 @@ import { getMachineDocumentation } from "@/content/machine";
 //------------------------------------------------------------------------------
 import type { AreaNode, CellNode, LineNode, SceneGraphNode } from "@/content/type";
 import { useTimelineStore } from "@/store/useTimelineStore";
+import { useFocusStore } from "@/store/useFocusStore";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -163,6 +164,7 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
     const [isMESDashboardVisible] = useState(false);
 
     //--------------------------------------------------------------------------
+    const { selected } = useFocusStore();
     const asOf = useTimelineStore((t) => t.asOf);
     const present = useTimelineStore((t) => t.present);
     const span = useTimelineStore((t) => t.span);
@@ -225,7 +227,10 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
 
     //--------------------------------------------------------------------------
     const downtime = useMemo(() => {
-        return operationDowntime && <CellIncident downtimeEvent={operationDowntime} />;
+        return (
+            operationDowntime &&
+            operationDowntime.id !== selected?.id && <CellIncident downtimeEvent={operationDowntime} />
+        );
     }, [operationDowntime]);
 
     //--------------------------------------------------------------------------
