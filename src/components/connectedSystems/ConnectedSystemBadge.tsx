@@ -5,7 +5,7 @@ import { faCheck, faXmark } from "@fortawesome/sharp-regular-svg-icons";
 import { Icon } from "@/components/common/Icon";
 
 //------------------------------------------------------------------------------
-import { Systems } from "./content";
+import { Systems, SYSTEM_FULL_NAMES } from "./content";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
@@ -18,6 +18,7 @@ type ConnectedSystemBadgeProps = HTMLAttributes<HTMLDivElement> & {
 export const ConnectedSystemBadge = ({ system, connected, className, ...props }: ConnectedSystemBadgeProps) => {
     return (
         <div
+            title={SYSTEM_FULL_NAMES[system]}
             {...props}
             className={cn(
                 "flex items-center rounded-sm",

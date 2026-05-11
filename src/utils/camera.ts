@@ -345,16 +345,12 @@ function quatFromMat3(m: number[]): Quat {
 //------------------------------------------------------------------------------
 const DEFAULT_ORIENTATION: Quat = [-0.16043, 0.37687, 0.06645, 0.91072];
 
-//{"3dverse-component":{"className":"label","values":{"camera":[25.158349990844727,17.505849838256836,31.793354034423828,-0.2957487106323242,0.14213962852954865,0.044551122933626175,0.9435805082321167],"description":"","speed":15,"title":"asd"}}}
-
-//{"3dverse-component":{"className":"label","values":{"camera":[29.027114868164062,20.298620223999023,30.757858276367188,-0.35376983880996704,0.20360919833183289,0.07920175790786743,0.9094598889350891],"description":"","speed":15,"title":"asd"}}}
-
 const ORIENTATION_BY_NODE_TYPE: Record<string, Quat> = {
     FACTORY: [-0.6036809086799622, 0.00048551723011769354, 0.00036738935159519315, 0.797225832939148],
-    AREA: [-0.1172819510102272, 0.4298095107078552, 0.05641791224479675, 0.8934907913208008],
+    AREA: [-0.09486871212720871, 0.617885947227478, 0.07545416057109833, 0.7768678069114685],
     LINE: [-0.35376983880996704, 0.20360919833183289, 0.07920175790786743, 0.9094598889350891],
     CELL: [-0.031109442934393883, 0.6785480380058289, 0.02878497913479805, 0.7333322763442993],
-    MACHINE: [-0.010867751372844726, 0.3934001860658572, 0.004650729594915339, 0.9192913337444676],
+    MACHINE: [-0.0733238086104393, 0.4833804666996002, 0.04067442566156387, 0.871385395526886],
 };
 
 export const getDefaultOrientationForNodeType = (nodeType: string): Quat =>
@@ -419,7 +415,7 @@ export const moveCamera = async (
                 left: (r.left - containerRect.left) / containerRect.width,
                 right: (containerRect.right - r.right) / containerRect.width,
                 top: (r.top - containerRect.top) / containerRect.height,
-                bottom: (containerRect.bottom - r.bottom) / containerRect.height,
+                bottom: (containerRect.bottom - r.bottom + 75) / containerRect.height,
             };
         }
 

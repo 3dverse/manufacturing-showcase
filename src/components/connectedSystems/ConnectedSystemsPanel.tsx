@@ -13,7 +13,7 @@ import { dashboardApi } from "@/services/dashboardApi";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
-import { CONNECTED_SYSTEMS, DEFAULT_CONNECTIONS, Systems } from "./content";
+import { CONNECTED_SYSTEMS, DEFAULT_CONNECTIONS, Systems, SYSTEM_FULL_NAMES } from "./content";
 import type { ConnectionState, SystemId } from "./content";
 
 //------------------------------------------------------------------------------
@@ -56,6 +56,7 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
                             <Button
                                 variant="ghost"
                                 size="2xs"
+                                title={SYSTEM_FULL_NAMES[id]}
                                 className="group pl-[3px] pr-2 relative w-full justify-start not-disabled:hover:bg-(--color)/10 rounded-full"
                                 style={
                                     {

@@ -9,6 +9,16 @@ export enum Systems {
     APS = "APS",
 }
 
+export const SYSTEM_FULL_NAMES: Record<Systems, string> = {
+    [Systems.SAP]: "Systems, Applications & Products",
+    [Systems.ERP]: "Enterprise Resource Planning",
+    [Systems.MES]: "Manufacturing Execution System",
+    [Systems.EAM]: "Enterprise Asset Management",
+    [Systems.WMS]: "Warehouse Management System",
+    [Systems.QMS]: "Quality Management System",
+    [Systems.APS]: "Advanced Planning & Scheduling",
+};
+
 export type SystemId = Systems;
 
 export type ConnectionState = Record<Systems, boolean>;

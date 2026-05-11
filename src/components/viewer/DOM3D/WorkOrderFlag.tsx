@@ -97,7 +97,7 @@ export function WorkOrderFlagFront({
         setSelected({ type: "workOrder", id: workOrderId });
         const { factorySlug } = Router.currentRoute();
         if (factorySlug) Router.replace({ factorySlug, nodeSlug: machine.hash, itemSlug: workOrderId });
-    }, [machine, setSelected, setSelectedNode]);
+    }, [machine, workOrderId, setSelected, setSelectedNode]);
 
     //--------------------------------------------------------------------------
     // Render
@@ -109,13 +109,13 @@ export function WorkOrderFlagFront({
         >
             <div
                 className={cn(
-                    "translate-y-1/2 flex flex-row items-center gap-2 bg-amber-400 text-amber-950 rounded-3xl [corner-shape:bevel] py-4 px-7 outline-4 outline-amber-400/50",
+                    "flex flex-row items-center gap-2 bg-amber-400 text-amber-950 rounded-3xl [corner-shape:bevel] py-2 px-3 outline-4 outline-amber-400/50",
                     "outline-offset-8 pointer-events-auto cursor-pointer",
                     "hover:outline-offset-12 hover:outline-amber-400/80 transition-all duration-200",
                 )}
                 onClick={handleClick}
             >
-                <Icon icon={faWrench} className="text-5xl" />
+                <Icon icon={faWrench} className="text-2xl" />
                 <p className="px-2 capitalize font-semibold">Maintenance</p>
             </div>
         </BoundingBoxFaceProjection>

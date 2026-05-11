@@ -24,6 +24,8 @@ import { ScenarioContext } from "@/contexts/ScenariosContext";
 import { Router } from "@/core/Router";
 import { dashboardApi } from "@/services/dashboardApi";
 import { cn } from "@/utils/cn";
+import { NodeTypes } from "@/content/enums";
+import { SelectionContext } from "@/contexts/SelectionContext";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -31,6 +33,7 @@ export const DesktopLayout = () => {
     //--------------------------------------------------------------------------
     // Context
     const { nodeGraph } = useContext(FactoryContext);
+    const { selectedNode } = useContext(SelectionContext);
     const { activeScenarioId } = useContext(ScenarioContext);
 
     //--------------------------------------------------------------------------
@@ -79,7 +82,7 @@ export const DesktopLayout = () => {
                                     >
                                         <KeyStatusIndicators keyStatus={data.keyStatus} />
                                     </div>
-                                    <GlobalOrderPanel />
+                                    {selectedNode?.type === NodeTypes.factory && <GlobalOrderPanel />}
                                 </div>
 
                                 <div className="grow flex flex-col items-end gap-3 pt-2 pr-2">
