@@ -400,7 +400,7 @@ function buildDowntimesStory(downtimes: DowntimeEntry[], nodeList: SceneGraphNod
             entityType: "downtime" as EntityType,
             targetNodeHash: machineNode?.hash || cellnode?.hash,
             start: dt.startedAt,
-            end: dt.endedAt,
+            end: dt.endedAt!,
             colors: ENTITY_COLORS.downtime,
         };
     });
