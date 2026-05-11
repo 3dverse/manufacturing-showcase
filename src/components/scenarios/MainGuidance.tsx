@@ -1,21 +1,67 @@
 //------------------------------------------------------------------------------
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 //------------------------------------------------------------------------------
 import { ScenariosWheel } from "./ScenariosWheel";
 import { ScenarioContext } from "@/contexts/ScenariosContext";
+import { FactoriesContext } from "@/contexts/FactoriesContext";
 
 //------------------------------------------------------------------------------
+import { Router } from "@/core/Router";
 import { CONTACT_URL, LANDING_3DVERSE_URL } from "@/content/routes";
 import { METADATA } from "@/content/metadata";
 import { cn } from "@/utils/cn";
 
 //------------------------------------------------------------------------------
+import type { Factory } from "@/content/type";
+
+//------------------------------------------------------------------------------
+function isHomePath(pathname: string, factories: Factory[]): boolean {
+    const parts = pathname.split("/");
+    if (parts.length >= 2 && parts[1] !== "") {
+        const factorySlug = parts[1];
+        if (factories.find((f) => f.slug === factorySlug)) {
+            return false;
+        }
+    }
+    if (parts.length > 1) {
+        switch (parts[1]) {
+            case "theme":
+            case "dataset":
+                return false;
+        }
+    }
+    return true;
+}
+
+//------------------------------------------------------------------------------
 export const MainGuidance = () => {
     //--------------------------------------------------------------------------
+    const { factories } = useContext(FactoriesContext);
     const { scenarios, activeScenarioId, scenarioActivatedAt } = useContext(ScenarioContext);
+    const [pathname, setPathname] = useState(() => window.location.pathname);
+    const isHomePage = useMemo(() => isHomePath(pathname, factories), [pathname, factories]);
+
     const [isRetracting, setIsRetracting] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+
+    //--------------------------------------------------------------------------
+    useLayoutEffect(() => {
+        setIsOpen(isHomePage);
+    }, [isHomePage]);
+
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        const handlePopState = () => setPathname(window.location.pathname);
+        window.addEventListener("popstate", handlePopState);
+        return () => window.removeEventListener("popstate", handlePopState);
+    }, []);
+
+    //--------------------------------------------------------------------------
+    useEffect(() => {
+        return Router.onChange(({ route }) => setPathname(route.pathname));
+    }, []);
+
     const asideRef = useRef<HTMLElement>(null);
     const activeScenario = scenarios.find((s) => s.id === activeScenarioId);
 
