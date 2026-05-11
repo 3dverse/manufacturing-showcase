@@ -102,6 +102,7 @@
 
 /* ChatGPT-style thinking dots */
 @keyframes thinking-dot {
+
     0%,
     60%,
     100% {
@@ -152,19 +153,22 @@
 }
 
 @keyframes band-scroll {
-    from { background-position: 28px 0; }
-    to   { background-position: 0 0; }
+    from {
+        background-position: 28px 0;
+    }
+
+    to {
+        background-position: 0 0;
+    }
 }
 
 /* Scrolling diagonal stripe overlay — composites over any solid bg-* color */
 .band-current {
-    background-image: repeating-linear-gradient(
-        -55deg,
-        transparent           0px,
-        transparent           4px,
-        rgba(255,255,255,0.5) 4px,
-        rgba(255,255,255,0.5) 6px
-    );
+    background-image: repeating-linear-gradient(-55deg,
+            transparent 0px,
+            transparent 4px,
+            rgba(255, 255, 255, 0.5) 4px,
+            rgba(255, 255, 255, 0.5) 6px);
     background-size: 200% 100%;
     animation: band-scroll 1.5s linear infinite;
 }
@@ -235,6 +239,18 @@
     to {
         opacity: 0;
         transform: translateY(100%);
+    }
+}
+
+@keyframes client-product-logo-border {
+    0% {
+        border-width: calc(1cqw*34);
+        border-radius: calc(1cqw*40);
+    }
+
+    100% {
+        border-width: calc(1cqw*42);
+        border-radius: calc(1cqw*47);
     }
 }
 
