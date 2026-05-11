@@ -1,5 +1,4 @@
 import { useContext } from "react";
-import { LoadingOverlay as OriginalLoadingOverlay } from "@3dverse/livelink-react-ui";
 import type { LivelinkConnectionStage } from "@3dverse/livelink";
 
 //------------------------------------------------------------------------------
@@ -7,6 +6,7 @@ import { GhettoReconnectContext } from "@/contexts/GhettoReconnectContext";
 
 //------------------------------------------------------------------------------
 import { OverlayShroud } from "./_fragments/OverlayShroud";
+import { ClientProductLogo } from "@/components/common/icons/ClientProductLogo";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -24,6 +24,28 @@ export const LoadingOverlay = ({ stage }: { stage: LivelinkConnectionStage }) =>
             </OverlayShroud>
         );
     } else {
-        return <OriginalLoadingOverlay stage={stage} />;
+        return <LoadingPanel stage={stage} />;
     }
+};
+
+//------------------------------------------------------------------------------
+const stageMessages: Record<LivelinkConnectionStage, string> = {
+    initializing: "Loading factory...",
+    "finding-session": "Looking for available sessions...",
+    "creating-session": "Creating new session...",
+    "registering-client": "Registering client...",
+    connecting: "Connecting to server...",
+    configuring: "Loading all data sources...",
+    ready: "Almost ready...",
+};
+
+//------------------------------------------------------------------------------
+const LoadingPanel = ({ stage }: { stage: LivelinkConnectionStage }) => {
+    //--------------------------------------------------------------------------
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-4">
+            <ClientProductLogo isLoading className="w-12" />
+            <p className="text-xs text-accent-500">{stageMessages[stage]}</p>
+        </div>
+    );
 };

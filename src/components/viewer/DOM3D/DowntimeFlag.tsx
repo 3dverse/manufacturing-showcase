@@ -30,12 +30,13 @@ export function DowntimeFlag({ cell, downtimeId }: { cell: CellNode; downtimeId:
 
     //--------------------------------------------------------------------------
     // Handlers
-    const handleClick = () => {
-        setSelectedNode(cell);
+    const handleClick = useCallback(() => {
+        const machine = cell.machines[0];
+        setSelectedNode(machine || cell);
         setSelected({ type: "downtime", id: downtimeId });
         const { factorySlug } = Router.currentRoute();
-        if (factorySlug) Router.replace({ factorySlug, nodeSlug: cell.hash, itemSlug: downtimeId });
-    };
+        if (factorySlug) Router.replace({ factorySlug, nodeSlug: machine?.hash || cell.hash, itemSlug: downtimeId });
+    }, [cell, downtimeId, setSelected, setSelectedNode]);
 
     //--------------------------------------------------------------------------
     // Render
@@ -93,11 +94,12 @@ export function DowntimeFlagFront({
     //--------------------------------------------------------------------------
     // Handlers
     const handleClick = useCallback(() => {
-        setSelectedNode(cell);
+        const machine = cell.machines[0];
+        setSelectedNode(machine || cell);
         setSelected({ type: "downtime", id: downtimeId });
         const { factorySlug } = Router.currentRoute();
-        if (factorySlug) Router.replace({ factorySlug, nodeSlug: cell.hash, itemSlug: downtimeId });
-    }, []);
+        if (factorySlug) Router.replace({ factorySlug, nodeSlug: machine?.hash || cell.hash, itemSlug: downtimeId });
+    }, [cell, downtimeId, setSelected, setSelectedNode]);
 
     //--------------------------------------------------------------------------
     // Render
@@ -109,13 +111,13 @@ export function DowntimeFlagFront({
         >
             <div
                 className={cn(
-                    "translate-y-1/2 flex flex-row items-center gap-2 bg-warning-700 text-warning-100 rounded-3xl [corner-shape:bevel] py-4 px-7 outline-4 outline-warning-700/50 outline-offset-8",
+                    "flex flex-row items-center gap-2 bg-warning-700 text-warning-100 rounded-3xl [corner-shape:bevel] py-2 px-3 outline-4 outline-warning-700/50 outline-offset-8",
                     "pointer-events-auto cursor-pointer",
                     "hover:outline-offset-12 hover:outline-warning-700/80 transition-all duration-200",
                 )}
                 onClick={handleClick}
             >
-                <Icon icon={faExclamationTriangle} className="text-5xl" />
+                <Icon icon={faExclamationTriangle} className="text-2xl" />
                 <p className="px-2 capitalize font-semibold text-warning-100">Incident</p>
             </div>
         </BoundingBoxFaceProjection>

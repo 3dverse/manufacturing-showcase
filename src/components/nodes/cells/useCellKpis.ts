@@ -73,5 +73,5 @@ export function useCellKpis(cell: CellNode): CellKpiData {
             oeeHistory,
             scrapRateHistory,
         };
-    }, [cell.hash, oeeHistory]);
+    }, [cell.hash, oeeFromSpan, oeeHistory]);
 }

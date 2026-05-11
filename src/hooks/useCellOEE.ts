@@ -9,8 +9,6 @@ export function useCellOEE(cell: CellNode): number | null {
     const asOf = useTimelineStore((s) => s.asOf);
     const present = useTimelineStore((s) => s.present);
 
-    const machineIds = useMemo(() => new Set(cell.machines.map((m) => m.hash)), [cell]);
-
     const minuteAsOf = Math.floor((asOf ?? present) / 60) * 60;
 
     return useMemo(() => {
@@ -33,5 +31,5 @@ export function useCellOEE(cell: CellNode): number | null {
         const workOrders = span.sortedWorkOrders.filter((wo) => woIds.has(wo.id));
 
         return computeOEE(intervals, quality, downtimes, workOrders, windowStart, minuteAsOf);
-    }, [span, cell, minuteAsOf, machineIds]);
+    }, [span, cell, minuteAsOf]);
 }

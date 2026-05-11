@@ -60,6 +60,8 @@ import type {
     PickTaskEntry,
     PutawayTaskEntry,
     PurchaseOrderEntry,
+    DowntimeEntry,
+    WorkOrderEntry,
 } from "@/core/Scope";
 
 //------------------------------------------------------------------------------
@@ -77,6 +79,9 @@ import {
     type PlaybackSpeed,
     type StackingStyle,
 } from "./constants";
+import { FactoryContext } from "@/contexts/FactoryContext";
+import type { CellNode, SceneGraphNode } from "@/content/type";
+import { NodeTypes } from "@/content/enums";
 
 type AreaType = "production" | "delivery" | "reception" | "storage" | "quality" | "other";
 
@@ -384,6 +389,32 @@ function buildPurchaseOrdersStory(pos: PurchaseOrderEntry[], cutOff: number): St
         barStyle: "line",
         stackingStyle: "swimlane",
     };
+}
+
+function buildDowntimesStory(downtimes: DowntimeEntry[], nodeList: SceneGraphNode[]): BarItem[] {
+    return downtimes.map((dt) => {
+        const cellnode = nodeList.find((n) => n.hash === dt.workCenterId);
+        const machineNode = cellnode?.type === NodeTypes.cell ? (cellnode as CellNode).machines[0] : cellnode;
+        return {
+            id: dt.id,
+            entityType: "downtime" as EntityType,
+            targetNodeHash: machineNode?.hash || cellnode?.hash,
+            start: dt.startedAt,
+            end: dt.endedAt!,
+            colors: ENTITY_COLORS.downtime,
+        };
+    });
+}
+
+function buildWorkOrdersStory(workOrders: WorkOrderEntry[]): BarItem[] {
+    return workOrders.map((wo) => ({
+        id: wo.id,
+        entityType: "workOrder" as EntityType,
+        targetNodeHash: wo.assetId || undefined,
+        start: wo.actualStart ?? wo.scheduledStart,
+        end: wo.actualEnd ?? wo.scheduledEnd,
+        colors: ENTITY_COLORS.workOrder,
+    }));
 }
 
 //------------------------------------------------------------------------------
@@ -765,6 +796,7 @@ function TimelineTooltip({ entityType, id }: { entityType: EntityType; id: strin
 //------------------------------------------------------------------------------
 export function Timeline() {
     const { selectedNode } = useContext(SelectionContext);
+    const { nodeList } = useContext(FactoryContext);
 
     //--------------------------------------------------------------------------
     const { hovered, setSelected } = useFocusStore();
@@ -840,29 +872,22 @@ export function Timeline() {
 
     const showMaintenanceBands = level !== "area" || areaType === "production";
 
-    const downtimeBands = useMemo(() => {
-        if (!span || !showMaintenanceBands) return [];
-        const result = [];
-        for (const dt of span.sortedDowntimes) {
-            const end = dt.endedAt ?? effectiveNow;
-            if (end <= winStart) break;
-            const start = dt.startedAt;
-            if (start < winEnd) result.push({ dt, start: Math.max(start, winStart), end: Math.min(end, winEnd) });
-        }
-        return result;
-    }, [span, winStart, winEnd, effectiveNow, showMaintenanceBands]);
+    const allDowntimeBars = useMemo(
+        () => (span ? buildDowntimesStory(span.sortedDowntimes, nodeList) : []),
+        [span, nodeList],
+    );
 
-    const workOrderBands = useMemo(() => {
-        if (!span || !showMaintenanceBands) return [];
-        const result = [];
-        for (const wo of span.sortedWorkOrders) {
-            const end = wo.actualEnd ?? wo.scheduledEnd;
-            if (end <= winStart) break;
-            const start = wo.actualStart ?? wo.scheduledStart;
-            if (start < winEnd) result.push({ wo, start: Math.max(start, winStart), end: Math.min(end, winEnd) });
-        }
-        return result;
-    }, [span, winStart, winEnd, showMaintenanceBands]);
+    const allWorkOrderBars = useMemo(() => (span ? buildWorkOrdersStory(span.sortedWorkOrders) : []), [span]);
+
+    const downtimeBands = useMemo(
+        () => (showMaintenanceBands ? allDowntimeBars.filter((bar) => bar.end > winStart && bar.start < winEnd) : []),
+        [allDowntimeBars, showMaintenanceBands, winStart, winEnd],
+    );
+
+    const workOrderBands = useMemo(
+        () => (showMaintenanceBands ? allWorkOrderBars.filter((bar) => bar.end > winStart && bar.start < winEnd) : []),
+        [allWorkOrderBars, showMaintenanceBands, winStart, winEnd],
+    );
 
     const scopedDowntimeIds = useMemo(() => new Set(scope?.downtimeEvents.map((dt) => dt.id) ?? []), [scope]);
     const scopedWorkOrderIds = useMemo(() => new Set(scope?.eamWorkOrders.map((wo) => wo.id) ?? []), [scope]);
@@ -1036,25 +1061,18 @@ export function Timeline() {
 
                             {/* Work order bands */}
                             <div data-scenario="predictive-maintenance-step-5" className="contents">
-                                {workOrderBands.map(({ wo, start, end }) => (
+                                {workOrderBands.map((bar) => (
                                     <Band
-                                        key={wo.id}
-                                        bar={{
-                                            id: wo.id,
-                                            entityType: "workOrder",
-                                            targetNodeHash: wo.assetId || undefined,
-                                            start,
-                                            end,
-                                            colors: ENTITY_COLORS.workOrder,
-                                        }}
-                                        isInScope={scopedWorkOrderIds.has(wo.id)}
+                                        key={bar.id}
+                                        bar={bar}
+                                        isInScope={scopedWorkOrderIds.has(bar.id)}
                                         winStart={winStart}
                                         winEnd={winEnd}
                                         onEnter={showTooltip}
                                         onLeave={hideTooltip}
                                         effectiveNow={effectiveNow}
                                         highlightState={highlightStateForBar(
-                                            wo.id,
+                                            bar.id,
                                             "workOrder",
                                             activeFocus,
                                             correlated,
@@ -1064,24 +1082,17 @@ export function Timeline() {
                             </div>
 
                             {/* Downtime bands */}
-                            {downtimeBands.map(({ dt, start, end }) => (
+                            {downtimeBands.map((bar) => (
                                 <Band
-                                    key={dt.id}
-                                    bar={{
-                                        id: dt.id,
-                                        entityType: "downtime",
-                                        targetNodeHash: dt.workCenterId,
-                                        start,
-                                        end,
-                                        colors: ENTITY_COLORS.downtime,
-                                    }}
-                                    isInScope={scopedDowntimeIds.has(dt.id)}
+                                    key={bar.id}
+                                    bar={bar}
+                                    isInScope={scopedDowntimeIds.has(bar.id)}
                                     winStart={winStart}
                                     winEnd={winEnd}
                                     onEnter={showTooltip}
                                     onLeave={hideTooltip}
                                     effectiveNow={effectiveNow}
-                                    highlightState={highlightStateForBar(dt.id, "downtime", activeFocus, correlated)}
+                                    highlightState={highlightStateForBar(bar.id, "downtime", activeFocus, correlated)}
                                 />
                             ))}
                         </div>

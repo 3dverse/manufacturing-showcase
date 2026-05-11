@@ -6,13 +6,13 @@ import { TopPanel } from "./DOM3D/TopPanel";
 import { UnitOutPanel } from "./DOM3D/UnitOutPanel";
 import { MachineLabel } from "./DOM3D/MachineLabel";
 import { MachineOutline } from "./DOM3D/MachineOutline";
-import { WorkOrderFlag } from "./DOM3D/WorkOrderFlag";
-import { DowntimeFlag } from "./DOM3D/DowntimeFlag";
+import { WorkOrderFlag, WorkOrderFlagFront } from "./DOM3D/WorkOrderFlag";
+import { DowntimeFlag, DowntimeFlagFront } from "./DOM3D/DowntimeFlag";
 
 //------------------------------------------------------------------------------
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { isCell, isMachine } from "@/core/SceneGraph";
-import { downtimeAtAsOf, workOrderAtAsOf } from "../timeline/timeUtils";
+import { activeDowntimesAt, activeWorkOrdersAt, downtimeAtAsOf, workOrderAtAsOf } from "../timeline/timeUtils";
 
 //------------------------------------------------------------------------------
 import { FactoryContext } from "@/contexts/FactoryContext";
@@ -21,6 +21,7 @@ import { SelectionContext } from "@/contexts/SelectionContext";
 //------------------------------------------------------------------------------
 import { NodeTypes } from "@/content/enums";
 import type { AreaNode, CellNode, FactoryNode, LineNode, MachineNode, SceneGraphNode } from "@/content/type";
+import { FloatingLabel } from "./DOM3D/FloatingLabel";
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -31,7 +32,7 @@ export const NodeChildrensOverlay = ({ node }: { node: SceneGraphNode }) => {
         case NodeTypes.area:
             return <AreaChildrensOverlay areaNode={node} />;
         case NodeTypes.line:
-            return;
+            return <LineChildrensOverlay lineNode={node} />;
         case NodeTypes.cell:
             return <CellChildrensOverlay cellNode={node} />;
         case NodeTypes.machine:
@@ -142,16 +143,61 @@ export const AreaChildrensOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 export const LineChildrensOverlay = ({ lineNode }: { lineNode: LineNode }) => {
-    {
-        lineNode.cells.map((cellNode) => <NodeSummary node={cellNode} key={cellNode.hash} />);
-    }
-    {
-        lineNode.cells.flatMap((cellNode, index) =>
-            cellNode.outputs.map((out) => (
-                <UnitOutPanel key={out.hash} outNode={out} unitCompleted={96} unitTotal={952} delay={index} />
-            )),
-        );
-    }
+    //--------------------------------------------------------------------------
+    // Store
+    const span = useTimelineStore((s) => s.span);
+    const asOf = useTimelineStore((s) => s.asOf);
+    const present = useTimelineStore((s) => s.present);
+    const t = asOf || present;
+
+    //--------------------------------------------------------------------------
+    // Memos
+    const cellHashes = useMemo(() => new Set(lineNode.cells.map((c) => c.hash)), [lineNode]);
+    const machineMap = useMemo(
+        () => new Map(lineNode.cells.flatMap((c) => c.machines.map((m) => [m.hash, { cell: c, machine: m }]))),
+        [lineNode],
+    );
+
+    //--------------------------------------------------------------------------
+    const activeDowntimes = useMemo(() => {
+        if (!span) return [];
+        return activeDowntimesAt(span, t)
+            .filter((dt) => cellHashes.has(dt.workCenterId))
+            .map((dt) => ({ cell: lineNode.cells.find((c) => c.hash === dt.workCenterId)!, downtimeId: dt.id }));
+    }, [span, t, cellHashes, lineNode]);
+
+    //--------------------------------------------------------------------------
+    const activeWorkOrders = useMemo(() => {
+        if (!span) return [];
+        return activeWorkOrdersAt(span, t)
+            .filter((wo) => machineMap.has(wo.assetId))
+            .map((wo) => ({ ...machineMap.get(wo.assetId)!, workOrderId: wo.id }));
+    }, [span, t, machineMap]);
+
+    //--------------------------------------------------------------------------
+    return (
+        <>
+            {lineNode.cells.map((cell) => (
+                <FloatingLabel key={cell.hash} node={cell} />
+            ))}
+            {lineNode.cells.flatMap((cellNode, index) =>
+                cellNode.outputs.map((out) => (
+                    <UnitOutPanel key={out.hash} outNode={out} unitCompleted={96} unitTotal={952} delay={index} />
+                )),
+            )}
+            {activeDowntimes.map(({ cell, downtimeId }) => (
+                <DowntimeFlagFront key={downtimeId} node={cell} cell={cell} downtimeId={downtimeId} />
+            ))}
+            {activeWorkOrders.map(({ machine, workOrderId }) => (
+                <WorkOrderFlagFront
+                    key={workOrderId}
+                    node={machine.parent}
+                    machine={machine}
+                    workOrderId={workOrderId}
+                />
+            ))}
+        </>
+    );
 };
 
 //------------------------------------------------------------------------------

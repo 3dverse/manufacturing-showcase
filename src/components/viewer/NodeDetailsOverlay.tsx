@@ -21,8 +21,6 @@ import {
 import { AnchoredPanel } from "./DOM3D/AnchoredPanel";
 import { StorageOverlay } from "./StorageOverlay";
 import { UnitOutPanel } from "./DOM3D/UnitOutPanel";
-import { DowntimeFlagFront } from "./DOM3D/DowntimeFlag";
-import { WorkOrderFlagFront } from "./DOM3D/WorkOrderFlag";
 import { InfoPanel } from "./DOM3D/InfoPanel";
 import { CellSummary } from "../nodes/cells/CellSummary";
 import { useSpanSnapshot } from "@/hooks/useSpanSnapshot";
@@ -162,35 +160,6 @@ const AreaDetailsOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
 //------------------------------------------------------------------------------
 const LineDetails = ({ lineNode }: { lineNode: LineNode }) => {
     //--------------------------------------------------------------------------
-    // Store
-    const span = useTimelineStore((s) => s.span);
-    const asOf = useTimelineStore((s) => s.asOf);
-    const present = useTimelineStore((s) => s.present);
-    const t = asOf || present;
-
-    //--------------------------------------------------------------------------
-    // Memos
-    const cellHashes = useMemo(() => new Set(lineNode.cells.map((c) => c.hash)), [lineNode]);
-    const machineMap = useMemo(
-        () => new Map(lineNode.cells.flatMap((c) => c.machines.map((m) => [m.hash, { cell: c, machine: m }]))),
-        [lineNode],
-    );
-
-    const activeDowntimes = useMemo(() => {
-        if (!span) return [];
-        return activeDowntimesAt(span, t)
-            .filter((dt) => cellHashes.has(dt.workCenterId))
-            .map((dt) => ({ cell: lineNode.cells.find((c) => c.hash === dt.workCenterId)!, downtimeId: dt.id }));
-    }, [span, t, cellHashes, lineNode]);
-
-    const activeWorkOrders = useMemo(() => {
-        if (!span) return [];
-        return activeWorkOrdersAt(span, t)
-            .filter((wo) => machineMap.has(wo.assetId))
-            .map((wo) => ({ ...machineMap.get(wo.assetId)!, workOrderId: wo.id }));
-    }, [span, t, machineMap]);
-
-    //--------------------------------------------------------------------------
     // Render
     return (
         <>
@@ -199,17 +168,6 @@ const LineDetails = ({ lineNode }: { lineNode: LineNode }) => {
                     <UnitOutPanel key={out.hash} outNode={out} unitCompleted={96} unitTotal={952} delay={cellIndex} />
                 )),
             )}
-            {activeDowntimes.map(({ cell, downtimeId }) => (
-                <DowntimeFlagFront key={downtimeId} node={cell} cell={cell} downtimeId={downtimeId} />
-            ))}
-            {activeWorkOrders.map(({ machine, workOrderId }) => (
-                <WorkOrderFlagFront
-                    key={workOrderId}
-                    node={machine.parent}
-                    machine={machine}
-                    workOrderId={workOrderId}
-                />
-            ))}
         </>
     );
 };
@@ -280,8 +238,10 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
     //--------------------------------------------------------------------------
     const operationDowntime = useMemo(() => {
         return projection?.downtimeEvents
-            .filter((d) => d.workCenterId === cellNode.hash && d.startedAt < targetAsOf)
-            .sort((a, b) => a.startedAt - b.startedAt)
+            .filter(
+                (d) =>
+                    d.workCenterId === cellNode.hash && d.startedAt < targetAsOf && d.endedAt && d.endedAt > targetAsOf,
+            )
             .pop();
     }, [cellNode, projection, targetAsOf]);
 
@@ -304,7 +264,7 @@ const CellDetails = ({ cellNode }: { cellNode: CellNode }) => {
             operationDowntime &&
             operationDowntime.id !== selected?.id && <CellIncident downtimeEvent={operationDowntime} />
         );
-    }, [operationDowntime]);
+    }, [operationDowntime, selected]);
 
     //--------------------------------------------------------------------------
     const extra = useMemo(() => {

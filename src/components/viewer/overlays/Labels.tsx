@@ -32,7 +32,7 @@ export const Labels = ({ cameraController }: { cameraController: DefaultCameraCo
                 );
             }
         },
-        [viewportRef],
+        [viewportRef, cameraController, cameraEntity],
     );
 
     //--------------------------------------------------------------------------

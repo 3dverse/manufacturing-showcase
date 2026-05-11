@@ -1,7 +1,6 @@
 import { useContext, useMemo } from "react";
 
 //------------------------------------------------------------------------------
-import { FloatingLabel } from "./DOM3D/FloatingLabel";
 import { FloorOutline } from "./DOM3D/FloorOutline";
 import { FloorRegion } from "./DOM3D/FloorRegion";
 import { FlowSpline } from "./DOM3D/FlowSpline";
@@ -87,13 +86,7 @@ const FactoryBuilder = () => {
                 <FloorRegion key={line.hash} node={line} />
             ))}
 
-            {shownCells.map((cell) =>
-                isArea(cell.parent) ? (
-                    <FloorRegion key={cell.hash} node={cell} />
-                ) : (
-                    <FloatingLabel key={cell.hash} node={cell} />
-                ),
-            )}
+            {shownCells.map((cell) => isArea(cell.parent) && <FloorRegion key={cell.hash} node={cell} />)}
         </>
     );
 };
