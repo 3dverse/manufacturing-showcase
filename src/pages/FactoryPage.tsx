@@ -1,4 +1,4 @@
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
 
 //------------------------------------------------------------------------------
 import { Livelink } from "@3dverse/livelink-react";
@@ -43,9 +43,18 @@ function PageContent({ factory }: { factory: Factory }) {
     const { reconnector } = useContext(GhettoReconnectContext);
 
     //--------------------------------------------------------------------------
+    // State
+    const [sessionId, setSessionId] = useState<string>();
+
+    //--------------------------------------------------------------------------
     const params = new URLSearchParams(location.search);
-    const sessionId = params.get("sessionId");
+    const _sessionId = params.get("sessionId");
     const isMobile = useMediaQuery(MEDIA_QUERIES.MOBILE);
+
+    //--------------------------------------------------------------------------
+    if (_sessionId && sessionId !== _sessionId) {
+        setSessionId(_sessionId);
+    }
 
     //--------------------------------------------------------------------------
     // Render
