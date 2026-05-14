@@ -30,7 +30,7 @@ import { buildCorrelatedSnapshot } from "@/core/Correlation";
 import { getMachineDocumentation } from "@/content/machine";
 
 //------------------------------------------------------------------------------
-import type { AreaNode, CellNode, LineNode, SceneGraphNode } from "@/content/type";
+import type { AreaNode, CellNode, SceneGraphNode } from "@/content/type";
 import { useTimelineStore } from "@/store/useTimelineStore";
 import { useFocusStore } from "@/store/useFocusStore";
 
@@ -44,7 +44,7 @@ export const NodeDetailsOverlay = ({ node }: { node: SceneGraphNode }) => {
         case NodeTypes.area:
             return <AreaDetailsOverlay areaNode={node} />;
         case NodeTypes.line:
-            return <LineDetails lineNode={node} />;
+            return;
         case NodeTypes.cell:
             return <CellDetails cellNode={node} />;
         case NodeTypes.machine:
@@ -152,22 +152,6 @@ const AreaDetailsOverlay = ({ areaNode }: { areaNode: AreaNode }) => {
                 {content}
             </AnchoredPanel>
             {addOn}
-        </>
-    );
-};
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-const LineDetails = ({ lineNode }: { lineNode: LineNode }) => {
-    //--------------------------------------------------------------------------
-    // Render
-    return (
-        <>
-            {lineNode.cells.flatMap((cell) =>
-                cell.outputs.map((out, cellIndex) => (
-                    <UnitOutPanel key={out.hash} outNode={out} unitCompleted={96} unitTotal={952} delay={cellIndex} />
-                )),
-            )}
         </>
     );
 };
