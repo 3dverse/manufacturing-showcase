@@ -1,7 +1,5 @@
 //------------------------------------------------------------------------------
-import { faListCheck } from "@fortawesome/sharp-solid-svg-icons";
-import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
-import { faChevronDown, faTimer } from "@fortawesome/pro-light-svg-icons";
+import { FaChevronDown, FaExclamationTriangle, FaStopwatch, FaTasks } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -28,7 +26,7 @@ export const TimeBadge = ({ order, isPanelOpen }: TimeBadgeProps) => {
                 <Badge isPanelOpen={isPanelOpen} className="text-warning-700 bg-warning-100">
                     {order.status.name === orderStatus.inProgress.name && (
                         <BadgeIcon>
-                            <Icon icon={faExclamationTriangle} size="sm" className="scale-110 pl-2" />
+                            <Icon icon={FaExclamationTriangle} size="sm" className="scale-110 pl-2" />
                         </BadgeIcon>
                     )}
                     <BadgeContent>{order.estimatedDelayInMin} min delay</BadgeContent>
@@ -39,7 +37,7 @@ export const TimeBadge = ({ order, isPanelOpen }: TimeBadgeProps) => {
             <Badge isPanelOpen={isPanelOpen} className="text-positive-700 bg-positive-100">
                 {order.status.name === orderStatus.inProgress.name && (
                     <BadgeIcon className="bg-positive-300/50">
-                        <Icon icon={faTimer} size="xs" />
+                        <Icon icon={FaStopwatch} size="xs" />
                     </BadgeIcon>
                 )}
                 <BadgeContent>On time</BadgeContent>
@@ -51,7 +49,7 @@ export const TimeBadge = ({ order, isPanelOpen }: TimeBadgeProps) => {
     return (
         <Badge isPanelOpen={isPanelOpen} className="text-positive-700 bg-positive-100">
             <BadgeIcon>
-                <Icon icon={faListCheck} size="xs" className="pl-4 pr-2" />
+                <Icon icon={FaTasks} size="xs" className="pl-4 pr-2" />
             </BadgeIcon>
             <BadgeContent>Ready</BadgeContent>
         </Badge>
@@ -72,7 +70,7 @@ const Badge = ({
         <div className={cn("flex items-center rounded-full pr-2", className)}>
             {children}
             <Icon
-                icon={faChevronDown}
+                icon={FaChevronDown}
                 size="2xs"
                 className={cn(
                     "self-center opacity-90 -translate-y-px transition-transform duration-300",

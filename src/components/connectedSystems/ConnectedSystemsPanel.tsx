@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck } from "@fortawesome/sharp-solid-svg-icons";
-import { faSlidersSimple } from "@fortawesome/sharp-light-svg-icons";
+import { FaCheck, FaSlidersH } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
@@ -77,8 +75,7 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
                                         connected ? "bg-positive-700 text-neutral-0" : "group-hover:bg-neutral-0",
                                     )}
                                 >
-                                    <FontAwesomeIcon
-                                        icon={faCheck}
+                                    <FaCheck
                                         className={cn(
                                             "text-[7px]",
                                             connected ? "appear-in-from-bottom [--translate:4px]" : "opacity-0",
@@ -94,7 +91,7 @@ export const ConnectedSystemsPanel: React.FC<{ className?: string }> = ({ classN
                                     {id}
                                 </span>
                                 <Icon
-                                    icon={faSlidersSimple}
+                                    icon={FaSlidersH}
                                     size="sm"
                                     fixedWidth
                                     className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"

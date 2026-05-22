@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 import { useCallback, useContext } from "react";
-import { faAngleLeft, faAngleRight } from "@fortawesome/pro-light-svg-icons";
+import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
@@ -123,7 +123,7 @@ const PrevNextOrderButton = ({
             )}
         >
             <p className="text-2xs leading-tight tracking-wider [writing-mode:vertical-rl]">{orderName}</p>
-            <Icon icon={isPrev ? faAngleLeft : faAngleRight} size="xs" />
+            <Icon icon={isPrev ? FaAngleLeft : FaAngleRight} size="xs" />
         </button>
     );
 };

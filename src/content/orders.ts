@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { faCalendarDays, faCheckCircle, faClockRotateLeft, faXmarkCircle } from "@fortawesome/pro-light-svg-icons";
+import { FaCalendarAlt, FaCheckCircle, FaHistory, FaTimesCircle } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import type { Order } from "@/content/type";
@@ -9,14 +9,14 @@ import { hoursFromNow } from "@/utils/helpers-time";
 
 //------------------------------------------------------------------------------
 export const orderStatus = {
-    planned: { name: "Planned", color: "text-neutral-700", icon: faCalendarDays },
+    planned: { name: "Planned", color: "text-neutral-700", icon: FaCalendarAlt },
     inProgress: {
         name: "In Progress",
         color: "text-accent",
-        icon: faClockRotateLeft,
+        icon: FaHistory,
     },
-    completed: { name: "Completed", color: "text-positive-700", icon: faCheckCircle },
-    cancelled: { name: "Cancelled", color: "text-negative", icon: faXmarkCircle },
+    completed: { name: "Completed", color: "text-positive-700", icon: FaCheckCircle },
+    cancelled: { name: "Cancelled", color: "text-negative", icon: FaTimesCircle },
 };
 
 //------------------------------------------------------------------------------

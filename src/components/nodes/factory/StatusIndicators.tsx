@@ -1,15 +1,14 @@
 //------------------------------------------------------------------------------
 import React, { useContext } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-    faIndustry,
-    faStar,
-    faBoxesStacked,
-    faHardHat,
-    faCheckCircle,
-    faTriangleExclamation,
-    faXmarkCircle,
-} from "@fortawesome/pro-solid-svg-icons";
+    FaBoxes,
+    FaCheckCircle,
+    FaExclamationTriangle,
+    FaHardHat,
+    FaIndustry,
+    FaStar,
+    FaTimesCircle,
+} from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -70,7 +69,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ index, label, 
                 </div>
                 <div className="absolute -bottom-1 -right-3">
                     <Icon
-                        icon={score === 1 ? faCheckCircle : score === 2 ? faTriangleExclamation : faXmarkCircle}
+                        icon={score === 1 ? FaCheckCircle : score === 2 ? FaExclamationTriangle : FaTimesCircle}
                         size="xs"
                         fixedWidth
                         className="aspect-square"
@@ -103,25 +102,25 @@ export const KeyStatusIndicators: React.FC<KeyStatusIndicatorsProps> = ({ keySta
                 index={1}
                 label="Efficiency"
                 score={overrides.efficiency ?? keyStatus.efficiency}
-                icon={<FontAwesomeIcon icon={faIndustry} />}
+                icon={<FaIndustry />}
             />
             <StatusIndicator
                 index={2}
                 label="Quality"
                 score={overrides.quality ?? keyStatus.quality}
-                icon={<FontAwesomeIcon icon={faStar} />}
+                icon={<FaStar />}
             />
             <StatusIndicator
                 index={3}
                 label="Tracking"
                 score={overrides.tracking ?? keyStatus.tracking}
-                icon={<FontAwesomeIcon icon={faBoxesStacked} />}
+                icon={<FaBoxes />}
             />
             <StatusIndicator
                 index={4}
                 label="Maintenance"
                 score={overrides.maintenance ?? keyStatus.maintenance}
-                icon={<FontAwesomeIcon icon={faHardHat} />}
+                icon={<FaHardHat />}
             />
         </>
     );

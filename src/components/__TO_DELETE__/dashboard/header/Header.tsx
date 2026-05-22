@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { faClock } from "@fortawesome/sharp-regular-svg-icons";
-import { faGrid } from "@fortawesome/sharp-solid-svg-icons";
+import { FaClock, FaTh } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { PanelWrapper } from "@/components/common/panel/PanelWrapper";
@@ -49,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({ keyStatus }) => {
                     className="px-1 py-px aspect-square rounded-sm text-accent bg-accent-50 hover:bg-accent-100 transition-colors duration-200 cursor-pointer"
                     onClick={() => navigate("/")}
                 >
-                    <Icon icon={faGrid} />
+                    <Icon icon={FaTh} />
                 </button>
             </div>
 
@@ -59,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({ keyStatus }) => {
                     <div className="flex gap-2 text-2xs text-muted">
                         <p className="">{factory.location}</p>
                         <p className="tabular-nums">
-                            <Icon icon={faClock} size="sm" className="mr-1" />
+                            <Icon icon={FaClock} size="sm" className="mr-1" />
                             {now.toLocaleTimeString("en-US", {
                                 hour: "2-digit",
                                 minute: "2-digit",

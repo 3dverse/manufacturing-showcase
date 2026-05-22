@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 import { useContext } from "react";
-import { faChartGantt, faListTree } from "@fortawesome/pro-light-svg-icons";
+import { FaSitemap, FaStream } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -28,7 +28,7 @@ export function FooterTabs({ className }: { className?: string }) {
                 className="px-1 rounded-r-none"
                 onClick={() => setFooterTab("timeline")}
             >
-                <Icon icon={faChartGantt} size="xs" />
+                <Icon icon={FaStream} size="xs" />
             </Button>
             <Button
                 size="sm"
@@ -37,7 +37,7 @@ export function FooterTabs({ className }: { className?: string }) {
                 className="px-1 rounded-l-none"
                 onClick={() => setFooterTab("bom")}
             >
-                <Icon icon={faListTree} size="xs" />
+                <Icon icon={FaSitemap} size="xs" />
             </Button>
         </Tabs>
     );

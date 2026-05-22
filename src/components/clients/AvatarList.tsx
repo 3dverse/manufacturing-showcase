@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 import { useContext, useEffect, useState, useCallback } from "react";
-import { faXmark, faExpand } from "@fortawesome/pro-light-svg-icons";
+import { FaExpand, FaTimes } from "react-icons/fa";
 import { uniqueNamesGenerator, adjectives, colors, animals } from "unique-names-generator";
 import createColor from "create-color";
 
@@ -160,7 +160,7 @@ export const AvatarList = () => {
                                             <> </>
                                         ) : (
                                             <Icon
-                                                icon={faExpand}
+                                                icon={FaExpand}
                                                 size="lg"
                                                 className="bg-accent-300 p-2 rounded-2xl text-white"
                                             />
@@ -174,7 +174,7 @@ export const AvatarList = () => {
                                         className="absolute top-1 right-1 flex items-center justify-center rounded-full p-1 hover:bg-accent-300"
                                         onClick={() => setWatchedAvatar(null)}
                                     >
-                                        <Icon icon={faXmark} />
+                                        <Icon icon={FaTimes} />
                                     </Button>
                                 )}
                             </Viewport>

@@ -1,7 +1,6 @@
 //------------------------------------------------------------------------------
 import { useCallback, type MouseEvent as ReactMouseEvent } from "react";
-import { faAngleRight } from "@fortawesome/sharp-regular-svg-icons";
-import { faExclamationTriangle } from "@fortawesome/sharp-solid-svg-icons";
+import { FaAngleRight, FaExclamationTriangle } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -42,7 +41,7 @@ export const CellIncident = ({ downtimeEvent }: { downtimeEvent: ProjectedDownti
         <>
             <PanelTitle className="capitalize text-warning-100">
                 <Icon
-                    icon={faExclamationTriangle}
+                    icon={FaExclamationTriangle}
                     className="absolute -top-2 left-3 text-2xs text-warning-100 bg-warning-700 rounded-full p-1"
                 />
                 <p className="text-xs">{downtimeEvent.reasonDescription}</p>
@@ -54,7 +53,7 @@ export const CellIncident = ({ downtimeEvent }: { downtimeEvent: ProjectedDownti
                     className="button bg-warning-100 text-warning-600 hover:bg-warning-50 border-0 -translate-z-[.1px] hover:translate-z-0"
                     onClick={clickHandler}
                 >
-                    <Icon icon={faAngleRight} className="mr-2 text-xs" />
+                    <Icon icon={FaAngleRight} className="mr-2 text-xs" />
                     Take action
                 </Button>
             </div>

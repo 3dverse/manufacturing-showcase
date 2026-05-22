@@ -1,12 +1,9 @@
 import { getFolderAssets } from "@3dverse/api";
-
 import { generate } from "./index";
 import { setDataset } from "./store";
 import { STATIC_SITE_ID, defaultSite } from "./input";
 import { loadSiteFromScene } from "./site";
-
-//------------------------------------------------------------------------------
-export const PUBLIC_FOLDER_ID = "3b1c6c2a-73e1-4787-a383-a7cdd4de54de";
+import config from "../config";
 
 //------------------------------------------------------------------------------
 export type BootstrapResult = {
@@ -31,7 +28,7 @@ export async function generateDatasetForScene(
 //------------------------------------------------------------------------------
 export async function generateAllDatasetsFromFolder(): Promise<BootstrapResult> {
     const resp = await getFolderAssets({
-        folder_id: PUBLIC_FOLDER_ID,
+        folder_id: config.publicFolderId,
         offset: 0,
         limit: 10,
         filter: { asset_type: "scene" },

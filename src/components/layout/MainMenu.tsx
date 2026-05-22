@@ -1,5 +1,5 @@
 import { cn } from "@/utils/cn";
-import type { IconDefinition } from "@fortawesome/fontawesome-common-types";
+import type { IconType } from "react-icons";
 import { useFactoryStore } from "@/store/useFactoryStore";
 
 //------------------------------------------------------------------------------
@@ -19,7 +19,7 @@ const MenuItem = ({
     onClick,
 }: {
     label: string;
-    icon: IconDefinition;
+    icon: IconType;
     isSelected: boolean;
     isDisabled?: boolean;
     onClick: () => void;

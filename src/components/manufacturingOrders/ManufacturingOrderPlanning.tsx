@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 import { useState, useMemo, useEffect, useRef } from "react";
-import { faList, faTimeline } from "@fortawesome/pro-light-svg-icons";
+import { FaList, FaStream } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -66,7 +66,7 @@ export const ManufacturingOrderPlanning = ({
                                 : "text-muted hover:text-default hover:bg-underground",
                         )}
                     >
-                        <Icon icon={faTimeline} size="xs" />
+                        <Icon icon={FaStream} size="xs" />
                     </Button>
                     <Button
                         title="List view"
@@ -80,7 +80,7 @@ export const ManufacturingOrderPlanning = ({
                                 : "text-muted hover:text-default hover:bg-underground",
                         )}
                     >
-                        <Icon icon={faList} size="xs" />
+                        <Icon icon={FaList} size="xs" />
                     </Button>
                 </div>
             </header>

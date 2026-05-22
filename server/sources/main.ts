@@ -4,12 +4,24 @@ import config from "./config";
 
 //------------------------------------------------------------------------------
 import { installFatalErrorHandler } from "@3dverse/service-common-errors";
+
 if (config.environment !== "local") {
     installFatalErrorHandler();
 }
 
 //-----------------------------------------------------------------------------
-import { logger } from "@3dverse/logger";
+import pino from "pino";
+
+const logger = pino({
+    base: {},
+    formatters: { level: (label) => ({ level: label }) },
+    timestamp: () => `,"ts":"${new Date().toISOString()}"`,
+    level: (() => {
+        const l = process.env.LOG_LEVEL?.toLowerCase();
+        const valid = ["trace", "debug", "info", "warn", "error", "fatal"];
+        return l && valid.includes(l) ? l : process.env.NODE_ENV === "development" ? "debug" : "info";
+    })(),
+});
 
 //-----------------------------------------------------------------------------
 import { startService, startOpsService } from "./service";

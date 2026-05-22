@@ -1,7 +1,6 @@
 //------------------------------------------------------------------------------
 import { useCallback, useContext, useMemo, type MouseEvent } from "react";
-import { faAngleLeft } from "@fortawesome/pro-light-svg-icons";
-import { faClock } from "@fortawesome/sharp-regular-svg-icons";
+import { FaAngleLeft, FaClock } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
@@ -74,7 +73,7 @@ export const MainHeader = ({ className }: { className?: string }) => {
                     onClick={homeClickHandler}
                 >
                     <Icon
-                        icon={faAngleLeft}
+                        icon={FaAngleLeft}
                         size="lg"
                         className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 scale-75 group-hover:translate-x-3 group-hover:scale-100 transition-transform duration-200"
                     />
@@ -92,7 +91,7 @@ export const MainHeader = ({ className }: { className?: string }) => {
                     <div className="flex items-center gap-x-2 gap-y-2 text-xs text-accent-200">
                         <p className="text-[95%]">{factory?.location}</p>
                         <span>
-                            <Icon icon={faClock} size="sm" /> 11:30
+                            <Icon icon={FaClock} size="sm" /> 11:30
                         </span>
                     </div>
                 </div>

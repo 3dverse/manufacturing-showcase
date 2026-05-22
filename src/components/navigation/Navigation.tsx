@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 import React, { useContext, useEffect, useMemo, useRef } from "react";
-import { faArrowTurnDownRight, faHome } from "@fortawesome/sharp-light-svg-icons";
-import { faExclamationTriangle, faWrench } from "@fortawesome/sharp-solid-svg-icons";
+import { FaExclamationTriangle, FaHome, FaWrench } from "react-icons/fa";
+import { LuCornerDownRight } from "react-icons/lu";
 
 //------------------------------------------------------------------------------
 import { ViewerPanel } from "@/components/common/ViewerPanel";
@@ -213,7 +213,7 @@ const FactoryNav = ({ className }: { className?: string }) => {
             onMouseEnter={mouseEnterHandler}
             onMouseLeave={mouseLeaveHandler}
         >
-            <Icon icon={faHome} size="lg" />
+            <Icon icon={FaHome} size="lg" />
         </Button>
     );
 };
@@ -461,18 +461,13 @@ const ChildNode = ({
                 )}
                 {node.name} {isLine(node) && "Line"}
                 {hasDowntime && (
-                    <span className="absolute -top-2 right-px w-4 aspect-square bg-warning-600 rounded-full">
-                        <Icon icon={faExclamationTriangle} size="xs" className="text-warning-100" />
+                    <span className="absolute -top-2 right-px w-4 aspect-square bg-warning-600 rounded-full flex justify-center items-center">
+                        <Icon icon={FaExclamationTriangle} size="xs" className="text-warning-100" />
                     </span>
                 )}
                 {!hasDowntime && hasWorkOrder && (
-                    <span className="absolute -top-2 right-px w-4 aspect-square bg-amber-400 rounded-full">
-                        <Icon icon={faWrench} size="xs" className="text-amber-900" />
-                    </span>
-                )}
-                {!hasDowntime && !hasWorkOrder && isScenarioTarget && spanData?.kind === "predictive" && (
-                    <span className="absolute -top-2 right-px w-4 aspect-square bg-amber-400 rounded-full">
-                        <Icon icon={faWrench} size="xs" className="text-amber-900" />
+                    <span className="flex absolute -top-2 right-px w-4 aspect-square bg-amber-400 rounded-full flex justify-center items-center">
+                        <Icon icon={FaWrench} size="xs" className="text-amber-900" />
                     </span>
                 )}
             </button>
@@ -490,7 +485,7 @@ const FlowNode = ({ isSelected }: { isSelected: boolean }) => {
                 isSelected ? "bg-guidance border-guidance-600 text-guidance-900" : "hover:border-muted",
             )}
         >
-            <Icon icon={faArrowTurnDownRight} size="2xs" className="mt-1" />
+            <Icon icon={LuCornerDownRight} size="2xs" className="mt-1" />
         </span>
     );
 };

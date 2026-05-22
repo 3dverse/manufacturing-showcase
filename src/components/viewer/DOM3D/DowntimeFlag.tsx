@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 import { useCallback, useContext } from "react";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
-import { faExclamationTriangle } from "@fortawesome/sharp-regular-svg-icons";
+import { FaExclamationTriangle } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -64,7 +64,7 @@ export function DowntimeFlag({ cell, downtimeId }: { cell: CellNode; downtimeId:
                     )}
                     onClick={handleClick}
                 >
-                    <Icon icon={faExclamationTriangle} className="text-5xl" />
+                    <Icon icon={FaExclamationTriangle} className="text-5xl" />
                     <p className="px-2 capitalize font-semibold text-warning-100">Incident on {cell.name}</p>
                 </div>
             </BoundingBoxFaceProjection>
@@ -117,7 +117,7 @@ export function DowntimeFlagFront({
                 )}
                 onClick={handleClick}
             >
-                <Icon icon={faExclamationTriangle} className="text-2xl" />
+                <Icon icon={FaExclamationTriangle} className="text-2xl" />
                 <p className="px-2 capitalize font-semibold text-warning-100">Incident</p>
             </div>
         </BoundingBoxFaceProjection>

@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
-import { faCheck } from "@fortawesome/sharp-solid-svg-icons";
+import { FaCheck } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { cn } from "@/utils/cn";
@@ -100,7 +100,7 @@ export const ManufacturingOrderProgressBar = ({
                 <span className="grow" />
                 {showDuration && <span className="text-xs opacity-90 tabular-nums">({durationLabel})</span>}
                 {progress_prct === 100 ? (
-                    <Icon icon={faCheck} />
+                    <Icon icon={FaCheck} />
                 ) : progress_prct > 0 ? (
                     <span className="font-medium tabular-nums">{progress_prct}%</span>
                 ) : (
