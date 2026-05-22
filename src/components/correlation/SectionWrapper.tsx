@@ -3,7 +3,7 @@ import { cn } from "@/utils/cn";
 import type { ProjectedStatus } from "@/core/Projection";
 import Button from "../common/Button";
 import { Icon } from "../common/Icon";
-import { faAngleDown, faAngleLeft, faAngleRight } from "@fortawesome/pro-light-svg-icons";
+import { FaAngleDown, FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
 // ---------------------------------------------------------------------------
 // Shared field-level primitives used by every sheet
@@ -111,7 +111,7 @@ export function SectionWrapper<T>({
                             onClick={() => setPage((p) => (p - 1 + count) % count)}
                             aria-label="Previous"
                         >
-                            <Icon icon={faAngleLeft} />
+                            <Icon icon={FaAngleLeft} />
                         </Button>
                         <span className="text-[10px] text-slate-400 tabular-nums w-8 text-center">
                             {page + 1} / {count}
@@ -124,7 +124,7 @@ export function SectionWrapper<T>({
                             onClick={() => setPage((p) => (p + 1) % count)}
                             aria-label="Next"
                         >
-                            <Icon icon={faAngleRight} />
+                            <Icon icon={FaAngleRight} />
                         </Button>
                     </div>
                 )}
@@ -144,7 +144,7 @@ export function SectionWrapper<T>({
                     )}
                     aria-hidden
                 >
-                    <Icon icon={faAngleDown} size="xs" />
+                    <Icon icon={FaAngleDown} size="xs" />
                 </span>
             </div>
 

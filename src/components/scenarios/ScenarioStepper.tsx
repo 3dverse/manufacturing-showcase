@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { faAngleLeft } from "@fortawesome/pro-solid-svg-icons";
+import { FaAngleLeft } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import Button from "@/components/common/Button";
@@ -63,21 +63,21 @@ export const ScenarioStepper = () => {
     //--------------------------------------------------------------------------
     const popoverPosition = messageTargetPosition
         ? {
-            x: clamp(
-                messageTargetPosition.x - overlayBounds.x + (activeStep?.message?.offset?.x ?? 0),
-                POPOVER_MARGIN,
-                Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
-            ),
-            y: clamp(
-                messageTargetPosition.y - overlayBounds.y + (activeStep?.message?.offset?.y ?? 0),
-                POPOVER_MARGIN,
-                Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
-            ),
-        }
+              x: clamp(
+                  messageTargetPosition.x - overlayBounds.x + (activeStep?.message?.offset?.x ?? 0),
+                  POPOVER_MARGIN,
+                  Math.max(POPOVER_MARGIN, overlayBounds.width - popoverSize.width - POPOVER_MARGIN),
+              ),
+              y: clamp(
+                  messageTargetPosition.y - overlayBounds.y + (activeStep?.message?.offset?.y ?? 0),
+                  POPOVER_MARGIN,
+                  Math.max(POPOVER_MARGIN, overlayBounds.height - popoverSize.height - POPOVER_MARGIN),
+              ),
+          }
         : {
-            x: Math.max(POPOVER_MARGIN, (overlayBounds.width - popoverSize.width) / 2),
-            y: Math.max(POPOVER_MARGIN, (overlayBounds.height - popoverSize.height) / 2),
-        };
+              x: Math.max(POPOVER_MARGIN, (overlayBounds.width - popoverSize.width) / 2),
+              y: Math.max(POPOVER_MARGIN, (overlayBounds.height - popoverSize.height) / 2),
+          };
 
     //--------------------------------------------------------------------------
     const updateOverlayMeasurements = useCallback(() => {
@@ -216,7 +216,7 @@ export const ScenarioStepper = () => {
                 <div className="flex gap-2">
                     {!isFirstStep && (
                         <Button variant="soft" colorScheme="guidance" size="sm" className="px-2" onClick={prevStep}>
-                            <Icon icon={faAngleLeft} size="sm" />
+                            <Icon icon={FaAngleLeft} size="sm" />
                         </Button>
                     )}
                     {isLastStep && !hasEnabledNextScenario ? (

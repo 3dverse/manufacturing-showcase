@@ -1,65 +1,42 @@
 //------------------------------------------------------------------------------
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { SizeProp, FlipProp, RotateProp } from "@fortawesome/fontawesome-svg-core";
-import type { IconDefinition } from "@fortawesome/fontawesome-common-types";
+import { useMemo } from "react";
+import type { IconType } from "react-icons";
 
 //------------------------------------------------------------------------------
-const variantLight = {
-    color: "content.tertiary",
-    filter: "drop-shadow(0px 14px 8px oklab(0 0 0 / .65))",
-    style: {
-        strokeWidth: "16px",
-        stroke: "color-mix(in srgb, var(--color-bg-foreground) 85%, transparent)",
-    },
-};
+import { cn } from "@/utils/cn";
 
-const variantElevation = {
-    color: "accent.500",
-    filter: "drop-shadow(0px 8px 16px color-mix(in srgb, var(--color-accent) 90%, transparent))",
-    style: {
-        strokeWidth: "1.5px",
-        stroke: "bg.ground",
-    },
+//------------------------------------------------------------------------------
+const FA_SIZE_MAP: Record<string, string> = {
+    "2xs": "0.625em",
+    xs: "0.75em",
+    sm: "0.875em",
+    lg: "1.25em",
+    xl: "1.5em",
+    "2xl": "2em",
 };
 
 //------------------------------------------------------------------------------
 export const Icon = ({
-    variant,
-    icon,
+    icon: IconComponent,
     size,
     fixedWidth,
-    flip,
-    rotation,
     className,
 }: {
-    variant?: "default" | "light" | "elevation";
-    icon: IconDefinition;
-    size?: SizeProp;
+    icon: IconType;
+    size?: string;
     fixedWidth?: boolean;
-    flip?: FlipProp;
-    rotation?: RotateProp;
     className?: string;
 }) => {
     //--------------------------------------------------------------------------
-    const getVariantStyle = () => {
-        if (variant === "light") {
-            return variantLight;
-        }
-        if (variant === "elevation") {
-            return variantElevation;
-        }
-    };
+    // Memos
+    const _className = useMemo(() => cn(className, "inline-block"), [className]);
 
     //--------------------------------------------------------------------------
     return (
-        <FontAwesomeIcon
-            icon={icon}
-            size={size}
-            fixedWidth={fixedWidth}
-            flip={flip}
-            rotation={rotation}
-            {...getVariantStyle()}
-            className={className}
+        <IconComponent
+            size={size ? (FA_SIZE_MAP[size] ?? size) : undefined}
+            style={fixedWidth ? { minWidth: "1em" } : undefined}
+            className={_className}
         />
     );
 };

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { faFilePdf } from "@fortawesome/sharp-regular-svg-icons";
+import { FaFilePdf } from "react-icons/fa";
 
 import { Icon } from "@/components/common/Icon";
 import Button from "@/components/common/Button";
@@ -24,7 +24,7 @@ export function IncidentPdfDownload({ reportData }: Props) {
             className="mt-2 w-full sm:w-auto self-start"
             onClick={handleDownloadPdf}
         >
-            <Icon icon={faFilePdf} className="mr-2 text-xs" />
+            <Icon icon={FaFilePdf} className="mr-2 text-xs" />
             Download incident report
         </Button>
     );

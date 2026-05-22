@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from "react";
-import { faCheck, faXmark } from "@fortawesome/sharp-regular-svg-icons";
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -30,7 +30,7 @@ export const ConnectedSystemBadge = ({ system, connected, className, ...props }:
         >
             {connected !== undefined && (
                 <Icon
-                    icon={connected ? faCheck : faXmark}
+                    icon={connected ? FaCheck : FaTimes}
                     className={cn("text-2xs pl-1.5 pr-5", connected ? "text-positive-50" : "text-neutral-400")}
                 />
             )}

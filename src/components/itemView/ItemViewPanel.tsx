@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { faXmark } from "@fortawesome/pro-light-svg-icons";
+import { FaTimes } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -220,7 +220,7 @@ function ItemViewPanelInner({ selected }: { selected: FocusedEntity }) {
                     className="px-2 shrink-0 text-white/80 hover:text-white hover:bg-white/15"
                     onClick={handleClose}
                 >
-                    <Icon icon={faXmark} />
+                    <Icon icon={FaTimes} />
                 </Button>
             </header>
 

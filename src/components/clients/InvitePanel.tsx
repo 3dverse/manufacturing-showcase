@@ -1,8 +1,7 @@
 //------------------------------------------------------------------------------
 import { useRef, useEffect, useContext, useMemo, useState, useCallback } from "react";
-import { faLink, faShare, faQrcode } from "@fortawesome/pro-light-svg-icons";
-import { faCheck, faUserPlus } from "@fortawesome/pro-solid-svg-icons";
-import type { IconDefinition } from "@fortawesome/fontawesome-common-types";
+import { FaCheck, FaLink, FaQrcode, FaShare, FaUserPlus } from "react-icons/fa";
+import type { IconType } from "react-icons";
 import { LivelinkContext } from "@3dverse/livelink-react";
 
 //------------------------------------------------------------------------------
@@ -72,19 +71,19 @@ export const InvitePanel = () => {
         {
             label: "Copy link",
             onClick: copyGuestLink,
-            icon: faLink,
+            icon: FaLink,
         },
         {
             label: "Share link",
             onClick: shareGuestLink,
-            icon: faShare,
+            icon: FaShare,
         },
         {
             label: "Show QR code",
             onClick: showGuestQrCode,
-            icon: faQrcode,
+            icon: FaQrcode,
         },
-    ] as { label: string; onClick: () => void; icon: IconDefinition }[];
+    ] as { label: string; onClick: () => void; icon: IconType }[];
 
     //--------------------------------------------------------------------------
     const [menuOpen, setMenuOpen] = useState(false);
@@ -129,11 +128,11 @@ export const InvitePanel = () => {
                         aria-haspopup="menu"
                         aria-expanded={menuOpen}
                     >
-                        <Icon icon={faUserPlus} className={cn("text-sm md:text-xs", isTextCopied && "hidden!")} />
+                        <Icon icon={FaUserPlus} className={cn("text-sm md:text-xs", isTextCopied && "hidden!")} />
                         <span className={cn("hidden md:block", isTextCopied ? "hidden!" : undefined)}>Invite</span>
                         {isTextCopied && (
                             <span className="starting:translate-y-2 starting:opacity-0 translate-y-0 opacity-100 transition-all duration-200">
-                                <Icon icon={faCheck} className="text-sm mr-1 text-positive -translate-y-px" />
+                                <Icon icon={FaCheck} className="text-sm mr-1 text-positive -translate-y-px" />
                                 Copied
                             </span>
                         )}

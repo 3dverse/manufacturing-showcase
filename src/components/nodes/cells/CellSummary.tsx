@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { faCheckToSlot } from "@fortawesome/sharp-regular-svg-icons";
+import { FaClipboardCheck } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -80,7 +80,7 @@ export const CellSummary = ({
                     </DataContainer>
                     <DataContainer className="gap-0 justify-between">
                         <DataLabel className="flex items-center gap-2 text-positive-700 ">
-                            <Icon icon={faCheckToSlot} />
+                            <Icon icon={FaClipboardCheck} />
                             {manufacturingOrder?.status === "completed" ? "Last order" : "In production"}
                         </DataLabel>
                         <DataValue className="mt-1 text-slate-800">{orderNumber}</DataValue>

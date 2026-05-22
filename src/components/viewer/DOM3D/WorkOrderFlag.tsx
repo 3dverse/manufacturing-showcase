@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 import { useCallback, useContext } from "react";
 import { BoundingBoxFaceProjection } from "@3dverse/livelink-react-ui";
-import { faWrench } from "@fortawesome/sharp-regular-svg-icons";
+import { FaWrench } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -63,7 +63,7 @@ export function WorkOrderFlag({ machine, workOrderId }: { machine: MachineNode; 
                     )}
                     onClick={handleClick}
                 >
-                    <Icon icon={faWrench} className="text-5xl" />
+                    <Icon icon={FaWrench} className="text-5xl" />
                     <p className="px-2 capitalize font-semibold">Maintenance on {machine.name}</p>
                 </div>
             </BoundingBoxFaceProjection>
@@ -115,7 +115,7 @@ export function WorkOrderFlagFront({
                 )}
                 onClick={handleClick}
             >
-                <Icon icon={faWrench} className="text-2xl" />
+                <Icon icon={FaWrench} className="text-2xl" />
                 <p className="px-2 capitalize font-semibold">Maintenance</p>
             </div>
         </BoundingBoxFaceProjection>

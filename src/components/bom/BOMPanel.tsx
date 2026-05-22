@@ -160,7 +160,7 @@ export function BOMPanel() {
     return (
         <div
             className={cn(
-                "flex flex-col-reverse border-b border-slate-200 pointer-events-auto",
+                "flex flex-col border-b border-slate-200 pointer-events-auto",
                 PERFORMANCE_MODE ? "bg-slate-0/97" : "bg-slate-0/80 backdrop-blur-xl",
             )}
         >

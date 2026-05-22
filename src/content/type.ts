@@ -1,5 +1,5 @@
 import type { Client, Entity, Vec3 } from "@3dverse/livelink";
-import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import type { IconType } from "react-icons";
 import type { StationId } from "./stations/enum";
 import type { NodeTypes } from "./enums";
 import type { ScenarioIncidentAction } from "./scenarios/types";
@@ -91,7 +91,7 @@ export type StateValue = {
 export type OrderStatus = {
     name: string;
     color: string;
-    icon: IconDefinition;
+    icon: IconType;
 };
 
 //------------------------------------------------------------------------------

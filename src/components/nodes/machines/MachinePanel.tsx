@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import { faClock } from "@fortawesome/pro-light-svg-icons";
+import { FaClock } from "react-icons/fa";
 
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
@@ -36,7 +36,7 @@ export function MachinePanel({
                     <div className="flex flex-col gap-1 grow">
                         <p className="text-sm text-default capitalize">{machine.name} M950iA-500</p>
                         <p className="text-xs text-muted/80">
-                            <Icon icon={faClock} size="sm" className="text-muted/80 mr-1" />
+                            <Icon icon={FaClock} size="sm" className="text-muted/80 mr-1" />
                             <span className="tabular-nums">100% uptime</span>
                         </p>
                     </div>

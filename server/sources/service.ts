@@ -2,7 +2,6 @@
 import express, { Express, Router } from "express";
 import compression from "compression";
 import * as bodyParser from "body-parser";
-//import { attachLogger, defaultErrorHandler, installHealthProbes } from "@3dverse/service-express-middlewares";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
 

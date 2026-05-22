@@ -9,28 +9,25 @@ import Modal from "@/components/common/modal/Modal";
 import { ScenarioContext } from "@/contexts/ScenariosContext";
 import { APP_OWNER_NAME } from "@/content/metadata";
 import { Icon } from "../common/Icon";
-import {
-    faMagnifyingGlassWaveform,
-    faBusinessTime,
-    faSensorTriangleExclamation,
-} from "@fortawesome/sharp-light-svg-icons";
+import { FaBusinessTime } from "react-icons/fa";
+import { LuScanSearch, LuTriangleAlert } from "react-icons/lu";
 
 //------------------------------------------------------------------------------
 const keyPoints = [
     {
-        icon: faMagnifyingGlassWaveform,
+        icon: LuScanSearch,
         title: "Understanding the operational impact",
         description:
             "When production is interrupted, the biggest delay is often not the machine; it is understanding the operational impact across orders, maintenance, and production.",
     },
     {
-        icon: faBusinessTime,
+        icon: FaBusinessTime,
         title: "Connected operational environment",
         description:
             "Hypervision connects the factory floor, manufacturing operations, and enterprise systems into a single operational environment without duplicating existing workflows or infrastructure.",
     },
     {
-        icon: faSensorTriangleExclamation,
+        icon: LuTriangleAlert,
         title: "Investigate incidents",
         description:
             "Teams can investigate incidents, evaluate production impact, coordinate remotely, and review operational scenarios using the same connected operational context.",

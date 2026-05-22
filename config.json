@@ -5,5 +5,6 @@
   "allowMock": true,
   "hostname": "localhost",
   "apiURL": "https://api.3dverse.com/app/v1",
-  "apiKey": "10468ff4-0e9c-478e-ab8f-53e5626c5be7.RkRvV6q9as3JznDdflf7gmg8GXcVVDBU-buJzyYOvP0"
+  "apiKey": "10468ff4-0e9c-478e-ab8f-53e5626c5be7.RkRvV6q9as3JznDdflf7gmg8GXcVVDBU-buJzyYOvP0",
+  "publicFolderId": "3b1c6c2a-73e1-4787-a383-a7cdd4de54de"
 }
