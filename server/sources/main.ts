@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-import { setApiKey, setBaseURL } from "@3dverse/api";
+import { setBaseURL, setUserToken } from "@3dverse/api";
 import config from "./config";
 
 //------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ const logger = pino({
 import { startService, startOpsService } from "./service";
 
 setBaseURL(config.apiURL);
-setApiKey(config.apiKey);
+setUserToken(config.apiToken);
 
 //-----------------------------------------------------------------------------
 startOpsService()

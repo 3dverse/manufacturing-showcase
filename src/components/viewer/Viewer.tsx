@@ -29,11 +29,11 @@ import { NodeChildrensOverlay } from "./NodeChildrenOverlay";
 import { DebugOverlay } from "./overlays/DebugOverlay";
 import { UserMode } from "@/core/UserMode";
 
-
 //------------------------------------------------------------------------------
 // Camera constraints
 const MIN_DOLLY_DISTANCE = 3;
 const MAX_DOLLY_DISTANCE = 85;
+const SCALE = UserMode.presentation ? 2 : undefined;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ export const Viewer = () => {
 
     //--------------------------------------------------------------------------
     return (
-        <Canvas className="w-full h-full">
+        <Canvas className="w-full h-full" scale={SCALE}>
             <Viewport ref={viewportRef} className="w-full h-full" {...viewportProps}>
                 {!isConnecting && (
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-green text-xs text-slate-0 rounded-full py-1 px-3 pointer-events-none animate-[fade-out_.5s_2s_forwards]">
