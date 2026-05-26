@@ -4,6 +4,7 @@ import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, use
 //------------------------------------------------------------------------------
 export const LOCAL_STORAGE_KEYS = {
     IS_INTRODUCTION_MODAL_OPEN: "is-introduction-modal-open",
+    VIEWER_SCALE: "viewer-scale",
 } as const;
 
 //------------------------------------------------------------------------------
