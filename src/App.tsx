@@ -12,6 +12,7 @@ import HomePage from "@/pages/HomePage";
 import FactoryPage from "@/pages/FactoryPage";
 import DatasetPage from "@/pages/DatasetPage";
 import ThemePage from "@/pages/ThemePage";
+import SettingsPage from "@/pages/SettingsPage";
 
 //------------------------------------------------------------------------------
 import { useFactoryStore } from "@/store/useFactoryStore";
@@ -135,6 +136,8 @@ function AppLayout() {
                     return <ThemePage />;
                 case "dataset":
                     return <DatasetPage />;
+                case "settings":
+                    return <SettingsPage />;
             }
         }
         return <HomePage />;
