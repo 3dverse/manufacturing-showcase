@@ -1,17 +1,13 @@
 //-----------------------------------------------------------------------------
 import { setBaseURL, setUserToken } from "@3dverse/api";
-import config from "./config";
-
-//------------------------------------------------------------------------------
-import { installFatalErrorHandler } from "@3dverse/service-common-errors";
-
-if (config.environment !== "local") {
-    installFatalErrorHandler();
-}
-
-//-----------------------------------------------------------------------------
 import pino from "pino";
 
+//-----------------------------------------------------------------------------
+import { startService, startOpsService } from "./service";
+import { installFatalErrorHandler } from "./utils/errors";
+import config from "./config";
+
+//-----------------------------------------------------------------------------
 const logger = pino({
     base: {},
     formatters: { level: (label) => ({ level: label }) },
@@ -23,9 +19,11 @@ const logger = pino({
     })(),
 });
 
-//-----------------------------------------------------------------------------
-import { startService, startOpsService } from "./service";
+if (config.environment !== "local") {
+    installFatalErrorHandler(logger);
+}
 
+//-----------------------------------------------------------------------------
 setBaseURL(config.apiURL);
 setUserToken(config.apiToken);
 
