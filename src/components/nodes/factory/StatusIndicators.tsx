@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 import {
     FaBoxes,
     FaCheckCircle,
@@ -13,6 +13,8 @@ import {
 //------------------------------------------------------------------------------
 import { Icon } from "@/components/common/Icon";
 import { ScenarioContext } from "@/contexts/ScenariosContext";
+import { useTimelineStore } from "@/store/useTimelineStore";
+import { hasActiveDowntimeAt, activeWorkOrdersAt } from "@/components/timeline/timeUtils";
 
 //------------------------------------------------------------------------------
 import type { KeyStatus, StatusScore } from "@/services/dashboardApi";
@@ -96,6 +98,20 @@ export const KeyStatusIndicators: React.FC<KeyStatusIndicatorsProps> = ({ keySta
         ...(stepKey ? STEP_KPI_OVERRIDES[stepKey] : {}),
     };
 
+    const span = useTimelineStore((s) => s.span);
+    const present = useTimelineStore((s) => s.present);
+    const asOf = useTimelineStore((s) => s.asOf);
+    const effectiveTime = asOf ?? present;
+
+    const derivedMaintenanceScore = useMemo((): StatusScore | undefined => {
+        if (!span) return undefined;
+        if (hasActiveDowntimeAt(span, effectiveTime)) return 3;
+        const activeWOs = activeWorkOrdersAt(span, effectiveTime);
+        if (activeWOs.some((wo) => wo.workType === "corrective" || wo.workType === "predictive")) return 2;
+        if (activeWOs.some((wo) => wo.workType === "preventive")) return 1;
+        return undefined;
+    }, [span, effectiveTime]);
+
     return (
         <>
             <StatusIndicator
@@ -119,7 +135,7 @@ export const KeyStatusIndicators: React.FC<KeyStatusIndicatorsProps> = ({ keySta
             <StatusIndicator
                 index={4}
                 label="Maintenance"
-                score={overrides.maintenance ?? keyStatus.maintenance}
+                score={overrides.maintenance ?? derivedMaintenanceScore ?? keyStatus.maintenance}
                 icon={<FaHardHat />}
             />
         </>
