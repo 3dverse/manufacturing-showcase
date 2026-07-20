@@ -34,7 +34,7 @@ RUN chown -R node:node /usr/src/app
 USER node
 
 # Install dependencies
-RUN npm install
+RUN npm install --allow-remote=all
 
 # Bundle app source with correct ownership
 COPY --chown=node:node . .

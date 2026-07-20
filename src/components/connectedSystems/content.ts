@@ -26,7 +26,7 @@ export type ConnectionState = Record<Systems, boolean>;
 export const CONNECTED_SYSTEMS = Object.values(Systems);
 
 export const DEFAULT_CONNECTIONS: Record<Systems, boolean> = {
-    [Systems.SAP]: true,
+    [Systems.SAP]: false,
     [Systems.ERP]: true,
     [Systems.MES]: true,
     [Systems.EAM]: true,
