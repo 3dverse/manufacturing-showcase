@@ -69,11 +69,13 @@ export const Viewer = () => {
     const { instance } = useContext(LivelinkContext);
     useEffect(() => {
         if (instance) {
-            //dirty delay before simulation start to let everything load properly
-            //@see https://3dverse-all-stars.slack.com/archives/C06J5A8DBSA/p1791208645449919
-            setTimeout(() => {
-                instance.startSimulation();
-            }, 2000);
+            instance.scene.waitForSceneLoaded().then(() => {
+                //dirty delay before simulation start to let everything load properly
+                //@see https://3dverse-all-stars.slack.com/archives/C06J5A8DBSA/p1791208645449919
+                setTimeout(() => {
+                    instance.startSimulation();
+                }, 2000);
+            });
             //instance.activity_watcher.setTimeouts({
             //    warn_after_seconds: 10,
             //    timeout_after_seconds: 15,
