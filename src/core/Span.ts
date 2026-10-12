@@ -51,8 +51,9 @@ export function spanWindow(origin: number): Window {
  *  - Production orders:  only those linked to a visible sales order
  *  - Operations:         only those belonging to a visible production order
  *  - Downtime events:    only those that started ≤ now
- *  - WMS receipts / putaway tasks / pick tasks / allocations: only those dated ≤ now
- *    (i.e. records that have already occurred; future records are hidden)
+ *  - WMS receipts / allocations: only those dated ≤ now
+ *  - WMS putaway / pick tasks:   only those created ≤ now (in-progress tasks are kept)
+ *    (i.e. records that already exist; future records are hidden)
  *
  * Toggle this constant to disable the filter during development.
  */
@@ -84,11 +85,16 @@ function applySimulationFilter(span: TimelineSpan): void {
     for (const [id, r] of span.receipts) {
         if (r.receivedDate > now) span.receipts.delete(id);
     }
+    // Tasks: filter on creation, not completion — in-progress tasks keep their planned end date
     for (const [id, pt] of span.putawayTasks) {
-        if (pt.putawayDate !== null && pt.putawayDate > now) span.putawayTasks.delete(id);
+        if (pt.createdAt > now) {
+            span.putawayTasks.delete(id);
+        }
     }
     for (const [id, pt] of span.pickTasks) {
-        if (pt.pickedDate !== null && pt.pickedDate > now) span.pickTasks.delete(id);
+        if (pt.createdAt > now) {
+            span.pickTasks.delete(id);
+        }
     }
     for (const [id, a] of span.allocations) {
         if (a.allocatedAt > now) span.allocations.delete(id);
