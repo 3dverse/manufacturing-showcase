@@ -22,6 +22,7 @@ export type GeneratorConfig = {
     minOperationWorkingMinutes: number; // lower bound of per-PO working-time range
     maxOperationWorkingMinutes: number; // upper bound of per-PO working-time range
     yieldRate: number; // 0–1, median yield across all operations
+    performanceRate: number; // 0–1, median actual/ideal rate ratio (speed losses, micro-stops)
     // EAM
     pmFrequencyDays: number;
     pmDurationHours: number;
@@ -53,6 +54,7 @@ export function buildConfig(partial: Partial<GeneratorConfig> & { site: SiteNode
         minOperationWorkingMinutes: 280,
         maxOperationWorkingMinutes: 3200,
         yieldRate: 0.95,
+        performanceRate: 0.86,
         pmFrequencyDays: 14,
         pmDurationHours: 4,
         customerCount: 3,

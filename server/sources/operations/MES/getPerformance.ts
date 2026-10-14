@@ -12,7 +12,8 @@ export const getPerformance: MESOperationHandler<"getPerformance"> = async (_c, 
     let buckets = ds.mes.oeeTimeseries.filter((b) => b.shiftStart >= from && b.shiftEnd <= to);
 
     if (workCenterId) {
-        buckets = ds.mes.oeeByWorkCenter.get(workCenterId)?.filter((b) => b.shiftStart >= from && b.shiftEnd <= to) ?? [];
+        buckets =
+            ds.mes.oeeByWorkCenter.get(workCenterId)?.filter((b) => b.shiftStart >= from && b.shiftEnd <= to) ?? [];
     }
 
     // Aggregate
@@ -24,9 +25,15 @@ export const getPerformance: MESOperationHandler<"getPerformance"> = async (_c, 
     const plannedMinutes = buckets.reduce((s, b) => s + b.plannedMinutes, 0);
     const throughputPerHour = runtimeMinutes > 0 ? Math.round((goodQuantity / (runtimeMinutes / 60)) * 10) / 10 : 0;
     const availabilityPercent = plannedMinutes > 0 ? Math.round((runtimeMinutes / plannedMinutes) * 100 * 10) / 10 : 0;
-    const performancePercent = buckets.length > 0 ? Math.round(buckets.reduce((s, b) => s + b.performancePercent, 0) / buckets.length * 10) / 10 : 0;
+    const performancePercent =
+        runtimeMinutes > 0
+            ? Math.round(
+                  (buckets.reduce((s, b) => s + b.performancePercent * b.runtimeMinutes, 0) / runtimeMinutes) * 10,
+              ) / 10
+            : 0;
     const qualityPercent = producedQuantity > 0 ? Math.round((goodQuantity / producedQuantity) * 100 * 10) / 10 : 100;
-    const oeePercent = Math.round((availabilityPercent / 100) * (performancePercent / 100) * (qualityPercent / 100) * 100 * 10) / 10;
+    const oeePercent =
+        Math.round((availabilityPercent / 100) * (performancePercent / 100) * (qualityPercent / 100) * 100 * 10) / 10;
 
     const metrics = {
         siteId: reqSiteId ?? ds.siteId,
