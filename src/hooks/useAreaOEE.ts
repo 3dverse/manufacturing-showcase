@@ -25,13 +25,13 @@ export function useAreaOEE(node: SceneGraphNode): number | undefined {
         const poIds = new Set(span.productionOrdersByLocation.get(node.hash) ?? []);
 
         const pos = span.sortedProductionOrders.filter((po) => poIds.has(po.id));
-        const { intervals, quality } = poMetricsForWindow(pos, windowStart, minuteAsOf);
+        const { intervals, quality, performance } = poMetricsForWindow(pos, windowStart, minuteAsOf);
 
         const downtimes = span.sortedDowntimes.filter((dt) => wcIds.has(dt.workCenterId));
 
         const woIds = new Set(span.workOrdersByLocation.get(node.hash) ?? []);
         const workOrders = span.sortedWorkOrders.filter((wo) => woIds.has(wo.id));
 
-        return computeOEE(intervals, quality, downtimes, workOrders, windowStart, minuteAsOf) ?? undefined;
+        return computeOEE(intervals, quality, performance, downtimes, workOrders, windowStart, minuteAsOf) ?? undefined;
     }, [span, node, minuteAsOf]);
 }

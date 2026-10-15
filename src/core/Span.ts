@@ -128,6 +128,8 @@ function mapPO(po: ProductionOrder): ProductionOrderEntry {
         quantities: {
             plannedQuantity: q.plannedQuantity,
             uom: q.uom,
+            goodQuantity: q.goodQuantity ?? undefined,
+            scrapQuantity: q.scrapQuantity ?? undefined,
         },
         erpSalesOrderId: po.erpSalesOrderId ?? null,
     };
@@ -166,6 +168,7 @@ function mapOEEBucket(b: {
     runtimeMinutes: number;
     goodQuantity: number;
     producedQuantity: number;
+    performancePercent: number;
     oeePercent: number;
 }): OEEBucketEntry {
     return {
@@ -175,6 +178,7 @@ function mapOEEBucket(b: {
         runtimeMinutes: b.runtimeMinutes,
         goodQuantity: b.goodQuantity,
         producedQuantity: b.producedQuantity,
+        performancePercent: b.performancePercent,
         oeePercent: b.oeePercent,
     };
 }

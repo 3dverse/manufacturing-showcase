@@ -11,20 +11,25 @@ const SPARKLINE_DAYS = 14;
 //------------------------------------------------------------------------------
 /** Aggregate shift-level OEE buckets into one OEE value per calendar day. */
 export function bucketsToDaily(buckets: OEEBucketEntry[]): number[] {
-    const byDay = new Map<string, { runtime: number; planned: number; good: number; produced: number }>();
+    const byDay = new Map<
+        string,
+        { runtime: number; planned: number; weightedPerformance: number; good: number; produced: number }
+    >();
     for (const b of buckets) {
         const day = new Date(b.shiftStart * 1000).toISOString().slice(0, 10);
-        const existing = byDay.get(day) ?? { runtime: 0, planned: 0, good: 0, produced: 0 };
+        const existing = byDay.get(day) ?? { runtime: 0, planned: 0, weightedPerformance: 0, good: 0, produced: 0 };
         existing.runtime += b.runtimeMinutes;
+        existing.weightedPerformance += (b.performancePercent / 100) * b.runtimeMinutes;
         existing.planned += b.plannedMinutes;
         existing.good += b.goodQuantity;
         existing.produced += b.producedQuantity;
         byDay.set(day, existing);
     }
-    return [...byDay.values()].map(({ runtime, planned, good, produced }) => {
+    return [...byDay.values()].map(({ runtime, planned, weightedPerformance, good, produced }) => {
         const availability = planned > 0 ? runtime / planned : 0;
+        const performance = runtime > 0 ? weightedPerformance / runtime : 1;
         const quality = produced > 0 ? good / produced : 1;
-        return Math.round(availability * quality * 100 * 10) / 10;
+        return Math.round(availability * performance * quality * 100 * 10) / 10;
     });
 }
 

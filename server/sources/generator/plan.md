@@ -71,6 +71,7 @@ Two categories of parameters exist:
 | `minOperationWorkingMinutes` | `320` | Minimum working-time duration of a PO (~1/3 of a working day) |
 | `maxOperationWorkingMinutes` | `3840` | Maximum working-time duration of a PO (~4 working days) |
 | `yieldRate` | `0.95` | Median yield across all operations; per-operation effective yield = `yieldRate + U(-(1-yieldRate), +(1-yieldRate))` |
+| `performanceRate` | `0.86` | Median actual/ideal rate ratio (speed losses, micro-stops); per-PO effective performance = `performanceRate + U(-(1-performanceRate)/3, +(1-performanceRate)/3)` |
 
 `productionOrderCount` is distributed across locations proportionally to the number of
 work centers (more complex lines get more POs).
@@ -418,8 +419,13 @@ shiftMinutes          = workingMinutes(po.start, po.end) (excl. nights/weekends)
 woMinutes             = working minutes consumed by WOs whose span overlaps this PO
 downtimeMinutes       = sum of all downtime event durations on all operations in this PO
 netMinutes            = shiftMinutes - woMinutes - downtimeMinutes
-producedQty           = floor(netMinutes × effectiveUnitsPerHour / 60)
+effectivePerformance  = performanceRate ± (1-performanceRate)/3   (sampled once per PO)
+producedQty           = floor(netMinutes × effectiveUnitsPerHour × effectivePerformance / 60)
 ```
+
+`effectiveUnitsPerHour` is the PO's **ideal** rate; `effectivePerformance` models speed
+losses. Operations expose `actualRunTimeMinutes = netMinutes`, so the ideal rate can be
+recovered downstream as `plannedQuantity / plannedRunTimeMinutes`.
 
 All operations in the same PO share the same `producedQty` (identical effective duration
 and rate).
@@ -446,13 +452,13 @@ stoppageMinutes   = woMinutes + downtimeMinutes           (WO time + unplanned d
 runtimeMinutes    = plannedMinutes - stoppageMinutes
 
 Availability  = runtimeMinutes / plannedMinutes
-Performance   = 1.0   (by construction — unitsPerHour is the ideal rate, net time gives ideal output)
+Performance   = producedQty / (runtimeMinutes × effectiveUnitsPerHour / 60)   (≈ effectivePerformance)
 Quality       = goodQty / producedQty
 OEE           = Availability × Performance × Quality
 ```
 
-Performance is 1.0 because `producedQty` is computed from net productive time at the
-ideal rate. Availability losses come from **three sources**: off-shift gaps (nights/
+Performance losses come from running below the ideal rate (`performanceRate`). With the
+defaults (A ≈ 0.87–0.93, P ≈ 0.86, Q ≈ 0.95) OEE lands around 75%. Availability losses come from **three sources**: off-shift gaps (nights/
 weekends already excluded from `shiftMinutes`), planned stoppages (WOs), and unplanned
 stoppages (downtime events). Quality losses come from scrap.
 

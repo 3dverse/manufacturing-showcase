@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { computeOEE, mergeIntervals, clipIntervalsToWindow, qualityFromPOs } from "@/core/oee";
+import { computeOEE, mergeIntervals, clipIntervalsToWindow, poMetricsForWindow } from "@/core/oee";
 import type { TimelineSpan } from "@/core/Scope";
 
 export function useFactoryOEE(span: TimelineSpan | null, targetAsOf: number): number | null {
@@ -26,10 +26,11 @@ export function useFactoryOEE(span: TimelineSpan | null, targetAsOf: number): nu
         if (!span || !mergedPoIntervals) return null;
         const windowStart = minuteAsOf - 7 * 86400;
         const plannedIntervals = clipIntervalsToWindow(mergedPoIntervals, windowStart, minuteAsOf);
-        const quality = qualityFromPOs(span.sortedProductionOrders, windowStart, minuteAsOf);
+        const { quality, performance } = poMetricsForWindow(span.sortedProductionOrders, windowStart, minuteAsOf);
         return computeOEE(
             plannedIntervals,
             quality,
+            performance,
             span.sortedDowntimes,
             span.sortedWorkOrders,
             windowStart,

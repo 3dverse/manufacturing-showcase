@@ -55,7 +55,15 @@ function computePOQty(
     wosByPO: Map<string, PlacedMaintenanceWO[]>,
     config: GeneratorConfig,
     rng: RNG,
-): { plannedQty: number; producedQty: number; goodQty: number; scrapQty: number; effectiveYield: number } {
+): {
+    plannedQty: number;
+    producedQty: number;
+    goodQty: number;
+    scrapQty: number;
+    effectiveYield: number;
+    effectivePerformance: number;
+    netMins: number;
+} {
     // Planned qty: based purely on the PO's target working minutes (before any stoppages)
     const plannedQty = Math.floor((po.targetWorkingMinutes * po.effectiveUnitsPerHour) / 60);
 
@@ -70,7 +78,14 @@ function computePOQty(
         0,
     );
     const netMins = Math.max(0, shiftMins - woMins - downtimeMins);
-    const producedQty = Math.floor((netMins * po.effectiveUnitsPerHour) / 60);
+
+    // Performance: actual rate below ideal (speed losses, micro-stops), sampled once per PO
+    const speedSpread = (1 - config.performanceRate) / 3;
+    const effectivePerformance = Math.min(
+        1,
+        Math.max(0, config.performanceRate + rng.nextFloat(-speedSpread, speedSpread)),
+    );
+    const producedQty = Math.floor((netMins * po.effectiveUnitsPerHour * effectivePerformance) / 60);
 
     // Yield: global median ± defectRate (sampled once per PO)
     const defectRate = 1 - config.yieldRate;
@@ -78,7 +93,7 @@ function computePOQty(
     const goodQty = Math.floor(producedQty * effectiveYield);
     const scrapQty = producedQty - goodQty;
 
-    return { plannedQty, producedQty, goodQty, scrapQty, effectiveYield };
+    return { plannedQty, producedQty, goodQty, scrapQty, effectiveYield, effectivePerformance, netMins };
 }
 
 // ---------------------------------------------------------------------------
@@ -164,8 +179,9 @@ export function fillDataset(
     const mesWorkCenterTimelines = new Map<string, WorkCenterTimeline>();
     const mesDispatchItems: any[] = [];
 
-    // Per-operation yield, stored for OEE computation
+    // Per-operation yield and performance, stored for OEE computation
     const opYields = new Map<string, number>();
+    const opPerformances = new Map<string, number>();
 
     // Build work-center timeline skeletons
     for (const wcId of entities.workCenterList) {
@@ -185,14 +201,16 @@ export function fillDataset(
             goodQty: poGoodQty,
             scrapQty: poScrapQty,
             effectiveYield: poYield,
+            effectivePerformance: poPerformance,
+            netMins: poNetMins,
         } = computePOQty(po, wosByPO, config, rng);
 
         for (const op of po.operations) {
             opYields.set(op.id, poYield);
+            opPerformances.set(op.id, poPerformance);
 
             const opSt = opStatus(op);
             const opIndex = po.operations.indexOf(op);
-            const actualRunMinutes = workingMinutes(op.start, op.end, config.shifts, config.workDays);
             mesOperations.set(op.id, {
                 id: op.id,
                 productionOrderId: po.id,
@@ -212,7 +230,7 @@ export function fillDataset(
                 plannedSetupTimeMinutes: op.setupMinutes,
                 plannedRunTimeMinutes: po.targetWorkingMinutes,
                 actualSetupTimeMinutes: op.setupMinutes,
-                actualRunTimeMinutes: actualRunMinutes,
+                actualRunTimeMinutes: Math.round(poNetMins),
                 quantities: {
                     plannedQuantity: plannedQty,
                     producedQuantity: poProducedQty,
@@ -358,6 +376,7 @@ export function fillDataset(
 
             const plannedMins = (slot.overlapEnd.getTime() - slot.overlapStart.getTime()) / 60_000;
             let downtimeMins = 0;
+            let idealQty = 0;
             let producedQty = 0;
             let goodQty = 0;
 
@@ -387,14 +406,17 @@ export function fillDataset(
                 }
 
                 const netMins = Math.max(0, (clampEnd.getTime() - clampStart.getTime()) / 60_000 - downtimeMins);
-                const qty = Math.floor((netMins * po.effectiveUnitsPerHour) / 60);
+                const perf = opPerformances.get(op.id) ?? config.performanceRate;
+                const qty = Math.floor((netMins * po.effectiveUnitsPerHour * perf) / 60);
                 const yld = opYields.get(op.id) ?? config.yieldRate;
+                idealQty += (netMins * po.effectiveUnitsPerHour) / 60;
                 producedQty += qty;
                 goodQty += Math.floor(qty * yld);
             }
 
             const runtimeMins = Math.max(0, plannedMins - downtimeMins);
             const availability = plannedMins > 0 ? runtimeMins / plannedMins : 0;
+            const performance = idealQty > 0 ? Math.min(1, producedQty / idealQty) : 1;
             const quality = producedQty > 0 ? goodQty / producedQty : 1;
             const scrapQty = producedQty - goodQty;
 
@@ -411,9 +433,9 @@ export function fillDataset(
                 scrapQuantity: scrapQty,
                 uom: "pcs",
                 availabilityPercent: availability * 100,
-                performancePercent: 100,
+                performancePercent: performance * 100,
                 qualityPercent: quality * 100,
-                oeePercent: availability * quality * 100,
+                oeePercent: availability * performance * quality * 100,
             };
             wcBuckets.push(bucket);
             oeeTimeseries.push(bucket);

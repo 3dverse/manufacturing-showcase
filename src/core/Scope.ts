@@ -160,6 +160,7 @@ export type OEEBucketEntry = {
     runtimeMinutes: number;
     goodQuantity: number;
     producedQuantity: number;
+    performancePercent: number;
     oeePercent: number;
 };
 

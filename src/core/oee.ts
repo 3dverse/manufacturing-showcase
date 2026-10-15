@@ -74,17 +74,20 @@ export function clipIntervalsToWindow(
 // ---------------------------------------------------------------------------
 
 /**
- * Single pass over sorted (end-DESC) production orders: returns both planned
- * intervals and quality for the window. Avoids iterating the array twice.
+ * Single pass over sorted (end-DESC) production orders: returns planned intervals,
+ * quality and performance for the window. Avoids iterating the array twice.
+ * Performance is produced vs planned quantity of POs completed in the window
+ * (planned quantity = ideal rate × planned run time).
  */
 export function poMetricsForWindow(
     pos: ProductionOrderEntry[],
     windowStart: number,
     targetAsOf: number,
-): { intervals: [number, number][]; quality: number } {
+): { intervals: [number, number][]; quality: number; performance: number } {
     const intervals: [number, number][] = [];
     let totalGood = 0,
-        totalProduced = 0;
+        totalProduced = 0,
+        totalPlanned = 0;
     for (const po of pos) {
         const end = po.timing.actualEnd ?? po.timing.scheduledEnd;
         if (end <= windowStart) break;
@@ -99,19 +102,24 @@ export function poMetricsForWindow(
         ) {
             totalGood += po.quantities.goodQuantity ?? 0;
             totalProduced += (po.quantities.goodQuantity ?? 0) + (po.quantities.scrapQuantity ?? 0);
+            totalPlanned += po.quantities.plannedQuantity ?? 0;
         }
     }
-    return { intervals, quality: totalProduced > 0 ? totalGood / totalProduced : 1 };
+    return {
+        intervals,
+        quality: totalProduced > 0 ? totalGood / totalProduced : 1,
+        performance: totalPlanned > 0 ? Math.min(1, totalProduced / totalPlanned) : 1,
+    };
 }
 
 /**
- * Single pass over operations: returns both planned intervals and quality.
+ * Single pass over operations: returns planned intervals, quality and performance.
  */
 export function opMetricsForWindow(
     ops: OperationEntry[],
     windowStart: number,
     targetAsOf: number,
-): { intervals: [number, number][]; quality: number } {
+): { intervals: [number, number][]; quality: number; performance: number } {
     const intervals: [number, number][] = [];
     let totalGood = 0,
         totalProduced = 0;
@@ -125,7 +133,28 @@ export function opMetricsForWindow(
             totalProduced += op.quantities.producedQuantity ?? 0;
         }
     }
-    return { intervals, quality: totalProduced > 0 ? totalGood / totalProduced : 1 };
+    return {
+        intervals,
+        quality: totalProduced > 0 ? totalGood / totalProduced : 1,
+        performance: performanceFromOps(ops, windowStart, targetAsOf),
+    };
+}
+
+/**
+ * Performance = actual output / ideal output over the net run time of operations
+ * completed in [windowStart, targetAsOf]. The ideal rate is plannedQuantity / plannedRunTimeMinutes.
+ */
+export function performanceFromOps(ops: Iterable<OperationEntry>, windowStart: number, targetAsOf: number): number {
+    let totalProduced = 0,
+        totalIdeal = 0;
+    for (const op of ops) {
+        if (op.actualEnd === undefined || op.actualEnd < windowStart || op.actualEnd > targetAsOf) continue;
+        if (!op.plannedRunTimeMinutes || op.actualRunTimeMinutes === undefined) continue;
+        const idealRatePerMinute = op.quantities.plannedQuantity / op.plannedRunTimeMinutes;
+        totalIdeal += idealRatePerMinute * op.actualRunTimeMinutes;
+        totalProduced += op.quantities.producedQuantity ?? 0;
+    }
+    return totalIdeal > 0 ? Math.min(1, totalProduced / totalIdeal) : 1;
 }
 
 // ---------------------------------------------------------------------------
@@ -152,6 +181,10 @@ export function qualityFromPOs(pos: ProductionOrderEntry[], windowStart: number,
     return poMetricsForWindow(pos, windowStart, targetAsOf).quality;
 }
 
+export function performanceFromPOs(pos: ProductionOrderEntry[], windowStart: number, targetAsOf: number): number {
+    return poMetricsForWindow(pos, windowStart, targetAsOf).performance;
+}
+
 export function qualityFromOps(ops: OperationEntry[], windowStart: number, targetAsOf: number): number {
     return opMetricsForWindow(ops, windowStart, targetAsOf).quality;
 }
@@ -161,8 +194,8 @@ export function qualityFromOps(ops: OperationEntry[], windowStart: number, targe
 // ---------------------------------------------------------------------------
 
 /**
- * Computes OEE (0–100) given pre-computed planned intervals, quality, downtime
- * events, and work orders within [windowStart, targetAsOf].
+ * Computes OEE (0–100) given pre-computed planned intervals, quality, performance,
+ * downtime events, and work orders within [windowStart, targetAsOf].
  *
  * Builds closed intervals once for the window and reuses them for both planned
  * and stoppage scheduled-seconds calculations.
@@ -172,6 +205,7 @@ export function qualityFromOps(ops: OperationEntry[], windowStart: number, targe
 export function computeOEE(
     plannedIntervals: [number, number][],
     quality: number,
+    performance: number,
     downtimes: DowntimeEntry[],
     workOrders: WorkOrderEntry[],
     windowStart: number,
@@ -202,5 +236,5 @@ export function computeOEE(
     const stoppageSecs = mergedStoppage.reduce((sum, [s, e]) => sum + scheduledSecsWithClosed(s, e, closed), 0);
 
     const availability = Math.max(0, (plannedSecs - stoppageSecs) / plannedSecs);
-    return Math.round(availability * quality * 100);
+    return Math.round(availability * performance * quality * 100);
 }

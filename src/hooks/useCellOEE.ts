@@ -20,7 +20,7 @@ export function useCellOEE(cell: CellNode): number | null {
             const op = span.operations.get(id);
             return op ? [op] : [];
         });
-        const { intervals, quality } = opMetricsForWindow(ops, windowStart, minuteAsOf);
+        const { intervals, quality, performance } = opMetricsForWindow(ops, windowStart, minuteAsOf);
 
         const downtimes = span.sortedDowntimes.filter((dt) => dt.workCenterId === cell.hash);
 
@@ -30,6 +30,6 @@ export function useCellOEE(cell: CellNode): number | null {
         ]);
         const workOrders = span.sortedWorkOrders.filter((wo) => woIds.has(wo.id));
 
-        return computeOEE(intervals, quality, downtimes, workOrders, windowStart, minuteAsOf);
+        return computeOEE(intervals, quality, performance, downtimes, workOrders, windowStart, minuteAsOf);
     }, [span, cell, minuteAsOf]);
 }
