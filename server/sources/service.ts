@@ -66,6 +66,17 @@ export async function startService(): Promise<Service> {
     // Expose the front end routes.
     if (isStaticBuild) {
         const distDir = path.join(process.cwd(), "out");
+
+        // index.html must never be cached nor revalidated with the default ETag:
+        // `npm pack` resets every mtime to 1985 and index.html keeps the same
+        // size across builds, so send's ETag (size + mtime) never changes and
+        // browsers get a 304 on an outdated index.html pointing to old bundles.
+        const sendIndex = (_req: express.Request, res: express.Response) => {
+            res.setHeader("Cache-Control", "no-cache");
+            res.sendFile(path.join(distDir, "index.html"), { etag: false, lastModified: false });
+        };
+        app.get(["/index.html", "/static/index.html"], sendIndex);
+
         app.use(
             express.static(distDir, {
                 maxAge: "1y",
@@ -84,8 +95,7 @@ export async function startService(): Promise<Service> {
 
         app.use((req, res, next) => {
             if (req.method !== "GET") return next();
-            res.setHeader("Cache-Control", "no-cache");
-            res.sendFile(path.join(distDir, "index.html"));
+            sendIndex(req, res);
         });
     } else {
         const frontend = await import("./frontend");
