@@ -102,7 +102,8 @@ export function buildClosedIntervals(
     while (dayStart < winEnd) {
         // Use local noon to identify the day safely across DST transitions
         const midday = dayStart + 43200;
-        const dayEnd = midnightInTZ(midday + 43200, tz);
+        const { year, month, day } = getDateParts(midday, tz);
+        const dayEnd = tzToUnix(year, month, day + 1, 0, 0, tz);
 
         if (!workDays.includes(dayOfWeekInTZ(midday, tz))) {
             closed.push({ start: dayStart, end: dayEnd });
