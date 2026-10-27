@@ -33,8 +33,8 @@ RUN chown -R node:node /usr/src/app
 # Switch to node user for npm operations
 USER node
 
-# Install dependencies
-RUN npm install --allow-remote=all
+# Install dependencies, as locked
+RUN npm ci --no-audit --no-fund --allow-remote=all
 
 # Bundle app source with correct ownership
 COPY --chown=node:node . .
@@ -44,8 +44,11 @@ RUN npm run build && \
     npm pack && \
     tar -zxf showcase-manufacturing-*.tgz
 
-# Remove dev dependency packages
-RUN npm prune --production
+# npm prune is ~20-30x slower than npm ci for the same result; cache is
+# already warm from the install above. Drop "prepare" first: husky is a
+# devDependency, gone after --omit=dev, so its script would fail here.
+RUN npm pkg delete scripts.prepare && \
+    npm ci --omit=dev --no-audit --no-fund --allow-remote=all
 
 # Clean up build dependencies after build is complete
 USER root
