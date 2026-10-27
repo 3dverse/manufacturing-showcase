@@ -3,6 +3,7 @@ import express, { Express, Router } from "express";
 import compression from "compression";
 import * as bodyParser from "body-parser";
 import path from "path";
+import { readFileSync } from "fs";
 import swaggerUi from "swagger-ui-express";
 
 //------------------------------------------------------------------------------
@@ -67,13 +68,15 @@ export async function startService(): Promise<Service> {
     if (isStaticBuild) {
         const distDir = path.join(process.cwd(), "out");
 
-        // index.html must never be cached nor revalidated with the default ETag:
-        // `npm pack` resets every mtime to 1985 and index.html keeps the same
-        // size across builds, so send's ETag (size + mtime) never changes and
-        // browsers get a 304 on an outdated index.html pointing to old bundles.
+        // Don't serve index.html with sendFile/static: their ETag is size + mtime,
+        // `npm pack` resets every mtime to 1985 and index.html keeps the same size
+        // across builds, so browsers got a 304 on an outdated index.html pointing
+        // to old bundles (and Express 5 ignores sendFile's `etag: false`).
+        // res.send() computes the ETag from the content instead.
+        const indexHtml = readFileSync(path.join(distDir, "index.html"), "utf-8");
         const sendIndex = (_req: express.Request, res: express.Response) => {
             res.setHeader("Cache-Control", "no-cache");
-            res.sendFile(path.join(distDir, "index.html"), { etag: false, lastModified: false });
+            res.type("html").send(indexHtml);
         };
         app.get(["/index.html", "/static/index.html"], sendIndex);
 
