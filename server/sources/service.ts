@@ -33,7 +33,9 @@ export async function startService(): Promise<Service> {
 
     //--------------------------------------------------------------------------
     app.use(compression());
-    app.use(express.json());
+    // A compressed body answers 415: no client compresses one, and the Brotli decoder of Node.js is where
+    // CVE-2026-111497 strikes, before any authentication.
+    app.use(express.json({ inflate: false }));
 
     app.use(
         "/-/api",
@@ -129,7 +131,7 @@ export function setHealthyState(state: boolean) {
 //------------------------------------------------------------------------------
 export async function startOpsService(): Promise<Express> {
     const opsService = express();
-    opsService.use(express.json());
+    opsService.use(express.json({ inflate: false }));
 
     // Health endpoints for Kubernetes probes
     opsService.get("/health/liveness", (req, res) => {
