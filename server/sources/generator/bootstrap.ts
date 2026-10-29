@@ -1,4 +1,4 @@
-import { getFolderAssets } from "@3dverse/api";
+import { listFolderAssets } from "@3dverse/api";
 import { generate } from "./index";
 import { setDataset } from "./store";
 import { STATIC_SITE_ID, defaultSite } from "./input";
@@ -27,11 +27,11 @@ export async function generateDatasetForScene(
 
 //------------------------------------------------------------------------------
 export async function generateAllDatasetsFromFolder(): Promise<BootstrapResult> {
-    const resp = await getFolderAssets({
+    const resp = await listFolderAssets({
         folder_id: config.publicFolderId,
         offset: 0,
         limit: 10,
-        filter: { asset_type: "scene" },
+        filters: { asset_types: ["scene"] },
     });
 
     const scenes = resp.data.scenes ?? [];

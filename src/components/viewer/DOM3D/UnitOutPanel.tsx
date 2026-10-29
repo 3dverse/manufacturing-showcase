@@ -66,7 +66,7 @@ export function UnitOutPanel({
         <>
             <BoundingBoxFaceProjection
                 entity={outNode.entity}
-                face="right"
+                face="back"
                 className="transform-3d flex items-end pointer-events-none!"
             >
                 <div className="relative flex flex-col justify-between gap-3 h-full min-h-16 w-full min-w-28 px-2 py-1 text-xs text-slate-0 rounded-sm border border-slate-0">
@@ -84,10 +84,10 @@ export function UnitOutPanel({
                 face="bottom"
                 className="transform-3d flex items-center justify-center text-8xl z-10 pointer-events-none!"
             >
-                <span className="absolute rotate-180 -translate-x-[25%] transform-[translateZ(0px)] text-slate-1000 blur-sm">
+                <span className="absolute rotate-270 -translate-x-[25%] -translate-y-[25%] transform-[translateZ(0px)] text-slate-1000 blur-sm">
                     ⇢
                 </span>
-                <span className="absolute rotate-180 -translate-x-[25%] transform-[translateZ(.1px)] text-guidance">
+                <span className="absolute rotate-270 -translate-x-[25%] -translate-y-[25%] transform-[translateZ(.1px)] text-guidance">
                     ⇢
                 </span>
             </BoundingBoxFaceProjection>

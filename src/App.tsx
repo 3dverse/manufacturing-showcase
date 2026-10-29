@@ -1,7 +1,7 @@
 "use strict";
 //------------------------------------------------------------------------------
 import { useState, useEffect, useMemo } from "react";
-import { getFolderAssets, setUserToken } from "@3dverse/api";
+import { listFolderAssets, setUserToken } from "@3dverse/api";
 
 //------------------------------------------------------------------------------
 import IntroductionModal from "@/components/scenarios/IntroductionModal";
@@ -74,11 +74,11 @@ function AppLayout() {
     //--------------------------------------------------------------------------
     useEffect(() => {
         if (factoriesPromise !== undefined) return;
-        factoriesPromise = getFolderAssets({
+        factoriesPromise = listFolderAssets({
             folder_id: PUBLIC_FOLDER_ID,
             offset: 0,
             limit: 10,
-            filter: { asset_type: "scene" },
+            filters: { asset_types: ["scene"] },
         }).then((resp) => {
             setFactories(
                 resp.data.scenes
