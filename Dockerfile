@@ -55,7 +55,9 @@ USER root
 RUN apk del .build-deps
 USER node
 
-FROM gcr.io/distroless/nodejs24-debian12
+# Node 24.22.1 at least, against CVE-2026-111497: the debian12 variant no longer gets the Node.js releases. Its nonroot
+# variant: the showcase runs as uid 65532, as the deployment requires.
+FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:78f07ef1b5ea71ad7c055df15d0dd8997f2d288f9158623c4d4ae3d765b7d50d
 ENV NODE_ENV="production"
 
 LABEL description="Manufacturing showcase." \
