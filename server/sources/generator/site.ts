@@ -5,7 +5,7 @@
  * This is the authoritative source of site structure for the generator.
  */
 
-import { getAssetDescription } from "@3dverse/api";
+import { getAssetDescription, type AssetDescription } from "@3dverse/api";
 import { NotFound } from "express-openapi-validator/dist/openapi.validator";
 
 // ---------------------------------------------------------------------------
@@ -82,6 +82,14 @@ function parseDebugName(value: string) {
     return { type: type ?? null, name: name ?? null, id: id ?? null };
 }
 
+// AssetDescription is a union over every asset type; narrow it to the scene shape.
+type SceneDescription = Extract<AssetDescription, { entities: unknown }>;
+
+async function getSceneDescription(scene_id: string): Promise<SceneDescription> {
+    const { data } = await getAssetDescription({ asset_container: "scenes", asset_id: scene_id });
+    return data as SceneDescription;
+}
+
 // ---------------------------------------------------------------------------
 // Scene loaders
 // ---------------------------------------------------------------------------
@@ -125,7 +133,7 @@ const loadRack = async (rackEntity: any, scene_id: string, lineage: string[]): P
     };
 
     if (scene_id) {
-        const rackScene = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
+        const rackScene = await getSceneDescription(scene_id);
         const binEntities = (rackScene.entities ?? []).filter((e: any) => {
             if (!e.debug_name?.value?.includes(":")) return false;
             return parseDebugName(e.debug_name.value).type === "bin";
@@ -151,7 +159,7 @@ const loadAisle = async (aisleEntity: any, scene_id: string, lineage: string[]):
     };
 
     if (scene_id) {
-        const aisleScene = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
+        const aisleScene = await getSceneDescription(scene_id);
         const rackEntities = (aisleScene.entities ?? []).filter((e: any) => {
             if (!e.debug_name?.value?.includes(":")) return false;
             return parseDebugName(e.debug_name.value).type === "rack";
@@ -176,7 +184,7 @@ const loadWorkCenter = async (workCenterEntity: any, scene_id: string, lineage: 
         tags: loadTags(workCenterEntity),
     };
 
-    const workCenterScene = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
+    const workCenterScene = await getSceneDescription(scene_id);
     if (!workCenterScene.entities) throw NotFound;
 
     const machineEntities: any[] = workCenterScene.entities.filter((entity: any) => {
@@ -197,7 +205,7 @@ const loadWorkCenter = async (workCenterEntity: any, scene_id: string, lineage: 
 
 //------------------------------------------------------------------------------
 const loadLineWorkCenters = async (lineEntity: any, scene_id: string, lineage: string[]): Promise<WorkCenterNode[]> => {
-    const lineScene = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
+    const lineScene = await getSceneDescription(scene_id);
     if (!lineScene.entities) return [];
 
     const lineLineage = [...lineage, lineEntity.euid.value];
@@ -226,7 +234,7 @@ const loadLocation = async (locationEntity: any, scene_id: string, lineage: stri
     };
 
     const locationLineage = [...lineage, locationEntity.euid.value];
-    const asset_description = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
+    const asset_description = await getSceneDescription(scene_id);
     if (!asset_description.entities) throw NotFound;
 
     const cellAndLineEnts: any[] = [];
@@ -276,7 +284,7 @@ const loadSite = async (siteEntity: any, scene_id: string): Promise<SiteNode> =>
         tags: loadTags(siteEntity),
     };
 
-    const asset_description = (await getAssetDescription({ asset_container: "scenes", asset_id: scene_id })).data;
+    const asset_description = await getSceneDescription(scene_id);
     if (!asset_description.entities) throw NotFound;
 
     const locationEntities: any[] = asset_description.entities.filter((entity: any) => {
@@ -309,7 +317,7 @@ const loadTags = (entity: any) => {
 // ---------------------------------------------------------------------------
 
 export async function loadSiteFromScene(sceneId: string): Promise<SiteNode | undefined> {
-    const asset_description = (await getAssetDescription({ asset_container: "scenes", asset_id: sceneId })).data;
+    const asset_description = await getSceneDescription(sceneId);
     if (!asset_description.entities) return undefined;
     const siteEntity: any = asset_description.entities.find((ent: any) => {
         if (!ent.scene_ref || !ent.debug_name.value.includes(":")) return false;

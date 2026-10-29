@@ -51,15 +51,15 @@ export function DowntimeFlag({ cell, downtimeId }: { cell: CellNode; downtimeId:
             </BoundingBoxFaceProjection>
             <BoundingBoxFaceProjection
                 entity={cell.entity}
-                face="front"
+                face="right"
                 className="flex justify-center items-end pointer-events-none!"
             >
                 <div className="h-full w-[3px] bg-warning-700" />
             </BoundingBoxFaceProjection>
-            <BoundingBoxFaceProjection entity={cell.entity} face="top" className="flex items-end justify-center">
+            <BoundingBoxFaceProjection entity={cell.entity} face="top" className="flex items-center justify-center">
                 <div
                     className={cn(
-                        "translate-y-1/2 flex flex-col items-center gap-2 bg-warning-700 text-warning-100 rounded-3xl [corner-shape:bevel] py-4 px-7 outline-4 outline-warning-700/50 outline-offset-8 cursor-pointer",
+                        "translate-x-[125%] rotate-270 flex flex-col items-center gap-2 bg-warning-700 text-warning-100 rounded-3xl [corner-shape:bevel] py-4 px-7 outline-4 outline-warning-700/50 outline-offset-8 cursor-pointer",
                         "hover:outline-offset-12 hover:outline-warning-700/80 transition-all duration-200",
                     )}
                     onClick={handleClick}
@@ -106,7 +106,7 @@ export function DowntimeFlagFront({
     return (
         <BoundingBoxFaceProjection
             entity={node.entity || cell.entity}
-            face="front"
+            face="right"
             className="flex items-end justify-center pointer-events-none!"
         >
             <div

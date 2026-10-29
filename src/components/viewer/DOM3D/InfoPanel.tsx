@@ -27,7 +27,7 @@ export function InfoPanel({
     return (
         <BoundingBoxFaceProjection
             entity={node.entity}
-            face="right"
+            face="back"
             className="flex flex-col justify-end gap-3 transform-3d pointer-events-none"
         >
             {warning && (

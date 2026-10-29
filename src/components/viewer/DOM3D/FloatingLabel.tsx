@@ -29,7 +29,7 @@ export const FloatingLabel = ({ node }: { node: SceneGraphNode }) => {
     return (
         <BoundingBoxFaceProjection
             entity={node.entity}
-            face="front"
+            face="right"
             className="transform-3d pointer-events-none! flex justify-center items-end"
         >
             <div
