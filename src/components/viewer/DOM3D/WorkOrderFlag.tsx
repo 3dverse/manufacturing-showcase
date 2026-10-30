@@ -50,7 +50,7 @@ export function WorkOrderFlag({ machine, workOrderId }: { machine: MachineNode; 
             </BoundingBoxFaceProjection>
             <BoundingBoxFaceProjection
                 entity={machine.entity}
-                face="front"
+                face="right"
                 className="flex justify-center items-end pointer-events-none!"
             >
                 <div className="h-full w-[3px] bg-amber-400" />
@@ -104,7 +104,7 @@ export function WorkOrderFlagFront({
     return (
         <BoundingBoxFaceProjection
             entity={node?.entity || machine.entity}
-            face="front"
+            face="right"
             className="flex items-end justify-center pointer-events-none!"
         >
             <div
