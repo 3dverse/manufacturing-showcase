@@ -70,8 +70,8 @@ Two categories of parameters exist:
 | `unitsPerHour` | `30` | Throughput rate shared by all operations; used to compute stagger and back-calculate batch qty in fill pass |
 | `minOperationWorkingMinutes` | `320` | Minimum working-time duration of a PO (~1/3 of a working day) |
 | `maxOperationWorkingMinutes` | `3840` | Maximum working-time duration of a PO (~4 working days) |
-| `yieldRate` | `0.95` | Median yield across all operations; per-operation effective yield = `yieldRate + U(-(1-yieldRate), +(1-yieldRate))` |
-| `performanceRate` | `0.86` | Median actual/ideal rate ratio (speed losses, micro-stops); per-PO effective performance = `performanceRate + U(-(1-performanceRate)/3, +(1-performanceRate)/3)` |
+| `yieldRate` | `0.91` | Median yield across all operations; per-operation effective yield = `yieldRate + U(-(1-yieldRate), +(1-yieldRate))` |
+| `performanceRate` | `0.91` | Median actual/ideal rate ratio (speed losses, micro-stops); per-PO effective performance = `performanceRate + U(-(1-performanceRate)/3, +(1-performanceRate)/3)` |
 
 `productionOrderCount` is distributed across locations proportionally to the number of
 work centers (more complex lines get more POs).
@@ -458,7 +458,7 @@ OEE           = Availability × Performance × Quality
 ```
 
 Performance losses come from running below the ideal rate (`performanceRate`). With the
-defaults (A ≈ 0.87–0.93, P ≈ 0.86, Q ≈ 0.95) OEE lands around 75%. Availability losses come from **three sources**: off-shift gaps (nights/
+defaults (A ≈ 0.85, P ≈ 0.91, Q ≈ 0.91) the factory OEE lands around 70%. Availability losses come from **three sources**: off-shift gaps (nights/
 weekends already excluded from `shiftMinutes`), planned stoppages (WOs), and unplanned
 stoppages (downtime events). Quality losses come from scrap.
 
@@ -645,7 +645,7 @@ All statuses are fixed at their terminal (completed) value — see §Core Philos
 - [x] Shift configuration is configurable. Default: two shifts Mon–Fri, shift 1 06:00–14:00, shift 2 14:00–22:00.
 - [x] PO duration is variable working time drawn from `U(minOperationWorkingMinutes, maxOperationWorkingMinutes)`, replacing the old fixed `operationDurationMinutes`. POs may span multiple days or straddle weekends.
 - [x] Work orders occur inside PO spans, not between them. The PO's produced quantity accounts for WO time as stoppage. There are no dedicated maintenance gaps.
-- [x] Yield: single configurable `yieldRate` (default 0.95). Per-operation effective yield = `yieldRate + U(-(1-yieldRate), +(1-yieldRate))`. The global rate is the median; variance scales with the defect rate.
+- [x] Yield: single configurable `yieldRate` (default 0.91). Per-operation effective yield = `yieldRate + U(-(1-yieldRate), +(1-yieldRate))`. The global rate is the median; variance scales with the defect rate.
 - [x] Nonconformances are QMS-only entities, generated independently of MES scrap. Rate and MES linkage deferred pending QMS API schema review.
 - [x] Item model: three types (FG, RM, WIP); WIP auto-derived from routing; operation inputs/outputs assigned per step; full inventory movement log with `asOf` projection. See §1.5a.
 - [ ] Downtime template pool: specific categories to include — deferred
